@@ -1,10 +1,9 @@
 package edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive;
 
-import static edu.wpi.first.units.Units.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.wpilib.units.Units.*;
 
-import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -13,16 +12,6 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
@@ -44,6 +33,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.internal.DriverStationBackend;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.linalg.Vector;
+import org.wpilib.math.numbers.N2;
+import org.wpilib.math.system.DCMotor;
 
 public class SwerveDriveTest {
 
@@ -64,7 +65,7 @@ public class SwerveDriveTest {
 
   @BeforeEach
   public void setUp() {
-    edu.wpi.first.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize(500, 0);
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -238,11 +239,12 @@ public class SwerveDriveTest {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
         MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
-        MockedStatic<DriverStation> mockDS = mockStatic(DriverStation.class)) {
+        MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
+        MockedStatic<DriverStationBackend> mockDSBackend = mockStatic(DriverStationBackend.class)) {
 
       mockRobotConfig.when(RobotConfig::fromGUISettings).thenReturn(mock(RobotConfig.class));
-      mockDS.when(DriverStation::isDisabled).thenReturn(false);
-      mockDS.when(DriverStation::getAlliance).thenReturn(Optional.of(DriverStation.Alliance.Red));
+      mockRobotState.when(RobotState::isDisabled).thenReturn(false);
+      mockDSBackend.when(DriverStationBackend::getAlliance).thenReturn(Optional.of(Alliance.RED));
 
       SwerveDrive drive =
           new SwerveDrive(
@@ -268,7 +270,7 @@ public class SwerveDriveTest {
       verify(flModuleIO, atLeastOnce()).updateInputs(any());
 
       // runVelocity
-      ChassisSpeeds targetSpeeds = new ChassisSpeeds(1.0, -1.0, 0.5);
+      ChassisVelocities targetSpeeds = new ChassisVelocities(1.0, -1.0, 0.5);
       drive.runVelocity(targetSpeeds);
       verify(flModuleIO).setDriveVelocity(anyDouble(), anyDouble());
 
@@ -292,7 +294,7 @@ public class SwerveDriveTest {
       // getModulePositions
       SwerveModulePosition[] positions = drive.getModulePositions();
       assertEquals(4, positions.length);
-      assertEquals(10.0 * 0.05, positions[0].distanceMeters, 1e-6);
+      assertEquals(10.0 * 0.05, positions[0].distance, 1e-6);
 
       // getWheelRadiusCharacterizationPositions
       double[] wheelRadPos = drive.getWheelRadiusCharacterizationPositions();
@@ -317,11 +319,7 @@ public class SwerveDriveTest {
       // setAutoControllers
       drive.setAutoControllers(driveConstants.driveGains, driveConstants.turnGains);
 
-      // choreoDrive
-      SwerveSample sample =
-          new SwerveSample(
-              0.0, 1.0, 2.0, 0.5, 0.1, 0.2, 0.3, 0.0, 0.0, 0.0, new double[4], new double[4]);
-      drive.choreoDrive(sample);
+      // TODO: restore choreoDrive test once ChoreoLib ships a WPILib 2027 alpha build.
 
       // getFieldRelativeVelocity
       Translation2d fieldRelVel = drive.getFieldRelativeVelocity();
@@ -334,12 +332,12 @@ public class SwerveDriveTest {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
         MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
-        MockedStatic<DriverStation> mockDS = mockStatic(DriverStation.class);
+        MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
         MockedStatic<PhoenixOdometryThread> mockOdomThread =
             mockStatic(PhoenixOdometryThread.class)) {
 
       mockRobotConfig.when(RobotConfig::fromGUISettings).thenReturn(mock(RobotConfig.class));
-      mockDS.when(DriverStation::isDisabled).thenReturn(true); // Test isDisabled branch
+      mockRobotState.when(RobotState::isDisabled).thenReturn(true); // Test isDisabled branch
 
       PhoenixOdometryThread mockThread = mock(PhoenixOdometryThread.class);
       mockOdomThread.when(() -> PhoenixOdometryThread.getInstance(any())).thenReturn(mockThread);
@@ -378,7 +376,7 @@ public class SwerveDriveTest {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
         MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
-        MockedStatic<DriverStation> mockDS = mockStatic(DriverStation.class)) {
+        MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class)) {
 
       mockRobotConfig.when(RobotConfig::fromGUISettings).thenReturn(mock(RobotConfig.class));
 

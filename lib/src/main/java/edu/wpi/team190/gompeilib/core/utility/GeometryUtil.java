@@ -1,6 +1,6 @@
 package edu.wpi.team190.gompeilib.core.utility;
 
-import edu.wpi.first.math.geometry.*;
+import org.wpilib.math.geometry.*;
 
 public class GeometryUtil {
   /**

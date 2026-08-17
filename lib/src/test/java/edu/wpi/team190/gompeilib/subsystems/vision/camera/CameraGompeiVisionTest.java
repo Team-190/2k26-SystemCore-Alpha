@@ -3,16 +3,6 @@ package edu.wpi.team190.gompeilib.subsystems.vision.camera;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import edu.wpi.first.apriltag.AprilTag;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.numbers.N5;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionMultiTxTyObservation;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
@@ -25,6 +15,16 @@ import org.ejml.simple.SimpleMatrix;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
+import org.wpilib.driverstation.internal.DriverStationBackend;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.linalg.Matrix;
+import org.wpilib.math.numbers.N1;
+import org.wpilib.math.numbers.N3;
+import org.wpilib.math.numbers.N5;
+import org.wpilib.vision.apriltag.AprilTag;
+import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class CameraGompeiVisionTest {
 
@@ -34,7 +34,7 @@ public class CameraGompeiVisionTest {
 
     Matrix<N3, N3> cameraMatrix = new Matrix<>(new SimpleMatrix(3, 3));
     Matrix<N5, N1> distortion = new Matrix<>(new SimpleMatrix(5, 1));
-    Pose3d cameraPoseRel = new Pose3d(0.5, 0.0, 0.5, new edu.wpi.first.math.geometry.Rotation3d());
+    Pose3d cameraPoseRel = new Pose3d(0.5, 0.0, 0.5, new org.wpilib.math.geometry.Rotation3d());
 
     VisionConstants.GompeiVisionConfig config =
         VisionConstants.GompeiVisionConfig.builder()
@@ -49,7 +49,7 @@ public class CameraGompeiVisionTest {
             .build();
 
     AprilTag tag1 =
-        new AprilTag(1, new Pose3d(1.0, 2.0, 3.0, new edu.wpi.first.math.geometry.Rotation3d()));
+        new AprilTag(1, new Pose3d(1.0, 2.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
     AprilTagFieldLayout layout = new AprilTagFieldLayout(List.of(tag1), 16.0, 8.0);
 
     List<VisionPoseObservation> poses = new ArrayList<>();
@@ -72,7 +72,7 @@ public class CameraGompeiVisionTest {
     assertEquals(cameraPoseRel, camera.getCurrentCameraPose());
 
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
-        MockedStatic<DriverStation> mockDS = mockStatic(DriverStation.class)) {
+        MockedStatic<DriverStationBackend> mockDS = mockStatic(DriverStationBackend.class)) {
 
       // --- Test empty frames ---
       doAnswer(
@@ -104,7 +104,8 @@ public class CameraGompeiVisionTest {
           .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
 
       camera.periodic();
-      mockDS.verify(() -> DriverStation.reportWarning("FAILED TO CAPTURE FRAMES", false), times(1));
+      mockDS.verify(
+          () -> DriverStationBackend.reportWarning("FAILED TO CAPTURE FRAMES", false), times(1));
 
       // --- Test Case 1: One Pose (Valid, Inside Field) ---
       doAnswer(

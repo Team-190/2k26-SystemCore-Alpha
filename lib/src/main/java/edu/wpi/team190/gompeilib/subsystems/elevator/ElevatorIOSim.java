@@ -1,19 +1,18 @@
 package edu.wpi.team190.gompeilib.subsystems.elevator;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import java.util.Arrays;
+import org.wpilib.math.controller.ElevatorFeedforward;
+import org.wpilib.math.controller.ProfiledPIDController;
+import org.wpilib.math.system.Models;
+import org.wpilib.math.trajectory.TrapezoidProfile;
+import org.wpilib.simulation.ElevatorSim;
+import org.wpilib.units.measure.*;
 
 public class ElevatorIOSim implements ElevatorIO {
   private final ElevatorSim sim;
@@ -30,7 +29,7 @@ public class ElevatorIOSim implements ElevatorIO {
   public ElevatorIOSim(ElevatorConstants constants) {
     sim =
         new ElevatorSim(
-            LinearSystemId.createElevatorSystem(
+            Models.elevatorFromPhysicalConstants(
                 constants.elevatorParameters.ELEVATOR_MOTOR_CONFIG(),
                 constants.elevatorParameters.CARRIAGE_MASS_KG(),
                 constants.drumRadius,
@@ -69,17 +68,17 @@ public class ElevatorIOSim implements ElevatorIO {
     if (isClosedLoop) {
       appliedVolts =
           Volts.of(
-              feedback.calculate(sim.getPositionMeters())
+              feedback.calculate(sim.getPosition())
                   + feedforward.calculate((feedback.getSetpoint().velocity)));
     }
 
-    appliedVolts = Volts.of(MathUtil.clamp(appliedVolts.in(Volts), -12, 12));
+    appliedVolts = Volts.of(Math.clamp(appliedVolts.in(Volts), -12, 12));
 
     sim.setInputVoltage(appliedVolts.in(Volts));
     sim.update(GompeiLib.getLoopPeriod());
 
-    inputs.position = Meters.of(sim.getPositionMeters());
-    inputs.velocity = MetersPerSecond.of(sim.getVelocityMetersPerSecond());
+    inputs.position = Meters.of(sim.getPosition());
+    inputs.velocity = MetersPerSecond.of(sim.getVelocity());
     inputs.acceleration =
         MetersPerSecondPerSecond.of(-1.0); // TODO: Replace with calculation based on velocity
 
@@ -89,8 +88,8 @@ public class ElevatorIOSim implements ElevatorIO {
     inputs.temperatureCelsius = new double[constants.elevatorParameters.NUM_MOTORS()];
 
     Arrays.fill(inputs.appliedVolts, appliedVolts.in(Volts));
-    Arrays.fill(inputs.supplyCurrentAmps, sim.getCurrentDrawAmps());
-    Arrays.fill(inputs.torqueCurrentAmps, sim.getCurrentDrawAmps());
+    Arrays.fill(inputs.supplyCurrentAmps, sim.getCurrentDraw());
+    Arrays.fill(inputs.torqueCurrentAmps, sim.getCurrentDraw());
     Arrays.fill(inputs.temperatureCelsius, 0.0);
 
     inputs.positionGoalMeters = Meters.of(feedback.getGoal().position);
@@ -119,13 +118,13 @@ public class ElevatorIOSim implements ElevatorIO {
 
   @Override
   public boolean atPositionGoal(Distance positionReference) {
-    return Meters.of(sim.getPositionMeters())
+    return Meters.of(sim.getPosition())
         .isNear(positionReference, constants.constraints.goalTolerance().get());
   }
 
   @Override
   public void setPosition(Distance position) {
-    sim.setState(position.in(Meters), sim.getVelocityMetersPerSecond());
+    sim.setState(position.in(Meters), sim.getVelocity());
   }
 
   @Override

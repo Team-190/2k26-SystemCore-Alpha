@@ -1,7 +1,7 @@
 package edu.wpi.team190.gompeilib.core.state.localization;
 
-import edu.wpi.first.apriltag.AprilTag;
 import java.util.Set;
+import org.wpilib.vision.apriltag.AprilTag;
 
 /**
  * Defines a logical region of the field in terms of the AprilTags that are considered visible,

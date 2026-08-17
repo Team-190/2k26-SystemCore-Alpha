@@ -1,21 +1,21 @@
 package edu.wpi.team190.gompeilib.subsystems.elevator;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
-import edu.wpi.first.units.DistanceUnit;
-import edu.wpi.first.units.VoltageUnit;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.Subsystem;
+import org.wpilib.command2.sysid.SysIdRoutine;
+import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.VoltageUnit;
+import org.wpilib.units.measure.Distance;
+import org.wpilib.units.measure.Voltage;
 
 public class Elevator {
   public final ElevatorIO io;
@@ -96,10 +96,10 @@ public class Elevator {
     Logger.processInputs(aKitTopic, inputs);
 
     Logger.recordOutput(aKitTopic + "/State", currentState.name());
-    Logger.recordOutput(aKitTopic + "/Voltage Goal", voltageGoal.getSetpoint());
-    Logger.recordOutput(aKitTopic + "/Position Goal", positionGoal.getSetpoint());
-    Logger.recordOutput(aKitTopic + "/Voltage Offset", voltageGoal.getOffset());
-    Logger.recordOutput(aKitTopic + "/Position Offset", positionGoal.getOffset());
+    Logger.recordOutputMeasure(aKitTopic + "/Voltage Goal", voltageGoal.getSetpoint());
+    Logger.recordOutputMeasure(aKitTopic + "/Position Goal", positionGoal.getSetpoint());
+    Logger.recordOutputMeasure(aKitTopic + "/Voltage Offset", voltageGoal.getOffset());
+    Logger.recordOutputMeasure(aKitTopic + "/Position Offset", positionGoal.getOffset());
     Logger.recordOutput(aKitTopic + "/At Voltage Goal", atVoltageGoal());
     Logger.recordOutput(aKitTopic + "/At Position Goal", atPositionGoal());
 

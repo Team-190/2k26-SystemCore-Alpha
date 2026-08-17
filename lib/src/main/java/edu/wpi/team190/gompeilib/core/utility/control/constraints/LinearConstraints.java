@@ -1,12 +1,13 @@
 package edu.wpi.team190.gompeilib.core.utility.control.constraints;
 
-import edu.wpi.first.units.*;
 import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableMeasure;
 import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.NonNull;
+import org.wpilib.units.*;
 
 /** Specifically for Angular constraints (Degrees, Radians, Rotations). */
+@SuppressWarnings("unused")
 @Builder(setterPrefix = "with")
 public record LinearConstraints(
     LoggedTunableMeasure<DistanceUnit> goalTolerance,

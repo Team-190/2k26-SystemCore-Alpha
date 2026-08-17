@@ -2,10 +2,10 @@ package edu.wpi.team190.gompeilib.core.state.localization;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.first.apriltag.AprilTag;
-import edu.wpi.first.math.geometry.Pose3d;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.vision.apriltag.AprilTag;
 
 public class FieldZoneTest {
   @Test

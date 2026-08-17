@@ -1,12 +1,12 @@
 package edu.wpi.team190.gompeilib.core.utility.control.constraints;
 
-import edu.wpi.first.units.AngularAccelerationUnit;
-import edu.wpi.first.units.AngularVelocityUnit;
-import edu.wpi.first.units.Measure;
 import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableMeasure;
 import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.NonNull;
+import org.wpilib.units.AngularAccelerationUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.Measure;
 
 /** Specifically for Angular constraints (Degrees, Radians, Rotations). */
 @Builder(setterPrefix = "with")

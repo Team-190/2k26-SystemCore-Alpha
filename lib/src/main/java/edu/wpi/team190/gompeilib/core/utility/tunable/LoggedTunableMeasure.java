@@ -1,7 +1,5 @@
 package edu.wpi.team190.gompeilib.core.utility.tunable;
 
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Unit;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,6 +7,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+import org.wpilib.units.Measure;
+import org.wpilib.units.Unit;
 
 /**
  * Class for a tunable measure (unit-safe). Gets value from dashboard in tuning mode, returns
@@ -19,6 +19,7 @@ public class LoggedTunableMeasure<U extends Unit> implements Supplier<Measure<U>
 
   private final String key;
   private final U unit;
+  @SuppressWarnings("unused")
   private boolean hasDefault = false;
   private Measure<U> defaultValue;
   private LoggedNetworkNumber dashboardNumber;

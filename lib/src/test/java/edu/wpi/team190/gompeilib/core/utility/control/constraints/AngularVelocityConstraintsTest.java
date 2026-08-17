@@ -2,9 +2,9 @@ package edu.wpi.team190.gompeilib.core.utility.control.constraints;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.first.units.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
+import org.wpilib.units.*;
 
 public class AngularVelocityConstraintsTest {
   @Test

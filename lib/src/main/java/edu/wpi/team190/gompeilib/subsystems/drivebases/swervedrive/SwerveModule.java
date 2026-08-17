@@ -1,14 +1,13 @@
 package edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.Alert;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.math.util.Units;
 
 public class SwerveModule {
   private final SwerveDriveConstants driveConstants;
@@ -28,14 +27,14 @@ public class SwerveModule {
     driveDisconnectedAlert =
         new Alert(
             "Disconnected drive motor on module " + Integer.toString(index) + ".",
-            AlertType.kError);
+            Alert.Level.HIGH);
     turnDisconnectedAlert =
         new Alert(
-            "Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
+            "Disconnected turn motor on module " + Integer.toString(index) + ".", Alert.Level.HIGH);
     turnEncoderDisconnectedAlert =
         new Alert(
             "Disconnected turn encoder on module " + Integer.toString(index) + ".",
-            AlertType.kError);
+            Alert.Level.HIGH);
   }
 
   @Trace
@@ -62,17 +61,23 @@ public class SwerveModule {
     turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
   }
 
-  /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
+  /**
+   * Runs the module with the specified setpoint state.
+   *
+   * @return The optimized state that was actually applied, for callers that want to log it.
+   */
   @Trace
-  public void runSetpoint(SwerveModuleState state, SwerveModuleState torqueFeedforward) {
-    // Optimize veloci[ty setpoint
-    state.optimize(getAngle());
-    state.cosineScale(inputs.turnPosition);
+  public SwerveModuleVelocity runSetpoint(
+      SwerveModuleVelocity state, SwerveModuleVelocity torqueFeedforward) {
+    // Optimize velocity setpoint. SwerveModuleVelocity is immutable now, so these return new
+    // instances instead of mutating in place.
+    state = state.optimize(getAngle());
+    state = state.cosineScale(inputs.turnPosition);
 
-    double wheelTorqueNewtonMeters = torqueFeedforward.speedMetersPerSecond;
+    double wheelTorqueNewtonMeters = torqueFeedforward.velocity;
     // Apply setpoints
     io.setDriveVelocity(
-        state.speedMetersPerSecond / driveConstants.driveConfig.wheelRadiusMeters(),
+        state.velocity / driveConstants.driveConfig.wheelRadiusMeters(),
         driveConstants
             .driveConfig
             .driveModel()
@@ -80,6 +85,7 @@ public class SwerveModule {
                 wheelTorqueNewtonMeters
                     / driveConstants.driveConfig.frontLeft().DriveMotorGearRatio));
     io.setTurnPosition(state.angle);
+    return state;
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
@@ -122,8 +128,8 @@ public class SwerveModule {
 
   /** Returns the module state (turn angle and drive velocity). */
   @Trace
-  public SwerveModuleState getState() {
-    return new SwerveModuleState(getVelocityMetersPerSec(), getAngle());
+  public SwerveModuleVelocity getState() {
+    return new SwerveModuleVelocity(getVelocityMetersPerSec(), getAngle());
   }
 
   /** Returns the timestamps of the samples received this cycle. */

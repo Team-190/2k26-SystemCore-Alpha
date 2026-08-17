@@ -56,10 +56,16 @@ repositories {
     maven { url = uri(frcHomeMaven) }
     maven { url = uri("https://frcmaven.wpi.edu/artifactory/release-2027") }
     maven { url = uri("https://frcmaven.wpi.edu/artifactory/release") }
-    maven { url = uri("https://frcmaven.wpi.edu/artifactory/littletonrobotics-mvn-release") }
+    maven {
+        url = uri("https://frcmaven.wpi.edu/artifactory/littletonrobotics-mvn-release")
+    }
     maven { url = uri("https://maven.ctr-electronics.com/release/") }
-    maven { url = uri("https://frcmaven.wpi.edu/artifactory/sleipnirgroup-mvn-release/") }
-    maven { url = uri("https://3015rangerrobotics.github.io/pathplannerlib/repo") }
+    maven {
+        url = uri("https://frcmaven.wpi.edu/artifactory/sleipnirgroup-mvn-release/")
+    }
+    maven {
+        url = uri("https://3015rangerrobotics.github.io/pathplannerlib/repo")
+    }
 }
 
 apply from: "gradle/native-utils.gradle"

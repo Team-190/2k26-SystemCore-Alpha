@@ -1,16 +1,16 @@
 package edu.wpi.team190.gompeilib.subsystems.elevator;
 
-import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.units.Units.Meters;
+import static org.wpilib.units.Units.*;
+import static org.wpilib.units.Units.Meters;
 
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.logging.Trace;
+import org.wpilib.math.system.Models;
+import org.wpilib.simulation.ElevatorSim;
+import org.wpilib.system.RobotController;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.AngularVelocity;
 
 public class ElevatorIOTalonFXSim extends ElevatorIOTalonFX {
   private final ElevatorSim elevatorSim;
@@ -21,7 +21,7 @@ public class ElevatorIOTalonFXSim extends ElevatorIOTalonFX {
     super(constants);
     elevatorSim =
         new ElevatorSim(
-            LinearSystemId.createElevatorSystem(
+            Models.elevatorFromPhysicalConstants(
                 constants.elevatorParameters.ELEVATOR_MOTOR_CONFIG(),
                 constants.elevatorParameters.CARRIAGE_MASS_KG(),
                 constants.drumRadius,
@@ -47,13 +47,11 @@ public class ElevatorIOTalonFXSim extends ElevatorIOTalonFX {
 
     Angle rotorPosition =
         Angle.ofBaseUnits(
-            elevatorSim.getPositionMeters() * constants.elevatorGearRatio * constants.drumRadius,
+            elevatorSim.getPosition() * constants.elevatorGearRatio * constants.drumRadius,
             Radians);
     AngularVelocity rotorVelocity =
         AngularVelocity.ofBaseUnits(
-            elevatorSim.getVelocityMetersPerSecond()
-                * constants.elevatorGearRatio
-                * constants.drumRadius,
+            elevatorSim.getVelocity() * constants.elevatorGearRatio * constants.drumRadius,
             RadiansPerSecond);
     elevatorController.setRawRotorPosition(rotorPosition);
     elevatorController.setRotorVelocity(rotorVelocity);

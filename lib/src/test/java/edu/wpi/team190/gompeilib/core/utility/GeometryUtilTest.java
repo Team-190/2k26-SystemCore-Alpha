@@ -2,15 +2,16 @@ package edu.wpi.team190.gompeilib.core.utility;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.*;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
+import org.wpilib.math.geometry.*;
+import org.wpilib.math.util.Pair;
 
+@SuppressWarnings("unchecked")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class GeometryUtilTest {
   public static Translation2d[] TRANSLATION2D_CASES;

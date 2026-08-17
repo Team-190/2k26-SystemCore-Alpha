@@ -2,9 +2,9 @@ package edu.wpi.team190.gompeilib.subsystems.vision.io;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.team190.gompeilib.core.utility.LimelightHelpers;
 import org.junit.jupiter.api.Test;
+import org.wpilib.math.geometry.Pose2d;
 
 public class CameraIOTest {
 

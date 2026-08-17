@@ -1,15 +1,15 @@
 package edu.wpi.team190.gompeilib.core.utility.sysid;
 
-import static edu.wpi.first.units.Units.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.wpilib.units.Units.*;
 
-import edu.wpi.first.units.*;
-import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Subsystem;
+import org.wpilib.units.*;
+import org.wpilib.units.measure.*;
 
 public class CustomSysidRoutineTest {
   @Test
@@ -35,8 +35,7 @@ public class CustomSysidRoutineTest {
     CustomSysIdRoutine.Mechanism<VoltageUnit> mechanism2 =
         new CustomSysIdRoutine.Mechanism<>(drivenValue::set, mockSubsystem);
 
-    CustomSysIdRoutine<VoltageUnit> routine =
-        new CustomSysIdRoutine<>(config, mechanism, Volts.mutable(0));
+    CustomSysIdRoutine<VoltageUnit> routine = new CustomSysIdRoutine<>(config, mechanism);
 
     Command quasistaticFwd = routine.quasistatic(CustomSysIdRoutine.Direction.kForward);
     Command quasistaticRev = routine.quasistatic(CustomSysIdRoutine.Direction.kReverse);

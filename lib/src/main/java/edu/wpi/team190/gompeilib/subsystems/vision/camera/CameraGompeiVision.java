@@ -1,9 +1,5 @@
 package edu.wpi.team190.gompeilib.subsystems.vision.camera;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.team190.gompeilib.core.utility.GeometryUtil;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants.GompeiVisionConfig;
@@ -17,6 +13,10 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.experimental.ExtensionMethod;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.internal.DriverStationBackend;
+import org.wpilib.math.geometry.*;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 @ExtensionMethod(GeometryUtil.class)
 public class CameraGompeiVision extends Camera {
@@ -136,7 +136,7 @@ public class CameraGompeiVision extends Camera {
 
           break;
         default:
-          DriverStation.reportWarning("FAILED TO CAPTURE FRAMES", false);
+          DriverStationBackend.reportWarning("FAILED TO CAPTURE FRAMES", false);
           continue;
       }
 

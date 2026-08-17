@@ -1,10 +1,10 @@
 package edu.wpi.team190.gompeilib.subsystems.vision.io;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.team190.gompeilib.core.utility.LimelightHelpers;
 import edu.wpi.team190.gompeilib.subsystems.vision.camera.Camera;
 import java.util.Arrays;
 import org.littletonrobotics.junction.AutoLog;
+import org.wpilib.math.geometry.Pose2d;
 
 /**
  * An interface for the hardware implementation of a {@link Camera Camera}. Contains the methods

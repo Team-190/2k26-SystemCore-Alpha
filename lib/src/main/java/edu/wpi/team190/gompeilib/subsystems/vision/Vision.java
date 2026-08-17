@@ -1,13 +1,13 @@
 package edu.wpi.team190.gompeilib.subsystems.vision;
 
-import edu.wpi.first.apriltag.AprilTag;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.team190.gompeilib.core.utility.VirtualSubsystem;
 import edu.wpi.team190.gompeilib.subsystems.vision.camera.Camera;
 import java.util.function.Supplier;
 import lombok.Getter;
+import org.wpilib.networktables.NetworkTable;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.vision.apriltag.AprilTag;
+import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 /**
  * A class to contain all the {@link Camera Camera}s for a robot and methods to interact with them.
