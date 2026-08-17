@@ -4,10 +4,16 @@ plugins {
     id "com.gradleup.shadow" version "9.3.0"
     id "com.peterabeles.gversion" version "1.10"
     id "io.freefair.lombok" version "8.4"
-    id "com.diffplug.spotless" version "6.25.0"
+    id "com.diffplug.spotless" version "8.10.0"
     id "io.freefair.aspectj.post-compile-weaving" version "9.5.0"
     id "jacoco"
 }
+
+// spotless's greclipse() formatter resolves the whole Eclipse/Equo p2 platform to get the
+// Groovy-Eclipse compiler bundle; it prints "missing bundle/capability" noise for platform
+// pieces (macOS launchers, SWT SVG support) that aren't needed for headless formatting. Route
+// captured stdout to INFO so it's hidden at the default log level but still visible with --info.
+logging.captureStandardOutput(LogLevel.INFO)
 
 ext {
     deploySrcDir = "src/main/deploy"
@@ -188,7 +194,7 @@ tasks.withType(JavaCompile) {
 project.compileJava.dependsOn(createVersionFile)
 gversion {
     srcDir = "src/main/java/"
-    classPackage = "frc.robot"
+    classPackage = "first.robot"
     className = "BuildConstants"
     dateFormat = "yyyy-MM-dd HH:mm:ss z"
     timeZone = "America/New_York"

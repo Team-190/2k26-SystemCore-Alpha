@@ -3,11 +3,17 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id "com.diffplug.spotless" version "6.25.0"
+    id "com.diffplug.spotless" version "8.10.0"
     id "io.freefair.lombok" version "8.4"
     id "io.freefair.aspectj.post-compile-weaving" version "9.5.0"
     id "jacoco"
 }
+
+// spotless's greclipse() formatter resolves the whole Eclipse/Equo p2 platform to get the
+// Groovy-Eclipse compiler bundle; it prints "missing bundle/capability" noise for platform
+// pieces (macOS launchers, SWT SVG support) that aren't needed for headless formatting. Route
+// captured stdout to INFO so it's hidden at the default log level but still visible with --info.
+logging.captureStandardOutput(LogLevel.INFO)
 
 java {
     toolchain {
@@ -29,10 +35,16 @@ def osClassifier = {
 repositories {
     mavenCentral()
     maven { url = uri("https://frcmaven.wpi.edu/artifactory/release") }
-    maven { url = uri("https://frcmaven.wpi.edu/artifactory/littletonrobotics-mvn-release") }
+    maven {
+        url = uri("https://frcmaven.wpi.edu/artifactory/littletonrobotics-mvn-release")
+    }
     maven { url = uri("https://maven.ctr-electronics.com/release/") }
-    maven { url = uri("https://frcmaven.wpi.edu/artifactory/sleipnirgroup-mvn-release/") }
-    maven { url = uri("https://3015rangerrobotics.github.io/pathplannerlib/repo") }
+    maven {
+        url = uri("https://frcmaven.wpi.edu/artifactory/sleipnirgroup-mvn-release/")
+    }
+    maven {
+        url = uri("https://3015rangerrobotics.github.io/pathplannerlib/repo")
+    }
 }
 
 apply from: "gradle/native-utils.gradle"
