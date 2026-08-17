@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-5"
+    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-6"
     id "com.gradleup.shadow" version "9.3.0"
     id "com.peterabeles.gversion" version "1.10"
     id "io.freefair.lombok" version "8.4"
@@ -28,6 +28,13 @@ ext {
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+}
+
+// io.freefair.lombok 8.4's default Lombok (1.18.30) predates JDK 25 support and crashes
+// (NoSuchFieldException: com.sun.tools.javac.code.TypeTag :: UNKNOWN) on this toolchain.
+// Lombok added JDK 25 support in 1.18.42; pin to a newer release explicitly.
+lombok {
+    version = "1.18.46"
 }
 
 def ROBOT_MAIN_CLASS = "first.Main"
@@ -102,9 +109,11 @@ dependencies {
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
 
-    // This is required for the @Tracer annotations to work at runtime
-    implementation 'org.aspectj:aspectjrt:1.9.21'
-    implementation 'org.aspectj:aspectjtools:1.9.21'
+    // This is required for the @Tracer annotations to work at runtime.
+    // 1.9.21 can't target Java 25 bytecode ("target level should be in ... 21"); 1.9.25 is the
+    // first release whose weaver/compiler supports a Java 25 target.
+    implementation 'org.aspectj:aspectjrt:1.9.25.1'
+    implementation 'org.aspectj:aspectjtools:1.9.25.1'
 
     implementation project(':gompeilib')
     aspect project(':gompeilib')
@@ -131,7 +140,9 @@ dependencies {
 }
 
 jacoco {
-    toolVersion = "0.8.10"
+    // 0.8.10 can't instrument Java 25 bytecode (IllegalClassFormatException). Official Java 25
+    // support landed in 0.8.14.
+    toolVersion = "0.8.15"
 }
 
 test {
