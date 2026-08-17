@@ -10,9 +10,13 @@ plugins {
 }
 
 // spotless's greclipse() formatter resolves the whole Eclipse/Equo p2 platform to get the
-// Groovy-Eclipse compiler bundle; it prints "missing bundle/capability" noise for platform
-// pieces (macOS launchers, SWT SVG support) that aren't needed for headless formatting. Route
-// captured stdout to INFO so it's hidden at the default log level but still visible with --info.
+// Groovy-Eclipse compiler bundle. On the first run of a fresh Gradle daemon it logs
+// "missing bundle/capability" noise for platform pieces (macOS launchers, SWT SVG support)
+// that aren't needed for headless formatting; this is harmless and doesn't fail the build.
+// Note: this line does NOT suppress that noise — those lines come from the resolver's own
+// SLF4J warn/info logger calls (routed straight to the console by Gradle's logging), not raw
+// stdout writes, so captureStandardOutput can't intercept them. It only affects println/printf
+// output from this build script's own task actions (e.g. the JaCoCo summary below).
 logging.captureStandardOutput(LogLevel.INFO)
 
 ext {
@@ -156,7 +160,7 @@ jacocoTestReport {
                 def missed = counter.attribute('missed').toInteger()
                 def covered = counter.attribute('covered').toInteger()
                 def total = missed + covered
-                def percentage = total > 0 ? (covered * 100.0 / total) : 0.0
+                def percentage = total> 0 ? (covered * 100.0 / total) : 0.0
                 printf("%-12s: %.2f%% (%d/%d)%n", type, percentage, covered, total)
             }
             println "================================================\n"
@@ -204,7 +208,9 @@ gversion {
 // Create commit with working changes on event branches
 tasks.register('eventDeploy') {
     doLast {
-        if (project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
+        if (project.gradle.startParameter.taskNames.any({
+            it.toLowerCase().contains("deploy")
+        })) {
             def branchPrefix = "event"
             def branch = 'git branch --show-current'.execute().text.trim()
             def commitMessage = "Update at '${new Date().toString()}'"
@@ -254,7 +260,7 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         greclipse()
-        indentWithSpaces(4)
+        leadingTabsToSpaces(4)
         trimTrailingWhitespace()
         endWithNewline()
     }
@@ -271,7 +277,7 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         trimTrailingWhitespace()
-        indentWithSpaces(2)
+        leadingTabsToSpaces(2)
         endWithNewline()
     }
 }
