@@ -5,7 +5,7 @@ plugins {
     id "com.peterabeles.gversion" version "1.10"
     id "io.freefair.lombok" version "8.4"
     id "com.diffplug.spotless" version "6.25.0"
-    id "io.freefair.aspectj.post-compile-weaving" version "8.6"
+    id "io.freefair.aspectj.post-compile-weaving" version "9.5.0"
     id "jacoco"
 }
 
@@ -57,7 +57,7 @@ deploy {
                     files = project.fileTree('src/main/deploy')
                     directory = '/home/systemcore/deploy'
                     deleteOldFiles = true // Change to true to delete files on systemcore that no
-                                           // longer exist in deploy directory of this project
+                    // longer exist in deploy directory of this project
                 }
             }
         }
@@ -82,6 +82,8 @@ task(replayWatch, type: JavaExec) {
     mainClass = "org.littletonrobotics.junction.ReplayWatch"
     classpath = sourceSets.main.runtimeClasspath
 }
+
+import groovy.json.JsonSlurper
 
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
@@ -227,7 +229,7 @@ tasks.register('eventDeploy') {
 createVersionFile.dependsOn(eventDeploy)
 
 // Spotless formatting
-project.compileJava.dependsOn(spotlessApply)
+// project.compileJava.dependsOn(spotlessApply)
 spotless {
     java {
         target fileTree(".") {
