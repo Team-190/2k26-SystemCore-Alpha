@@ -1,0 +1,12 @@
+name: Pull GompeiLib
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    uses: Team-190/.github/.github/workflows/syncgompeilib.yaml@main
+    with:
+      direction: pull
+    secrets:
+      GOMPEILIB_SYNC: ${{ secrets.GOMPEILIB_SYNC }}
