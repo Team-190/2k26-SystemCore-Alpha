@@ -10,7 +10,6 @@ package edu.wpi.team190.gompeilib.core.utility.control;
 import lombok.Getter;
 import lombok.Setter;
 import org.wpilib.math.geometry.Twist2d;
-import org.wpilib.math.util.MathUtil;
 
 /** Ramps up and down to setpoint for velocity closed loop control */
 public class LinearProfile {

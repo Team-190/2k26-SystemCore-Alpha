@@ -19,8 +19,10 @@ public class LoggedTunableMeasure<U extends Unit> implements Supplier<Measure<U>
 
   private final String key;
   private final U unit;
+
   @SuppressWarnings("unused")
   private boolean hasDefault = false;
+
   private Measure<U> defaultValue;
   private LoggedNetworkNumber dashboardNumber;
   private final Map<Integer, Measure<U>> lastHasChangedValues = new HashMap<>();
