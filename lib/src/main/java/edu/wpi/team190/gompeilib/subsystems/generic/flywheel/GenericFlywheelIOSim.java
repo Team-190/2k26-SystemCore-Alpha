@@ -10,7 +10,6 @@ import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import java.util.Arrays;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.Models;
 import org.wpilib.simulation.FlywheelSim;
 import org.wpilib.units.measure.*;
@@ -87,7 +86,7 @@ public class GenericFlywheelIOSim implements GenericFlywheelIO {
             RadiansPerSecond.of(motorSim.getAngularVelocity())
                 .times(Seconds.of(GompeiLib.getLoopPeriod())));
 
-    inputs.position = Rotation2d.fromRadians(accumulatedPosition.in(Radians));
+    inputs.position = accumulatedPosition;
     inputs.velocity = RadiansPerSecond.of(motorSim.getAngularVelocity());
 
     int numMotors =

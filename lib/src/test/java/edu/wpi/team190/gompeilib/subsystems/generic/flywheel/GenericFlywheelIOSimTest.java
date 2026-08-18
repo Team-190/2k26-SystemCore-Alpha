@@ -85,7 +85,7 @@ public class GenericFlywheelIOSimTest {
 
     // Initial check
     sim.updateInputs(inputs);
-    assertEquals(0.0, inputs.position.getRadians(), 1e-6);
+    assertEquals(0.0, inputs.position.in(Units.Radians), 1e-6);
     assertEquals(0.0, inputs.velocity.in(Units.RadiansPerSecond), 1e-6);
     assertEquals(3, inputs.appliedVolts.length);
 

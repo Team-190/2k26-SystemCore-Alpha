@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
@@ -15,6 +16,8 @@ import org.wpilib.units.Units;
 public class ArmConstantsTest {
   @Test
   public void testConstantsAndBuilder() {
+    GompeiLib.init(null, false, 0.02);
+
     DCMotor motor = DCMotor.getNeo550(1);
     ArmConstants.ArmParameters params =
         ArmConstants.ArmParameters.builder()
@@ -64,7 +67,7 @@ public class ArmConstantsTest {
     assertFalse(constants.enableFOC);
     assertEquals(InvertedValue.Clockwise_Positive, constants.invertedValue);
     assertEquals(0.5, constants.voltageOffsetStep.in(Units.Volts));
-    assertEquals(5.0, constants.positionOffsetStep.getDegrees());
+    assertEquals(5.0, constants.positionOffsetStep.getDegrees(), 0.01);
 
     // Test record fields on ArmParameters
     assertEquals(motor, params.motorConfig());

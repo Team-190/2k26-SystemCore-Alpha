@@ -16,7 +16,6 @@ import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocit
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixUtil;
 import java.util.ArrayList;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.units.measure.*;
 
 public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
@@ -174,7 +173,7 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
 
   @Override
   public void updateInputs(GenericFlywheelIOInputs inputs) {
-    inputs.position = Rotation2d.fromRotations(positionRotations.getValueAsDouble());
+    inputs.position = positionRotations.getValue();
     inputs.velocity = velocityRotationsPerSecond.getValue();
 
     inputs.appliedVolts = new double[appliedVolts.size()];

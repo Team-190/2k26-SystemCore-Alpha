@@ -4,7 +4,6 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import java.util.Arrays;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.Models;
 import org.wpilib.simulation.DCMotorSim;
 import org.wpilib.units.measure.Angle;
@@ -44,7 +43,7 @@ public class GenericRollerIOSim implements GenericRollerIO {
             accumulatedPosition.in(Radians)
                 + (motorSim.getAngularVelocity() * GompeiLib.getLoopPeriod()));
 
-    inputs.position = Rotation2d.fromRadians(accumulatedPosition.in(Radians));
+    inputs.position = accumulatedPosition;
     inputs.velocity = RadiansPerSecond.of(motorSim.getAngularVelocity());
 
     int numMotors =

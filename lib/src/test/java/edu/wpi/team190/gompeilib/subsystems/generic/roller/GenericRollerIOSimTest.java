@@ -51,7 +51,7 @@ public class GenericRollerIOSimTest {
 
     // Initial check
     sim.updateInputs(inputs);
-    assertEquals(0.0, inputs.position.getRadians(), 1e-6);
+    assertEquals(0.0, inputs.position.in(Units.Radians), 1e-6);
     assertEquals(0.0, inputs.velocity.in(Units.RadiansPerSecond), 1e-6);
     assertEquals(1, inputs.appliedVolts.length);
 
@@ -65,6 +65,6 @@ public class GenericRollerIOSimTest {
     // Let simulation update and check position and velocity change
     sim.updateInputs(inputs);
     assertTrue(inputs.velocity.in(Units.RadiansPerSecond) > 0.0);
-    assertTrue(inputs.position.getRadians() > 0.0);
+    assertTrue(inputs.position.in(Units.Radians) > 0.0);
   }
 }

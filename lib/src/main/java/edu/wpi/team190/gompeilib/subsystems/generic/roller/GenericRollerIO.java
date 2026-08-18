@@ -3,14 +3,14 @@ package edu.wpi.team190.gompeilib.subsystems.generic.roller;
 import static org.wpilib.units.Units.*;
 
 import org.littletonrobotics.junction.AutoLog;
-import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Voltage;
 
 public interface GenericRollerIO {
   @AutoLog
   public static class GenericRollerIOInputs {
-    public Rotation2d position = new Rotation2d();
+    public Angle position = Radians.of(0.0);
     public AngularVelocity velocity = RadiansPerSecond.of(0.0);
 
     public double[] appliedVolts = new double[] {};

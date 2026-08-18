@@ -222,7 +222,7 @@ jacocoTestReport {
                 def covered = counter.attribute('covered').toInteger()
                 def total = missed + covered
                 def percentage = total> 0 ? (covered * 100.0 / total) : 0.0
-                
+
                 printf("%-12s: %.2f%% (%d/%d)%n", type, percentage, covered, total)
             }
             println "==============================================\n"

@@ -14,8 +14,8 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.Subsystem;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.units.*;
+import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Voltage;
@@ -145,7 +145,7 @@ public class GenericFlywheel {
     return inputs.velocity;
   }
 
-  public Rotation2d getFlywheelPosition() {
+  public Angle getFlywheelPosition() {
     return inputs.position;
   }
 

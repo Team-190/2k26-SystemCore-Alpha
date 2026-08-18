@@ -12,7 +12,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixUtil;
 import java.util.ArrayList;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.units.measure.*;
 
 public class GenericRollerIOTalonFX implements GenericRollerIO {
@@ -132,7 +131,7 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
 
   @Override
   public void updateInputs(GenericRollerIOInputs inputs) {
-    inputs.position = Rotation2d.fromRotations(positionRotations.getValueAsDouble());
+    inputs.position = positionRotations.getValue();
     inputs.velocity = velocityRotationsPerSecond.getValue();
 
     inputs.appliedVolts = new double[appliedVolts.size()];

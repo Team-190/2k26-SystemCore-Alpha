@@ -104,7 +104,7 @@ public class GenericFlywheelIOTalonFXTest {
     StatusSignal<Double> velocityErrorRotationsPerSecond = mock(StatusSignal.class);
     StatusSignal<Integer> closedLoopSlot = mock(StatusSignal.class);
 
-    when(positionRotations.getValueAsDouble()).thenReturn(10.0);
+    when(positionRotations.getValue()).thenReturn(Units.Rotations.of(10));
     when(velocityRotationsPerSecond.getValue()).thenReturn(Units.RotationsPerSecond.of(5.0));
     when(velocityRotationsPerSecond.getValueAsDouble()).thenReturn(5.0);
     when(velocityRotationsPerSecond.isNear(any(), any())).thenReturn(true);
@@ -159,7 +159,7 @@ public class GenericFlywheelIOTalonFXTest {
 
       // Verify the allocated inputs length matches leader + 2 followers
       assertEquals(3, inputs.appliedVolts.length);
-      assertEquals(10.0, inputs.position.getRotations(), 0.01);
+      assertEquals(10.0, inputs.position.in(Units.Rotations), 0.01);
       assertEquals(5.0, inputs.velocity.in(Units.RotationsPerSecond), 0.01);
       assertEquals(6.0, inputs.appliedVolts[0], 0.01);
       assertEquals(15.0, inputs.supplyCurrentAmps[0], 0.01);
