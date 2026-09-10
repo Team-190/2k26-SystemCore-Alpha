@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.wpilib.units.Units.*;
 
@@ -7,38 +7,38 @@ import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import java.util.Arrays;
-import org.wpilib.math.controller.ElevatorFeedforward;
+import org.wpilib.math.controller.ExtensionFeedforward;
 import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.system.Models;
 import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.simulation.ElevatorSim;
+import org.wpilib.simulation.ExtensionSim;
 import org.wpilib.units.measure.*;
 
-public class ElevatorIOSim implements ElevatorIO {
-  private final ElevatorSim sim;
+public class ExtensionIOSim implements ExtensionIO {
+  private final ExtensionSim sim;
 
   private Voltage appliedVolts;
   private boolean isClosedLoop;
   private GainSlot gainSlot;
 
   private final ProfiledPIDController feedback;
-  private ElevatorFeedforward feedforward;
+  private ExtensionFeedforward feedforward;
 
-  private final ElevatorConstants constants;
+  private final ExtensionConstants constants;
 
-  public ElevatorIOSim(ElevatorConstants constants) {
+  public ExtensionIOSim(ExtensionConstants constants) {
     sim =
-        new ElevatorSim(
-            Models.elevatorFromPhysicalConstants(
-                constants.elevatorParameters.ELEVATOR_MOTOR_CONFIG(),
-                constants.elevatorParameters.CARRIAGE_MASS_KG(),
+        new ExtensionSim(
+            Models.extensionFromPhysicalConstants(
+                constants.extensionParameters.ELEVATOR_MOTOR_CONFIG(),
+                constants.extensionParameters.CARRIAGE_MASS_KG(),
                 constants.drumRadius,
-                constants.elevatorGearRatio),
-            constants.elevatorParameters.ELEVATOR_MOTOR_CONFIG(),
-            constants.elevatorParameters.MIN_HEIGHT().in(Meters),
-            constants.elevatorParameters.MAX_HEIGHT().in(Meters),
+                constants.extensionGearRatio),
+            constants.extensionParameters.ELEVATOR_MOTOR_CONFIG(),
+            constants.extensionParameters.MIN_HEIGHT().in(Meters),
+            constants.extensionParameters.MAX_HEIGHT().in(Meters),
             true,
-            constants.elevatorParameters.MIN_HEIGHT().in(Meters));
+            constants.extensionParameters.MIN_HEIGHT().in(Meters));
 
     appliedVolts = Volts.of(0.0);
     isClosedLoop = true;
@@ -54,7 +54,7 @@ public class ElevatorIOSim implements ElevatorIO {
                 constants.constraints.maxAcceleration().get().in(MetersPerSecondPerSecond)));
 
     feedforward =
-        new ElevatorFeedforward(
+        new ExtensionFeedforward(
             constants.slot0Gains.kS().get(),
             constants.slot0Gains.kG().get(),
             constants.slot0Gains.kV().get(),
@@ -64,7 +64,7 @@ public class ElevatorIOSim implements ElevatorIO {
   }
 
   @Override
-  public void updateInputs(ElevatorIOInputs inputs) {
+  public void updateInputs(ExtensionIOInputs inputs) {
     if (isClosedLoop) {
       appliedVolts =
           Volts.of(
@@ -82,10 +82,10 @@ public class ElevatorIOSim implements ElevatorIO {
     inputs.acceleration =
         MetersPerSecondPerSecond.of(-1.0); // TODO: Replace with calculation based on velocity
 
-    inputs.appliedVolts = new double[constants.elevatorParameters.NUM_MOTORS()];
-    inputs.supplyCurrentAmps = new double[constants.elevatorParameters.NUM_MOTORS()];
-    inputs.torqueCurrentAmps = new double[constants.elevatorParameters.NUM_MOTORS()];
-    inputs.temperatureCelsius = new double[constants.elevatorParameters.NUM_MOTORS()];
+    inputs.appliedVolts = new double[constants.extensionParameters.NUM_MOTORS()];
+    inputs.supplyCurrentAmps = new double[constants.extensionParameters.NUM_MOTORS()];
+    inputs.torqueCurrentAmps = new double[constants.extensionParameters.NUM_MOTORS()];
+    inputs.temperatureCelsius = new double[constants.extensionParameters.NUM_MOTORS()];
 
     Arrays.fill(inputs.appliedVolts, appliedVolts.in(Volts));
     Arrays.fill(inputs.supplyCurrentAmps, sim.getCurrentDraw());
@@ -147,7 +147,7 @@ public class ElevatorIOSim implements ElevatorIO {
   public void updateGains(Gains gains, GainSlot gainSlot) {
     feedback.setPID(gains.kP().get(), gains.kI().get(), gains.kD().get());
     feedforward =
-        new ElevatorFeedforward(
+        new ExtensionFeedforward(
             gains.kS().get(), gains.kG().get(), gains.kV().get(), gains.kA().get());
   }
 
