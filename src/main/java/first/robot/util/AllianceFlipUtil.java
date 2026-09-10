@@ -4,7 +4,7 @@ import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.DriverStation;
+import org.wpilib.driverstation.MatchState;
 import first.robot.FieldConstants;
 
 public class AllianceFlipUtil {
@@ -53,10 +53,7 @@ public class AllianceFlipUtil {
   }
 
   public static boolean shouldFlip() {
-    return true;
-    // return DriverStation.getAlliance().isPresent()
-    //     && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    return MatchState.getAlliance().isPresent()
+         && MatchState.getAlliance().get() == Alliance.RED;
   }
-
-//TODO: fix the alliancefliputil
 }
