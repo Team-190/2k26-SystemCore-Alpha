@@ -9,6 +9,9 @@ import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
@@ -20,9 +23,9 @@ import org.wpilib.units.Units;
 import org.wpilib.units.measure.Distance;
 
 public class ElevatorTest {
-  private ElevatorIO io;
+  private ExtensionIO io;
   private Subsystem subsystem;
-  private ElevatorConstants constants;
+  private ExtensionConstants constants;
 
   @BeforeEach
   public void setUp() {
@@ -33,28 +36,28 @@ public class ElevatorTest {
     }
     GompeiLib.init(RobotMode.SIM, false, 0.02);
 
-    io = mock(ElevatorIO.class);
+    io = mock(ExtensionIO.class);
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
     when(subsystem.getName()).thenReturn("TestElevatorSubsystem");
 
     DCMotor motor = DCMotor.getNeo550(1);
-    ElevatorConstants.ElevatorParameters params =
-        ElevatorConstants.ElevatorParameters.builder()
-            .withELEVATOR_MOTOR_CONFIG(motor)
+    ExtensionConstants.ExtensionParameters params =
+        ExtensionConstants.ExtensionParameters.builder()
+            .withEXTENSION_MOTOR_CONFIG(motor)
             .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_HEIGHT(Units.Meters.of(0.0))
-            .withMAX_HEIGHT(Units.Meters.of(1.5))
+            .withMIN_LENGTH(Units.Meters.of(0.0))
+            .withMAX_LENGTH(Units.Meters.of(1.5))
             .withNUM_MOTORS(1)
             .build();
 
     constants =
-        ElevatorConstants.builder()
+        ExtensionConstants.builder()
             .withLeaderCANID(5)
-            .withElevatorGearRatio(10.0)
+            .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
-            .withElevatorSupplyCurrentLimit(40.0)
-            .withElevatorStatorCurrentLimit(40.0)
-            .withElevatorParameters(params)
+            .withExtensionSupplyCurrentLimit(40.0)
+            .withExtensionStatorCurrentLimit(40.0)
+            .withExtensionParameters(params)
             .withSlot0Gains(Gains.fromDoubles().withPrefix("slot0").build())
             .withConstraints(
                 LinearConstraints.fromMeasures()
@@ -63,6 +66,7 @@ public class ElevatorTest {
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
                     .withGoalTolerance(Units.Meters.of(0.05))
                     .build())
+            .withVerticalGravity(false)
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .withHeightOffsetStep(Units.Meters.of(0.05))
             .build();
@@ -71,7 +75,7 @@ public class ElevatorTest {
   @Test
   public void testElevator() {
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
-      Elevator elevator = new Elevator(constants, subsystem, 0, io);
+      Extension elevator = new Extension(constants, subsystem, 0, io);
 
       assertNotNull(elevator);
 
@@ -100,7 +104,7 @@ public class ElevatorTest {
               Units.Meters.of(0.0),
               Units.Meters.of(1.5)));
 
-      elevator.getElevatorPosition();
+      elevator.getExtensionPosition();
 
       // Test delegates
       elevator.setPosition(Units.Meters.of(0.4));

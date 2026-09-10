@@ -7,13 +7,16 @@ import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOSim;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 
 public class ElevatorIOSimTest {
-  private ElevatorConstants constants;
+  private ExtensionConstants constants;
 
   @BeforeEach
   public void setUp() {
@@ -25,23 +28,23 @@ public class ElevatorIOSimTest {
     GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     DCMotor motor = DCMotor.getNeo550(1);
-    ElevatorConstants.ElevatorParameters params =
-        ElevatorConstants.ElevatorParameters.builder()
-            .withELEVATOR_MOTOR_CONFIG(motor)
+    ExtensionConstants.ExtensionParameters params =
+        ExtensionConstants.ExtensionParameters.builder()
+            .withEXTENSION_MOTOR_CONFIG(motor)
             .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_HEIGHT(Units.Meters.of(0.0))
-            .withMAX_HEIGHT(Units.Meters.of(1.5))
+            .withMIN_LENGTH(Units.Meters.of(0.0))
+            .withMAX_LENGTH(Units.Meters.of(1.5))
             .withNUM_MOTORS(2)
             .build();
 
     constants =
-        ElevatorConstants.builder()
+        ExtensionConstants.builder()
             .withLeaderCANID(5)
-            .withElevatorGearRatio(10.0)
+            .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
-            .withElevatorSupplyCurrentLimit(40.0)
-            .withElevatorStatorCurrentLimit(40.0)
-            .withElevatorParameters(params)
+            .withExtensionSupplyCurrentLimit(40.0)
+            .withExtensionStatorCurrentLimit(40.0)
+            .withExtensionParameters(params)
             .withSlot0Gains(
                 Gains.fromDoubles()
                     .withPrefix("slot0")
@@ -64,6 +67,7 @@ public class ElevatorIOSimTest {
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
                     .withGoalTolerance(Units.Meters.of(0.05))
                     .build())
+            .withVerticalGravity(false)
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .withHeightOffsetStep(Units.Meters.of(0.05))
             .build();
@@ -71,8 +75,8 @@ public class ElevatorIOSimTest {
 
   @Test
   public void testElevatorIOSim() {
-    ElevatorIOSim sim = new ElevatorIOSim(constants);
-    ElevatorIO.ElevatorIOInputs inputs = new ElevatorIO.ElevatorIOInputs();
+    ExtensionIOSim sim = new ExtensionIOSim(constants);
+    ExtensionIO.ExtensionIOInputs inputs = new ExtensionIO.ExtensionIOInputs();
 
     // Initial state set position
     sim.setPosition(Units.Meters.of(0.5));

@@ -1,6 +1,8 @@
 package edu.wpi.team190.gompeilib.subsystems.elevator;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -14,6 +16,9 @@ import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFX;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -28,7 +33,7 @@ import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
 public class ElevatorIOTalonFXTest {
-  private ElevatorConstants constants;
+  private ExtensionConstants constants;
 
   @BeforeEach
   public void setUp() {
@@ -40,23 +45,23 @@ public class ElevatorIOTalonFXTest {
     GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     DCMotor motor = DCMotor.getNeo550(1);
-    ElevatorConstants.ElevatorParameters params =
-        ElevatorConstants.ElevatorParameters.builder()
-            .withELEVATOR_MOTOR_CONFIG(motor)
+    ExtensionConstants.ExtensionParameters params =
+        ExtensionConstants.ExtensionParameters.builder()
+            .withEXTENSION_MOTOR_CONFIG(motor)
             .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_HEIGHT(Units.Meters.of(0.0))
-            .withMAX_HEIGHT(Units.Meters.of(1.5))
+            .withMIN_LENGTH(Units.Meters.of(0.0))
+            .withMAX_LENGTH(Units.Meters.of(1.5))
             .withNUM_MOTORS(1)
             .build();
 
     constants =
-        ElevatorConstants.builder()
+        ExtensionConstants.builder()
             .withLeaderCANID(5)
-            .withElevatorGearRatio(10.0)
+            .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
-            .withElevatorSupplyCurrentLimit(40.0)
-            .withElevatorStatorCurrentLimit(40.0)
-            .withElevatorParameters(params)
+            .withExtensionSupplyCurrentLimit(40.0)
+            .withExtensionStatorCurrentLimit(40.0)
+            .withExtensionParameters(params)
             .withSlot0Gains(
                 Gains.fromDoubles()
                     .withPrefix("slot0")
@@ -79,6 +84,7 @@ public class ElevatorIOTalonFXTest {
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
                     .withGoalTolerance(Units.Meters.of(0.05))
                     .build())
+            .withVerticalGravity(false)
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .withHeightOffsetStep(Units.Meters.of(0.05))
             .build();
@@ -143,8 +149,8 @@ public class ElevatorIOTalonFXTest {
                       anyDouble(), any(BaseStatusSignal[].class)))
           .thenReturn(null);
 
-      ElevatorIOTalonFX io = new ElevatorIOTalonFX(constants);
-      ElevatorIO.ElevatorIOInputs inputs = new ElevatorIO.ElevatorIOInputs();
+      ExtensionIOTalonFX io = new ExtensionIOTalonFX(constants);
+      ExtensionIO.ExtensionIOInputs inputs = new ExtensionIO.ExtensionIOInputs();
 
       io.updateInputs(inputs);
 

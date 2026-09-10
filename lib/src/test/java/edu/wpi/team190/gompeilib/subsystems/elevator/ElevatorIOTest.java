@@ -5,14 +5,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.Units;
 
 public class ElevatorIOTest {
   @Test
   public void testElevatorIODefaults() {
-    ElevatorIO io = new ElevatorIO() {};
-    ElevatorIO.ElevatorIOInputs inputs = new ElevatorIO.ElevatorIOInputs();
+    ExtensionIO io = new ExtensionIO() {};
+    ExtensionIO.ExtensionIOInputs inputs = new ExtensionIO.ExtensionIOInputs();
 
     // Call defaults - should not throw
     io.updateInputs(inputs);
