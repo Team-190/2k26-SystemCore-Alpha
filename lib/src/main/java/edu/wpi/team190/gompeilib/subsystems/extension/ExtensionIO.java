@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.wpilib.units.Units.*;
 
@@ -8,10 +8,10 @@ import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import org.littletonrobotics.junction.AutoLog;
 import org.wpilib.units.measure.*;
 
-public interface ElevatorIO {
+public interface ExtensionIO {
 
   @AutoLog
-  public static class ElevatorIOInputs {
+  public static class ExtensionIOInputs {
     public Distance position = Meters.of(0.0);
     public LinearVelocity velocity = MetersPerSecond.of(0.0);
     public LinearAcceleration acceleration = MetersPerSecondPerSecond.of(0.0);
@@ -29,28 +29,28 @@ public interface ElevatorIO {
   }
 
   /**
-   * Updates the inputs for the elevator.
+   * Updates the inputs for the extension.
    *
    * @param inputs The inputs to update.
    */
-  default void updateInputs(ElevatorIOInputs inputs) {}
+  default void updateInputs(ExtensionIOInputs inputs) {}
 
   /**
-   * Sets the voltage for the elevator.
+   * Sets the voltage for the extension.
    *
-   * @param voltageGoal The voltage of the elevator in volts.
+   * @param voltageGoal The voltage of the extension in volts.
    */
   default void setVoltageGoal(Voltage voltageGoal) {}
 
   /**
-   * Sets the position goal of the elevator.
+   * Sets the position goal of the extension.
    *
-   * @param positionGoal The position goal of the elevator in meters.
+   * @param positionGoal The position goal of the extension in meters.
    */
   default void setPositionGoal(Distance positionGoal) {}
 
   /**
-   * Checks if the voltage of the elevator matches the volts argument
+   * Checks if the voltage of the extension matches the volts argument
    *
    * @param voltageReference The voltage to check against
    * @return True if the voltage matches, false otherwise
@@ -70,26 +70,26 @@ public interface ElevatorIO {
   }
 
   /**
-   * Sets the position of the elevator.
+   * Sets the position of the extension.
    *
    * @param position The position to set.
    */
   default void setPosition(Distance position) {}
 
   /**
-   * @param gainSlot The CTRE gain slot to set the elevator to.
+   * @param gainSlot The CTRE gain slot to set the extension to.
    */
   default void setGainSlot(GainSlot gainSlot) {}
 
   /**
-   * Sets the gains for the elevator.
+   * Sets the gains for the extension.
    *
    * @param gains the gains to update
    */
   default void updateGains(Gains gains, GainSlot gainSlot) {}
 
   /**
-   * Sets the constraints for the elevator.
+   * Sets the constraints for the extension.
    *
    * @param constraints the constraints to update
    */
