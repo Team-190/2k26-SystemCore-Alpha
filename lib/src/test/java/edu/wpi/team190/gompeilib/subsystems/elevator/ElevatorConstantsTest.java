@@ -55,6 +55,7 @@ public class ElevatorConstantsTest {
             .withConstraints(constraints)
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .withHeightOffsetStep(Units.Meters.of(0.05))
+            .withVerticalGravity(true)
             .build();
 
     assertNotNull(constants);
