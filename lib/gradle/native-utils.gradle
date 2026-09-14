@@ -1,10 +1,18 @@
-// Detect OS for FRC Natives
+// Detect OS/arch for FRC Natives
 def osClassifier = {
     def osName = System.getProperty("os.name").toLowerCase()
     if (osName.contains("win")) return "windowsx86-64"
     if (osName.contains("mac")) return "osxuniversal"
     return "linuxx86-64"
 }()
+
+//TODO: Remove this once the phoenix6 native dependencies are available for MacOS
+
+def isMac = System.getProperty("os.name").toLowerCase().contains("mac")
+
+configurations {
+    nativeDeps
+}
 
 configurations {
     nativeDeps
@@ -27,9 +35,14 @@ dependencies {
     nativeDeps "org.wpilib.datalog:datalog-cpp:${wpilibVer}:${osClassifier}@zip"
 
     def phoenix6Ver = libs.versions.phoenix6.get()
-    nativeDeps "com.ctre.phoenix6:tools:${phoenix6Ver}:${osClassifier}@zip"
+
+    //TODO: Remove this once the phoenix6 native dependencies are available for MacOS
+
+    if (!isMac) {
+        nativeDeps "com.ctre.phoenix6:tools:${phoenix6Ver}:${osClassifier}@zip"
+        nativeDeps "com.ctre.phoenix6:api-cpp:${phoenix6Ver}:${osClassifier}@zip"
+    }
     nativeDeps "com.ctre.phoenix6.sim:tools-sim:${phoenix6Ver}:${osClassifier}@zip"
-    nativeDeps "com.ctre.phoenix6:api-cpp:${phoenix6Ver}:${osClassifier}@zip"
     nativeDeps "com.ctre.phoenix6.sim:api-cpp-sim:${phoenix6Ver}:${osClassifier}@zip"
 }
 
