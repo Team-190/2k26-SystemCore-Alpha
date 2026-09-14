@@ -2,7 +2,6 @@ package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionState;
 import org.junit.jupiter.api.Test;
 
 public class ExtensionStateTest {
