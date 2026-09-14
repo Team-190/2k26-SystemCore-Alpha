@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -22,7 +22,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.Distance;
 
-public class ElevatorTest {
+public class ExtensionTest {
   private ExtensionIO io;
   private Subsystem subsystem;
   private ExtensionConstants constants;

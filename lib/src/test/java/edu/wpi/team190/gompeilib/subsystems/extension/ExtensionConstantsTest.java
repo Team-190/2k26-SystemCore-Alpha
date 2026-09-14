@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 
-public class ElevatorConstantsTest {
+public class ExtensionConstantsTest {
   @Test
   public void testConstantsAndBuilder() {
     GompeiLib.init(null, false, 0.02);

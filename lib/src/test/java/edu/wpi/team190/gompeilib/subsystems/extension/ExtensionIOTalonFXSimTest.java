@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,14 +11,14 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
-import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFXSim;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -32,7 +32,7 @@ import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
-public class ElevatorIOTalonFXTest {
+public class ExtensionIOTalonFXSimTest {
   private ExtensionConstants constants;
 
   @BeforeEach
@@ -91,7 +91,7 @@ public class ElevatorIOTalonFXTest {
   }
 
   @Test
-  public void testElevatorIOTalonFX() {
+  public void testElevatorIOTalonFXSim() {
     TalonFXConfigurator configurator = mock(TalonFXConfigurator.class);
     when(configurator.apply(any(TalonFXConfiguration.class))).thenReturn(StatusCode.OK);
     when(configurator.apply(any(TalonFXConfiguration.class), anyDouble()))
@@ -124,6 +124,9 @@ public class ElevatorIOTalonFXTest {
     when(positionErrorRotations.getValueAsDouble()).thenReturn(0.01);
     when(closedLoopSlot.getValue()).thenReturn(0);
 
+    TalonFXSimState simState = mock(TalonFXSimState.class);
+    when(simState.getMotorVoltage()).thenReturn(6.0);
+
     try (MockedConstruction<TalonFX> mockTalon =
             mockConstruction(
                 TalonFX.class,
@@ -139,6 +142,7 @@ public class ElevatorIOTalonFXTest {
                   when(mock.getClosedLoopReference()).thenReturn(positionSetpointRotations);
                   when(mock.getClosedLoopError()).thenReturn(positionErrorRotations);
                   when(mock.getClosedLoopSlot()).thenReturn(closedLoopSlot);
+                  when(mock.getSimState()).thenReturn(simState);
                 });
         MockedStatic<BaseStatusSignal> mockBss = mockStatic(BaseStatusSignal.class)) {
 
@@ -149,44 +153,17 @@ public class ElevatorIOTalonFXTest {
                       anyDouble(), any(BaseStatusSignal[].class)))
           .thenReturn(null);
 
-      ExtensionIOTalonFX io = new ExtensionIOTalonFX(constants);
+      ExtensionIOTalonFXSim sim = new ExtensionIOTalonFXSim(constants);
       ExtensionIO.ExtensionIOInputs inputs = new ExtensionIO.ExtensionIOInputs();
 
-      io.updateInputs(inputs);
+      sim.updateInputs(inputs);
 
       assertEquals(10.0, inputs.position.in(Units.Meters), 0.01);
       assertEquals(1.5, inputs.velocity.in(Units.MetersPerSecond), 0.01);
-      assertEquals(6.0, inputs.appliedVolts[0], 0.01);
-      assertEquals(15.0, inputs.supplyCurrentAmps[0], 0.01);
-      assertEquals(12.0, inputs.torqueCurrentAmps[0], 0.01);
-      assertEquals(45.0, inputs.temperatureCelsius[0], 0.01);
-      assertEquals(0.5, inputs.positionSetpointMeters.in(Units.Meters), 0.001);
-      assertEquals(GainSlot.ZERO, inputs.gainSlot);
 
-      io.setVoltageGoal(Units.Volts.of(8.0));
-      io.setPositionGoal(Units.Meters.of(1.0));
-      assertTrue(io.atVoltageGoal(Units.Volts.of(6.0)));
-      assertFalse(io.atVoltageGoal(Units.Volts.of(0.0)));
-      assertTrue(io.atPositionGoal(Units.Meters.of(10.0)));
-      assertFalse(io.atPositionGoal(Units.Meters.of(5.0)));
-
-      io.setPosition(Units.Meters.of(0.5));
-
-      io.setGainSlot(GainSlot.ZERO);
-      io.setGainSlot(GainSlot.ONE);
-      io.setGainSlot(GainSlot.TWO);
-
-      io.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
-      io.updateGains(Gains.fromDoubles().withPrefix("slot1").build(), GainSlot.ONE);
-      io.updateGains(Gains.fromDoubles().withPrefix("slot2").build(), GainSlot.TWO);
-
-      io.updateConstraints(
-          LinearConstraints.fromMeasures()
-              .withPrefix("constraints")
-              .withGoalTolerance(Units.Meters.of(0.01))
-              .withMaxVelocity(Units.MetersPerSecond.of(1.0))
-              .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(1.0))
-              .build());
+      verify(simState).setSupplyVoltage(anyDouble());
+      verify(simState).setRawRotorPosition(any(Angle.class));
+      verify(simState).setRotorVelocity(any(AngularVelocity.class));
     }
   }
 }

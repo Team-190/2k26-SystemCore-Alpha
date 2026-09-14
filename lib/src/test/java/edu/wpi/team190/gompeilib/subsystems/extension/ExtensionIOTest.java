@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,7 +9,7 @@ import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.Units;
 
-public class ElevatorIOTest {
+public class ExtensionIOTest {
   @Test
   public void testElevatorIODefaults() {
     ExtensionIO io = new ExtensionIO() {};

@@ -1,11 +1,11 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionState;
 import org.junit.jupiter.api.Test;
 
-public class ElevatorStateTest {
+public class ExtensionStateTest {
   @Test
   public void testEnum() {
     assertEquals(3, ExtensionState.values().length);
