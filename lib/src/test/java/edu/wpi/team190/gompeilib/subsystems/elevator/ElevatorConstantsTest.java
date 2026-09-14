@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.subsystems.elevator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
@@ -12,6 +13,7 @@ import org.wpilib.units.Units;
 public class ElevatorConstantsTest {
   @Test
   public void testConstantsAndBuilder() {
+    GompeiLib.init(null, false, 0.02);
     DCMotor motor = DCMotor.getNeo550(1);
     ExtensionConstants.ExtensionParameters params =
         ExtensionConstants.ExtensionParameters.builder()
