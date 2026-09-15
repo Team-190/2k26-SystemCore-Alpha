@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.wpilib.units.Units.*;
 
@@ -19,7 +19,7 @@ import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixUtil;
 import java.util.ArrayList;
 import org.wpilib.units.measure.*;
 
-public class ElevatorIOTalonFX implements ElevatorIO {
+public class ExtensionIOTalonFX implements ExtensionIO {
 
   // Core hardware components
   protected final TalonFX talonFX;
@@ -27,7 +27,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
   // Configuration
   public final TalonFXConfiguration config;
-  protected final ElevatorConstants constants;
+  protected final ExtensionConstants constants;
 
   // Sensor inputs
   private StatusSignal<Angle> positionRotations;
@@ -48,7 +48,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private MotionMagicVoltage positionVoltageRequest;
   private VoltageOut voltageRequest;
 
-  public ElevatorIOTalonFX(ElevatorConstants constants) {
+  public ExtensionIOTalonFX(ExtensionConstants constants) {
 
     this.constants = constants;
 
@@ -56,45 +56,49 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     talonFX = new TalonFX(constants.leaderCANID, constants.canBus);
 
     // Create follower motor array (define length)
-    followTalonFX = new TalonFX[constants.elevatorParameters.NUM_MOTORS() - 1];
+    followTalonFX = new TalonFX[constants.extensionParameters.NUM_MOTORS() - 1];
 
     config = new TalonFXConfiguration();
+
     config.Slot0.withKP(constants.slot0Gains.kP().get())
         .withKD(constants.slot0Gains.kD().get())
         .withKS(constants.slot0Gains.kS().get())
         .withKV(constants.slot0Gains.kV().get())
         .withKA(constants.slot0Gains.kA().get())
-        .withKG(constants.slot0Gains.kG().get())
-        .withGravityType(GravityTypeValue.Elevator_Static);
+        .withKG(constants.slot0Gains.kG().get());
 
     config.Slot1.withKP(constants.slot1Gains.kP().get())
         .withKD(constants.slot1Gains.kD().get())
         .withKS(constants.slot1Gains.kS().get())
         .withKV(constants.slot1Gains.kV().get())
         .withKA(constants.slot1Gains.kA().get())
-        .withKG(constants.slot1Gains.kG().get())
-        .withGravityType(GravityTypeValue.Elevator_Static);
+        .withKG(constants.slot1Gains.kG().get());
 
     config.Slot2.withKP(constants.slot2Gains.kP().get())
         .withKD(constants.slot2Gains.kD().get())
         .withKS(constants.slot2Gains.kS().get())
         .withKV(constants.slot2Gains.kV().get())
         .withKA(constants.slot2Gains.kA().get())
-        .withKG(constants.slot2Gains.kG().get())
-        .withGravityType(GravityTypeValue.Elevator_Static);
+        .withKG(constants.slot2Gains.kG().get());
 
-    config.CurrentLimits.withSupplyCurrentLimit(constants.elevatorSupplyCurrentLimit)
+    if (constants.verticalGravity) {
+      config.Slot0.withGravityType(GravityTypeValue.Elevator_Static);
+      config.Slot1.withGravityType(GravityTypeValue.Elevator_Static);
+      config.Slot2.withGravityType(GravityTypeValue.Elevator_Static);
+    }
+
+    config.CurrentLimits.withSupplyCurrentLimit(constants.extensionSupplyCurrentLimit)
         .withSupplyCurrentLimitEnable(true)
-        .withStatorCurrentLimit(constants.elevatorStatorCurrentLimit)
+        .withStatorCurrentLimit(constants.extensionStatorCurrentLimit)
         .withStatorCurrentLimitEnable(true);
 
     config.Feedback.SensorToMechanismRatio =
-        constants.elevatorGearRatio / (2 * Math.PI * constants.drumRadius);
+        constants.extensionGearRatio / (2 * Math.PI * constants.drumRadius);
 
     config.SoftwareLimitSwitch.withForwardSoftLimitThreshold(
-            constants.elevatorParameters.MAX_HEIGHT().in(Meters))
+            constants.extensionParameters.MAX_LENGTH().in(Meters))
         .withForwardSoftLimitEnable(true)
-        .withReverseSoftLimitThreshold(constants.elevatorParameters.MIN_HEIGHT().in(Meters))
+        .withReverseSoftLimitThreshold(constants.extensionParameters.MIN_LENGTH().in(Meters))
         .withReverseSoftLimitEnable(true);
 
     config.MotionMagic.withMotionMagicAcceleration(
@@ -181,7 +185,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   }
 
   @Override
-  public void updateInputs(ElevatorIOInputs inputs) {
+  public void updateInputs(ExtensionIOInputs inputs) {
 
     // CTRE status signals are natively in rotations, but setting sensor to mechanism ratio
     // including the circumference of the drum allows us to transform into meters directly from

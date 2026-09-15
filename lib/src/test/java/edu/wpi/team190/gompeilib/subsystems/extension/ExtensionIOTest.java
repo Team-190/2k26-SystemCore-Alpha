@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -8,11 +8,11 @@ import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.Units;
 
-public class ElevatorIOTest {
+public class ExtensionIOTest {
   @Test
-  public void testElevatorIODefaults() {
-    ElevatorIO io = new ElevatorIO() {};
-    ElevatorIO.ElevatorIOInputs inputs = new ElevatorIO.ElevatorIOInputs();
+  public void testExtensionIODefaults() {
+    ExtensionIO io = new ExtensionIO() {};
+    ExtensionIO.ExtensionIOInputs inputs = new ExtensionIO.ExtensionIOInputs();
 
     // Call defaults - should not throw
     io.updateInputs(inputs);

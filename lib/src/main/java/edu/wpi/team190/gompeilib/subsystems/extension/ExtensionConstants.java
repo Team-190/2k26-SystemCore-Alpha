@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
@@ -12,20 +12,22 @@ import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Voltage;
 
 @Builder(setterPrefix = "with")
-public class ElevatorConstants {
+public class ExtensionConstants {
   @NonNull public final Integer leaderCANID;
   @NonNull public final CANBus canBus = new CANBus();
-  @NonNull public final Double elevatorGearRatio;
+  @NonNull public final Double extensionGearRatio;
   @NonNull public final Double drumRadius;
 
-  @NonNull public final Double elevatorSupplyCurrentLimit;
-  @NonNull public final Double elevatorStatorCurrentLimit;
+  @NonNull public final Double extensionSupplyCurrentLimit;
+  @NonNull public final Double extensionStatorCurrentLimit;
 
-  @NonNull public final ElevatorParameters elevatorParameters;
+  @NonNull public final ExtensionParameters extensionParameters;
   @NonNull public final Gains slot0Gains;
   @Builder.Default public final Gains slot1Gains = Gains.builder().build();
   @Builder.Default public final Gains slot2Gains = Gains.builder().build();
   @NonNull public final LinearConstraints constraints;
+
+  @NonNull public final Boolean verticalGravity;
 
   @Singular(value = "alignedFollowerCANID")
   @NonNull
@@ -39,10 +41,10 @@ public class ElevatorConstants {
   @NonNull public final Distance heightOffsetStep;
 
   @Builder(setterPrefix = "with")
-  public record ElevatorParameters(
-      @NonNull DCMotor ELEVATOR_MOTOR_CONFIG,
+  public record ExtensionParameters(
+      @NonNull DCMotor EXTENSION_MOTOR_CONFIG,
       @NonNull Double CARRIAGE_MASS_KG,
-      @NonNull Distance MIN_HEIGHT,
-      @NonNull Distance MAX_HEIGHT,
+      @NonNull Distance MIN_LENGTH,
+      @NonNull Distance MAX_LENGTH,
       @NonNull Integer NUM_MOTORS) {}
 }
