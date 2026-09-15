@@ -10,7 +10,7 @@ import org.wpilib.units.Units;
 
 public class ExtensionIOTest {
   @Test
-  public void testElevatorIODefaults() {
+  public void testExtensionIODefaults() {
     ExtensionIO io = new ExtensionIO() {};
     ExtensionIO.ExtensionIOInputs inputs = new ExtensionIO.ExtensionIOInputs();
 

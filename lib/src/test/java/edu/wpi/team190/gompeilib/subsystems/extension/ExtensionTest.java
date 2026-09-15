@@ -73,9 +73,9 @@ public class ExtensionTest {
   @Test
   public void testExtension() throws Exception {
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
-      Extension elevator = new Extension(constants, subsystem, 0, io);
+      Extension extension = new Extension(constants, subsystem, 0, io);
 
-      Extension elevator2 =
+      Extension extension2 =
           new Extension(
               constants,
               subsystem,
@@ -87,46 +87,46 @@ public class ExtensionTest {
                   Units.Meters.of(0.0),
                   Units.Meters.of(1.5)));
 
-      assertNotNull(elevator);
+      assertNotNull(extension);
 
       // Test periodic in IDLE state
-      elevator.periodic();
+      extension.periodic();
       verify(io).updateInputs(any());
 
       // Test open loop control state
-      elevator.setVoltageGoal(Units.Volts.of(6.0));
-      elevator.periodic();
+      extension.setVoltageGoal(Units.Volts.of(6.0));
+      extension.periodic();
       verify(io).setVoltageGoal(Units.Volts.of(6.0));
 
       // Test closed loop control state
-      elevator.setPositionGoal(Units.Meters.of(1.0));
-      elevator.periodic();
+      extension.setPositionGoal(Units.Meters.of(1.0));
+      extension.periodic();
       verify(io).setPositionGoal(any(Distance.class));
 
       // Test setters/getters
-      elevator.setVoltageGoal(
+      extension.setVoltageGoal(
           new Setpoint<>(
               Units.Volts.of(2.0), Units.Volts.of(0.1), Units.Volts.of(-12), Units.Volts.of(12)));
-      elevator.setPositionGoal(
+      extension.setPositionGoal(
           new Setpoint<>(
               Units.Meters.of(0.5),
               Units.Meters.of(0.01),
               Units.Meters.of(0.0),
               Units.Meters.of(1.5)));
 
-      elevator.getExtensionPosition();
+      extension.getExtensionPosition();
 
       // Test delegates
-      elevator.setPosition(Units.Meters.of(0.4));
+      extension.setPosition(Units.Meters.of(0.4));
       verify(io).setPosition(Units.Meters.of(0.4));
 
-      elevator.setGainSlot(GainSlot.ONE);
+      extension.setGainSlot(GainSlot.ONE);
       verify(io).setGainSlot(GainSlot.ONE);
 
-      elevator.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
+      extension.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
       verify(io).updateGains(any(), eq(GainSlot.ZERO));
 
-      elevator.updateConstraints(
+      extension.updateConstraints(
           LinearConstraints.fromMeasures()
               .withPrefix("constraints")
               .withGoalTolerance(Units.Meters.of(0.01))
@@ -137,17 +137,17 @@ public class ExtensionTest {
 
       // test goals
       when(io.atVoltageGoal(any())).thenReturn(true);
-      assertTrue(elevator.atVoltageGoal());
-      assertTrue(elevator.atVoltageGoal(Units.Volts.of(2.0)));
+      assertTrue(extension.atVoltageGoal());
+      assertTrue(extension.atVoltageGoal(Units.Volts.of(2.0)));
 
       when(io.atPositionGoal(any())).thenReturn(true);
-      assertTrue(elevator.atPositionGoal());
-      assertTrue(elevator.atPositionGoal(Units.Meters.of(0.5)));
+      assertTrue(extension.atPositionGoal());
+      assertTrue(extension.atPositionGoal(Units.Meters.of(0.5)));
 
-      Command waitCmd = elevator.waitUntilAtGoal();
+      Command waitCmd = extension.waitUntilAtGoal();
       assertNotNull(waitCmd);
 
-      Command sysIdCmd = elevator.runSysIdRoutine();
+      Command sysIdCmd = extension.runSysIdRoutine();
       assertNotNull(sysIdCmd);
     }
   }
