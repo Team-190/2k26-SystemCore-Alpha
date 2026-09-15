@@ -71,7 +71,7 @@ public class ExtensionIOSimTest {
   }
 
   @Test
-  public void testElevatorIOSim() {
+  public void testExtensionIOSim() {
     ExtensionIOSim sim = new ExtensionIOSim(constants);
     ExtensionIO.ExtensionIOInputs inputs = new ExtensionIO.ExtensionIOInputs();
 

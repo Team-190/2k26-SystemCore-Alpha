@@ -16,6 +16,7 @@ import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.Distance;
 
@@ -35,7 +36,7 @@ public class ExtensionTest {
 
     io = mock(ExtensionIO.class);
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
-    when(subsystem.getName()).thenReturn("TestElevatorSubsystem");
+    when(subsystem.getName()).thenReturn("TestExtensionSubsystem");
 
     DCMotor motor = DCMotor.getNeo550(1);
     ExtensionConstants.ExtensionParameters params =
@@ -70,9 +71,21 @@ public class ExtensionTest {
   }
 
   @Test
-  public void testElevator() {
+  public void testExtension() {
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
       Extension elevator = new Extension(constants, subsystem, 0, io);
+
+      Extension elevator2 =
+          new Extension(
+              constants,
+              subsystem,
+              0,
+              io,
+              new Setpoint<DistanceUnit>(
+                  Units.Meters.of(0.5),
+                  Units.Meters.of(0.01),
+                  Units.Meters.of(0.0),
+                  Units.Meters.of(1.5)));
 
       assertNotNull(elevator);
 

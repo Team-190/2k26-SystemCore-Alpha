@@ -88,7 +88,7 @@ public class ExtensionIOTalonFXTest {
   }
 
   @Test
-  public void testElevatorIOTalonFX() {
+  public void testExtensionIOTalonFX() {
     TalonFXConfigurator configurator = mock(TalonFXConfigurator.class);
     when(configurator.apply(any(TalonFXConfiguration.class))).thenReturn(StatusCode.OK);
     when(configurator.apply(any(TalonFXConfiguration.class), anyDouble()))
