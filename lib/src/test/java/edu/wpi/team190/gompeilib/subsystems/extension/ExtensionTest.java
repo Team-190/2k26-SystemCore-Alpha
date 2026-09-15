@@ -15,6 +15,7 @@ import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
+import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
@@ -71,7 +72,7 @@ public class ExtensionTest {
   }
 
   @Test
-  public void testExtension() {
+  public void testExtension() throws Exception {
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
       Extension elevator = new Extension(constants, subsystem, 0, io);
 

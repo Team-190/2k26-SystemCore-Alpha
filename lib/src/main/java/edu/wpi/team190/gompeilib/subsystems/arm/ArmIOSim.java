@@ -143,6 +143,8 @@ public class ArmIOSim implements ArmIO {
       case TWO:
         feedback.setPID(constants.slot2Gains.kP().get(), 0.0, constants.slot2Gains.kD().get());
         break;
+      default:
+        throw new IllegalStateException("Unknown gain slot: " + gainSlot);
     }
   }
 

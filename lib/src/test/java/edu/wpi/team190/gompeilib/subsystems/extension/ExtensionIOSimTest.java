@@ -132,4 +132,27 @@ public class ExtensionIOSimTest {
     assertTrue(sim.atPositionGoal(Units.Meters.of(0.8)));
     assertFalse(sim.atPositionGoal(Units.Meters.of(1.2)));
   }
+
+  @Test
+  public void testExtensionIOSimUnknownGainSlotThrows() throws Exception {
+    ExtensionIOSim sim = new ExtensionIOSim(constants);
+
+    // GainSlot has exactly 3 values, all handled by setGainSlot's switch, so its compiler-
+    // generated $SwitchMap lookup table has no unmapped (default-triggering) entry under normal
+    // use. Corrupt that lookup table directly to force the switch's default branch, proving it
+    // throws rather than silently doing nothing.
+    Class<?> switchMapClass = Class.forName(ExtensionIOSim.class.getName() + "$1");
+    java.lang.reflect.Field field =
+        switchMapClass.getDeclaredField(
+            "$SwitchMap$edu$wpi$team190$gompeilib$core$utility$phoenix$GainSlot");
+    field.setAccessible(true);
+    int[] switchMap = (int[]) field.get(null);
+    int original = switchMap[GainSlot.ZERO.ordinal()];
+    switchMap[GainSlot.ZERO.ordinal()] = 0;
+    try {
+      assertThrows(IllegalStateException.class, () -> sim.setGainSlot(GainSlot.ZERO));
+    } finally {
+      switchMap[GainSlot.ZERO.ordinal()] = original;
+    }
+  }
 }

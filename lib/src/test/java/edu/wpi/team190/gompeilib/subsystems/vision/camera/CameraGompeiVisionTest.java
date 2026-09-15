@@ -50,7 +50,9 @@ public class CameraGompeiVisionTest {
 
     AprilTag tag1 =
         new AprilTag(1, new Pose3d(1.0, 2.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
-    AprilTagFieldLayout layout = new AprilTagFieldLayout(List.of(tag1), 16.0, 8.0);
+    AprilTag tag2 =
+        new AprilTag(2, new Pose3d(5.0, 5.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
+    AprilTagFieldLayout layout = new AprilTagFieldLayout(List.of(tag1, tag2), 16.0, 8.0);
 
     List<VisionPoseObservation> poses = new ArrayList<>();
     List<VisionMultiTxTyObservation> txtys = new ArrayList<>();
@@ -238,6 +240,314 @@ public class CameraGompeiVisionTest {
       poses.clear();
       camera.periodic();
       assertFalse(poses.isEmpty());
+
+      // --- Test frame present but reporting zero targets: covers the values[0]==0 skip ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames = new double[][] {new double[] {0.0, 1.0, 2.0}};
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertTrue(poses.isEmpty());
+
+      // --- Test Case 2: Ambiguous errors (neither pose confident enough to select) ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        2.0,
+                        0.3, // values[0]=2, error0=0.3
+                        1.0,
+                        2.0,
+                        0.0, // pose0 translation
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0, // pose0 quaternion
+                        0.3, // error1=0.3 (too close to error0 to be confident)
+                        1.0,
+                        5.0,
+                        0.0, // pose1 translation
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0 // pose1 quaternion
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertTrue(poses.isEmpty());
+
+      // --- Test Case 2: Confident selection, resolved by rotation proximity favoring pose 0 ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        2.0, 0.05, // values[0]=2, error0=0.05
+                        1.0, 2.0, 0.0, // pose0 translation
+                        1.0, 0.0, 0.0, 0.0, // pose0 quaternion (no rotation, matches current pose)
+                        0.5, // error1=0.5
+                        1.0, 5.0, 0.0, // pose1 translation
+                        0.7071, 0.0, 0.0, 0.7071, // pose1 quaternion (90 degrees about Z)
+                        1.0, // tagId=1
+                        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertFalse(poses.isEmpty());
+
+      // --- Test Case 1: Far outside field boundary (unambiguous) ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0, 0.0, 1.0e7, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.1, 0.2, 0.3, 0.4, 0.5,
+                        0.6, 0.7, 0.8, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertTrue(poses.isEmpty());
+
+      // --- Test Case 1: Outside field via negative X ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0, 0.0, -1.0e7, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.1, 0.2, 0.3, 0.4,
+                        0.5, 0.6, 0.7, 0.8, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertTrue(poses.isEmpty());
+
+      // --- Test Case 1: Outside field via negative Y ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0, 0.0, 1.0, -1.0e7, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.1, 0.2, 0.3, 0.4,
+                        0.5, 0.6, 0.7, 0.8, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertTrue(poses.isEmpty());
+
+      // --- Test Case 1: Outside field via large positive Y ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0, 0.0, 1.0, 1.0e7, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.1, 0.2, 0.3, 0.4, 0.5,
+                        0.6, 0.7, 0.8, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertTrue(poses.isEmpty());
+
+      // --- Test Case 1: Valid, in-bounds pose referencing a tag not in the field layout ---
+      // (covers the tagPoses.isEmpty() branch, since tag 99 isn't in the layout)
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0, 99.0, 0.1, 0.2, 0.3, 0.4, 0.5,
+                        0.6, 0.7, 0.8, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertEquals(1, poses.size());
+      assertTrue(poses.get(0).tagIds().isEmpty());
+
+      // --- Test Case 1: Two valid tags, both present in the field layout (multi-tag branch) ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0,
+                        0.0,
+                        1.0,
+                        2.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0, // header
+                        1.0,
+                        0.1,
+                        0.2,
+                        0.3,
+                        0.4,
+                        0.5,
+                        0.6,
+                        0.7,
+                        0.8,
+                        2.0, // tag 1 chunk
+                        2.0,
+                        0.1,
+                        0.2,
+                        0.3,
+                        0.4,
+                        0.5,
+                        0.6,
+                        0.7,
+                        0.8,
+                        3.0 // tag 2 chunk
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      txtys.clear();
+      camera.periodic();
+      assertFalse(poses.isEmpty());
+      assertEquals(2, txtys.size());
+      assertEquals(2, poses.get(0).tagIds().size());
+
+      // --- Test Case 1: More tag data chunks than valid targets, and a misaligned array length
+      // --- (covers the "more tag data than expected" and "not a multiple of 10" warnings) ---
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.subsystems.vision.io.GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0,
+                        0.0,
+                        1.0,
+                        2.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0, // header
+                        1.0,
+                        0.1,
+                        0.2,
+                        0.3,
+                        0.4,
+                        0.5,
+                        0.6,
+                        0.7,
+                        0.8,
+                        2.0, // tag 1 chunk (valid)
+                        99.0,
+                        0.1,
+                        0.2,
+                        0.3,
+                        0.4,
+                        0.5,
+                        0.6,
+                        0.7,
+                        0.8,
+                        3.0, // tag 99 (not in layout)
+                        0.0 // dangling trailing value, misaligns the chunk length
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      txtys.clear();
+      camera.periodic();
+      assertFalse(poses.isEmpty());
+      assertEquals(1, txtys.size());
     }
   }
 }
