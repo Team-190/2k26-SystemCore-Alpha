@@ -149,6 +149,10 @@ public class ExtensionTest {
 
       Command sysIdCmd = extension.runSysIdRoutine();
       assertNotNull(sysIdCmd);
+
+      sysIdCmd.initialize();
+      sysIdCmd.execute();
+      sysIdCmd.end(true);
     }
   }
 }
