@@ -7,17 +7,17 @@
 
 package first.robot;
 
-import org.wpilib.vision.apriltag.AprilTag;
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
-import org.wpilib.vision.apriltag.AprilTagFields;
+import first.robot.util.AllianceFlipUtil;
+import java.util.List;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rectangle2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.geometry.Translation3d;
 import org.wpilib.math.util.Units;
-import java.util.List;
-import first.robot.util.AllianceFlipUtil;
+import org.wpilib.vision.apriltag.AprilTag;
+import org.wpilib.vision.apriltag.AprilTagFieldLayout;
+import org.wpilib.vision.apriltag.AprilTagFields;
 
 /**
  * Contains information for location of field element and other useful reference points.

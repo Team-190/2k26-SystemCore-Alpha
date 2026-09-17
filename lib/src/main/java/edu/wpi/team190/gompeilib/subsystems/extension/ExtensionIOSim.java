@@ -7,11 +7,11 @@ import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import java.util.Arrays;
-import org.wpilib.math.controller.ExtensionFeedforward;
+import org.wpilib.math.controller.ElevatorFeedforward;
 import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.system.Models;
 import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.simulation.ExtensionSim;
+import org.wpilib.simulation.ElevatorSim;
 import org.wpilib.units.measure.*;
 
 public class ExtensionIOSim implements ExtensionIO {
@@ -22,7 +22,7 @@ public class ExtensionIOSim implements ExtensionIO {
   private GainSlot gainSlot;
 
   private final ProfiledPIDController feedback;
-  private ExtensionFeedforward feedforward;
+  private ElevatorFeedforward feedforward;
 
   private final ExtensionConstants constants;
 
@@ -54,7 +54,7 @@ public class ExtensionIOSim implements ExtensionIO {
                 constants.constraints.maxAcceleration().get().in(MetersPerSecondPerSecond)));
 
     feedforward =
-        new ExtensionFeedforward(
+        new ElevatorFeedforward(
             constants.slot0Gains.kS().get(),
             constants.slot0Gains.kG().get(),
             constants.slot0Gains.kV().get(),
@@ -149,7 +149,7 @@ public class ExtensionIOSim implements ExtensionIO {
   public void updateGains(Gains gains, GainSlot gainSlot) {
     feedback.setPID(gains.kP().get(), gains.kI().get(), gains.kD().get());
     feedforward =
-        new ExtensionFeedforward(
+        new ElevatorFeedforward(
             gains.kS().get(), gains.kG().get(), gains.kV().get(), gains.kA().get());
   }
 

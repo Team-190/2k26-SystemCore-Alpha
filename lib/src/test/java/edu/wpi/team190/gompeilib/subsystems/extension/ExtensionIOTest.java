@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
-
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.Units;
 

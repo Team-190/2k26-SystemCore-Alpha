@@ -1,11 +1,11 @@
 package first.robot.util;
 
+import first.robot.FieldConstants;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.MatchState;
-import first.robot.FieldConstants;
 
 public class AllianceFlipUtil {
   public static double fieldWidth = FieldConstants.fieldWidth;
@@ -53,7 +53,6 @@ public class AllianceFlipUtil {
   }
 
   public static boolean shouldFlip() {
-    return MatchState.getAlliance().isPresent()
-         && MatchState.getAlliance().get() == Alliance.RED;
+    return MatchState.getAlliance().isPresent() && MatchState.getAlliance().get() == Alliance.RED;
   }
 }
