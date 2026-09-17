@@ -7,8 +7,8 @@
 
 package first.robot.util;
 
-import org.wpilib.system.Timer;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.system.Timer;
 
 /** Utility class for logging code execution times. */
 public class InternalLoggedTracer {

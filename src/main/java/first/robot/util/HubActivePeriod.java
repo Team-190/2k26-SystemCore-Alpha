@@ -1,11 +1,11 @@
 package first.robot.util;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.MatchState;
 import org.wpilib.driverstation.RobotState;
 import org.wpilib.system.Timer;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 public class HubActivePeriod {
 

@@ -7,11 +7,6 @@
 
 package first.robot.util;
 
-import org.wpilib.util.sendable.Sendable;
-import org.wpilib.util.sendable.SendableBuilder;
-import org.wpilib.driverstation.DriverStationErrors;
-import org.wpilib.system.Timer;
-import org.wpilib.smartdashboard.SmartDashboard;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,6 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import lombok.Getter;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.smartdashboard.SmartDashboard;
+import org.wpilib.system.Timer;
+import org.wpilib.util.sendable.Sendable;
+import org.wpilib.util.sendable.SendableBuilder;
 
 /** Class for managing persistent alerts to be sent over NetworkTables. */
 public class Alert {
@@ -69,7 +69,7 @@ public class Alert {
       switch (type) {
         case ERROR:
           DriverStationErrors.reportError(text, false);
-          
+
           break;
         case WARNING:
           DriverStationErrors.reportWarning(text, false);

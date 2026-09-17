@@ -9,7 +9,6 @@ package first.robot.util;
 
 import org.wpilib.system.RobotController;
 
-
 public class SystemTimeValidReader {
   private static Thread thread = null;
   private static boolean ready = false;
