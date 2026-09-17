@@ -182,27 +182,13 @@ jacocoTestReport {
                 '**/*AutoLogged.class',
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
+                '**/Elevator*.class',
+                '**/PoseEstimator*.class',
                 '**/LimelightHelpers*.class',
                 '**/*TalonFX.class',
                 '**/*Pigeon2.class',
                 '**/*SysId*.class',
-                '**/Phoenix*.class',
-                '**/CameraMovingLimelight*.class',
-                '**/CameraStaticLimelight*.class',
-                '**/CameraGompeiVision*.class',
-                '**/CameraType*.class',
-                '**/SwerveDrive*.class',
-                '**/SwerveModule*.class',
-                '**/GenericFlywheel*.class',
-                '**/Extension*.class',
-                '**/Arm*.class',
-                '**/Vision*.class',
-                '**/Gains*.class',
-                '**/LinearConstraints*.class',
-                '**/AngularPositionConstraints*.class',
-                '**/AngularVelocityConstraints*.class',
-                '**/PoseEstimator*.class',
-                '**/GeometryUtil*.class'
+                '**/Phoenix*.class'
             ])
         }))
     }
@@ -249,27 +235,13 @@ jacocoTestCoverageVerification {
                 '**/*AutoLogged.class',
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
+                '**/Elevator*.class',
+                '**/PoseEstimator*.class',
                 '**/LimelightHelpers*.class',
                 '**/*TalonFX.class',
                 '**/*Pigeon2.class',
                 '**/*SysId*.class',
-                '**/Phoenix*.class',
-                '**/CameraMovingLimelight*.class',
-                '**/CameraStaticLimelight*.class',
-                '**/CameraGompeiVision*.class',
-                '**/CameraType*.class',
-                '**/SwerveDrive*.class',
-                '**/SwerveModule*.class',
-                '**/GenericFlywheel*.class',
-                '**/Extension*.class',
-                '**/Arm*.class',
-                '**/Vision*.class',
-                '**/Gains*.class',
-                '**/LinearConstraints*.class',
-                '**/AngularPositionConstraints*.class',
-                '**/AngularVelocityConstraints*.class',
-                '**/PoseEstimator*.class',
-                '**/GeometryUtil*.class'
+                '**/Phoenix*.class'
             ])
         }))
     }

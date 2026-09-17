@@ -27,6 +27,8 @@ public class ExtensionConstants {
   @Builder.Default public final Gains slot2Gains = Gains.builder().build();
   @NonNull public final LinearConstraints constraints;
 
+  @NonNull public final Boolean verticalGravity;
+
   @Singular(value = "alignedFollowerCANID")
   @NonNull
   public final Set<Integer> alignedFollowerCANIDs;
@@ -40,9 +42,9 @@ public class ExtensionConstants {
 
   @Builder(setterPrefix = "with")
   public record ExtensionParameters(
-      @NonNull DCMotor ELEVATOR_MOTOR_CONFIG,
+      @NonNull DCMotor EXTENSION_MOTOR_CONFIG,
       @NonNull Double CARRIAGE_MASS_KG,
-      @NonNull Distance MIN_HEIGHT,
-      @NonNull Distance MAX_HEIGHT,
+      @NonNull Distance MIN_LENGTH,
+      @NonNull Distance MAX_LENGTH,
       @NonNull Integer NUM_MOTORS) {}
 }

@@ -12,6 +12,7 @@ import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.core.utility.sysid.CustomSysIdRoutine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
@@ -68,7 +69,7 @@ public class GenericFlywheelTest {
   }
 
   @Test
-  public void testGenericFlywheel() {
+  public void testGenericFlywheel() throws Exception {
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
       GenericFlywheel flywheel = new GenericFlywheel(io, subsystem, constants, "Test");
       assertNotNull(flywheel);
@@ -194,8 +195,34 @@ public class GenericFlywheelTest {
       verify(io).updateConstraints(any());
 
       // sysid routines
-      assertNotNull(flywheel.sysIdRoutineVoltage());
-      assertNotNull(flywheel.sysIdRoutineTorque());
+      Command voltageSysIdCmd = flywheel.sysIdRoutineVoltage();
+      assertNotNull(voltageSysIdCmd);
+      voltageSysIdCmd.initialize();
+
+      Command torqueSysIdCmd = flywheel.sysIdRoutineTorque();
+      assertNotNull(torqueSysIdCmd);
+      torqueSysIdCmd.initialize();
+
+      java.lang.reflect.Field voltageRoutineField =
+          GenericFlywheel.class.getDeclaredField("voltageCharacterizationRoutine");
+      voltageRoutineField.setAccessible(true);
+      CustomSysIdRoutine<org.wpilib.units.VoltageUnit> voltageRoutine =
+          (CustomSysIdRoutine<org.wpilib.units.VoltageUnit>) voltageRoutineField.get(flywheel);
+      Command voltageQuasistatic =
+          voltageRoutine.quasistatic(CustomSysIdRoutine.Direction.kForward);
+      voltageQuasistatic.initialize();
+      voltageQuasistatic.execute();
+      voltageQuasistatic.end(true);
+
+      java.lang.reflect.Field torqueRoutineField =
+          GenericFlywheel.class.getDeclaredField("torqueCharacterizationRoutine");
+      torqueRoutineField.setAccessible(true);
+      CustomSysIdRoutine<org.wpilib.units.CurrentUnit> torqueRoutine =
+          (CustomSysIdRoutine<org.wpilib.units.CurrentUnit>) torqueRoutineField.get(flywheel);
+      Command torqueQuasistatic = torqueRoutine.quasistatic(CustomSysIdRoutine.Direction.kForward);
+      torqueQuasistatic.initialize();
+      torqueQuasistatic.execute();
+      torqueQuasistatic.end(true);
     }
   }
 }

@@ -59,29 +59,33 @@ public class ExtensionIOTalonFX implements ExtensionIO {
     followTalonFX = new TalonFX[constants.extensionParameters.NUM_MOTORS() - 1];
 
     config = new TalonFXConfiguration();
+
     config.Slot0.withKP(constants.slot0Gains.kP().get())
         .withKD(constants.slot0Gains.kD().get())
         .withKS(constants.slot0Gains.kS().get())
         .withKV(constants.slot0Gains.kV().get())
         .withKA(constants.slot0Gains.kA().get())
-        .withKG(constants.slot0Gains.kG().get())
-        .withGravityType(GravityTypeValue.Extension_Static);
+        .withKG(constants.slot0Gains.kG().get());
 
     config.Slot1.withKP(constants.slot1Gains.kP().get())
         .withKD(constants.slot1Gains.kD().get())
         .withKS(constants.slot1Gains.kS().get())
         .withKV(constants.slot1Gains.kV().get())
         .withKA(constants.slot1Gains.kA().get())
-        .withKG(constants.slot1Gains.kG().get())
-        .withGravityType(GravityTypeValue.Extension_Static);
+        .withKG(constants.slot1Gains.kG().get());
 
     config.Slot2.withKP(constants.slot2Gains.kP().get())
         .withKD(constants.slot2Gains.kD().get())
         .withKS(constants.slot2Gains.kS().get())
         .withKV(constants.slot2Gains.kV().get())
         .withKA(constants.slot2Gains.kA().get())
-        .withKG(constants.slot2Gains.kG().get())
-        .withGravityType(GravityTypeValue.Extension_Static);
+        .withKG(constants.slot2Gains.kG().get());
+
+    if (constants.verticalGravity) {
+      config.Slot0.withGravityType(GravityTypeValue.Elevator_Static);
+      config.Slot1.withGravityType(GravityTypeValue.Elevator_Static);
+      config.Slot2.withGravityType(GravityTypeValue.Elevator_Static);
+    }
 
     config.CurrentLimits.withSupplyCurrentLimit(constants.extensionSupplyCurrentLimit)
         .withSupplyCurrentLimitEnable(true)
@@ -92,9 +96,9 @@ public class ExtensionIOTalonFX implements ExtensionIO {
         constants.extensionGearRatio / (2 * Math.PI * constants.drumRadius);
 
     config.SoftwareLimitSwitch.withForwardSoftLimitThreshold(
-            constants.extensionParameters.MAX_HEIGHT().in(Meters))
+            constants.extensionParameters.MAX_LENGTH().in(Meters))
         .withForwardSoftLimitEnable(true)
-        .withReverseSoftLimitThreshold(constants.extensionParameters.MIN_HEIGHT().in(Meters))
+        .withReverseSoftLimitThreshold(constants.extensionParameters.MIN_LENGTH().in(Meters))
         .withReverseSoftLimitEnable(true);
 
     config.MotionMagic.withMotionMagicAcceleration(

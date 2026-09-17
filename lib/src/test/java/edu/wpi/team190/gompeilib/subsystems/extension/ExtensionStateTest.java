@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionState;
-
 public class ExtensionStateTest {
   @Test
   public void testEnum() {

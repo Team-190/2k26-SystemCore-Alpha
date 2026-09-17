@@ -42,7 +42,7 @@ public class Extension {
     this.io = io;
     this.inputs = new ExtensionIOInputsAutoLogged();
 
-    aKitTopic = subsystem.getName() + "/Extensions" + index;
+    aKitTopic = subsystem.getName() + "/Extension" + index;
 
     currentState = ExtensionState.IDLE;
 
@@ -70,8 +70,8 @@ public class Extension {
         new Setpoint<>(
             Meters.of(0),
             constants.heightOffsetStep,
-            constants.extensionParameters.MIN_HEIGHT(),
-            constants.extensionParameters.MAX_HEIGHT()),
+            constants.extensionParameters.MIN_LENGTH(),
+            constants.extensionParameters.MAX_LENGTH()),
         new Setpoint<>(Volts.of(0), constants.voltageOffsetStep, Volts.of(-12), Volts.of(12)));
   }
 

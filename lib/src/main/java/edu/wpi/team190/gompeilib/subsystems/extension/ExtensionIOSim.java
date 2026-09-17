@@ -15,7 +15,7 @@ import org.wpilib.simulation.ExtensionSim;
 import org.wpilib.units.measure.*;
 
 public class ExtensionIOSim implements ExtensionIO {
-  private final ExtensionSim sim;
+  private final ElevatorSim sim;
 
   private Voltage appliedVolts;
   private boolean isClosedLoop;
@@ -28,17 +28,17 @@ public class ExtensionIOSim implements ExtensionIO {
 
   public ExtensionIOSim(ExtensionConstants constants) {
     sim =
-        new ExtensionSim(
-            Models.extensionFromPhysicalConstants(
-                constants.extensionParameters.ELEVATOR_MOTOR_CONFIG(),
+        new ElevatorSim(
+            Models.elevatorFromPhysicalConstants(
+                constants.extensionParameters.EXTENSION_MOTOR_CONFIG(),
                 constants.extensionParameters.CARRIAGE_MASS_KG(),
                 constants.drumRadius,
                 constants.extensionGearRatio),
-            constants.extensionParameters.ELEVATOR_MOTOR_CONFIG(),
-            constants.extensionParameters.MIN_HEIGHT().in(Meters),
-            constants.extensionParameters.MAX_HEIGHT().in(Meters),
+            constants.extensionParameters.EXTENSION_MOTOR_CONFIG(),
+            constants.extensionParameters.MIN_LENGTH().in(Meters),
+            constants.extensionParameters.MAX_LENGTH().in(Meters),
             true,
-            constants.extensionParameters.MIN_HEIGHT().in(Meters));
+            constants.extensionParameters.MIN_LENGTH().in(Meters));
 
     appliedVolts = Volts.of(0.0);
     isClosedLoop = true;
@@ -140,6 +140,8 @@ public class ExtensionIOSim implements ExtensionIO {
       case TWO:
         feedback.setPID(constants.slot2Gains.kP().get(), 0.0, constants.slot2Gains.kD().get());
         break;
+      default:
+        throw new IllegalStateException("Unknown gain slot: " + gainSlot);
     }
   }
 

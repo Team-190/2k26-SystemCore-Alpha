@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
@@ -13,17 +14,28 @@ import org.wpilib.units.Units;
 public class ExtensionConstantsTest {
   @Test
   public void testConstantsAndBuilder() {
+    GompeiLib.init(null, false, 0.02);
     DCMotor motor = DCMotor.getNeo550(1);
     ExtensionConstants.ExtensionParameters params =
         ExtensionConstants.ExtensionParameters.builder()
-            .withELEVATOR_MOTOR_CONFIG(motor)
+            .withEXTENSION_MOTOR_CONFIG(motor)
             .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_HEIGHT(Units.Meters.of(0.0))
-            .withMAX_HEIGHT(Units.Meters.of(1.5))
+            .withMIN_LENGTH(Units.Meters.of(0.0))
+            .withMAX_LENGTH(Units.Meters.of(1.5))
             .withNUM_MOTORS(1)
             .build();
 
-    Gains slot0 = Gains.fromDoubles().withPrefix("test").withKP(1.0).build();
+    Gains slot0 =
+        Gains.fromDoubles()
+            .withPrefix("slot0")
+            .withKP(1.0)
+            .withKI(0.0)
+            .withKD(0.1)
+            .withKS(0.01)
+            .withKV(0.01)
+            .withKA(0.01)
+            .withKG(0.1)
+            .build();
     LinearConstraints constraints =
         LinearConstraints.fromMeasures()
             .withPrefix("test")
@@ -44,6 +56,7 @@ public class ExtensionConstantsTest {
             .withConstraints(constraints)
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .withHeightOffsetStep(Units.Meters.of(0.05))
+            .withVerticalGravity(true)
             .build();
 
     assertNotNull(constants);
@@ -59,10 +72,10 @@ public class ExtensionConstantsTest {
     assertEquals(0.05, constants.heightOffsetStep.in(Units.Meters));
 
     // Test record fields
-    assertEquals(motor, params.ELEVATOR_MOTOR_CONFIG());
+    assertEquals(motor, params.EXTENSION_MOTOR_CONFIG());
     assertEquals(15.0, params.CARRIAGE_MASS_KG());
-    assertEquals(0.0, params.MIN_HEIGHT().in(Units.Meters));
-    assertEquals(1.5, params.MAX_HEIGHT().in(Units.Meters));
+    assertEquals(0.0, params.MIN_LENGTH().in(Units.Meters));
+    assertEquals(1.5, params.MAX_LENGTH().in(Units.Meters));
     assertEquals(1, params.NUM_MOTORS());
   }
 }

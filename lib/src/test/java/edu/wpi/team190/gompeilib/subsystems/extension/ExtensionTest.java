@@ -20,6 +20,7 @@ import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.Distance;
 
@@ -44,10 +45,10 @@ public class ExtensionTest {
     DCMotor motor = DCMotor.getNeo550(1);
     ExtensionConstants.ExtensionParameters params =
         ExtensionConstants.ExtensionParameters.builder()
-            .withELEVATOR_MOTOR_CONFIG(motor)
+            .withEXTENSION_MOTOR_CONFIG(motor)
             .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_HEIGHT(Units.Meters.of(0.0))
-            .withMAX_HEIGHT(Units.Meters.of(1.5))
+            .withMIN_LENGTH(Units.Meters.of(0.0))
+            .withMAX_LENGTH(Units.Meters.of(1.5))
             .withNUM_MOTORS(1)
             .build();
 
@@ -67,15 +68,28 @@ public class ExtensionTest {
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
                     .withGoalTolerance(Units.Meters.of(0.05))
                     .build())
+            .withVerticalGravity(false)
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .withHeightOffsetStep(Units.Meters.of(0.05))
             .build();
   }
 
   @Test
-  public void testExtension() {
+  public void testExtension() throws Exception {
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
       Extension extension = new Extension(constants, subsystem, 0, io);
+
+      Extension extension2 =
+          new Extension(
+              constants,
+              subsystem,
+              0,
+              io,
+              new Setpoint<DistanceUnit>(
+                  Units.Meters.of(0.5),
+                  Units.Meters.of(0.01),
+                  Units.Meters.of(0.0),
+                  Units.Meters.of(1.5)));
 
       assertNotNull(extension);
 
@@ -139,6 +153,10 @@ public class ExtensionTest {
 
       Command sysIdCmd = extension.runSysIdRoutine();
       assertNotNull(sysIdCmd);
+
+      sysIdCmd.initialize();
+      sysIdCmd.execute();
+      sysIdCmd.end(true);
     }
   }
 }

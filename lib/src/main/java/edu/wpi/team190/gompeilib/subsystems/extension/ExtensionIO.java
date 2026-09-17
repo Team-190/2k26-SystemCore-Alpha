@@ -29,28 +29,28 @@ public interface ExtensionIO {
   }
 
   /**
-   * Updates the inputs for the extension.
+   * Updates the inputs for the extender.
    *
    * @param inputs The inputs to update.
    */
   default void updateInputs(ExtensionIOInputs inputs) {}
 
   /**
-   * Sets the voltage for the extension.
+   * Sets the voltage for the extender.
    *
-   * @param voltageGoal The voltage of the extension in volts.
+   * @param voltageGoal The voltage of the extender in volts.
    */
   default void setVoltageGoal(Voltage voltageGoal) {}
 
   /**
-   * Sets the position goal of the extension.
+   * Sets the position goal of the extender.
    *
-   * @param positionGoal The position goal of the extension in meters.
+   * @param positionGoal The position goal of the extender in meters.
    */
   default void setPositionGoal(Distance positionGoal) {}
 
   /**
-   * Checks if the voltage of the extension matches the volts argument
+   * Checks if the voltage of the extender matches the volts argument
    *
    * @param voltageReference The voltage to check against
    * @return True if the voltage matches, false otherwise
@@ -70,26 +70,26 @@ public interface ExtensionIO {
   }
 
   /**
-   * Sets the position of the extension.
+   * Sets the position of the extender.
    *
    * @param position The position to set.
    */
   default void setPosition(Distance position) {}
 
   /**
-   * @param gainSlot The CTRE gain slot to set the extension to.
+   * @param gainSlot The CTRE gain slot to set the extender to.
    */
   default void setGainSlot(GainSlot gainSlot) {}
 
   /**
-   * Sets the gains for the extension.
+   * Sets the gains for the extender.
    *
    * @param gains the gains to update
    */
   default void updateGains(Gains gains, GainSlot gainSlot) {}
 
   /**
-   * Sets the constraints for the extension.
+   * Sets the constraints for the extender.
    *
    * @param constraints the constraints to update
    */
