@@ -140,9 +140,8 @@ public class CameraGompeiVision extends Camera {
           continue;
       }
 
-      if (cameraPose == null || robotPose == null) {
-        continue;
-      }
+      // cameraPose and robotPose are always assigned together by the switch above.
+      if (cameraPose == null) continue;
 
       // Exit if robot pose is off the field
       double fieldLength = aprilTagFieldLayoutSupplier.get().getFieldLength();
@@ -151,9 +150,7 @@ public class CameraGompeiVision extends Camera {
       if (robotPose.getX() < -fieldBorderMarginMeters
           || robotPose.getX() > fieldLength + fieldBorderMarginMeters
           || robotPose.getY() < -fieldBorderMarginMeters
-          || robotPose.getY() > fieldWidth + fieldBorderMarginMeters) {
-        continue;
-      }
+          || robotPose.getY() > fieldWidth + fieldBorderMarginMeters) continue;
 
       // Get tag poses and update last detection times
       List<Pose3d> tagPoses = new ArrayList<>();
@@ -176,12 +173,9 @@ public class CameraGompeiVision extends Camera {
         averageDistance = totalDistance / tagPoses.size();
 
         // --- Parse tag angle + distance data ---
-        int tagEstimationDataEndIndex =
-            switch ((int) values[0]) {
-              case 1 -> 8;
-              case 2 -> 16;
-              default -> 0;
-            };
+        // values[0] is already constrained to 1 or 2 by the switch above (any other value
+        // continues the outer loop before reaching here).
+        int tagEstimationDataEndIndex = (int) values[0] == 1 ? 8 : 16;
 
         int indexCounter = 0;
 

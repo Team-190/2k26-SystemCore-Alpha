@@ -1,6 +1,8 @@
 package edu.wpi.team190.gompeilib.subsystems.arm;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.ctre.phoenix6.CANBus;
@@ -150,6 +152,10 @@ public class ArmTest {
 
       Command sysIdCmd = arm.sysIdRoutine();
       assertNotNull(sysIdCmd);
+
+      sysIdCmd.initialize();
+      sysIdCmd.execute();
+      sysIdCmd.end(true);
     }
   }
 }

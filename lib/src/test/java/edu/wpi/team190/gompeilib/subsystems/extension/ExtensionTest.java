@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -16,13 +16,14 @@ import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.Distance;
 
-public class ElevatorTest {
-  private ElevatorIO io;
+public class ExtensionTest {
+  private ExtensionIO io;
   private Subsystem subsystem;
-  private ElevatorConstants constants;
+  private ExtensionConstants constants;
 
   @BeforeEach
   public void setUp() {
@@ -33,28 +34,28 @@ public class ElevatorTest {
     }
     GompeiLib.init(RobotMode.SIM, false, 0.02);
 
-    io = mock(ElevatorIO.class);
+    io = mock(ExtensionIO.class);
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
-    when(subsystem.getName()).thenReturn("TestElevatorSubsystem");
+    when(subsystem.getName()).thenReturn("TestExtensionSubsystem");
 
     DCMotor motor = DCMotor.getNeo550(1);
-    ElevatorConstants.ElevatorParameters params =
-        ElevatorConstants.ElevatorParameters.builder()
-            .withELEVATOR_MOTOR_CONFIG(motor)
+    ExtensionConstants.ExtensionParameters params =
+        ExtensionConstants.ExtensionParameters.builder()
+            .withEXTENSION_MOTOR_CONFIG(motor)
             .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_HEIGHT(Units.Meters.of(0.0))
-            .withMAX_HEIGHT(Units.Meters.of(1.5))
+            .withMIN_LENGTH(Units.Meters.of(0.0))
+            .withMAX_LENGTH(Units.Meters.of(1.5))
             .withNUM_MOTORS(1)
             .build();
 
     constants =
-        ElevatorConstants.builder()
+        ExtensionConstants.builder()
             .withLeaderCANID(5)
-            .withElevatorGearRatio(10.0)
+            .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
-            .withElevatorSupplyCurrentLimit(40.0)
-            .withElevatorStatorCurrentLimit(40.0)
-            .withElevatorParameters(params)
+            .withExtensionSupplyCurrentLimit(40.0)
+            .withExtensionStatorCurrentLimit(40.0)
+            .withExtensionParameters(params)
             .withSlot0Gains(Gains.fromDoubles().withPrefix("slot0").build())
             .withConstraints(
                 LinearConstraints.fromMeasures()
@@ -63,56 +64,69 @@ public class ElevatorTest {
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
                     .withGoalTolerance(Units.Meters.of(0.05))
                     .build())
+            .withVerticalGravity(false)
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .withHeightOffsetStep(Units.Meters.of(0.05))
             .build();
   }
 
   @Test
-  public void testElevator() {
+  public void testExtension() throws Exception {
     try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
-      Elevator elevator = new Elevator(constants, subsystem, 0, io);
+      Extension extension = new Extension(constants, subsystem, 0, io);
 
-      assertNotNull(elevator);
+      Extension extension2 =
+          new Extension(
+              constants,
+              subsystem,
+              0,
+              io,
+              new Setpoint<DistanceUnit>(
+                  Units.Meters.of(0.5),
+                  Units.Meters.of(0.01),
+                  Units.Meters.of(0.0),
+                  Units.Meters.of(1.5)));
+
+      assertNotNull(extension);
 
       // Test periodic in IDLE state
-      elevator.periodic();
+      extension.periodic();
       verify(io).updateInputs(any());
 
       // Test open loop control state
-      elevator.setVoltageGoal(Units.Volts.of(6.0));
-      elevator.periodic();
+      extension.setVoltageGoal(Units.Volts.of(6.0));
+      extension.periodic();
       verify(io).setVoltageGoal(Units.Volts.of(6.0));
 
       // Test closed loop control state
-      elevator.setPositionGoal(Units.Meters.of(1.0));
-      elevator.periodic();
+      extension.setPositionGoal(Units.Meters.of(1.0));
+      extension.periodic();
       verify(io).setPositionGoal(any(Distance.class));
 
       // Test setters/getters
-      elevator.setVoltageGoal(
+      extension.setVoltageGoal(
           new Setpoint<>(
               Units.Volts.of(2.0), Units.Volts.of(0.1), Units.Volts.of(-12), Units.Volts.of(12)));
-      elevator.setPositionGoal(
+      extension.setPositionGoal(
           new Setpoint<>(
               Units.Meters.of(0.5),
               Units.Meters.of(0.01),
               Units.Meters.of(0.0),
               Units.Meters.of(1.5)));
 
-      elevator.getElevatorPosition();
+      extension.getExtensionPosition();
 
       // Test delegates
-      elevator.setPosition(Units.Meters.of(0.4));
+      extension.setPosition(Units.Meters.of(0.4));
       verify(io).setPosition(Units.Meters.of(0.4));
 
-      elevator.setGainSlot(GainSlot.ONE);
+      extension.setGainSlot(GainSlot.ONE);
       verify(io).setGainSlot(GainSlot.ONE);
 
-      elevator.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
+      extension.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
       verify(io).updateGains(any(), eq(GainSlot.ZERO));
 
-      elevator.updateConstraints(
+      extension.updateConstraints(
           LinearConstraints.fromMeasures()
               .withPrefix("constraints")
               .withGoalTolerance(Units.Meters.of(0.01))
@@ -123,18 +137,22 @@ public class ElevatorTest {
 
       // test goals
       when(io.atVoltageGoal(any())).thenReturn(true);
-      assertTrue(elevator.atVoltageGoal());
-      assertTrue(elevator.atVoltageGoal(Units.Volts.of(2.0)));
+      assertTrue(extension.atVoltageGoal());
+      assertTrue(extension.atVoltageGoal(Units.Volts.of(2.0)));
 
       when(io.atPositionGoal(any())).thenReturn(true);
-      assertTrue(elevator.atPositionGoal());
-      assertTrue(elevator.atPositionGoal(Units.Meters.of(0.5)));
+      assertTrue(extension.atPositionGoal());
+      assertTrue(extension.atPositionGoal(Units.Meters.of(0.5)));
 
-      Command waitCmd = elevator.waitUntilAtGoal();
+      Command waitCmd = extension.waitUntilAtGoal();
       assertNotNull(waitCmd);
 
-      Command sysIdCmd = elevator.runSysIdRoutine();
+      Command sysIdCmd = extension.runSysIdRoutine();
       assertNotNull(sysIdCmd);
+
+      sysIdCmd.initialize();
+      sysIdCmd.execute();
+      sysIdCmd.end(true);
     }
   }
 }

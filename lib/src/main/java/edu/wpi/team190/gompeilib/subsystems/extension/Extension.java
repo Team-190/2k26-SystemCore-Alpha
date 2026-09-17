@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.wpilib.units.Units.*;
 
@@ -17,34 +17,34 @@ import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Voltage;
 
-public class Elevator {
-  public final ElevatorIO io;
-  public final ElevatorIOInputsAutoLogged inputs;
+public class Extension {
+  public final ExtensionIO io;
+  public final ExtensionIOInputsAutoLogged inputs;
 
   private final String aKitTopic;
 
-  private ElevatorState currentState;
+  private ExtensionState currentState;
 
   private Setpoint<VoltageUnit> voltageGoal;
   private Setpoint<DistanceUnit> positionGoal;
 
   private final SysIdRoutine characterizationRoutine;
 
-  public final ElevatorConstants constants;
+  public final ExtensionConstants constants;
 
-  public Elevator(
-      ElevatorConstants constants,
+  public Extension(
+      ExtensionConstants constants,
       Subsystem subsystem,
       int index,
-      ElevatorIO io,
+      ExtensionIO io,
       Setpoint<DistanceUnit> positionGoal,
       Setpoint<VoltageUnit> voltageGoal) {
     this.io = io;
-    this.inputs = new ElevatorIOInputsAutoLogged();
+    this.inputs = new ExtensionIOInputsAutoLogged();
 
-    aKitTopic = subsystem.getName() + "/Elevators" + index;
+    aKitTopic = subsystem.getName() + "/Extension" + index;
 
-    currentState = ElevatorState.IDLE;
+    currentState = ExtensionState.IDLE;
 
     this.positionGoal = positionGoal;
     this.voltageGoal = voltageGoal;
@@ -61,7 +61,7 @@ public class Elevator {
     this.constants = constants;
   }
 
-  public Elevator(ElevatorConstants constants, Subsystem subsystem, int index, ElevatorIO io) {
+  public Extension(ExtensionConstants constants, Subsystem subsystem, int index, ExtensionIO io) {
     this(
         constants,
         subsystem,
@@ -70,16 +70,16 @@ public class Elevator {
         new Setpoint<>(
             Meters.of(0),
             constants.heightOffsetStep,
-            constants.elevatorParameters.MIN_HEIGHT(),
-            constants.elevatorParameters.MAX_HEIGHT()),
+            constants.extensionParameters.MIN_LENGTH(),
+            constants.extensionParameters.MAX_LENGTH()),
         new Setpoint<>(Volts.of(0), constants.voltageOffsetStep, Volts.of(-12), Volts.of(12)));
   }
 
-  public Elevator(
-      ElevatorConstants constants,
+  public Extension(
+      ExtensionConstants constants,
       Subsystem subsystem,
       int index,
-      ElevatorIO io,
+      ExtensionIO io,
       Setpoint<DistanceUnit> positionGoal) {
     this(
         constants,
@@ -110,27 +110,27 @@ public class Elevator {
     }
   }
 
-  public Distance getElevatorPosition() {
+  public Distance getExtensionPosition() {
     return inputs.position;
   }
 
   public void setVoltageGoal(Voltage voltageGoal) {
-    currentState = ElevatorState.OPEN_LOOP_VOLTAGE_CONTROL;
+    currentState = ExtensionState.OPEN_LOOP_VOLTAGE_CONTROL;
     this.voltageGoal.setSetpoint(voltageGoal);
   }
 
   public void setPositionGoal(Distance positionGoal) {
-    currentState = ElevatorState.CLOSED_LOOP_POSITION_CONTROL;
+    currentState = ExtensionState.CLOSED_LOOP_POSITION_CONTROL;
     this.positionGoal.setSetpoint(positionGoal);
   }
 
   public void setVoltageGoal(Setpoint<VoltageUnit> voltageGoal) {
-    currentState = ElevatorState.OPEN_LOOP_VOLTAGE_CONTROL;
+    currentState = ExtensionState.OPEN_LOOP_VOLTAGE_CONTROL;
     this.voltageGoal = voltageGoal;
   }
 
   public void setPositionGoal(Setpoint<DistanceUnit> positionGoal) {
-    currentState = ElevatorState.CLOSED_LOOP_POSITION_CONTROL;
+    currentState = ExtensionState.CLOSED_LOOP_POSITION_CONTROL;
     this.positionGoal = positionGoal;
   }
 
@@ -174,7 +174,7 @@ public class Elevator {
 
   public Command runSysIdRoutine() {
     return Commands.sequence(
-        Commands.runOnce(() -> currentState = ElevatorState.IDLE),
+        Commands.runOnce(() -> currentState = ExtensionState.IDLE),
         characterizationRoutine.quasistatic(SysIdRoutine.Direction.kForward),
         Commands.waitSeconds(1.0),
         characterizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse),

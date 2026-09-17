@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.subsystems.elevator;
+package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.wpilib.units.Units.*;
 
@@ -14,7 +14,7 @@ import org.wpilib.math.trajectory.TrapezoidProfile;
 import org.wpilib.simulation.ElevatorSim;
 import org.wpilib.units.measure.*;
 
-public class ElevatorIOSim implements ElevatorIO {
+public class ExtensionIOSim implements ExtensionIO {
   private final ElevatorSim sim;
 
   private Voltage appliedVolts;
@@ -24,21 +24,21 @@ public class ElevatorIOSim implements ElevatorIO {
   private final ProfiledPIDController feedback;
   private ElevatorFeedforward feedforward;
 
-  private final ElevatorConstants constants;
+  private final ExtensionConstants constants;
 
-  public ElevatorIOSim(ElevatorConstants constants) {
+  public ExtensionIOSim(ExtensionConstants constants) {
     sim =
         new ElevatorSim(
             Models.elevatorFromPhysicalConstants(
-                constants.elevatorParameters.ELEVATOR_MOTOR_CONFIG(),
-                constants.elevatorParameters.CARRIAGE_MASS_KG(),
+                constants.extensionParameters.EXTENSION_MOTOR_CONFIG(),
+                constants.extensionParameters.CARRIAGE_MASS_KG(),
                 constants.drumRadius,
-                constants.elevatorGearRatio),
-            constants.elevatorParameters.ELEVATOR_MOTOR_CONFIG(),
-            constants.elevatorParameters.MIN_HEIGHT().in(Meters),
-            constants.elevatorParameters.MAX_HEIGHT().in(Meters),
+                constants.extensionGearRatio),
+            constants.extensionParameters.EXTENSION_MOTOR_CONFIG(),
+            constants.extensionParameters.MIN_LENGTH().in(Meters),
+            constants.extensionParameters.MAX_LENGTH().in(Meters),
             true,
-            constants.elevatorParameters.MIN_HEIGHT().in(Meters));
+            constants.extensionParameters.MIN_LENGTH().in(Meters));
 
     appliedVolts = Volts.of(0.0);
     isClosedLoop = true;
@@ -64,7 +64,7 @@ public class ElevatorIOSim implements ElevatorIO {
   }
 
   @Override
-  public void updateInputs(ElevatorIOInputs inputs) {
+  public void updateInputs(ExtensionIOInputs inputs) {
     if (isClosedLoop) {
       appliedVolts =
           Volts.of(
@@ -82,10 +82,10 @@ public class ElevatorIOSim implements ElevatorIO {
     inputs.acceleration =
         MetersPerSecondPerSecond.of(-1.0); // TODO: Replace with calculation based on velocity
 
-    inputs.appliedVolts = new double[constants.elevatorParameters.NUM_MOTORS()];
-    inputs.supplyCurrentAmps = new double[constants.elevatorParameters.NUM_MOTORS()];
-    inputs.torqueCurrentAmps = new double[constants.elevatorParameters.NUM_MOTORS()];
-    inputs.temperatureCelsius = new double[constants.elevatorParameters.NUM_MOTORS()];
+    inputs.appliedVolts = new double[constants.extensionParameters.NUM_MOTORS()];
+    inputs.supplyCurrentAmps = new double[constants.extensionParameters.NUM_MOTORS()];
+    inputs.torqueCurrentAmps = new double[constants.extensionParameters.NUM_MOTORS()];
+    inputs.temperatureCelsius = new double[constants.extensionParameters.NUM_MOTORS()];
 
     Arrays.fill(inputs.appliedVolts, appliedVolts.in(Volts));
     Arrays.fill(inputs.supplyCurrentAmps, sim.getCurrentDraw());
@@ -140,6 +140,8 @@ public class ElevatorIOSim implements ElevatorIO {
       case TWO:
         feedback.setPID(constants.slot2Gains.kP().get(), 0.0, constants.slot2Gains.kD().get());
         break;
+      default:
+        throw new IllegalStateException("Unknown gain slot: " + gainSlot);
     }
   }
 
