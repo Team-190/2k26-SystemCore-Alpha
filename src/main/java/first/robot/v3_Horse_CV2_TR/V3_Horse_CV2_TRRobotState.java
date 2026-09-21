@@ -2,7 +2,23 @@ package first.robot.v3_Horse_CV2_TR;
 
 import static org.wpilib.units.Units.*;
 
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
+import edu.wpi.team190.gompeilib.core.logging.Trace;
+import edu.wpi.team190.gompeilib.core.state.localization.FieldZone;
+import edu.wpi.team190.gompeilib.core.state.localization.Localization;
+import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
+import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
+import first.robot.FieldConstants;
+import first.robot.util.AllianceFlipUtil;
+import first.robot.util.HubActivePeriod;
+import first.robot.util.NTPrefixes;
+import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import lombok.*;
+import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
 import org.wpilib.math.geometry.*;
 import org.wpilib.math.interpolation.InterpolatingTreeMap;
 import org.wpilib.math.interpolation.Interpolator;
@@ -10,30 +26,12 @@ import org.wpilib.math.interpolation.InverseInterpolator;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.util.Units;
 import org.wpilib.networktables.NetworkTablesJNI;
-import org.wpilib.units.measure.AngularVelocity;
-import org.wpilib.units.measure.Distance;
-import org.wpilib.driverstation.RobotState;
-import org.wpilib.driverstation.MatchState;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.system.Timer;
 import org.wpilib.smartdashboard.Field2d;
 import org.wpilib.smartdashboard.SmartDashboard;
-import edu.wpi.team190.gompeilib.core.logging.Trace;
-import edu.wpi.team190.gompeilib.core.state.localization.FieldZone;
-import edu.wpi.team190.gompeilib.core.state.localization.Localization;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
-import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
-import first.robot.FieldConstants;
-import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
-import first.robot.util.AllianceFlipUtil;
-import first.robot.util.HubActivePeriod;
-import first.robot.util.NTPrefixes;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import lombok.*;
-import org.littletonrobotics.junction.Logger;
+import org.wpilib.system.Timer;
+import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Distance;
+import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class V3_Horse_CV2_TRRobotState {
   private static final AprilTagFieldLayout fieldLayout;
@@ -145,11 +143,10 @@ public class V3_Horse_CV2_TRRobotState {
     shootAngleTree.put(Meters.of(1.491203295344588), Rotation2d.fromDegrees(6.0));
     shootSpeedTree.put(Meters.of(1.491203295344588), RadiansPerSecond.of(345.0));
 
-
     feedAngleTree.put(
         Meters.of(0.0),
-        Rotation2d.fromDegrees(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.maxAngle.getDegrees()));
-   
+        Rotation2d.fromDegrees(
+            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.maxAngle.getDegrees()));
 
     feedSpeedTree.put(
         Meters.of(0.0), RadiansPerSecond.of(Units.rotationsPerMinuteToRadiansPerSecond(4500)));
