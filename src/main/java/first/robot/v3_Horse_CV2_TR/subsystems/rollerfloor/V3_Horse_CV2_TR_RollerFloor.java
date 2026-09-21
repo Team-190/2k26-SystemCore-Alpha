@@ -47,12 +47,16 @@ public class V3_Horse_CV2_TR_RollerFloor extends SubsystemBase {
     switch (rollerFloorGoal) {
       case RUN:
         runRollerFloor(rollerFloorSetpoint);
+        break;
       case OVERRIDE:
         runRollerFloor(rollerFloorOverrideSetpoint);
+        break;
       case STOP:
         stopRollerFloor();
+        break;
       default:
         runRollerFloor(rollerFloorSetpoint);
+        break;
     }
     Logger.recordOutput(
         "Elastic/Hopper/RollerFloor/Voltage Magnitude",
