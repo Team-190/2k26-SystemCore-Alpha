@@ -44,8 +44,8 @@ public class GenericHood {
    */
   public GenericHood(
       GenericHoodIO io,
-      GenericHoodConstants constants,
       Subsystem subsystem,
+      GenericHoodConstants constants,
       String name,
       Setpoint<AngleUnit> positionGoal,
       Setpoint<VoltageUnit> voltageGoal) {
