@@ -195,12 +195,10 @@ public class V3_Horse_CV2_TRRobotState {
                 .getDistance(AllianceFlipUtil.apply(FieldConstants.Outpost.BLUE_FEED_TRANSLATION)),
             Meters);
 
-    Pose2d shooterPosition = hubPose.transformBy(V3_Horse_CV2_TRShooterConstants.SHOOTER_POSE);
     robotToHubAngle =
         hubTranslation
-            .minus(shooterPosition.getTranslation())
-            .getAngle()
-            .minus(V3_Horse_CV2_TRShooterConstants.SHOOTER_POSE.getRotation());
+            .minus(hubPose.getTranslation())
+            .getAngle();
 
     scoreAngle = shootAngleTree.get(distanceToHub);
     scoreVelocity = shootSpeedTree.get(distanceToHub).in(RadiansPerSecond);

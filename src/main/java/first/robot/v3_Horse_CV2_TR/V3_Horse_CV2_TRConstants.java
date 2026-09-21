@@ -39,8 +39,8 @@ public class V3_Horse_CV2_TRConstants {
           V3_Horse_CV2_TRTunerConstants.BackRight,
           V3_Horse_CV2_TRTunerConstants.kDriveClosedLoopOutput,
           V3_Horse_CV2_TRTunerConstants.kSteerClosedLoopOutput,
-          Units.inchesToMeters(37.5),
-          Units.inchesToMeters(28.5),
+          Units.inchesToMeters(37.5), //TODO: Use Real Value
+          Units.inchesToMeters(28.5), //TODO: Use Real Value
           0.0,
           0.0,
           0.0,
@@ -79,25 +79,25 @@ public class V3_Horse_CV2_TRConstants {
                   "Drive/Teleoperated/Turn Kv", V3_Horse_CV2_TRTunerConstants.steerGains.kV))
           .build();
 
-  public static final Gains TRANSLATION_AUTO_GAINS =
+  public static final Gains TRANSLATION_AUTO_GAINS = //TODO: Use Real Value
       Gains.builder()
           .withKP(new LoggedTunableNumber("Drive/Auto/Translation Kp", 5.0))
           .withKD(new LoggedTunableNumber("Drive/Auto/Translation Kd", 0.0))
           .build();
 
-  public static final Gains ROTATION_AUTO_GAINS =
+  public static final Gains ROTATION_AUTO_GAINS = //TODO: Use Real Value
       Gains.builder()
           .withKP(new LoggedTunableNumber("Drive/Auto/Rotation Kp", 5.0))
           .withKD(new LoggedTunableNumber("Drive/Auto/Rotation Kd", 0.0))
           .build();
 
-  public static final Gains AUTO_ALIGN_X_GAINS =
+  public static final Gains AUTO_ALIGN_X_GAINS = //TODO: Use Real Value
       Gains.builder()
           .withKP(new LoggedTunableNumber("Drive/Auto Align/X/Kp", 3.0))
           .withKD(new LoggedTunableNumber("Drive/Auto Align/X/Kd", 0.15))
           .build();
 
-  public static final LinearConstraints AUTO_ALIGN_X_CONSTRAINTS =
+  public static final LinearConstraints AUTO_ALIGN_X_CONSTRAINTS = //TODO: Use Real Value
       LinearConstraints.builder()
           .withMaxVelocity(
               new LoggedTunableMeasure<>(
@@ -109,13 +109,13 @@ public class V3_Horse_CV2_TRConstants {
               new LoggedTunableMeasure<>("Drive/Auto Align/X/Goal Tolerance", Meters.of(0.03)))
           .build();
 
-  public static final Gains AUTO_ALIGN_Y_GAINS =
+  public static final Gains AUTO_ALIGN_Y_GAINS = //TODO: Use Real Value
       Gains.builder()
           .withKP(new LoggedTunableNumber("Drive/Auto Align/Y/Kp", 3.0))
           .withKD(new LoggedTunableNumber("Drive/Auto Align/Y/Kd", 0.15))
           .build();
 
-  public static final LinearConstraints AUTO_ALIGN_Y_CONSTRAINTS =
+  public static final LinearConstraints AUTO_ALIGN_Y_CONSTRAINTS = //TODO: Use Real Value
       LinearConstraints.builder()
           .withMaxVelocity(
               new LoggedTunableMeasure<>(
@@ -127,13 +127,13 @@ public class V3_Horse_CV2_TRConstants {
               new LoggedTunableMeasure<>("Drive/Auto Align/Y/Goal Tolerance", Meters.of(0.05)))
           .build();
 
-  public static final Gains AUTO_ALIGN_THETA_GAINS =
+  public static final Gains AUTO_ALIGN_THETA_GAINS = //TODO: Use Real Value
       Gains.builder()
           .withKP(new LoggedTunableNumber("Drive/Auto Align/Theta/Kp", 6.5))
           .withKD(new LoggedTunableNumber("Drive/Auto Align/Theta/Kd", 0.2))
           .build();
 
-  public static final AngularPositionConstraints AUTO_ALIGN_THETA_CONSTRAINTS =
+  public static final AngularPositionConstraints AUTO_ALIGN_THETA_CONSTRAINTS = //TODO: Use Real Value
       AngularPositionConstraints.builder()
           .withMaxVelocity(
               new LoggedTunableMeasure<>(
@@ -145,7 +145,7 @@ public class V3_Horse_CV2_TRConstants {
               new LoggedTunableMeasure<>("Drive/Auto Align/Theta/Goal Tolerance", Degrees.of(0.5)))
           .build();
 
-  public static final SwerveDriveConstants.AutoAlignConstants AUTO_ALIGN_CONSTANTS =
+  public static final SwerveDriveConstants.AutoAlignConstants AUTO_ALIGN_CONSTANTS = //TODO: Use Real Value
       SwerveDriveConstants.AutoAlignConstants.builder()
           .withXGains(AUTO_ALIGN_X_GAINS)
           .withXConstraints(AUTO_ALIGN_X_CONSTRAINTS)
@@ -163,7 +163,7 @@ public class V3_Horse_CV2_TRConstants {
   public static final double DRIVER_DEADBAND = 0.1;
   public static final double OPERATOR_DEADBAND = 0.1;
 
-  public static final SwerveDriveConstants DRIVE_CONSTANTS =
+  public static final SwerveDriveConstants DRIVE_CONSTANTS = //TODO: Use Real Value
       SwerveDriveConstants.builder()
           .withDriveConfig(DRIVE_CONFIG)
           .withDriveGains(DRIVE_GAINS)
@@ -176,7 +176,7 @@ public class V3_Horse_CV2_TRConstants {
           .withOperatorDeadband(OPERATOR_DEADBAND)
           .build();
 
-  public static final StaticLimelightConfig LIMELIGHT_SHOOTER_CONFIG =
+  public static final StaticLimelightConfig LIMELIGHT_SHOOTER_CONFIG = //TODO: Use Real Value
       StaticLimelightConfig.builder()
           .key("shooter")
           .cameraType(CameraType.LIMELIGHT_4)
@@ -197,7 +197,7 @@ public class V3_Horse_CV2_TRConstants {
           .enableRewind(true)
           .build();
 
-  public static final StaticLimelightConfig LIMELIGHT_CLIMBER_CONFIG =
+  public static final StaticLimelightConfig LIMELIGHT_CLIMBER_CONFIG = //TODO: Use Real Value
       StaticLimelightConfig.builder()
           .key("climber")
           .cameraType(CameraType.LIMELIGHT_4)
