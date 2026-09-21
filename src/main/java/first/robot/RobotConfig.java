@@ -8,6 +8,5 @@ public final class RobotConfig {
     V3_Horse_CV2_TR_SIM;
 
     RobotType() {}
-    
   }
 }
