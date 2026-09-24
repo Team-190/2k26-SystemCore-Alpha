@@ -8,9 +8,12 @@ import first.robot.Constants;
 import first.robot.RobotConfig;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloorConstants;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.wpilib.command2.Command;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private V3_Horse_CV2_TR_RollerFloor rollerFloor;
+  private final LoggedDashboardChooser<Command> autoChooser;
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -31,5 +34,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
           break;
       }
     }
+    autoChooser = new LoggedDashboardChooser<>("Autonomous Modes");
+  }
+
+  @Override
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
   }
 }

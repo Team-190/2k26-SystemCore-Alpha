@@ -31,7 +31,7 @@ public class V3_Horse_CV2_TR_RollerFloorConstants {
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(2))
-            .withRollerMotorGearRatio(42.0) // TODO: Update to actual value
+            .withRollerMotorGearRatio(3.0 / 2.0) // TODO: Update to actual value
             .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withMomentOfInertia(
                 Units.KilogramSquareMeters.of(0.0001)) // TODO: Update to actual value
