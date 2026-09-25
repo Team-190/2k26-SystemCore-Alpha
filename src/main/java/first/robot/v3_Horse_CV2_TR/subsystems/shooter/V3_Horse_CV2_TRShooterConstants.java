@@ -49,8 +49,8 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withSupplyCurrentLimit(Amps.of(60.0)) // TODO: Use Real Value
                   .withStatorCurrentLimit(Amps.of(80.0)) // TODO: Use Real Value
                   .build())
-          .withMomentOfInertia(0.09473883059) 
-          .withGearRatio(18.0 / 30.0) 
+          .withMomentOfInertia(0.09473883059)
+          .withGearRatio(18.0 / 30.0)
           .withMotorConfig(DCMotor.getKrakenX60Foc(4))
           .withVoltageGains(
               Gains.builder() // TODO: Use Real Value
