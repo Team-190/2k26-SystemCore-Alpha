@@ -14,6 +14,7 @@ import org.wpilib.command2.Subsystem;
 import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.VoltageUnit;
+import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Voltage;
 
@@ -112,6 +113,10 @@ public class Extension {
 
   public Distance getExtensionPosition() {
     return inputs.position;
+  }
+
+  public Current getTorqueCurrent() {
+    return Amps.of(inputs.torqueCurrentAmps[0]);
   }
 
   public void setVoltageGoal(Voltage voltageGoal) {
