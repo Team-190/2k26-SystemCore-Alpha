@@ -18,7 +18,6 @@ import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
 import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelConstants;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodConstants;
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.geometry.Transform2d;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.AngularVelocity;
 
@@ -39,11 +38,10 @@ public class V3_Horse_CV2_TRShooterConstants {
   public static final Rotation2d TOWER_SHOT_HOOD_ANGLE =
       Rotation2d.fromDegrees(18.5); // TODO: Use Real Value
 
-
   public static final GenericFlywheelConstants SHOOT_CONSTANTS =
       GenericFlywheelConstants.builder()
           .withLeaderCANID(31) // TODO: Use Real Value
-          .withLeaderInversion(InvertedValue.CounterClockwise_Positive) 
+          .withLeaderInversion(InvertedValue.CounterClockwise_Positive)
           .withCanBus(CANBus.systemcore(0)) // TODO: Use Real Value
           .withEnableFOC(true)
           .withCurrentLimit(
@@ -51,8 +49,8 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withSupplyCurrentLimit(Amps.of(60.0)) // TODO: Use Real Value
                   .withStatorCurrentLimit(Amps.of(80.0)) // TODO: Use Real Value
                   .build())
-          .withMomentOfInertia(0.05) // TODO: ASK CAM
-          .withGearRatio(28.0 / 24.0) // TODO: ASK CAM 
+          .withMomentOfInertia(0.09473883059) 
+          .withGearRatio(18.0 / 30.0) 
           .withMotorConfig(DCMotor.getKrakenX60Foc(4))
           .withVoltageGains(
               Gains.builder() // TODO: Use Real Value
@@ -91,14 +89,14 @@ public class V3_Horse_CV2_TRShooterConstants {
       GenericHoodConstants.builder()
           .withMotorCanId(32) // TODO: Use Real Value
           .withCanBus(CANBus.systemcore(0)) // TODO: Use Real Value
-          .withGearRatio((36.0 / 12.0) * (24.0 / 18.0) * (296.0 / 14.0)) // TODO: Use ASK CAM
+          .withGearRatio(70.0) // TODO: Use ASK CAM
           .withCurrentLimits(new CurrentLimits(40, 30)) // TODO: Use Real Value
           .withMomentOfInertia(0.0001)
           .withInvertedValue(InvertedValue.CounterClockwise_Positive)
-          .withMotorConfig(DCMotor.getKrakenX44Foc(1)) 
-          .withLengthMeters(0.211582) 
-          .withMinAngle(Rotation2d.fromDegrees(2)) 
-          .withMaxAngle(Rotation2d.fromDegrees(40)) 
+          .withMotorConfig(DCMotor.getKrakenX44Foc(1))
+          .withLengthMeters(0.211582)
+          .withMinAngle(Rotation2d.fromDegrees(2))
+          .withMaxAngle(Rotation2d.fromDegrees(40))
           .withZeroVoltage(Volts.of(1.0)) // TODO: Use Real Value
           .withZeroCurrentThreshold(Amps.of(40.0)) // TODO: Use Real Value
           .withZeroCurrentEpsilon(Milliamps.of(500)) // TODO: Use Real Value
@@ -125,10 +123,14 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withVoltageStep(Volts.of(0.5)) // TODO: Use Real Value
           .build();
 
-  public enum HoodGoal {
+  public enum ShooterGoal {
     SCORE,
     FEED,
     STOW,
-    OVERRIDE
+    OVERRIDE_FLYWHEEL,
+    OVERRIDE_HOOD,
+    ZERO,
+    STOP,
+    IDLE
   }
 }

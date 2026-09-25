@@ -52,15 +52,17 @@ public class V3_Horse_CV2_TRRobotState {
   @Getter private static Rotation2d robotToHubAngle;
   @Getter private static Distance distanceToFeedTranslation;
 
+  @Getter private static boolean inAllianceZone;
+
   private static final InterpolatingTreeMap<Distance, Rotation2d> shootAngleTree;
   private static final InterpolatingTreeMap<Distance, AngularVelocity> shootSpeedTree;
   private static final InterpolatingTreeMap<Distance, Rotation2d> feedAngleTree;
   private static final InterpolatingTreeMap<Distance, AngularVelocity> feedSpeedTree;
 
   @Getter private static Rotation2d scoreAngle;
-  @Getter private static double scoreVelocity;
+  @Getter private static AngularVelocity scoreVelocity;
   @Getter private static Rotation2d feedAngle;
-  @Getter private static double feedVelocity;
+  @Getter private static AngularVelocity feedVelocity;
 
   @Getter private static final LEDStates ledStates;
 
@@ -101,7 +103,7 @@ public class V3_Horse_CV2_TRRobotState {
 
     robotToHubAngle = Rotation2d.fromDegrees(0);
 
-    ledStates = new LEDStates(false, false, false, false, false, false);
+    ledStates = new LEDStates(false, false, false, false, false);
 
     shootAngleTree =
         new InterpolatingTreeMap<>(
@@ -152,9 +154,9 @@ public class V3_Horse_CV2_TRRobotState {
         Meters.of(0.0), RadiansPerSecond.of(Units.rotationsPerMinuteToRadiansPerSecond(4500)));
 
     scoreAngle = new Rotation2d();
-    scoreVelocity = 0;
+    scoreVelocity = AngularVelocity.ofBaseUnits(0, RadiansPerSecond);
     feedAngle = new Rotation2d();
-    feedVelocity = 0;
+    feedVelocity = AngularVelocity.ofBaseUnits(0, RadiansPerSecond);
 
     field.setRobotPose(getGlobalPose());
     SmartDashboard.putData("Field", field);
@@ -195,16 +197,23 @@ public class V3_Horse_CV2_TRRobotState {
                 .getDistance(AllianceFlipUtil.apply(FieldConstants.Outpost.BLUE_FEED_TRANSLATION)),
             Meters);
 
-    robotToHubAngle =
-        hubTranslation
-            .minus(hubPose.getTranslation())
-            .getAngle();
+    robotToHubAngle = hubTranslation.minus(hubPose.getTranslation()).getAngle();
 
     scoreAngle = shootAngleTree.get(distanceToHub);
-    scoreVelocity = shootSpeedTree.get(distanceToHub).in(RadiansPerSecond);
+    scoreVelocity = shootSpeedTree.get(distanceToHub);
 
     feedAngle = feedAngleTree.get(distanceToFeedTranslation);
-    feedVelocity = feedSpeedTree.get(distanceToFeedTranslation).in(RadiansPerSecond);
+    feedVelocity = feedSpeedTree.get(distanceToFeedTranslation);
+
+    Rectangle2d allianceZone =
+        new Rectangle2d(
+            AllianceFlipUtil.apply(
+                new Translation2d(
+                    FieldConstants.LinesVertical.neutralZoneNear,
+                    FieldConstants.fieldWidth + Units.inchesToMeters(15))),
+            AllianceFlipUtil.apply(new Translation2d(0, -Units.inchesToMeters(-15))));
+
+    inAllianceZone = allianceZone.contains(getGlobalPose().getTranslation());
 
     field.setRobotPose(getGlobalPose());
 
@@ -288,22 +297,22 @@ public class V3_Horse_CV2_TRRobotState {
   public enum FixedShots {
     LEFT_TRENCH(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(-170.0 + 180),
+            Rotation2d.fromDegrees(-80.0 + 180),
             V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE,
             V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED)),
     RIGHT_TRENCH(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(350.0 + 180),
+            Rotation2d.fromDegrees(80 + 180),
             V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE,
             V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED)),
     HUB(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(-90.0 + 180),
+            Rotation2d.fromDegrees(180),
             V3_Horse_CV2_TRShooterConstants.HUB_SHOT_HOOD_ANGLE,
             V3_Horse_CV2_TRShooterConstants.HUB_SHOT_FLYWHEEL_SPEED)),
     TOWER(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(-90.0 + 180),
+            Rotation2d.fromDegrees(180),
             V3_Horse_CV2_TRShooterConstants.TOWER_SHOT_HOOD_ANGLE,
             V3_Horse_CV2_TRShooterConstants.TOWER_SHOT_FLYWHEEL_SPEED));
 
@@ -313,6 +322,6 @@ public class V3_Horse_CV2_TRRobotState {
   @Data
   @AllArgsConstructor
   public static class LEDStates {
-    boolean IntakeCollecting, IntakeIn, ShooterPrepping, ShooterShooting, Spitting, AutoClimbing;
+    boolean IntakeCollecting, IntakeIn, ShooterPrepping, ShooterShooting, Spitting;
   }
 }
