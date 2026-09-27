@@ -33,9 +33,6 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   private final GenericFlywheel flywheel;
   private ShooterGoal shooterGoal;
 
-  private Voltage overrideHoodVoltage;
-  private Voltage overrideFlywheelVoltage;
-
   private final GenericHood hood;
 
   private final Trigger flywheelShootingTrigger;
@@ -77,8 +74,6 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
     this.shooterGoal = ShooterGoal.STOW;
-    this.overrideHoodVoltage = Volts.of(0.0);
-    this.overrideFlywheelVoltage = Volts.of(0.0);
 
     flywheelShootingTrigger =
         new Trigger(
@@ -138,12 +133,6 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
         flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity());
         break;
-      case OVERRIDE_HOOD:
-        hood.setVoltageGoal(overrideHoodVoltage);
-        break;
-      case OVERRIDE_FLYWHEEL:
-        flywheel.setVoltageGoal(overrideFlywheelVoltage);
-        break;
       case ZERO:
         hood.setPositionGoal(Rotation2d.kZero);
         flywheel.stop();
@@ -192,11 +181,16 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   }
 
   public boolean atGoal() {
-    return hood.atPositionGoal() && flywheel.atVelocityGoal();
+    return (V3_Horse_CV2_TRRobotState.isInAllianceZone()
+        ? (flywheelShootingTrigger.getAsBoolean()
+            && hood.atPositionGoal())
+        : (flywheelFeedingTrigger.getAsBoolean()
+            && hoodFeedingTrigger.getAsBoolean()
+            ));
   }
 
   public Command waitUntilAtGoal() {
-    return hood.waitUntilAtGoal().alongWith(flywheel.waitUntilAtGoal());
+    return Commands.waitUntil(this::atGoal);
   }
 
   public Command waitUntilHoodAtGoal() {
@@ -254,5 +248,17 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   public Command setFlywheelVelocity(AngularVelocity velocity) {
     return setGoal(ShooterGoal.IDLE)
         .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity)));
+  }
+
+  public Command resetHoodZero() {
+    return hood.resetHoodZero();
+  }
+
+  public Rotation2d getHoodAngle() {
+    return hood.getAngle();
+  }
+
+  public AngularVelocity getFlywheelVelocity() {
+    return flywheel.getFlywheelVelocity();
   }
 }

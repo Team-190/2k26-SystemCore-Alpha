@@ -127,8 +127,6 @@ public class V3_Horse_CV2_TRShooterConstants {
     SCORE,
     FEED,
     STOW,
-    OVERRIDE_FLYWHEEL,
-    OVERRIDE_HOOD,
     ZERO,
     STOP,
     IDLE
