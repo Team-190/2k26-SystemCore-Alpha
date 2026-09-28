@@ -10,7 +10,7 @@ import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
-import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_IntakeConstants.RollerState;
+import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import java.util.Map;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
@@ -20,7 +20,7 @@ import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Voltage;
 
-public class V3_Horse_CV2_IntakeConstants {
+public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final GenericRollerConstants INTAKE_ROLLER_CONSTANTS;
   public static final GenericRollerConstants KICKER_ROLLER_CONSTANTS;
