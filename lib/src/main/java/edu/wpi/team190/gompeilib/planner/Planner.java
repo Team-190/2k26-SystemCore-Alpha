@@ -21,7 +21,7 @@ public class Planner {
     config = newConfig;
   }
 
-  public static Command FollowPath(ArrayList<PathNode> path, Supplier<Pose2d> robotPose) {
+  public static Command followPath(ArrayList<PathNode> path, Supplier<Pose2d> robotPose) {
     if (config == null) {
       System.out.println("Config is set to null in planner class");
       return null;
@@ -33,7 +33,6 @@ public class Planner {
 
     PlannerDriveController driveController = new PlannerDriveController(config);
 
-    // impliment pose reset later :thumbsup:
     Command command = Commands.none();
 
     for (PathNode node : path) {
