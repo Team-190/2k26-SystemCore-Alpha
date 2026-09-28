@@ -44,8 +44,8 @@ public class GenericHood {
    */
   public GenericHood(
       GenericHoodIO io,
-      GenericHoodConstants constants,
       Subsystem subsystem,
+      GenericHoodConstants constants,
       String name,
       Setpoint<AngleUnit> positionGoal,
       Setpoint<VoltageUnit> voltageGoal) {
@@ -73,25 +73,25 @@ public class GenericHood {
 
   public GenericHood(
       GenericHoodIO io,
-      GenericHoodConstants constants,
       Subsystem subsystem,
+      GenericHoodConstants constants,
       String name,
       Setpoint<AngleUnit> positionGoal) {
     this(
         io,
-        constants,
         subsystem,
+        constants,
         name,
         positionGoal,
         new Setpoint<>(Volts.of(0), constants.voltageStep, Volts.of(-12), Volts.of(12)));
   }
 
   public GenericHood(
-      GenericHoodIO io, GenericHoodConstants constants, Subsystem subsystem, String name) {
+      GenericHoodIO io, Subsystem subsystem, GenericHoodConstants constants, String name) {
     this(
         io,
-        constants,
         subsystem,
+        constants,
         name,
         new Setpoint<>(
             Radians.zero(),
