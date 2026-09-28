@@ -16,13 +16,16 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.VoltageUnit;
+import org.wpilib.units.measure.Current;
+import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Voltage;
 
 public class V3_Horse_CV2_IntakeConstants {
 
   public static final GenericRollerConstants INTAKE_ROLLER_CONSTANTS;
   public static final GenericRollerConstants KICKER_ROLLER_CONSTANTS;
-  public static final ExtensionConstants EXTENSION_CONSTANTS;
+  public static final ExtensionConstants LEFT_EXTENSION_CONSTANTS;
+  public static final ExtensionConstants RIGHT_EXTENSION_CONSTANTS;
 
   public static final int MOTOR_CAN_ID = 40;
   public static final double GEAR_RATIO = 1.0 / 2.0;
@@ -42,7 +45,9 @@ public class V3_Horse_CV2_IntakeConstants {
 
   public static final double EXTENSION_INTAKE_POSITION = 0.25;
 
-  public static final Map<ExtensionState, Setpoint<DistanceUnit>> EXTENSION_STATES;
+  public static final Map<ExtensionState, Setpoint<DistanceUnit>> LEFT_EXTENSION_STATES;
+
+  public static final Map<ExtensionState, Setpoint<DistanceUnit>> RIGHT_EXTENSION_STATES;
 
   public static final Map<RollerState, Setpoint<VoltageUnit>> INTAKE_ROLLER_STATES;
 
@@ -56,11 +61,18 @@ public class V3_Horse_CV2_IntakeConstants {
 
   public static final Voltage KICKER_OUT_ROLLER_VOLTAGE;
 
+  public static final Current EXTENSION_SWITCH_CURRENT;
+
+  public static final LinearVelocity EXTENSION_SWITCH_VELOCITY;
+
   static {
     INTAKE_IN_ROLLER_VOLTAGE = Volts.of(12.0);
     INTAKE_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
     KICKER_IN_ROLLER_VOLTAGE = Volts.of(12.0);
     KICKER_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
+
+    EXTENSION_SWITCH_CURRENT = Amps.of(35);
+    EXTENSION_SWITCH_VELOCITY = MetersPerSecond.of(0.001);
 
     INTAKE_ROLLER_CONSTANTS =
         GenericRollerConstants.builder()
@@ -99,7 +111,7 @@ public class V3_Horse_CV2_IntakeConstants {
             .withEnableFOC(false)
             .build();
 
-    EXTENSION_CONSTANTS =
+    LEFT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(44)
             .withExtensionGearRatio(null) // and here
@@ -110,13 +122,49 @@ public class V3_Horse_CV2_IntakeConstants {
             .withSlot1Gains(Gains.builder().build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)
-            .withAlignedFollowerCANID(45)
             .withOpposedFollowerCANID(46)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
             .build();
 
-    EXTENSION_STATES =
+    RIGHT_EXTENSION_CONSTANTS =
+        ExtensionConstants.builder()
+            .withLeaderCANID(44)
+            .withExtensionGearRatio(null) // and here
+            .withDrumRadius(0.025)
+            .withExtensionSupplyCurrentLimit(40.0)
+            .withExtensionStatorCurrentLimit(40.0)
+            .withSlot0Gains(Gains.builder().build())
+            .withSlot1Gains(Gains.builder().build())
+            .withSlot2Gains(Gains.builder().build())
+            .withVerticalGravity(false)
+            .withOpposedFollowerCANID(46)
+            .withVoltageOffsetStep(Volts.of(1))
+            .withHeightOffsetStep(Meters.of(0.01))
+            .build();
+
+    LEFT_EXTENSION_STATES =
+        Map.of(
+            ExtensionState.STOW,
+            new Setpoint<>(
+                Meters.of(EXTENSION_STOW_POSITION),
+                Meters.of(0.01),
+                Meters.of(MIN_EXTENSION),
+                Meters.of(MAX_EXTENSION)),
+            ExtensionState.INTAKE,
+            new Setpoint<>(
+                Meters.of(EXTENSION_INTAKE_POSITION),
+                Meters.of(0.01),
+                Meters.of(MIN_EXTENSION),
+                Meters.of(MAX_EXTENSION)),
+            ExtensionState.AGITATE,
+            new Setpoint<>(
+                Meters.of(0.25),
+                Meters.of(0.01),
+                Meters.of(MIN_EXTENSION),
+                Meters.of(MAX_EXTENSION)));
+
+    RIGHT_EXTENSION_STATES =
         Map.of(
             ExtensionState.STOW,
             new Setpoint<>(

@@ -115,6 +115,8 @@ public class ExtensionTest {
               Units.Meters.of(1.5)));
 
       extension.getExtensionPosition();
+      // extension.getTorqueCurrent();
+      extension.getVelocity();
 
       // Test delegates
       extension.setPosition(Units.Meters.of(0.4));

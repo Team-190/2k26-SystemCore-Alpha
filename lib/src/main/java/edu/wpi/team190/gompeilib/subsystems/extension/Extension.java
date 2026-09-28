@@ -7,6 +7,7 @@ import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
@@ -16,6 +17,7 @@ import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Distance;
+import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Voltage;
 
 public class Extension {
@@ -27,7 +29,7 @@ public class Extension {
   private ExtensionState currentState;
 
   private Setpoint<VoltageUnit> voltageGoal;
-  private Setpoint<DistanceUnit> positionGoal;
+  @Getter private Setpoint<DistanceUnit> positionGoal;
 
   private final SysIdRoutine characterizationRoutine;
 
@@ -117,6 +119,10 @@ public class Extension {
 
   public Current getTorqueCurrent() {
     return Amps.of(inputs.torqueCurrentAmps[0]);
+  }
+
+  public LinearVelocity getVelocity() {
+    return inputs.velocity;
   }
 
   public void setVoltageGoal(Voltage voltageGoal) {
