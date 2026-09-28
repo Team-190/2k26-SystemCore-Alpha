@@ -26,7 +26,6 @@ import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.AngularVelocity;
-import org.wpilib.units.measure.Voltage;
 
 public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
@@ -182,11 +181,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public boolean atGoal() {
     return (V3_Horse_CV2_TRRobotState.isInAllianceZone()
-        ? (flywheelShootingTrigger.getAsBoolean()
-            && hood.atPositionGoal())
-        : (flywheelFeedingTrigger.getAsBoolean()
-            && hoodFeedingTrigger.getAsBoolean()
-            ));
+        ? (flywheelShootingTrigger.getAsBoolean() && hood.atPositionGoal())
+        : (flywheelFeedingTrigger.getAsBoolean() && hoodFeedingTrigger.getAsBoolean()));
   }
 
   public Command waitUntilAtGoal() {
