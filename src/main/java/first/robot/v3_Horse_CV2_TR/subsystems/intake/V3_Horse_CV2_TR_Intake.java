@@ -6,6 +6,7 @@ import static org.wpilib.units.Units.MetersPerSecond;
 import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
+import edu.wpi.team190.gompeilib.core.utility.ExtensionMethods;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
@@ -15,12 +16,15 @@ import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConst
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
+import lombok.experimental.ExtensionMethod;
+
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.units.Units;
 
+@ExtensionMethod(ExtensionMethods.class)
 public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   @Getter private ExtensionState extensionState;
@@ -131,9 +135,9 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
                     .getPositionGoal()
                     .equals(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal))
                 && rightExtension.atPositionGoal()))
-        || (Amps.of(leftExtension.getTorqueCurrent().abs(Units.Amps))
+        || (leftExtension.getTorqueCurrent().abs()
             .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT))
-        || Amps.of(rightExtension.getTorqueCurrent().abs(Units.Amps))
+        || rightExtension.getTorqueCurrent().abs()
             .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT));
   }
 
@@ -152,13 +156,13 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   private boolean extensionStuck() {
-    return ((Amps.of(leftExtension.getTorqueCurrent().abs(Units.Amps))
+    return ((leftExtension.getTorqueCurrent().abs()
                 .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT)
-            && MetersPerSecond.of(leftExtension.getVelocity().abs(Units.MetersPerSecond))
+            && leftExtension.getVelocity().abs()
                 .lte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_VELOCITY))
-        || (Amps.of(rightExtension.getTorqueCurrent().abs(Units.Amps))
+        || (rightExtension.getTorqueCurrent().abs()
                 .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT)
-            && MetersPerSecond.of(rightExtension.getVelocity().abs(Units.MetersPerSecond))
+            && rightExtension.getVelocity().abs()
                 .lte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_VELOCITY)));
   }
 
