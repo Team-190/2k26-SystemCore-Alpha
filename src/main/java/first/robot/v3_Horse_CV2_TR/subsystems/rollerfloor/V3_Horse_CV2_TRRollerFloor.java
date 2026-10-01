@@ -14,12 +14,12 @@ import org.wpilib.command2.SubsystemBase;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Voltage;
 
-public class V3_Horse_CV2_TR_RollerFloor extends SubsystemBase {
+public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
   private final GenericRoller rollerFloor;
   @Getter private RollerFloorState rollerFloorGoal;
   private final Setpoint<VoltageUnit> rollerFloorSetpoint, rollerFloorOverrideSetpoint;
 
-  public V3_Horse_CV2_TR_RollerFloor(GenericRollerIO rollerFloorIO) {
+  public V3_Horse_CV2_TRRollerFloor(GenericRollerIO rollerFloorIO) {
 
     rollerFloorSetpoint =
         new Setpoint<>(
