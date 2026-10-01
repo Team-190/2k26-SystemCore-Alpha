@@ -4,6 +4,8 @@
 
 package first.robot;
 
+import first.robot.v3_Horse_CV2_TR.subsystems.V3_Horse_CV2_TRRobotContainer;
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.framework.TimedRobot;
@@ -11,15 +13,16 @@ import org.wpilib.framework.TimedRobot;
 public class Robot extends TimedRobot {
   private Command autonomousCommand;
 
-  private final RobotContainer robotContainer;
+  private final V3_Horse_CV2_TRRobotContainer robotContainer;
 
   public Robot() {
-    robotContainer = new RobotContainer();
+    robotContainer = new V3_Horse_CV2_TRRobotContainer();
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    Logger.recordOutput("RobotPose", robotContainer.getPose());
   }
 
   @Override

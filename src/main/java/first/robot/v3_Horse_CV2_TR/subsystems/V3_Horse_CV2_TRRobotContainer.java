@@ -7,14 +7,18 @@ package first.robot.v3_Horse_CV2_TR.subsystems;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.planner.PathNode;
 import edu.wpi.team190.gompeilib.planner.Planner;
+import edu.wpi.team190.gompeilib.planner.PlannerControllerConfig;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOSim;
 import java.util.ArrayList;
 import java.util.List;
 import org.wpilib.command2.Command;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.trajectory.TrapezoidProfile;
 
 public class V3_Horse_CV2_TRRobotContainer {
   private SwerveDrive drive;
@@ -25,10 +29,13 @@ public class V3_Horse_CV2_TRRobotContainer {
               new PathNode(new Pose2d(new Translation2d(3, 3), new Rotation2d(0)), 10.0)));
 
   public V3_Horse_CV2_TRRobotContainer() {
-    // PlannerControllerConfig plannerConfig = new PlannerControllerConfig(); // add those pid
-    // values
-    // Planner.setConfig(plannerConfig);
-    // Planner.setDriveCommand();
+    PlannerControllerConfig plannerConfig =
+        new PlannerControllerConfig(
+            new PIDController(0.1, 0.1, 0.1),
+            new PIDController(0.1, 0.1, 0.1),
+            new ProfiledPIDController(0.1, 0.1, 0.1, new TrapezoidProfile.Constraints(1, 1)));
+
+    Planner.setConfig(plannerConfig);
     drive =
         new SwerveDrive(
             V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
@@ -45,14 +52,19 @@ public class V3_Horse_CV2_TRRobotContainer {
             new SwerveModuleIOSim(
                 V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
                 V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backRight()),
-            ()->{return new Pose2d},
-            (Pose2d pose)->{});
+            V3_Horse_CV2_TRRobotState::getGlobalPose,
+            (Pose2d pose) -> {});
+    Planner.setDriveCommand(drive::runVelocity);
     configureBindings();
   }
 
   private void configureBindings() {}
 
   public Command getAutonomousCommand() {
-    return Planner.followPath(path, null);
+    return Planner.followPath(path, V3_Horse_CV2_TRRobotState::getGlobalPose);
+  }
+
+  public Pose2d getPose() {
+    return V3_Horse_CV2_TRRobotState.getGlobalPose();
   }
 }
