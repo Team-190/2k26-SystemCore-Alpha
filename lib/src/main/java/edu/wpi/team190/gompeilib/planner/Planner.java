@@ -21,7 +21,7 @@ public class Planner {
     config = newConfig;
   }
 
-  public static Command followPath(ArrayList<PathNode> path, Supplier<Pose2d> robotPose) {
+  public static Command followPath(ArrayList<Segment> path, Supplier<Pose2d> robotPose) {
     if (config == null) {
       System.out.println("Config is set to null in planner class");
       return null;
@@ -35,7 +35,7 @@ public class Planner {
 
     Command command = Commands.none();
 
-    for (PathNode node : path) {
+    for (Segment node : path) {
       Pose2d targetPose =
           new Pose2d(
               node.translation.isPresent()
@@ -46,9 +46,7 @@ public class Planner {
           command
               .andThen(
                   () -> {
-                    driveCommand.accept(
-                        driveController.calculate(
-                            targetPose, robotPose.get(), node.desiredLinearVelocity));
+                    driveCommand.accept(driveController.calculate(targetPose, robotPose.get(), 19));
                   })
               .until(
                   () -> {
