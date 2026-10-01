@@ -96,29 +96,41 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 driver.leftTrigger())
             .withName("joystickDriveRotationLock"));
 
+        driver
+        .leftTrigger()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        V3_Horse_CV2_TRDriveCommands.setLastCardinalDirection(
+                            Math.round(
+                                    V3_Horse_CV2_TRRobotState.getHeading().getRadians()
+                                        / (Math.PI / 2.0))
+                                * (Math.PI / 2.0)))
+                .withName("cardinal-direction-set"));
+
       driver.leftBumper()
-          .onTrue(Commands.none()); //Intake collect
+          .onTrue(Commands.none().withName("driver-leftBumper-true")); //Intake collect
 
       driver.rightBumper()
-          .onTrue(Commands.none()); //Shoot when ready
+          .onTrue(Commands.none().withName("driver-rightBumper-true")); //Shoot when ready
 
       driver.rightTrigger()
-      .onTrue(Commands.none()); //Agitate
+      .onTrue(Commands.none().withName("driver-rightTrigger-true")); //Agitate
       
       driver.dpadDown()
-          .onTrue(Commands.none()); //Reset heading
+          .onTrue(Commands.none().withName("driver-dpadDown-true")); //Reset heading
 
       driver.northFace() // Y Button
-          .onTrue(Commands.none()); //Shoot far
+          .onTrue(Commands.none().withName("driver-Y-true")); //Shoot far
 
       driver.southFace() // A Button
-          .onTrue(Commands.none()); //Shoot close
+          .onTrue(Commands.none().withName("driver-A-true")); //Shoot close
 
       driver.westFace() // X Button
-          .onTrue(Commands.none()); //Shoot mid
+          .onTrue(Commands.none().withName("driver-X-true")); //Shoot mid
 
       driver.eastFace() // B Button
-          .onTrue(Commands.none()); //Intake stow
+          .onTrue(Commands.none().withName("driver-B-true")); //Intake stow
   }
 
   @Override
