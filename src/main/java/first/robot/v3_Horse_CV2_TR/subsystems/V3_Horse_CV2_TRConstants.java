@@ -21,6 +21,10 @@ import org.wpilib.math.system.DCMotor;
 
 public class V3_Horse_CV2_TRConstants {
 
+  static {
+    System.out.println("A");
+  }
+
   public static final DriveConfig DRIVE_CONFIG =
       DriveConfig.builder()
           .withCanBus(V3_Horse_CV2_TRTunerConstants.kCANBus)

@@ -21,6 +21,7 @@ import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.trajectory.TrapezoidProfile;
 
 public class V3_Horse_CV2_TRRobotContainer {
+
   private SwerveDrive drive;
   private ArrayList<PathNode> path =
       new ArrayList<PathNode>(
@@ -29,6 +30,7 @@ public class V3_Horse_CV2_TRRobotContainer {
               new PathNode(new Pose2d(new Translation2d(3, 3), new Rotation2d(0)), 10.0)));
 
   public V3_Horse_CV2_TRRobotContainer() {
+
     PlannerControllerConfig plannerConfig =
         new PlannerControllerConfig(
             new PIDController(0.1, 0.1, 0.1),

@@ -4,6 +4,8 @@
 
 package first.robot;
 
+import edu.wpi.team190.gompeilib.core.GompeiLib;
+import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import first.robot.v3_Horse_CV2_TR.subsystems.V3_Horse_CV2_TRRobotContainer;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
@@ -16,6 +18,7 @@ public class Robot extends TimedRobot {
   private final V3_Horse_CV2_TRRobotContainer robotContainer;
 
   public Robot() {
+    GompeiLib.init(RobotMode.SIM, false, DEFAULT_PERIOD);
     robotContainer = new V3_Horse_CV2_TRRobotContainer();
   }
 
