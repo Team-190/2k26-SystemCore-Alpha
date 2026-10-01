@@ -2,6 +2,8 @@ package first.robot.v3_Horse_CV2_TR.subsystems.shooter;
 
 import static org.wpilib.units.Units.*;
 
+import java.util.function.Supplier;
+
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
@@ -177,6 +179,10 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public Command setGoal(ShooterGoal shooterGoal) {
     return this.runOnce(() -> this.shooterGoal = shooterGoal);
+  }
+
+  public Command setGoal(Supplier<ShooterGoal> goalSupplier) {
+    return this.run(() -> this.shooterGoal = goalSupplier.get());
   }
 
   public boolean atGoal() {
