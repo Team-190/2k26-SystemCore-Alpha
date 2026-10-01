@@ -231,7 +231,8 @@ public class V3_Horse_CV2_TR_IntakeConstants {
   public enum ExtensionState {
     STOW,
     INTAKE,
-    AGITATE
+    AGITATE,
+    OVERRIDE
   }
 
   public enum RollerState {

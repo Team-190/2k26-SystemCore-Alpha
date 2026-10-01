@@ -4,6 +4,10 @@
 
 package first.robot;
 
+import static org.wpilib.units.Units.Meters;
+
+import edu.wpi.team190.gompeilib.core.utility.ExtensionMethods;
+import lombok.experimental.ExtensionMethod;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.framework.TimedRobot;
