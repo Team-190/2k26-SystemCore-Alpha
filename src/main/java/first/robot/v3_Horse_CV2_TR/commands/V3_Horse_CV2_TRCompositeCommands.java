@@ -21,47 +21,82 @@ import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterCons
 public class V3_Horse_CV2_TRCompositeCommands {
 
     public static Command resetHeading(
-      SwerveDrive drive,
-      Consumer<Pose2d> resetHeadingConsumer,
-      Supplier<Translation2d> currentRobotTranslation) {
-    return Commands.runOnce(
-            () -> {
-              resetHeadingConsumer.accept(
-                  new Pose2d(
-                      currentRobotTranslation.get(), AllianceFlipUtil.apply(new Rotation2d())));
-            })
-        .ignoringDisable(true);
-  }
+            SwerveDrive drive,
+            Consumer<Pose2d> resetHeadingConsumer,
+            Supplier<Translation2d> currentRobotTranslation) {
+        return Commands.runOnce(
+                () -> {
+                    resetHeadingConsumer.accept(
+                            new Pose2d(
+                                    currentRobotTranslation.get(), AllianceFlipUtil.apply(new Rotation2d())));
+                })
+                .ignoringDisable(true);
+    }
 
-  public static Command updateCurrentLimits(
-      SwerveDrive drive, double driveCurrentLimit, double turnCurrentLimit) {
-    return Commands.runOnce(() -> drive.updateCurrentLimits(driveCurrentLimit, turnCurrentLimit))
-        .ignoringDisable(true);
-  }
-  
+    public static Command updateCurrentLimits(
+            SwerveDrive drive, double driveCurrentLimit, double turnCurrentLimit) {
+        return Commands.runOnce(() -> drive.updateCurrentLimits(driveCurrentLimit, turnCurrentLimit))
+                .ignoringDisable(true);
+    }
+
     public static Command scoreOrFeedCommand(
-       V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    return Commands.sequence(
-        shooter.setGoal(
-            () ->
-                (V3_Horse_CV2_TRRobotState.isInAllianceZone()
-                        ? ShooterGoal.SCORE
-                        : ShooterGoal.FEED)),
-        shooter.waitUntilAtGoal(),
-        rollerFloor.setState(RollerFloorState.RUN));
-  }
+            V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
+        return Commands.sequence(
+                shooter.setGoal(
+                        () -> (V3_Horse_CV2_TRRobotState.isInAllianceZone()
+                                ? ShooterGoal.SCORE
+                                : ShooterGoal.FEED)),
+                shooter.waitUntilAtGoal(),
+                rollerFloor.setState(RollerFloorState.RUN));
+    }
 
-    public static Command stopShooter(V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter){
+    public static Command stopShooter(V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
         return Commands.parallel(shooter.setGoal(ShooterGoal.STOP), rollerFloor.setState(RollerFloorState.STOP));
     }
 
-    public static Command shootWithAgitateCommand(V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter, V3_Horse_CV2_TR_Intake intake){
-        return Commands.parallel(V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter), 
-        intake.setState(intakeState.AGITATE));
+    public static Command shootWithAgitateCommand(V3_Horse_CV2_TR_RollerFloor rollerFloor,
+            V3_Horse_CV2_TRShooter shooter, V3_Horse_CV2_TR_Intake intake) {
+        return Commands.parallel(V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter),
+                intake.setState(intakeState.AGITATE));
     }
 
+    public static Command bumpShotCommand(V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter,
+            V3_Horse_CV2_TR_Intake intake) {
 
+        return Commands.parallel(
+                Commands.sequence(
+                        shooter.setGoal(ShooterGoal.BUMP_SHOT),
+                        shooter.waitUntilAtGoal(),
+                        rollerFloor.setState(null)),
+
+                intake.setState(intakeState.AGITATE));
+
+    }
+
+    public static Command trenchShotCommand(V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter,
+            V3_Horse_CV2_TR_Intake intake) {
+
+        return Commands.parallel(
+                Commands.sequence(
+                        shooter.setGoal(ShooterGoal.TRENCH_SHOT),
+                        shooter.waitUntilAtGoal(),
+                        rollerFloor.setState(null)),
+
+                intake.setState(intakeState.AGITATE));
+
+    }
+
+    public static Command farShotCommand(V3_Horse_CV2_TR_RollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter,
+            V3_Horse_CV2_TR_Intake intake) {
+
+        return Commands.parallel(
+                Commands.sequence(
+                        shooter.setGoal(ShooterGoal.FAR_SHOT),
+                        shooter.waitUntilAtGoal(),
+                        rollerFloor.setState(null)),
+
+                intake.setState(intakeState.AGITATE));
+
+    }
 
 }
-
-
