@@ -3,26 +3,15 @@ package first.robot.v3_Horse_CV2_TR.commands;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 
-import org.wpilib.math.controller.ProfiledPIDController;
-import org.wpilib.math.filter.SlewRateLimiter;
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.kinematics.ChassisVelocities;
-import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.math.util.MathUtil;
-import org.wpilib.math.util.Pair;
-import org.wpilib.math.util.Units;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.Commands;
-import first.robot.v3_Horse_CV2_TR.subsystems.shooter.ShotCalculator;
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.utility.tunable.TunableUpdaterRegistry;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants.AutoAlignConstants;
 import first.robot.FieldConstants;
-import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.util.AllianceFlipUtil;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
+import first.robot.v3_Horse_CV2_TR.subsystems.shooter.ShotCalculator;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
@@ -32,6 +21,17 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.math.controller.ProfiledPIDController;
+import org.wpilib.math.filter.SlewRateLimiter;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.trajectory.TrapezoidProfile;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.math.util.Pair;
+import org.wpilib.math.util.Units;
 
 public final class V3_Horse_CV2_TRDriveCommands {
 
@@ -100,16 +100,14 @@ public final class V3_Horse_CV2_TRDriveCommands {
                   .filter(pair -> pair.getFirst().getAsBoolean())
                   .map(pair -> pair.getSecond().getAsDouble())
                   .findFirst()
-                  .orElse(
-                      fieldRelativeXVel);
+                  .orElse(fieldRelativeXVel);
 
           fieldRelativeYVel =
               hijackYSuppliers.stream()
                   .filter(pair -> pair.getFirst().getAsBoolean())
                   .map(pair -> pair.getSecond().getAsDouble())
                   .findFirst()
-                  .orElse(
-                       fieldRelativeYVel);
+                  .orElse(fieldRelativeYVel);
 
           angular =
               hijackOmegaSuppliers.stream()
@@ -119,8 +117,8 @@ public final class V3_Horse_CV2_TRDriveCommands {
                   .orElse(angular);
 
           ChassisVelocities chassisVelocities =
-              new ChassisVelocities(fieldRelativeXVel, fieldRelativeYVel, angular).toRobotRelative(
-                  AllianceFlipUtil.apply(rotationSupplier.get()));
+              new ChassisVelocities(fieldRelativeXVel, fieldRelativeYVel, angular)
+                  .toRobotRelative(AllianceFlipUtil.apply(rotationSupplier.get()));
 
           Logger.recordOutput("Drive/JoystickDrive/chassisVelocities", chassisVelocities);
 
@@ -265,7 +263,7 @@ public final class V3_Horse_CV2_TRDriveCommands {
         List.of(
             Pair.of(
                 cardinalDirectionAlign,
-               () -> 
+                () ->
                     V3_Horse_CV2_TRAutoAlignCommands.calculate(
                         omegaController,
                         lastCardinalDirection,
@@ -310,14 +308,15 @@ public final class V3_Horse_CV2_TRDriveCommands {
     return Commands.run(
             () ->
                 drive.runVelocity(
-                    new ChassisVelocities(0.0,
-                        0.0,
-                        V3_Horse_CV2_TRAutoAlignCommands.calculate(
-                            omegaController,
-                            targetRotation.get().getRadians(),
-                            currentRotation.get().getRadians(),
-                            drive.getMeasuredChassisVelocities().omega)).toFieldRelative(
-                        AllianceFlipUtil.apply(currentRotation.get()))))
+                    new ChassisVelocities(
+                            0.0,
+                            0.0,
+                            V3_Horse_CV2_TRAutoAlignCommands.calculate(
+                                omegaController,
+                                targetRotation.get().getRadians(),
+                                currentRotation.get().getRadians(),
+                                drive.getMeasuredChassisVelocities().omega))
+                        .toFieldRelative(AllianceFlipUtil.apply(currentRotation.get()))))
         .beforeStarting(ShotCalculator::clear);
   }
 
@@ -379,14 +378,15 @@ public final class V3_Horse_CV2_TRDriveCommands {
     return Commands.run(
         () -> {
           drive.runVelocity(
-              new ChassisVelocities(0.0,
-                  0.0,
-                  V3_Horse_CV2_TRAutoAlignCommands.calculate(
-                      omegaController,
-                      V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
-                      V3_Horse_CV2_TRRobotState.getHeading().getRadians(),
-                      drive.getMeasuredChassisVelocities().omega)).toFieldRelative(
-                  V3_Horse_CV2_TRRobotState.getHeading()));
+              new ChassisVelocities(
+                      0.0,
+                      0.0,
+                      V3_Horse_CV2_TRAutoAlignCommands.calculate(
+                          omegaController,
+                          V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
+                          V3_Horse_CV2_TRRobotState.getHeading().getRadians(),
+                          drive.getMeasuredChassisVelocities().omega))
+                  .toFieldRelative(V3_Horse_CV2_TRRobotState.getHeading()));
         });
   }
 

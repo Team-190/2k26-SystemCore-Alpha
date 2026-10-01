@@ -1,9 +1,9 @@
 package first.robot.util.CV2_input;
 
-import org.wpilib.event.EventLoop;
 import org.wpilib.command2.CommandScheduler;
-import org.wpilib.command2.button.Trigger;
 import org.wpilib.command2.button.CommandGenericHID;
+import org.wpilib.command2.button.Trigger;
+import org.wpilib.event.EventLoop;
 
 @SuppressWarnings("MethodName")
 public class XKeysInput extends CommandGenericHID {

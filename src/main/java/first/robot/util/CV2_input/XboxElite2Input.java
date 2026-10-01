@@ -1,11 +1,10 @@
 package first.robot.util.CV2_input;
 
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.button.CommandGamepad;
+import org.wpilib.command2.button.Trigger;
 import org.wpilib.driverstation.Gamepad;
 import org.wpilib.event.EventLoop;
-import org.wpilib.command2.CommandScheduler;
-import org.wpilib.command2.button.Trigger;
-import org.wpilib.command2.button.CommandGamepad;
-
 
 public class XboxElite2Input extends CommandGamepad {
 

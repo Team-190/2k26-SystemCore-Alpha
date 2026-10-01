@@ -1,12 +1,12 @@
 package first.robot.v3_Horse_CV2_TR.commands;
 
-import org.wpilib.system.Timer;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.Subsystem;
 import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Subsystem;
+import org.wpilib.system.Timer;
 
 public class KSCharacterization extends Command {
   private static final LoggedTunableNumber currentRampFactor =

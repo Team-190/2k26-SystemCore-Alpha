@@ -5,16 +5,16 @@ import static org.wpilib.units.Units.MetersPerSecond;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 
-import org.wpilib.math.controller.ProfiledPIDController;
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.kinematics.ChassisVelocities;
-import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.command2.Command;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants.AutoAlignConstants;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Command;
+import org.wpilib.math.controller.ProfiledPIDController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.trajectory.TrapezoidProfile;
 
 public class V3_Horse_CV2_TRAutoAlignCommands extends Command {
   private final SwerveDrive drive;
@@ -91,12 +91,9 @@ public class V3_Horse_CV2_TRAutoAlignCommands extends Command {
     Logger.recordOutput("Drive/Auto Align/Goal", targetPose);
 
     alignHeadingController.reset(
-        robotPose.get().getRotation().getRadians(),
-        drive.getMeasuredChassisVelocities().omega);
-    alignXController.reset(
-        robotPose.get().getX(), drive.getMeasuredChassisVelocities().vx);
-    alignYController.reset(
-        robotPose.get().getY(), drive.getMeasuredChassisVelocities().vy);
+        robotPose.get().getRotation().getRadians(), drive.getMeasuredChassisVelocities().omega);
+    alignXController.reset(robotPose.get().getX(), drive.getMeasuredChassisVelocities().vx);
+    alignYController.reset(robotPose.get().getY(), drive.getMeasuredChassisVelocities().vy);
   }
 
   @Override
@@ -107,16 +104,10 @@ public class V3_Horse_CV2_TRAutoAlignCommands extends Command {
 
       double adjustedXSpeed =
           calculate(
-              alignXController,
-              targetPose.getX(),
-              robotPose.get().getX(),
-              measuredVelocities.vx);
+              alignXController, targetPose.getX(), robotPose.get().getX(), measuredVelocities.vx);
       double adjustedYSpeed =
           calculate(
-              alignYController,
-              targetPose.getY(),
-              robotPose.get().getY(),
-              measuredVelocities.vy);
+              alignYController, targetPose.getY(), robotPose.get().getY(), measuredVelocities.vy);
       double adjustedThetaSpeed =
           calculate(
               alignHeadingController,
@@ -124,8 +115,8 @@ public class V3_Horse_CV2_TRAutoAlignCommands extends Command {
               robotPose.get().getRotation().getRadians(),
               measuredVelocities.omega);
       velocities =
-          new ChassisVelocities(adjustedXSpeed, adjustedYSpeed, adjustedThetaSpeed).toRobotRelative(
-               robotPose.get().getRotation());
+          new ChassisVelocities(adjustedXSpeed, adjustedYSpeed, adjustedThetaSpeed)
+              .toRobotRelative(robotPose.get().getRotation());
 
     } else {
       velocities = new ChassisVelocities();

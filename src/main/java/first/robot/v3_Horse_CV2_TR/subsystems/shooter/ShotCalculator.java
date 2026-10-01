@@ -4,6 +4,10 @@ import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.Seconds;
 
+import edu.wpi.team190.gompeilib.core.GompeiLib;
+import edu.wpi.team190.gompeilib.core.utility.GeometryUtil;
+import java.util.function.Function;
+import lombok.experimental.ExtensionMethod;
 import org.wpilib.math.filter.LinearFilter;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
@@ -14,10 +18,6 @@ import org.wpilib.math.util.MathUtil;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Time;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.utility.GeometryUtil;
-import java.util.function.Function;
-import lombok.experimental.ExtensionMethod;
 
 @ExtensionMethod({GeometryUtil.class})
 public class ShotCalculator {
@@ -54,7 +54,8 @@ public class ShotCalculator {
       Function<Distance, Rotation2d> distanceToHoodFunction,
       Function<Distance, AngularVelocity> distanceToFlywheelFunction) {
 
-    Pose2d phaseDelayedPose = robotPose.plus(robotRelativeVelocity.toTwist2d(phaseDelay.in(Seconds)).exp());
+    Pose2d phaseDelayedPose =
+        robotPose.plus(robotRelativeVelocity.toTwist2d(phaseDelay.in(Seconds)).exp());
     Translation2d robotPosition = phaseDelayedPose.getTranslation();
 
     Translation2d lookaheadRobotPosition = robotPosition;
@@ -65,12 +66,10 @@ public class ShotCalculator {
       Time timeOfFlight = distanceToTimeFunction.apply(Meters.of(clampedDistance));
 
       double offsetX =
-          robotRelativeVelocity.toFieldRelative(robotPose.getRotation())
-                  .vx
+          robotRelativeVelocity.toFieldRelative(robotPose.getRotation()).vx
               * timeOfFlight.in(Seconds);
       double offsetY =
-          robotRelativeVelocity.toFieldRelative(robotPose.getRotation())
-                  .vy
+          robotRelativeVelocity.toFieldRelative(robotPose.getRotation()).vy
               * timeOfFlight.in(Seconds);
       lookaheadRobotPosition = robotPosition.plus(new Translation2d(offsetX, offsetY));
 
