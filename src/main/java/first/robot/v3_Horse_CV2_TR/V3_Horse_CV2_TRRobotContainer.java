@@ -15,6 +15,7 @@ import first.robot.Constants;
 import first.robot.RobotConfig;
 import first.robot.util.CV2_input.XKeysInput;
 import first.robot.util.CV2_input.XboxElite2Input;
+import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants;
@@ -26,120 +27,122 @@ import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
-  private GyroIO gyroIO;
-  private V3_Horse_CV2_TRRollerFloor rollerFloor;
-  private V3_Horse_CV2_TRShooter shooter;
-  //   private V3_Horse_CV2_Intake intake;
-  private SwerveDrive drive;
-  private final LoggedDashboardChooser<Command> autoChooser;
+    private GyroIO gyroIO;
+    private V3_Horse_CV2_TRRollerFloor rollerFloor;
+    private V3_Horse_CV2_TRShooter shooter;
+    // private V3_Horse_CV2_Intake intake;
+    private SwerveDrive drive;
+    private final LoggedDashboardChooser<Command> autoChooser;
 
-  private final XboxElite2Input driver = new XboxElite2Input(0);
+    private final XboxElite2Input driver = new XboxElite2Input(0);
 
-  private final CommandGamepad driverController = new CommandGamepad(0);
+    private final CommandGamepad driverController = new CommandGamepad(0);
 
-  private final XKeysInput xkeys = new XKeysInput(1);
+    private final XKeysInput xkeys = new XKeysInput(1);
 
-  private final CommandGamepad operatorController = new CommandGamepad(1);
+    private final CommandGamepad operatorController = new CommandGamepad(1);
 
-  public V3_Horse_CV2_TRRobotContainer() {
-    if (Constants.getMode() != RobotMode.REPLAY) {
-      switch (RobotConfig.ROBOT) {
-        case V3_Horse_CV2_TR:
-          gyroIO =
-              new GyroIOPigeon2(
-                  V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                  V3_Horse_CV2_TRRobotState::setHeadingUpdateTimestamp);
-          rollerFloor =
-              new V3_Horse_CV2_TRRollerFloor(
-                  new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
-          shooter =
-              new V3_Horse_CV2_TRShooter(
-                  new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
-                  new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
-          break;
-        case V3_Horse_CV2_TR_SIM:
-          rollerFloor =
-              new V3_Horse_CV2_TRRollerFloor(
-                  new GenericRollerIOSim(
-                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
-          shooter =
-              new V3_Horse_CV2_TRShooter(
-                  new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
-                  new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
-          break;
-        default:
-          break;
-      }
+    public V3_Horse_CV2_TRRobotContainer() {
+        if (Constants.getMode() != RobotMode.REPLAY) {
+            switch (RobotConfig.ROBOT) {
+                case V3_Horse_CV2_TR:
+                    gyroIO = new GyroIOPigeon2(
+                            V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                            V3_Horse_CV2_TRRobotState::setHeadingUpdateTimestamp);
+                    rollerFloor = new V3_Horse_CV2_TRRollerFloor(
+                            new GenericRollerIOTalonFX(
+                                    V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+                    shooter = new V3_Horse_CV2_TRShooter(
+                            new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+                            new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
+                    break;
+                case V3_Horse_CV2_TR_SIM:
+                    rollerFloor = new V3_Horse_CV2_TRRollerFloor(
+                            new GenericRollerIOSim(
+                                    V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+                    shooter = new V3_Horse_CV2_TRShooter(
+                            new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+                            new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
+                    break;
+                default:
+                    break;
+            }
+        }
+        autoChooser = new LoggedDashboardChooser<>("Autonomous Modes");
     }
-    autoChooser = new LoggedDashboardChooser<>("Autonomous Modes");
-  }
 
-  private void configureButtonBindings() {
-    drive.setDefaultCommand(
-        V3_Horse_CV2_TRDriveCommands.joystickDriveRotationLock(
-                drive,
-                V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> -driver.getRightX(),
-                V3_Horse_CV2_TRRobotState::getHeading,
-                driver.rightTrigger(),
-                () -> V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
-                () -> 0.0,
-                driver.leftTrigger())
-            .withName("joystickDriveRotationLock"));
+    private void configureButtonBindings() {
+        drive.setDefaultCommand(
+                V3_Horse_CV2_TRDriveCommands.joystickDriveRotationLock(
+                        drive,
+                        V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                        () -> -driver.getLeftY(),
+                        () -> -driver.getLeftX(),
+                        () -> -driver.getRightX(),
+                        V3_Horse_CV2_TRRobotState::getHeading,
+                        driver.rightTrigger(),
+                        () -> V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
+                        () -> 0.0,
+                        driver.leftTrigger())
+                        .withName("joystickDriveRotationLock"));
 
-    driver
-        .leftTrigger()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        V3_Horse_CV2_TRDriveCommands.setLastCardinalDirection(
-                            Math.round(
-                                    V3_Horse_CV2_TRRobotState.getHeading().getRadians()
-                                        / (Math.PI / 2.0))
-                                * (Math.PI / 2.0)))
-                .withName("cardinal-direction-set"));
+        driver
+                .leftTrigger()
+                .onTrue(
+                        Commands.runOnce(
+                                () -> V3_Horse_CV2_TRDriveCommands.setLastCardinalDirection(
+                                        Math.round(
+                                                V3_Horse_CV2_TRRobotState.getHeading().getRadians()
+                                                        / (Math.PI / 2.0))
+                                                * (Math.PI / 2.0)))
+                                .withName("cardinal-direction-set"));
 
-    driver
-        .leftBumper()
-        .onTrue(Commands.none().withName("driver-leftBumper-true")); // Intake collect
+        driver
+                .leftBumper()
+                .onTrue(Commands.none().withName("driver-leftBumper-true")); // Intake collect
 
-    driver
-        .rightBumper()
-        .onTrue(Commands.none().withName("driver-rightBumper-true")); // Shoot when ready
+        driver
+                .rightBumper()
+                .onTrue(V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter)
+                        .withName("driver-rightBumper-true"));
 
-    driver.rightTrigger().onTrue(Commands.none().withName("driver-rightTrigger-true")); // Agitate
+        driver.rightTrigger().onTrue(Commands.print("Agitate").withName("driver-rightTrigger-true"));
 
-    driver.dpadDown().onTrue(Commands.none().withName("driver-dpadDown-true")); // Reset heading
+        driver.dpadDown()
+                .onTrue(V3_Horse_CV2_TRCompositeCommands
+                        .resetHeading(drive, V3_Horse_CV2_TRRobotState::resetPose,
+                                () -> V3_Horse_CV2_TRRobotState.getGlobalPose().getTranslation())
+                        .withName("driver-dpadDown-true"));
 
-    driver
-        .northFace() // Y Button
-        .onTrue(Commands.none().withName("driver-Y-true")); // Shoot far
+        driver
+                .northFace() 
+                .onTrue(V3_Horse_CV2_TRCompositeCommands.farShotCommand(rollerFloor, shooter)
+                        .withName("driver-Y-true")); 
 
-    driver
-        .southFace() // A Button
-        .onTrue(Commands.none().withName("driver-A-true")); // Shoot close
+        driver
+                .southFace() 
+                .onTrue(V3_Horse_CV2_TRCompositeCommands.bumpShotCommand(rollerFloor, shooter)
+                        .withName("driver-A-true")); 
 
-    driver
-        .westFace() // X Button
-        .onTrue(Commands.none().withName("driver-X-true")); // Shoot mid
+        driver
+                .westFace() 
+                .onTrue(V3_Horse_CV2_TRCompositeCommands.trenchShotCommand(rollerFloor, shooter)
+                        .withName("driver-X-true")); 
 
-    driver
-        .eastFace() // B Button
-        .onTrue(Commands.none().withName("driver-B-true")); // Intake stow
-  }
+        driver
+                .eastFace() 
+                .onTrue(Commands.print("Intake Stow").withName("driver-B-true")); 
+    }
 
-  @Override
-  public void robotPeriodic() {
+    @Override
+    public void robotPeriodic() {
 
-    V3_Horse_CV2_TRRobotState.periodic(
-        drive.getRawGyroRotation(), drive.getYawVelocity(), drive.getModulePositions(), drive);
-  }
+        V3_Horse_CV2_TRRobotState.periodic(
+                drive.getRawGyroRotation(), drive.getYawVelocity(), drive.getModulePositions(), drive);
+    }
 
-  @Override
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
-  }
+    @Override
+    public Command getAutonomousCommand() {
+        return autoChooser.get();
+    }
 }
