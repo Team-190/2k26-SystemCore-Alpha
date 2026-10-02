@@ -12,4 +12,8 @@ public class ExtensionMethods {
     // return absoluteMeasure;
     return measure.times(Math.signum(measure.baseUnitMagnitude()));
   }
+
+  public static <U extends Unit> boolean equals(Measure<U> measure, Setpoint<U> setpoint) {
+    return (measure.isEquivalent(setpoint.getSetpoint()));
+  }
 }

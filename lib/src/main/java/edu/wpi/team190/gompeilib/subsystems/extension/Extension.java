@@ -125,6 +125,10 @@ public class Extension {
     return inputs.velocity;
   }
 
+  public LinearVelocity getVelocitySetpoint(){
+    return inputs.linearVelocitySetpoint;
+  }
+
   public void setVoltageGoal(Voltage voltageGoal) {
     currentState = ExtensionState.OPEN_LOOP_VOLTAGE_CONTROL;
     this.voltageGoal.setSetpoint(voltageGoal);

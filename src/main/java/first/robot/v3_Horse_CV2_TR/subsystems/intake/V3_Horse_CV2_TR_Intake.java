@@ -186,7 +186,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             && leftExtension
                 .getVelocity()
                 .abs()
-                .lte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_VELOCITY))
+                .lte(leftExtension.getVelocitySetpoint().times(0.5).abs())
+              && !leftExtension.atPositionGoal())
         || (rightExtension
                 .getTorqueCurrent()
                 .abs()
@@ -194,7 +195,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             && rightExtension
                 .getVelocity()
                 .abs()
-                .lte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_VELOCITY)));
+                .lte(rightExtension.getVelocitySetpoint().times(0.5).abs())
+              && !rightExtension.atPositionGoal()));
   }
 
   public Command setIntakeVoltage(double voltage) {
