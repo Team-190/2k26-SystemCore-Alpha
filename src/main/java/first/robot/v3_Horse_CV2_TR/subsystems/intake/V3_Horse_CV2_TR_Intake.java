@@ -100,12 +100,13 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(extensionState));
         rightExtension.setPositionGoal(
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
-
+        break;
       case AGITATE:
         if (switchDirection(agitateIn)) {
           agitateIn = !agitateIn;
         }
         setAgitateGoals(agitateIn);
+        break;
       case MANUAL_EXTEND:
         if (triggerSupplier.getAsDouble() < 0.9) {
           leftExtension.setPositionGoal(linearExtensionMap());
@@ -113,8 +114,9 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         } else {
           extensionState = ExtensionState.STOW;
         }
-
+        break;
       case OVERRIDE:
+        break;
     }
     // Rewrite agitate in periodic (not command form)
     intakeRoller.setVoltageGoal(
@@ -278,7 +280,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
-  public Command manualExtend(DoubleSupplier getTriggerPos) {
+  public Command setManualExtendState() {
     return Commands.runOnce(
         () -> {
           extensionState = ExtensionState.MANUAL_EXTEND;
