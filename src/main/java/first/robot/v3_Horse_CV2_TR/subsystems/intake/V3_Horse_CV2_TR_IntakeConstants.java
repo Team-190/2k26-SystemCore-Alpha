@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
+import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
 import java.util.Map;
@@ -117,8 +118,20 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withDrumRadius(0.025)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
-            .withSlot0Gains(Gains.builder().build())
-            .withSlot1Gains(Gains.builder().build())
+            .withSlot0Gains(Gains.builder()
+                  .withKP(new LoggedTunableNumber("Intake/Left Extension/VoltageKp",  1.0))
+                  .withKD(new LoggedTunableNumber("Intake/Left Extension/VoltageKd", 0.0))
+                  .withKS(new LoggedTunableNumber("Intake/Left Extension/VoltageKs", 0.0))
+                  .withKV(new LoggedTunableNumber("Intake/Left Extension/VoltageKv", 0.0))
+                  .withKA(new LoggedTunableNumber("Intake/Left Extension/VoltageKa", 0.0))
+                  .build())
+            .withSlot1Gains(Gains.builder()
+                  .withKP(new LoggedTunableNumber("Intake/Left Extension/VoltageKp",  1.0))
+                  .withKD(new LoggedTunableNumber("Intake/Left Extension/VoltageKd", 0.0))
+                  .withKS(new LoggedTunableNumber("Intake/Left Extension/VoltageKs", 0.0))
+                  .withKV(new LoggedTunableNumber("Intake/Left Extension/VoltageKv", 0.0))
+                  .withKA(new LoggedTunableNumber("Intake/Left Extension/VoltageKa", 0.0))
+                  .build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)
             .withOpposedFollowerCANID(46)
@@ -133,8 +146,20 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withDrumRadius(0.025)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
-            .withSlot0Gains(Gains.builder().build())
-            .withSlot1Gains(Gains.builder().build())
+            .withSlot0Gains(Gains.builder()
+                  .withKP(new LoggedTunableNumber("Intake/Right Extension/VoltageKp",  1.0))
+                  .withKD(new LoggedTunableNumber("Intake/Right Extension/VoltageKd", 0.0))
+                  .withKS(new LoggedTunableNumber("Intake/Right Extension/VoltageKs", 0.0))
+                  .withKV(new LoggedTunableNumber("Intake/Right Extension/VoltageKv", 0.0))
+                  .withKA(new LoggedTunableNumber("Intake/Right Extension/VoltageKa", 0.0))
+                  .build())
+            .withSlot1Gains(Gains.builder()
+                  .withKP(new LoggedTunableNumber("Intake/Right Extension/VoltageKp",  1.0))
+                  .withKD(new LoggedTunableNumber("Intake/Right Extension/VoltageKd", 0.0))
+                  .withKS(new LoggedTunableNumber("Intake/Right Extension/VoltageKs", 0.0))
+                  .withKV(new LoggedTunableNumber("Intake/Right Extension/VoltageKv", 0.0))
+                  .withKA(new LoggedTunableNumber("Intake/Right Extension/VoltageKa", 0.0))
+                  .build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)
             .withOpposedFollowerCANID(47)
