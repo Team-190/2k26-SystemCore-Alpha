@@ -232,6 +232,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     STOW,
     INTAKE,
     AGITATE,
+    MANUAL_EXTEND,
     OVERRIDE
   }
 

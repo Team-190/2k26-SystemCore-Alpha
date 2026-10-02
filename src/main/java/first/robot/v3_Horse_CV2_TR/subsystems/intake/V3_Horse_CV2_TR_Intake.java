@@ -1,8 +1,6 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 
-import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Meters;
-import static org.wpilib.units.Units.MetersPerSecond;
 import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
@@ -17,12 +15,11 @@ import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConst
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
 import lombok.experimental.ExtensionMethod;
-
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
-import org.wpilib.units.Units;
+import org.wpilib.units.measure.Distance;
 
 @ExtensionMethod(ExtensionMethods.class)
 public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
@@ -40,16 +37,20 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   private boolean agitateIn;
 
+  private DoubleSupplier triggerSupplier;
+
   public V3_Horse_CV2_TR_Intake(
       GenericRollerIO intakeRollerIO,
       GenericRollerIO kickerRollerIO,
       ExtensionIO leftExtensionIO,
-      ExtensionIO rightExtensionIO) {
+      ExtensionIO rightExtensionIO,
+      DoubleSupplier triggerSupplier) {
     setName("Intake");
 
     extensionState = ExtensionState.STOW;
     rollerState = RollerState.STOP;
     agitateIn = false;
+    this.triggerSupplier = triggerSupplier;
 
     intakeRoller =
         new GenericRoller(
@@ -105,6 +106,14 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
           agitateIn = !agitateIn;
         }
         setAgitateGoals(agitateIn);
+      case MANUAL_EXTEND:
+        if (triggerSupplier.getAsDouble() < 0.9) {
+          leftExtension.setPositionGoal(linearExtensionMap());
+          rightExtension.setPositionGoal(linearExtensionMap());
+        } else {
+          extensionState = ExtensionState.STOW;
+        }
+
       case OVERRIDE:
     }
     // Rewrite agitate in periodic (not command form)
@@ -118,6 +127,16 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     rightExtension.periodic();
     Logger.recordOutput("Intake/Rollers/State", rollerState.toString());
     Logger.recordOutput("Intake/Extension/State", extensionState.toString());
+  }
+
+  private Distance linearExtensionMap() {
+    Distance position =
+        Meters.of(
+            (1 - triggerSupplier.getAsDouble())
+                    * (V3_Horse_CV2_TR_IntakeConstants.EXTENSION_INTAKE_POSITION
+                        - V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION)
+                + V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION);
+    return position;
   }
 
   private boolean switchDirection(boolean agitateIn) {
@@ -135,9 +154,13 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
                     .getPositionGoal()
                     .equals(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal))
                 && rightExtension.atPositionGoal()))
-        || (leftExtension.getTorqueCurrent().abs()
+        || (leftExtension
+            .getTorqueCurrent()
+            .abs()
             .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT))
-        || rightExtension.getTorqueCurrent().abs()
+        || rightExtension
+            .getTorqueCurrent()
+            .abs()
             .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT));
   }
 
@@ -156,13 +179,21 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   private boolean extensionStuck() {
-    return ((leftExtension.getTorqueCurrent().abs()
+    return ((leftExtension
+                .getTorqueCurrent()
+                .abs()
                 .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT)
-            && leftExtension.getVelocity().abs()
+            && leftExtension
+                .getVelocity()
+                .abs()
                 .lte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_VELOCITY))
-        || (rightExtension.getTorqueCurrent().abs()
+        || (rightExtension
+                .getTorqueCurrent()
+                .abs()
                 .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT)
-            && rightExtension.getVelocity().abs()
+            && rightExtension
+                .getVelocity()
+                .abs()
                 .lte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_VELOCITY)));
   }
 
@@ -250,20 +281,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command manualExtend(DoubleSupplier getTriggerPos) {
     return Commands.runOnce(
         () -> {
-          extensionState = ExtensionState.OVERRIDE;
-          double triggerPos = getTriggerPos.getAsDouble();
-          rightExtension.setPosition(
-              Meters.of(
-                  triggerPos
-                          * (V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION
-                              - V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION)
-                      + V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
-          leftExtension.setPosition(
-              Meters.of(
-                  triggerPos
-                          * (V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION
-                              - V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION)
-                      + V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+          extensionState = ExtensionState.MANUAL_EXTEND;
         });
   }
 }
