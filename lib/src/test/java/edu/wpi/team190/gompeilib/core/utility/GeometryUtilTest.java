@@ -238,5 +238,10 @@ public class GeometryUtilTest {
 
     // Intersects via target containing rectangle center
     assertTrue(GeometryUtil.intersects(rectangles, new Pose2d(0.5, 0.5, Rotation2d.kZero), 3, 3));
+
+    // Intersects via target containing rectangle center, with no corner or target-center overlap
+    Rectangle2d[] offsetRectangles = {new Rectangle2d(new Pose2d(3, 3, Rotation2d.kZero), 1, 1)};
+    assertTrue(
+        GeometryUtil.intersects(offsetRectangles, new Pose2d(0, 0, Rotation2d.kZero), 10, 10));
   }
 }

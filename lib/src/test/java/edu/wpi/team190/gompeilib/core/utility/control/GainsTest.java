@@ -43,5 +43,8 @@ public class GainsTest {
     gains1.update(1, g -> counter.incrementAndGet());
     // Since kP is a LoggedTunableNumber, first check to see if it changed will trigger
     assertEquals(1, counter.get());
+
+    // Null prefix check
+    assertThrows(NullPointerException.class, () -> Gains.fromDoubles().build());
   }
 }

@@ -25,5 +25,16 @@ public class LinearConstraintsTest {
     AtomicInteger counter = new AtomicInteger(0);
     c.update(1, x -> counter.incrementAndGet());
     assertEquals(1, counter.get());
+
+    // Null prefix check (other fields must be valid so the NPE comes from the @NonNull check
+    // itself, rather than from constructing a LoggedTunableMeasure with a null measure first)
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            LinearConstraints.fromMeasures()
+                .withGoalTolerance(Units.Meters.of(0.05))
+                .withMaxVelocity(Units.MetersPerSecond.of(3.0))
+                .withMaxAcceleration(Units.MetersPerSecond.per(Units.Second).of(6.0))
+                .build());
   }
 }

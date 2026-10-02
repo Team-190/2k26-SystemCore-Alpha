@@ -54,18 +54,6 @@ public enum CameraType {
     this.primaryThetaStandardDeviationCoefficient = primaryThetaStandardDeviationCoefficient;
   }
 
-  private CameraType(
-      double horizontalFOV,
-      double verticalFOV,
-      double xyStandardDeviationCoefficient,
-      double thetaStandardDeviationCoefficient) {
-    this.horizontalFOV = horizontalFOV;
-    this.verticalFOV = verticalFOV;
-    this.primaryXYStandardDeviationCoefficient = xyStandardDeviationCoefficient;
-    this.secondaryXYStandardDeviationCoefficient = xyStandardDeviationCoefficient;
-    this.primaryThetaStandardDeviationCoefficient = thetaStandardDeviationCoefficient;
-  }
-
   private CameraType() {
     this.horizontalFOV = 0.0;
     this.verticalFOV = 0.0;

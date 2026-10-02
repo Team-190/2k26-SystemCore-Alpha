@@ -24,5 +24,16 @@ public class AngularPositionConstraintsTest {
     AtomicInteger counter = new AtomicInteger(0);
     c.update(1, x -> counter.incrementAndGet());
     assertEquals(1, counter.get());
+
+    // Null prefix check (other fields must be valid so the NPE comes from the @NonNull check
+    // itself, rather than from constructing a LoggedTunableMeasure with a null measure first)
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            AngularPositionConstraints.fromMeasures()
+                .withGoalTolerance(Units.Degrees.of(1.0))
+                .withMaxVelocity(Units.DegreesPerSecond.of(180.0))
+                .withMaxAcceleration(Units.DegreesPerSecond.per(Units.Second).of(360.0))
+                .build());
   }
 }
