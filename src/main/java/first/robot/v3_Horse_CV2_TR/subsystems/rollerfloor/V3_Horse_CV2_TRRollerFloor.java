@@ -5,7 +5,7 @@ import static org.wpilib.units.Units.Volts;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRoller;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
-import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloorConstants.RollerFloorState;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
@@ -14,30 +14,30 @@ import org.wpilib.command2.SubsystemBase;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Voltage;
 
-public class V3_Horse_CV2_TR_RollerFloor extends SubsystemBase {
+public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
   private final GenericRoller rollerFloor;
   @Getter private RollerFloorState rollerFloorGoal;
   private final Setpoint<VoltageUnit> rollerFloorSetpoint, rollerFloorOverrideSetpoint;
 
-  public V3_Horse_CV2_TR_RollerFloor(GenericRollerIO rollerFloorIO) {
+  public V3_Horse_CV2_TRRollerFloor(GenericRollerIO rollerFloorIO) {
 
     rollerFloorSetpoint =
         new Setpoint<>(
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE,
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(-12),
             Volts.of(12));
     rollerFloorOverrideSetpoint =
         new Setpoint<>(
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_OVERRIDE_VOLTAGE,
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_OVERRIDE_VOLTAGE,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(-12),
             Volts.of(12));
     rollerFloor =
         new GenericRoller(
             rollerFloorIO,
             this,
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS,
             " Floor",
             rollerFloorSetpoint);
   }
