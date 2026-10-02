@@ -10,7 +10,6 @@ import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
-import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import java.util.Map;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
@@ -104,7 +103,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
             .withRollerMotorGearRatio((1.0 / 2.0)) // same here, please change this
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withOpposedFollowerCANID(41)
+            .withOpposedFollowerCANID(43)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
             .withCanBus(CANBus.systemcore(0))
@@ -129,7 +128,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
     RIGHT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
-            .withLeaderCANID(44)
+            .withLeaderCANID(45)
             .withExtensionGearRatio(null) // and here
             .withDrumRadius(0.025)
             .withExtensionSupplyCurrentLimit(40.0)
@@ -138,7 +137,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withSlot1Gains(Gains.builder().build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)
-            .withOpposedFollowerCANID(46)
+            .withOpposedFollowerCANID(47)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
             .build();

@@ -30,6 +30,9 @@
   ],
   "java.test.defaultConfig": "WPIlibUnitTests",
   "java.import.gradle.annotationProcessing.enabled": false,
+  "java.import.gradle.rootDirectories.exclude": [
+    "**/lib"
+  ],
   "java.completion.favoriteStaticMembers": [
     "org.junit.Assert.*",
     "org.junit.Assume.*",
