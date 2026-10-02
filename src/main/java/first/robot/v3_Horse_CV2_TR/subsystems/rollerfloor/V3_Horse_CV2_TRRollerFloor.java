@@ -23,21 +23,21 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
 
     rollerFloorSetpoint =
         new Setpoint<>(
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE,
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(-12),
             Volts.of(12));
     rollerFloorOverrideSetpoint =
         new Setpoint<>(
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_OVERRIDE_VOLTAGE,
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_OVERRIDE_VOLTAGE,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(-12),
             Volts.of(12));
     rollerFloor =
         new GenericRoller(
             rollerFloorIO,
             this,
-            V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS,
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS,
             " Floor",
             rollerFloorSetpoint);
   }

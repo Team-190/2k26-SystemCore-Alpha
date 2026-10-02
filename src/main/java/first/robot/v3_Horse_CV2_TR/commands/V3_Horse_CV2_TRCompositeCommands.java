@@ -55,50 +55,46 @@ public class V3_Horse_CV2_TRCompositeCommands {
   }
 
   public static Command shootWithAgitateCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor,
-      V3_Horse_CV2_TRShooter shooter,
-      V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
+    // V3_Horse_CV2_TR_Intake intake) {
     return Commands.parallel(
-        V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter),
-        intake.setState(intakeState.AGITATE));
+        V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter));
+    // intake.setState(intakeState.AGITATE));
   }
 
   public static Command bumpShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor,
-      V3_Horse_CV2_TRShooter shooter,
-      V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
+    // V3_Horse_CV2_TR_Intake intake) {
 
     return Commands.parallel(
         Commands.sequence(
             shooter.setGoal(ShooterGoal.BUMP_SHOT),
             shooter.waitUntilAtGoal(),
-            rollerFloor.setState(null)),
-        intake.setState(intakeState.AGITATE));
+            rollerFloor.setState(null)));
+    // intake.setState(intakeState.AGITATE))
   }
 
   public static Command trenchShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor,
-      V3_Horse_CV2_TRShooter shooter,
-      V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
+    //   V3_Horse_CV2_TR_Intake intake) {
 
     return Commands.parallel(
         Commands.sequence(
             shooter.setGoal(ShooterGoal.TRENCH_SHOT),
             shooter.waitUntilAtGoal(),
-            rollerFloor.setState(null)),
-        intake.setState(intakeState.AGITATE));
+            rollerFloor.setState(null)));
+    // intake.setState(intakeState.AGITATE))
   }
 
   public static Command farShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor,
-      V3_Horse_CV2_TRShooter shooter,
-      V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
+    // V3_Horse_CV2_TR_Intake intake) {
 
     return Commands.parallel(
         Commands.sequence(
             shooter.setGoal(ShooterGoal.FAR_SHOT),
             shooter.waitUntilAtGoal(),
-            rollerFloor.setState(null)),
-        intake.setState(intakeState.AGITATE));
+            rollerFloor.setState(null)));
+    // intake.setState(intakeState.AGITATE));
   }
 }
