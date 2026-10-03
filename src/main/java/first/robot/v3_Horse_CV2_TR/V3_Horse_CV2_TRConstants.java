@@ -178,5 +178,18 @@ public class V3_Horse_CV2_TRConstants {
           .enableRewind(true)
           .build();
 
+  public static final StaticLimelightConfig frontcamera = // TODO: Use Real Value
+      StaticLimelightConfig.builder()
+          .key("front")
+          .cameraType(CameraType.LIMELIGHT_4)
+          .horizontalFOV(CameraType.LIMELIGHT_4.horizontalFOV)
+          .verticalFOV(CameraType.LIMELIGHT_4.verticalFOV)
+          .megatagXYStdev(CameraType.LIMELIGHT_4.secondaryXYStandardDeviationCoefficient)
+          .metatagThetaStdev(CameraType.LIMELIGHT_4.primaryThetaStandardDeviationCoefficient)
+          .megatag2XYStdev(CameraType.LIMELIGHT_4.primaryXYStandardDeviationCoefficient)
+          .robotToCameraTransform(new Transform3d(0.0, 0.0, 0.0, new Rotation3d(0.0, 0.0, 0.0)))
+          .enableRewind(true)
+          .build();
+
   public static final double AUTO_CORRECTION_THRESHOLD_METERS = 0.2;
 }
