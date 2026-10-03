@@ -41,7 +41,7 @@ public class V3_Horse_CV2_TRShooterConstants {
       GenericFlywheelConstants.builder()
           .withLeaderCANID(41)
           .withLeaderInversion(InvertedValue.Clockwise_Positive)
-          .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Use Real Value
+          .withCanBus(new CANBus(CANPort.CAN_S4))
           .withEnableFOC(true)
           .withCurrentLimit(
               CurrentLimits.builder()
@@ -79,14 +79,14 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withOpposedFollowerCANID(42)
           .withOpposedFollowerCANID(44)
           .withAlignedFollowerCANID(43)
-          .withVelocityOffsetStep(RadiansPerSecond.of(10)) // TODO: Use Real Value
-          .withVoltageOffsetStep(Volts.of(1)) // TODO: Use Real Value
+          .withVelocityOffsetStep(RadiansPerSecond.of(10))
+          .withVoltageOffsetStep(Volts.of(1))
           .build();
 
   public static final GenericHoodConstants HOOD_CONSTANTS =
       GenericHoodConstants.builder()
           .withMotorCanId(45)
-          .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Use Real Value
+          .withCanBus(new CANBus(CANPort.CAN_S4))
           .withGearRatio(70.0)
           .withCurrentLimits(new CurrentLimits(40, 30)) // TODO: Use Real Value
           .withMomentOfInertia(0.0001)
@@ -114,8 +114,8 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
                   .withGoalTolerance(Degrees.of(1.0))
                   .build())
-          .withOffsetStep(Degrees.of(0.5)) // TODO: Use Real Value
-          .withVoltageStep(Volts.of(0.5)) // TODO: Use Real Value
+          .withOffsetStep(Degrees.of(0.5))
+          .withVoltageStep(Volts.of(0.5))
           .build();
 
   public enum ShooterGoal {

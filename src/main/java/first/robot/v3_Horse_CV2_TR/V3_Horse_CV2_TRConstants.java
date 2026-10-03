@@ -38,8 +38,8 @@ public class V3_Horse_CV2_TRConstants {
           V3_Horse_CV2_TRTunerConstants.BackRight,
           V3_Horse_CV2_TRTunerConstants.kDriveClosedLoopOutput,
           V3_Horse_CV2_TRTunerConstants.kSteerClosedLoopOutput,
-          Units.inchesToMeters(37.5), // TODO: Use Real Value
-          Units.inchesToMeters(28.5), // TODO: Use Real Value
+          Units.inchesToMeters(34.25), // width
+          Units.inchesToMeters(32.25), // length
           0.0,
           0.0,
           0.0,

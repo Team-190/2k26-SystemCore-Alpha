@@ -85,7 +85,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio((1.0 / 2.0)) // please god someone change this
+            .withRollerMotorGearRatio(36.0 / 12)
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
@@ -102,7 +102,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio((1.0 / 2.0)) // TODO: please god someone change this
+            .withRollerMotorGearRatio(36 / 12.0)
             .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
@@ -119,8 +119,8 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio((1.0 / 2.0)) // same here, please change this
-            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withRollerMotorGearRatio(((58.0 / 26) * (24 / 18)))
+            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
             .withCanBus(new CANBus("Extension"))
@@ -130,8 +130,9 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     LEFT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(21)
-            .withExtensionGearRatio(null) // TODO: and here
-            .withDrumRadius(0.025)
+            .withExtensionGearRatio((52.0 / 30) * (52 / 16))
+            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
+            .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
             .withSlot0Gains(
@@ -162,8 +163,9 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     RIGHT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(22)
-            .withExtensionGearRatio(null) // TODO: and here
-            .withDrumRadius(0.025)
+            .withExtensionGearRatio((52.0 / 30) * (52 / 16))
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
             .withSlot0Gains(

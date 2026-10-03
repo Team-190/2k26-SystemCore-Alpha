@@ -62,6 +62,8 @@ public class ExtensionIOTalonFX implements ExtensionIO {
 
     config = new TalonFXConfiguration();
 
+    config.MotorOutput.withInverted(constants.leaderInvertedValue);
+
     config.Slot0.withKP(constants.slot0Gains.kP().get())
         .withKD(constants.slot0Gains.kD().get())
         .withKS(constants.slot0Gains.kS().get())

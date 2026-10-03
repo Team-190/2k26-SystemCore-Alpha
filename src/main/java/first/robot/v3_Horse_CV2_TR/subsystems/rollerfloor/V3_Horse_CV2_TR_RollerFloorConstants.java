@@ -34,10 +34,9 @@ public class V3_Horse_CV2_TR_RollerFloorConstants {
             .withRollerGearbox(DCMotor.getKrakenX60Foc(2))
             .withRollerMotorGearRatio(3.0 / 2.0)
             .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
-            .withMomentOfInertia(
-                Units.KilogramSquareMeters.of(0.0001)) 
+            .withMomentOfInertia(Units.KilogramSquareMeters.of(0.0001))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus(CANPort.CAN_S3)) 
+            .withCanBus(new CANBus(CANPort.CAN_S3))
             .withEnableFOC(false)
             .withAlignedFollowerCANID(32)
             .build();

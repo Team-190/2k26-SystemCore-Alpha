@@ -1,6 +1,7 @@
 package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import java.util.Set;
@@ -14,6 +15,7 @@ import org.wpilib.units.measure.Voltage;
 @Builder(setterPrefix = "with")
 public class ExtensionConstants {
   @NonNull public final Integer leaderCANID;
+  @NonNull public final InvertedValue leaderInvertedValue;
   @NonNull public final CANBus canBus;
   @NonNull public final Double extensionGearRatio;
   @NonNull public final Double drumRadius;
