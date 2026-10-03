@@ -30,6 +30,7 @@ import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class ArmIOTalonFXTest {
   private ArmConstants constants;
 
@@ -143,7 +144,7 @@ public class ArmIOTalonFXTest {
     when(positionErrorRotations.getValueAsDouble()).thenReturn(0.01);
     when(closedLoopSlot.getValue()).thenReturn(0);
 
-    try (MockedConstruction<TalonFX> mockTalon =
+    try (MockedConstruction<TalonFX> _ =
             mockConstruction(
                 TalonFX.class,
                 (mock, context) -> {

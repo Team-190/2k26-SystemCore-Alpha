@@ -111,6 +111,7 @@ public class Arm {
       case OPEN_LOOP_VOLTAGE_CONTROL -> io.setVoltageGoal((Voltage) voltageGoal.getNewSetpoint());
       case CLOSED_LOOP_POSITION_CONTROL ->
           io.setPositionGoal(new Rotation2d((Angle) positionGoal.getNewSetpoint()));
+      case IDLE -> {}
     }
   }
 

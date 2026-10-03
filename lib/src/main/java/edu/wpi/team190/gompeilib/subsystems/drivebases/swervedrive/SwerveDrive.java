@@ -157,16 +157,13 @@ public class SwerveDrive extends SubsystemBase {
 
     try {
       config = RobotConfig.fromGUISettings();
-    } catch (Exception e) {
-      System.err.println("Error occurred while loading robot config: " + e.getMessage());
-    }
-
-    try {
       AutoBuilder.configure(
           this.robotPoseSupplier,
           resetPoseConsumer, // resetPose
           () -> getChassisVelocities(), // get robotRelativeSpeeds
           (speeds, feedforwards) -> {
+            // Retained from Choreo; switch to runVelocityTorque(speeds, forces) if needed.
+            @SuppressWarnings("unused")
             List<Vector<N2>> forces =
                 IntStream.range(0, 4)
                     .mapToObj(
@@ -187,7 +184,7 @@ public class SwerveDrive extends SubsystemBase {
                   driveConstants.autoRotationGains.kP().getAsDouble(),
                   driveConstants.autoRotationGains.kI().getAsDouble(),
                   driveConstants.autoRotationGains.kD().getAsDouble())),
-          com.pathplanner.lib.config.RobotConfig.fromGUISettings(),
+          config,
           () -> {
             var alliance = DriverStationBackend.getAlliance();
             if (alliance.isPresent()) {

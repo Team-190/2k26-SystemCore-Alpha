@@ -49,6 +49,7 @@ import org.wpilib.math.numbers.N2;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class SwerveDriveTest {
 
   private SwerveDriveConstants driveConstants;
@@ -229,7 +230,7 @@ public class SwerveDriveTest {
   public void testSwerveDriveLowFrequencyGyro() {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
         MockedStatic<DriverStationBackend> mockDSBackend = mockStatic(DriverStationBackend.class)) {
 
@@ -358,9 +359,9 @@ public class SwerveDriveTest {
 
   @Test
   public void testSwerveDriveHighFrequencyGyro() {
-    try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
+    try (MockedStatic<AutoBuilder> _ = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
         MockedStatic<PhoenixOdometryThread> mockOdomThread =
             mockStatic(PhoenixOdometryThread.class)) {
@@ -404,8 +405,8 @@ public class SwerveDriveTest {
   public void testSwerveDriveDisconnectedGyroFallback() {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
-        MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
+        MockedStatic<RobotState> _ = mockStatic(RobotState.class);
         MockedStatic<DriverStationBackend> mockDSBackend = mockStatic(DriverStationBackend.class)) {
 
       mockRobotConfig.when(RobotConfig::fromGUISettings).thenReturn(mock(RobotConfig.class));
@@ -463,9 +464,9 @@ public class SwerveDriveTest {
 
   @Test
   public void testSwerveDriveRobotConfigLoadFailure() {
-    try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
+    try (MockedStatic<AutoBuilder> _ = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class)) {
 
       // Every call to RobotConfig.fromGUISettings() fails, exercising both the constructor's

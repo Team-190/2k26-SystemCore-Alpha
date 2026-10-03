@@ -57,7 +57,7 @@ public class GenericRollerTest {
 
   @Test
   public void testRoller() {
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       GenericRoller roller = new GenericRoller(io, subsystem, constants, "Test");
       assertNotNull(roller);
 

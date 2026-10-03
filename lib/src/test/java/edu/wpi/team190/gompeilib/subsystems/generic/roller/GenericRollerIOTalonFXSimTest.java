@@ -24,6 +24,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.*;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class GenericRollerIOTalonFXSimTest {
   private GenericRollerConstants constants;
 
@@ -81,7 +82,7 @@ public class GenericRollerIOTalonFXSimTest {
     TalonFXSimState simState = mock(TalonFXSimState.class);
     when(simState.getMotorVoltage()).thenReturn(6.0);
 
-    try (MockedConstruction<TalonFX> mockTalon =
+    try (MockedConstruction<TalonFX> _ =
             mockConstruction(
                 TalonFX.class,
                 (mock, context) -> {

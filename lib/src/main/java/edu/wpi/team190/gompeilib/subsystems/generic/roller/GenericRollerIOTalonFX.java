@@ -33,6 +33,7 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
 
   protected GenericRollerConstants constants;
 
+  @SuppressWarnings("resource") // Followers are retained in followerTalonFX
   public GenericRollerIOTalonFX(GenericRollerConstants constants) {
     talonFX = new TalonFX(constants.leaderCANID, constants.canBus);
     followerTalonFX =

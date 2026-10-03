@@ -115,6 +115,7 @@ public class Extension {
       case OPEN_LOOP_VOLTAGE_CONTROL -> io.setVoltageGoal((Voltage) voltageGoal.getNewSetpoint());
       case CLOSED_LOOP_POSITION_CONTROL ->
           io.setPositionGoal((Distance) positionGoal.getNewSetpoint());
+      case IDLE -> {}
     }
   }
 

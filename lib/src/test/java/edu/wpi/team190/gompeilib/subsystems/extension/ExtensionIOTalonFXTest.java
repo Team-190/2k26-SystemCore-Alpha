@@ -29,6 +29,7 @@ import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class ExtensionIOTalonFXTest {
   private ExtensionConstants constants;
 
@@ -123,7 +124,7 @@ public class ExtensionIOTalonFXTest {
     when(velocitySetpointRotations.getValueAsDouble()).thenReturn(0.75);
     when(closedLoopSlot.getValue()).thenReturn(0);
 
-    try (MockedConstruction<TalonFX> mockTalon =
+    try (MockedConstruction<TalonFX> _ =
             mockConstruction(
                 TalonFX.class,
                 (mock, context) -> {

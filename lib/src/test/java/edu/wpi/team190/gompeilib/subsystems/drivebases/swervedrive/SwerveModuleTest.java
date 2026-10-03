@@ -144,7 +144,7 @@ public class SwerveModuleTest {
         .when(io)
         .updateInputs(any());
 
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       SwerveModule module = new SwerveModule(driveConstants, io, 0);
 
       module.updateInputs();
@@ -219,7 +219,7 @@ public class SwerveModuleTest {
         .when(io)
         .updateInputs(any());
 
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       SwerveModule module = new SwerveModule(driveConstants, io, 1);
       module.updateInputs();
       module.periodic();

@@ -24,8 +24,7 @@ import org.wpilib.units.measure.LinearVelocity;
  * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Unset
  * values default to zero.
  */
-public final class LinearConstraints
-    implements Constraints<LinearConstraints>, Constraints.PositionConstraints<LinearConstraints> {
+public final class LinearConstraints implements Constraints.PositionConstraints<LinearConstraints> {
   private final Tunable<Distance> goalTolerance;
   private final Tunable<LinearVelocity> maxVelocity;
   private final Tunable<LinearAcceleration> maxAcceleration;

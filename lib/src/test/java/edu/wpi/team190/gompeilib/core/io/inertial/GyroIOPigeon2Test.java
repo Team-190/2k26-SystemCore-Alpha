@@ -26,6 +26,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 
+@SuppressWarnings({"unchecked", "rawtypes"}) // Mockito mocks of generic Phoenix types
 public class GyroIOPigeon2Test {
   @BeforeEach
   public void setUp() {
@@ -98,7 +99,7 @@ public class GyroIOPigeon2Test {
 
     AtomicLong timestampInput = new AtomicLong(0);
 
-    try (MockedConstruction<Pigeon2> mockPigeon =
+    try (MockedConstruction<Pigeon2> _ =
             mockConstruction(
                 Pigeon2.class,
                 (mock, context) -> {

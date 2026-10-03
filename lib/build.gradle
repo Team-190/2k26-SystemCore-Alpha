@@ -17,6 +17,10 @@ java {
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
 // io.freefair.lombok 8.4's default Lombok (1.18.30) predates JDK 25 support and crashes
 // (NoSuchFieldException: com.sun.tools.javac.code.TypeTag :: UNKNOWN) on this toolchain.
 // Lombok added JDK 25 support in 1.18.42; pin to a newer release explicitly.

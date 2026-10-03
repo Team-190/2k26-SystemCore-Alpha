@@ -30,6 +30,7 @@ public class GyroIOPigeon2 implements GyroIO {
 
   private final Consumer<Long> networktablesTimestampConsumer;
 
+  @SuppressWarnings("resource") // Pigeon2 lives for the lifetime of the robot program
   public GyroIOPigeon2(
       SwerveDriveConstants driveConstants, Consumer<Long> networkTablesTimestampConsumer) {
     Pigeon2 pigeon =

@@ -44,6 +44,7 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
 
   protected GenericFlywheelConstants constants;
 
+  @SuppressWarnings("resource") // Followers are retained in followerTalonFX
   public GenericFlywheelIOTalonFX(GenericFlywheelConstants constants) {
     talonFX = new TalonFX(constants.leaderCANID, constants.canBus);
     followerTalonFX =
@@ -141,6 +142,8 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
 
     signalsList.add(positionRotations);
     signalsList.add(velocityRotationsPerSecond);
+    signalsList.add(velocitySetpointRotationsPerSecond);
+    signalsList.add(velocityErrorRotationsPerSecond);
     signalsList.addAll(appliedVolts);
     signalsList.addAll(supplyCurrentAmps);
     signalsList.addAll(torqueCurrentAmps);
@@ -191,7 +194,8 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
     inputs.velocityGoal = velocityGoal;
     inputs.velocitySetpoint =
         RotationsPerSecond.of(velocitySetpointRotationsPerSecond.getValueAsDouble());
-    inputs.velocityError = RotationsPerSecond.of(velocityRotationsPerSecond.getValueAsDouble());
+    inputs.velocityError =
+        RotationsPerSecond.of(velocityErrorRotationsPerSecond.getValueAsDouble());
 
     inputs.gainSlot = GainSlot.integerToGainSlot(talonFX.getClosedLoopSlot().getValue());
   }

@@ -1,7 +1,6 @@
 package edu.wpi.team190.gompeilib.subsystems.vision.io;
 
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
-import java.util.*;
 import lombok.Getter;
 import org.wpilib.math.util.Units;
 import org.wpilib.networktables.*;

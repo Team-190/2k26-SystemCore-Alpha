@@ -25,8 +25,7 @@ import org.wpilib.units.measure.AngularVelocity;
  * values default to zero.
  */
 public final class AngularPositionConstraints
-    implements Constraints<AngularPositionConstraints>,
-        Constraints.PositionConstraints<AngularPositionConstraints> {
+    implements Constraints.PositionConstraints<AngularPositionConstraints> {
   private final Tunable<Angle> goalTolerance;
   private final Tunable<AngularVelocity> maxVelocity;
   private final Tunable<AngularAcceleration> maxAcceleration;

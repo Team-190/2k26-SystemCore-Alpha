@@ -29,6 +29,7 @@ import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class ExtensionIOTalonFXSimTest {
   private ExtensionConstants constants;
 
@@ -126,7 +127,7 @@ public class ExtensionIOTalonFXSimTest {
     TalonFXSimState simState = mock(TalonFXSimState.class);
     when(simState.getMotorVoltage()).thenReturn(6.0);
 
-    try (MockedConstruction<TalonFX> mockTalon =
+    try (MockedConstruction<TalonFX> _ =
             mockConstruction(
                 TalonFX.class,
                 (mock, context) -> {

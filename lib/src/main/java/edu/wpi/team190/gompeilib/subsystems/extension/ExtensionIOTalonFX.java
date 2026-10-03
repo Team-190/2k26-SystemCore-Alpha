@@ -49,6 +49,7 @@ public class ExtensionIOTalonFX implements ExtensionIO {
   private MotionMagicVoltage positionVoltageRequest;
   private VoltageOut voltageRequest;
 
+  @SuppressWarnings("resource") // Followers are retained in followerTalonFX
   public ExtensionIOTalonFX(ExtensionConstants constants) {
 
     this.constants = constants;

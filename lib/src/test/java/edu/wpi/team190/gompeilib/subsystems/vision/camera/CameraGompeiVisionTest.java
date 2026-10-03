@@ -73,7 +73,7 @@ public class CameraGompeiVisionTest {
     assertEquals("gompei", camera.getName());
     assertEquals(cameraPoseRel, camera.getCurrentCameraPose());
 
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<DriverStationBackend> mockDS = mockStatic(DriverStationBackend.class)) {
 
       // --- Test empty frames ---

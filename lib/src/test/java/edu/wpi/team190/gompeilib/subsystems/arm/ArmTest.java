@@ -77,7 +77,7 @@ public class ArmTest {
 
   @Test
   public void testArm() {
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       Arm arm = new Arm(io, subsystem, 0, constants);
 
       assertNotNull(arm);

@@ -22,6 +22,7 @@ import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class GenericFlywheelTest {
   private GenericFlywheelIO io;
   private Subsystem subsystem;
@@ -70,7 +71,7 @@ public class GenericFlywheelTest {
 
   @Test
   public void testGenericFlywheel() throws Exception {
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       GenericFlywheel flywheel = new GenericFlywheel(io, subsystem, constants, "Test");
       assertNotNull(flywheel);
       assertEquals(GenericFlywheelState.IDLE, flywheel.getCurrentState());

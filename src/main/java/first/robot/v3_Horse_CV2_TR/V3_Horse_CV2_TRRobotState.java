@@ -35,7 +35,7 @@ import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 
 public class V3_Horse_CV2_TRRobotState {
-  private static final Field fieldLayout;
+  @Getter private static final Field fieldLayout;
 
   private static final Field2d field;
 

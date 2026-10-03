@@ -1,6 +1,5 @@
 package edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
@@ -32,6 +31,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
 import org.wpilib.units.measure.*;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class SwerveModuleIOTalonFXSimTest {
 
   private SwerveDriveConstants driveConstants;
@@ -218,7 +218,7 @@ public class SwerveModuleIOTalonFXSimTest {
                   when(mock.setControl(any(com.ctre.phoenix6.controls.ControlRequest.class)))
                       .thenReturn(StatusCode.OK);
                 });
-        MockedConstruction<CANcoder> mockCANcoder =
+        MockedConstruction<CANcoder> _ =
             mockConstruction(
                 CANcoder.class,
                 (mock, context) -> {

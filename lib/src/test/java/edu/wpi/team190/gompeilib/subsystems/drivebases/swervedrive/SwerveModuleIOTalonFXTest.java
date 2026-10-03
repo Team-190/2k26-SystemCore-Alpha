@@ -32,6 +32,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
 import org.wpilib.units.measure.*;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class SwerveModuleIOTalonFXTest {
 
   private SwerveDriveConstants driveConstants;
@@ -210,7 +211,7 @@ public class SwerveModuleIOTalonFXTest {
                   when(mock.setControl(any(com.ctre.phoenix6.controls.ControlRequest.class)))
                       .thenReturn(StatusCode.OK);
                 });
-        MockedConstruction<CANcoder> mockCANcoder =
+        MockedConstruction<CANcoder> _ =
             mockConstruction(
                 CANcoder.class,
                 (mock, context) -> {
@@ -341,7 +342,7 @@ public class SwerveModuleIOTalonFXTest {
                   when(mock.setControl(any(com.ctre.phoenix6.controls.ControlRequest.class)))
                       .thenReturn(StatusCode.OK);
                 });
-        MockedConstruction<CANcoder> mockCANcoder =
+        MockedConstruction<CANcoder> _ =
             mockConstruction(
                 CANcoder.class,
                 (mock, context) -> {

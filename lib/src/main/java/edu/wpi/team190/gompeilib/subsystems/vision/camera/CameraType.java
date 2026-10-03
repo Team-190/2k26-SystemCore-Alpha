@@ -102,7 +102,5 @@ public enum CameraType {
     private static final double SINGLETAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.05;
     private static final double THETA_STANDARD_DEVIATION_COEFFICIENT = 0.1;
     private static final double MULTITAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.00015;
-    private static final int WIDTH = 1600;
-    private static final int HEIGHT = 1304;
   }
 }

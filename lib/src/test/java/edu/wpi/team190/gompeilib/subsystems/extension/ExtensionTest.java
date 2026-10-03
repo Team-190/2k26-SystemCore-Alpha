@@ -72,10 +72,10 @@ public class ExtensionTest {
 
   @Test
   public void testExtension() throws Exception {
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       Extension extension = new Extension(constants, subsystem, 0, io);
 
-      Extension extension2 =
+      Extension _ =
           new Extension(
               constants,
               subsystem,
