@@ -37,7 +37,7 @@ lombok {
     version = "1.18.46"
 }
 
-def ROBOT_MAIN_CLASS = "first.Main"
+def ROBOT_MAIN_CLASS = "first.robot.Main"
 
 def buildDir = new File("${project.buildDir}/classes/java/main")
 

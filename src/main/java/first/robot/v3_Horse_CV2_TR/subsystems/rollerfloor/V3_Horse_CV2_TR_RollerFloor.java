@@ -58,6 +58,7 @@ public class V3_Horse_CV2_TR_RollerFloor extends SubsystemBase {
         runRollerFloor(rollerFloorSetpoint);
         break;
     }
+    rollerFloor.periodic();
     Logger.recordOutput(
         "Elastic/Hopper/RollerFloor/Voltage Magnitude",
         String.format("%.1f", Math.abs(rollerFloor.getVoltageGoal().getSetpoint().in(Volts))));
