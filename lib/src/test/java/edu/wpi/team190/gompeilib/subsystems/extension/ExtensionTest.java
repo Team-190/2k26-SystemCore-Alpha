@@ -3,6 +3,8 @@ package edu.wpi.team190.gompeilib.subsystems.extension;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
@@ -51,6 +53,8 @@ public class ExtensionTest {
     constants =
         ExtensionConstants.builder()
             .withLeaderCANID(5)
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withCanBus(new CANBus("rio"))
             .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
             .withExtensionSupplyCurrentLimit(40.0)

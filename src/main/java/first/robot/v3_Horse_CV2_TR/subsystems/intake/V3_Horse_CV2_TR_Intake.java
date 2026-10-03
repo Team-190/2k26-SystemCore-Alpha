@@ -322,7 +322,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             () -> {
               extensionState = ExtensionState.OVERRIDE;
             })
-        .andThen(
-            Commands.parallel(leftExtension.runSysIdRoutine(), rightExtension.runSysIdRoutine()));
+        .andThen(Extension.runSysIdRoutine(this, leftExtension, rightExtension));
   }
 }

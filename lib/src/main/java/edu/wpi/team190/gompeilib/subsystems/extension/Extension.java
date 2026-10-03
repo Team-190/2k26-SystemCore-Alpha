@@ -52,14 +52,7 @@ public class Extension {
     this.positionGoal = positionGoal;
     this.voltageGoal = voltageGoal;
 
-    characterizationRoutine =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(1).per(Second),
-                Volts.of(3),
-                Seconds.of(3),
-                (state) -> Logger.recordOutput(aKitTopic + "/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(io::setVoltageGoal, null, subsystem));
+    characterizationRoutine = createCharacterizationRoutine(subsystem, this);
 
     this.constants = constants;
 
@@ -192,14 +185,50 @@ public class Extension {
   }
 
   public Command runSysIdRoutine() {
+    return runSysIdRoutine(characterizationRoutine, this);
+  }
+
+  /** Characterizes several extensions owned by the same subsystem in one pass. */
+  public static Command runSysIdRoutine(Subsystem subsystem, Extension... extensions) {
+    return runSysIdRoutine(createCharacterizationRoutine(subsystem, extensions), extensions);
+  }
+
+  private static SysIdRoutine createCharacterizationRoutine(
+      Subsystem subsystem, Extension... extensions) {
+    return new SysIdRoutine(
+        new SysIdRoutine.Config(
+            Volts.of(1).per(Second),
+            Volts.of(3),
+            Seconds.of(3),
+            (state) -> {
+              for (Extension extension : extensions) {
+                Logger.recordOutput(extension.aKitTopic + "/SysIdState", state.toString());
+              }
+            }),
+        new SysIdRoutine.Mechanism(
+            (voltage) -> {
+              for (Extension extension : extensions) {
+                extension.io.setVoltageGoal(voltage);
+              }
+            },
+            null,
+            subsystem));
+  }
+
+  private static Command runSysIdRoutine(SysIdRoutine routine, Extension... extensions) {
     return Commands.sequence(
-        Commands.runOnce(() -> currentState = ExtensionState.IDLE),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.FORWARD),
+        Commands.runOnce(
+            () -> {
+              for (Extension extension : extensions) {
+                extension.currentState = ExtensionState.IDLE;
+              }
+            }),
+        routine.quasistatic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.REVERSE),
+        routine.quasistatic(SysIdRoutine.Direction.REVERSE),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.FORWARD),
+        routine.dynamic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.REVERSE));
+        routine.dynamic(SysIdRoutine.Direction.REVERSE));
   }
 }
