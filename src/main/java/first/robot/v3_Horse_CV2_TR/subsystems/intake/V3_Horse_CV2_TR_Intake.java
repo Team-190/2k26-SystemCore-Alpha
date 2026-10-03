@@ -5,6 +5,7 @@ import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.utility.ExtensionMethods;
+import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
@@ -19,6 +20,7 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.measure.Distance;
 
 @ExtensionMethod(ExtensionMethods.class)
@@ -38,6 +40,10 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   private boolean agitateIn;
 
   private DoubleSupplier triggerSupplier;
+
+  private final Setpoint<DistanceUnit> leftManualPositionGoal;
+
+  private final Setpoint<DistanceUnit> rightManualPositionGoal;
 
   public V3_Horse_CV2_TR_Intake(
       GenericRollerIO intakeRollerIO,
@@ -82,6 +88,19 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             1,
             rightExtensionIO,
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
+
+    leftManualPositionGoal =
+        new Setpoint<>(
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION),
+            Meters.of(0.01),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
+    rightManualPositionGoal =
+        new Setpoint<>(
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION),
+            Meters.of(0.01),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
   }
 
   @Trace
@@ -89,13 +108,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public void periodic() {
     switch (extensionState) {
       case INTAKE, STOW:
-        if (extensionStuck()) {
-          leftExtension.setGainSlot(GainSlot.ONE);
-          rightExtension.setGainSlot(GainSlot.ONE);
-        } else {
-          leftExtension.setGainSlot(GainSlot.ZERO);
-          rightExtension.setGainSlot(GainSlot.ZERO);
-        }
         leftExtension.setPositionGoal(
             V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(extensionState));
         rightExtension.setPositionGoal(
@@ -109,8 +121,10 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         break;
       case MANUAL_EXTEND:
         if (triggerSupplier.getAsDouble() < 0.9) {
-          leftExtension.setPositionGoal(linearExtensionMap());
-          rightExtension.setPositionGoal(linearExtensionMap());
+          leftManualPositionGoal.setSetpoint(linearExtensionMap());
+          rightManualPositionGoal.setSetpoint(linearExtensionMap());
+          leftExtension.setPositionGoal(leftManualPositionGoal);
+          rightExtension.setPositionGoal(rightManualPositionGoal);
         } else {
           extensionState = ExtensionState.STOW;
         }
@@ -118,7 +132,9 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
       case OVERRIDE:
         break;
     }
-    // Rewrite agitate in periodic (not command form)
+    if (extensionState != ExtensionState.OVERRIDE) {
+      updateGainSlots();
+    }
     intakeRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
     kickerRoller.setVoltageGoal(
@@ -148,13 +164,17 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     } else {
       agitateGoal = ExtensionState.INTAKE;
     }
-    return (((leftExtension
+    return ((leftExtension
                     .getPositionGoal()
-                    .equals(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(agitateGoal))
+                    .getNewSetpoint()
+                    .matchesSetpoint(
+                        V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(agitateGoal))
                 && leftExtension.atPositionGoal())
             && (rightExtension
                     .getPositionGoal()
-                    .equals(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal))
+                    .getNewSetpoint()
+                    .matchesSetpoint(
+                        V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal))
                 && rightExtension.atPositionGoal()))
         || (leftExtension
             .getTorqueCurrent()
@@ -163,7 +183,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         || rightExtension
             .getTorqueCurrent()
             .abs()
-            .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT));
+            .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT);
   }
 
   private void setAgitateGoals(boolean agitateIn) {
@@ -180,25 +200,10 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal));
   }
 
-  private boolean extensionStuck() {
-    return ((leftExtension
-                .getTorqueCurrent()
-                .abs()
-                .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT)
-            && leftExtension
-                .getVelocity()
-                .abs()
-                .lte(leftExtension.getVelocitySetpoint().times(0.5).abs())
-              && !leftExtension.atPositionGoal())
-        || (rightExtension
-                .getTorqueCurrent()
-                .abs()
-                .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT)
-            && rightExtension
-                .getVelocity()
-                .abs()
-                .lte(rightExtension.getVelocitySetpoint().times(0.5).abs())
-              && !rightExtension.atPositionGoal()));
+  // Compliant (ZERO) at rest, firmer (ONE) while driving to a new goal.
+  private void updateGainSlots() {
+    leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
+    rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
   }
 
   public Command setIntakeVoltage(double voltage) {

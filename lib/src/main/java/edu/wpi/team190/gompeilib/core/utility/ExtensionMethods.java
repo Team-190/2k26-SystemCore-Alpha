@@ -4,11 +4,12 @@ import org.wpilib.units.Measure;
 import org.wpilib.units.Unit;
 
 public class ExtensionMethods {
-  public static <U extends Unit> Measure<U> abs(Measure<U> measure) {
-    return measure.times(Math.signum(measure.baseUnitMagnitude()));
+  @SuppressWarnings("unchecked")
+  public static <M extends Measure<?>> M abs(M measure) {
+    return measure.baseUnitMagnitude() < 0 ? (M) measure.unaryMinus() : measure;
   }
 
-  public static <U extends Unit> boolean equals(Measure<U> measure, Setpoint<U> setpoint) {
-    return (measure.isEquivalent(setpoint.getSetpoint()));
+  public static <U extends Unit> boolean matchesSetpoint(Measure<U> measure, Setpoint<U> setpoint) {
+    return measure.isEquivalent(setpoint.getSetpoint());
   }
 }

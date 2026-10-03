@@ -125,7 +125,7 @@ public class Extension {
     return inputs.velocity;
   }
 
-  public LinearVelocity getVelocitySetpoint(){
+  public LinearVelocity getVelocitySetpoint() {
     return inputs.linearVelocitySetpoint;
   }
 
@@ -154,9 +154,7 @@ public class Extension {
   }
 
   public boolean atPositionGoal(Distance positionReference) {
-    return positionGoal
-        .getNewSetpoint()
-        .isNear(positionReference, constants.constraints.goalTolerance().get());
+    return io.atPositionGoal(positionReference);
   }
 
   public boolean atVoltageGoal() {

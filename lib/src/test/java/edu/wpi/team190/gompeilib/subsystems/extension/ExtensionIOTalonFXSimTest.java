@@ -104,6 +104,7 @@ public class ExtensionIOTalonFXSimTest {
     StatusSignal<Temperature> temperatureCelsius = mock(StatusSignal.class);
     StatusSignal<Double> positionSetpointRotations = mock(StatusSignal.class);
     StatusSignal<Double> positionErrorRotations = mock(StatusSignal.class);
+    StatusSignal<Double> velocitySetpointRotations = mock(StatusSignal.class);
     StatusSignal<Integer> closedLoopSlot = mock(StatusSignal.class);
 
     when(positionRotations.getValue()).thenReturn(Units.Rotations.of(10.0));
@@ -119,6 +120,7 @@ public class ExtensionIOTalonFXSimTest {
     when(temperatureCelsius.getValueAsDouble()).thenReturn(45.0);
     when(positionSetpointRotations.getValueAsDouble()).thenReturn(0.5);
     when(positionErrorRotations.getValueAsDouble()).thenReturn(0.01);
+    when(velocitySetpointRotations.getValueAsDouble()).thenReturn(0.75);
     when(closedLoopSlot.getValue()).thenReturn(0);
 
     TalonFXSimState simState = mock(TalonFXSimState.class);
@@ -138,6 +140,7 @@ public class ExtensionIOTalonFXSimTest {
                   when(mock.getDeviceTemp()).thenReturn(temperatureCelsius);
                   when(mock.getClosedLoopReference()).thenReturn(positionSetpointRotations);
                   when(mock.getClosedLoopError()).thenReturn(positionErrorRotations);
+                  when(mock.getClosedLoopReferenceSlope()).thenReturn(velocitySetpointRotations);
                   when(mock.getClosedLoopSlot()).thenReturn(closedLoopSlot);
                   when(mock.getSimState()).thenReturn(simState);
                 });
@@ -157,6 +160,7 @@ public class ExtensionIOTalonFXSimTest {
 
       assertEquals(10.0, inputs.position.in(Units.Meters), 0.01);
       assertEquals(1.5, inputs.velocity.in(Units.MetersPerSecond), 0.01);
+      assertEquals(0.75, inputs.linearVelocitySetpoint.in(Units.MetersPerSecond), 0.01);
 
       verify(simState).setSupplyVoltage(anyDouble());
       verify(simState).setRawRotorPosition(any(Angle.class));
