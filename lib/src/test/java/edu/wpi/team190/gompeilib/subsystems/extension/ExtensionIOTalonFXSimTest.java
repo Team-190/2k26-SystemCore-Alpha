@@ -6,11 +6,13 @@ import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
@@ -55,6 +57,8 @@ public class ExtensionIOTalonFXSimTest {
     constants =
         ExtensionConstants.builder()
             .withLeaderCANID(5)
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withCanBus(new CANBus("rio"))
             .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
             .withExtensionSupplyCurrentLimit(40.0)

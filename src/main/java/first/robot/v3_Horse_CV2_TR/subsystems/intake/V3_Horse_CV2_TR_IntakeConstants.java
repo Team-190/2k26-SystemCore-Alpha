@@ -121,7 +121,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio(((58.0 / 26) * (24 / 18)))
+            .withRollerMotorGearRatio(((58.0 / 26) * (24.0 / 18)))
             .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
@@ -132,7 +132,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     LEFT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(21)
-            .withExtensionGearRatio((52.0 / 30) * (52 / 16))
+            .withExtensionGearRatio((52.0 / 30) * (52.0 / 16))
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
             .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
@@ -170,16 +170,17 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withConstraints(
                 LinearConstraints.builder()
+                    .withPrefix("Intake/Left Extension/Constraints")
                     .withGoalTolerance(Meters.of(0.01))
-                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
-                    .withMaxVelocity(MetersPerSecond.of(10))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(3))
+                    .withMaxVelocity(MetersPerSecond.of(0.75))
                     .build())
             .build();
 
     RIGHT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(22)
-            .withExtensionGearRatio((52.0 / 30) * (52 / 16))
+            .withExtensionGearRatio((52.0 / 30) * (52.0 / 16))
             .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
@@ -217,9 +218,10 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withConstraints(
                 LinearConstraints.builder()
+                    .withPrefix("Intake/Right Extension/Constraints")
                     .withGoalTolerance(Meters.of(0.01))
-                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
-                    .withMaxVelocity(MetersPerSecond.of(10))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(3))
+                    .withMaxVelocity(MetersPerSecond.of(0.75))
                     .build())
             .build();
 
