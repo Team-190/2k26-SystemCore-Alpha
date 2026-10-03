@@ -95,15 +95,15 @@ public class GenericHoodIOSim implements GenericHoodIO {
   public void setProfile(AngularPositionConstraints constraints) {
     feedback.setConstraints(
         new Constraints(
-            constraints.maxVelocity().get(RadiansPerSecond),
-            constraints.maxAcceleration().get(RadiansPerSecondPerSecond)));
-    feedback.setTolerance(constraints.goalTolerance().get(Radians));
+            constraints.maxVelocity().get().in(RadiansPerSecond),
+            constraints.maxAcceleration().get().in(RadiansPerSecondPerSecond)));
+    feedback.setTolerance(constraints.goalTolerance().get().in(Radians));
   }
 
   @Override
   public boolean atPositionGoal(Rotation2d positionReference) {
     return Math.abs(positionReference.getRadians() - motorSim.getAngle())
-        <= constants.constraints.goalTolerance().get(Radians);
+        <= constants.constraints.goalTolerance().get().in(Radians);
   }
 
   @Override

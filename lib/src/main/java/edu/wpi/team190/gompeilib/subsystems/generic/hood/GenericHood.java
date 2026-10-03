@@ -69,6 +69,9 @@ public class GenericHood {
     this.voltageGoal = voltageGoal;
 
     this.constants = constants;
+
+    constants.gains.onChange(io::setGains);
+    constants.constraints.onChange(io::setProfile);
   }
 
   public GenericHood(
@@ -217,7 +220,7 @@ public class GenericHood {
                 () ->
                     inputs.torqueCurrent.isNear(
                         constants.zeroCurrentThreshold, constants.zeroCurrentEpsilon)),
-        Commands.runOnce(() -> io.setPosition(Rotation2d.kZero)));
+        Commands.runOnce(() -> io.setPosition(Rotation2d.ZERO)));
   }
 
   /**
@@ -237,13 +240,13 @@ public class GenericHood {
   public Command runSysIdRoutine() {
     return Commands.sequence(
         Commands.runOnce(() -> currentState = GenericHoodState.IDLE),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kForward),
+        characterizationRoutine.quasistatic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(3),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
+        characterizationRoutine.quasistatic(SysIdRoutine.Direction.REVERSE),
         Commands.waitSeconds(3),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kForward),
+        characterizationRoutine.dynamic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(3),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kReverse));
+        characterizationRoutine.dynamic(SysIdRoutine.Direction.REVERSE));
   }
 
   public Rotation2d getAngle() {

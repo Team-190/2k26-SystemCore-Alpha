@@ -77,6 +77,10 @@ public class GenericFlywheel {
                 Amp),
             new CustomSysIdRoutine.Mechanism<>(
                 (amps) -> io.setCurrentGoal(Amps.of(amps.in(Amps))), subsystem));
+
+    constants.voltageGains.onChange(gains -> io.updateGains(gains, GainSlot.ZERO));
+    constants.torqueGains.onChange(gains -> io.updateGains(gains, GainSlot.ONE));
+    constants.constraints.onChange(io::updateConstraints);
   }
 
   public GenericFlywheel(

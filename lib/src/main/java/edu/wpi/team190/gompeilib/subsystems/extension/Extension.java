@@ -62,6 +62,11 @@ public class Extension {
             new SysIdRoutine.Mechanism(io::setVoltageGoal, null, subsystem));
 
     this.constants = constants;
+
+    constants.slot0Gains.onChange(gains -> io.updateGains(gains, GainSlot.ZERO));
+    constants.slot1Gains.onChange(gains -> io.updateGains(gains, GainSlot.ONE));
+    constants.slot2Gains.onChange(gains -> io.updateGains(gains, GainSlot.TWO));
+    constants.constraints.onChange(io::updateConstraints);
   }
 
   public Extension(ExtensionConstants constants, Subsystem subsystem, int index, ExtensionIO io) {
@@ -188,12 +193,12 @@ public class Extension {
   public Command runSysIdRoutine() {
     return Commands.sequence(
         Commands.runOnce(() -> currentState = ExtensionState.IDLE),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kForward),
+        characterizationRoutine.quasistatic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
+        characterizationRoutine.quasistatic(SysIdRoutine.Direction.REVERSE),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kForward),
+        characterizationRoutine.dynamic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kReverse));
+        characterizationRoutine.dynamic(SysIdRoutine.Direction.REVERSE));
   }
 }

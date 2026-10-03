@@ -30,7 +30,7 @@ public class GenericFlywheelIOTalonFXSimTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -52,7 +52,7 @@ public class GenericFlywheelIOTalonFXSimTest {
             .withGearRatio(1.0)
             .withMotorConfig(DCMotor.getNeo550(1))
             .withVoltageGains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("voltage")
                     .withKP(1.0)
                     .withKI(0.0)
@@ -63,7 +63,7 @@ public class GenericFlywheelIOTalonFXSimTest {
                     .withKG(0.0)
                     .build())
             .withTorqueGains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("torque")
                     .withKP(0.5)
                     .withKI(0.0)
@@ -74,7 +74,7 @@ public class GenericFlywheelIOTalonFXSimTest {
                     .withKG(0.0)
                     .build())
             .withConstraints(
-                AngularVelocityConstraints.fromMeasures()
+                AngularVelocityConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.RadiansPerSecond.of(100.0))
                     .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(50.0))

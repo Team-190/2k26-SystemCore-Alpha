@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
 import org.wpilib.driverstation.internal.DriverStationBackend;
+import org.wpilib.fields.Field;
+import org.wpilib.fields.FieldTag;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Pose3d;
 import org.wpilib.math.geometry.Rotation2d;
@@ -23,8 +25,6 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.numbers.N5;
-import org.wpilib.vision.apriltag.AprilTag;
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class CameraGompeiVisionTest {
 
@@ -48,11 +48,11 @@ public class CameraGompeiVisionTest {
             .robotRelativePose(cameraPoseRel)
             .build();
 
-    AprilTag tag1 =
-        new AprilTag(1, new Pose3d(1.0, 2.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
-    AprilTag tag2 =
-        new AprilTag(2, new Pose3d(5.0, 5.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
-    AprilTagFieldLayout layout = new AprilTagFieldLayout(List.of(tag1, tag2), 16.0, 8.0);
+    FieldTag tag1 =
+        new FieldTag(1, new Pose3d(1.0, 2.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
+    FieldTag tag2 =
+        new FieldTag(2, new Pose3d(5.0, 5.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
+    Field layout = new Field(null, null, null, null, 16.0, 8.0, null, List.of(tag1, tag2));
 
     List<VisionPoseObservation> poses = new ArrayList<>();
     List<VisionMultiTxTyObservation> txtys = new ArrayList<>();

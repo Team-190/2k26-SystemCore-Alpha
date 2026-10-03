@@ -8,10 +8,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
 import java.util.Map;
+import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
@@ -89,7 +89,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withOpposedFollowerCANID(41)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(CANBus.systemcore(0))
+            .withCanBus(new CANBus(CANPort.CAN_S0))
             .withEnableFOC(false)
             .build();
     KICKER_ROLLER_CONSTANTS =
@@ -107,7 +107,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withOpposedFollowerCANID(43)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(CANBus.systemcore(0))
+            .withCanBus(new CANBus(CANPort.CAN_S0))
             .withEnableFOC(false)
             .build();
 
@@ -120,19 +120,21 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withExtensionStatorCurrentLimit(40.0)
             .withSlot0Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Left Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Left Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Left Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Left Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Left Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Left Extension/Slot0")
+                    .withKP(1.0)
+                    .withKD(0.0)
+                    .withKS(0.0)
+                    .withKV(0.0)
+                    .withKA(0.0)
                     .build())
             .withSlot1Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Left Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Left Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Left Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Left Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Left Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Left Extension/Slot1")
+                    .withKP(1.0)
+                    .withKD(0.0)
+                    .withKS(0.0)
+                    .withKV(0.0)
+                    .withKA(0.0)
                     .build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)
@@ -150,19 +152,21 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withExtensionStatorCurrentLimit(40.0)
             .withSlot0Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Right Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Right Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Right Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Right Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Right Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Right Extension/Slot0")
+                    .withKP(1.0)
+                    .withKD(0.0)
+                    .withKS(0.0)
+                    .withKV(0.0)
+                    .withKA(0.0)
                     .build())
             .withSlot1Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Right Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Right Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Right Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Right Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Right Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Right Extension/Slot1")
+                    .withKP(1.0)
+                    .withKD(0.0)
+                    .withKS(0.0)
+                    .withKV(0.0)
+                    .withKA(0.0)
                     .build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)

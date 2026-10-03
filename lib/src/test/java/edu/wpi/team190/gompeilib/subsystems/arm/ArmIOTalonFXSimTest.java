@@ -35,7 +35,7 @@ public class ArmIOTalonFXSimTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -61,7 +61,7 @@ public class ArmIOTalonFXSimTest {
             .withCanBus(new CANBus("rio"))
             .withArmParameters(params)
             .withSlot0Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot0")
                     .withKP(1.0)
                     .withKI(0.0)
@@ -72,11 +72,11 @@ public class ArmIOTalonFXSimTest {
                     .withKG(0.1)
                     .build())
             .withSlot1Gains(
-                Gains.fromDoubles().withPrefix("slot1").withKP(2.0).withKI(0.0).withKD(0.2).build())
+                Gains.builder().withPrefix("slot1").withKP(2.0).withKI(0.0).withKD(0.2).build())
             .withSlot2Gains(
-                Gains.fromDoubles().withPrefix("slot2").withKP(3.0).withKI(0.0).withKD(0.3).build())
+                Gains.builder().withPrefix("slot2").withKP(3.0).withKI(0.0).withKD(0.3).build())
             .withConstraints(
-                AngularPositionConstraints.fromMeasures()
+                AngularPositionConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.RadiansPerSecond.of(2.0))
                     .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(2.0))

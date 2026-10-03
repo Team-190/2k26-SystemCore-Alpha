@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
+import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.Voltage;
@@ -36,7 +37,7 @@ public class V3_Horse_CV2_TR_RollerFloorConstants {
             .withMomentOfInertia(
                 Units.KilogramSquareMeters.of(0.0001)) // TODO: Update to actual value
             .withVoltageOffsetStep(Volts.of(1)) // TODO: Update to actual value
-            .withCanBus(CANBus.systemcore(0)) // TODO: Update to actual value
+            .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Update to actual value
             .withEnableFOC(false)
             .withAlignedFollowerCANID(33) // TODO: Update to actual value
             .build();

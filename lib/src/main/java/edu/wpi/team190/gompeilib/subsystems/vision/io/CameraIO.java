@@ -47,7 +47,7 @@ public interface CameraIO {
       RawFiducial[] rawFiducials,
       boolean isMegaTag2) {
     public PoseEstimate() {
-      this(Pose2d.kZero, 0, 0, 0, 0, 0, 0, new RawFiducial[] {}, false);
+      this(Pose2d.ZERO, 0, 0, 0, 0, 0, 0, new RawFiducial[] {}, false);
     }
 
     public PoseEstimate(LimelightHelpers.PoseEstimate poseEstimate) {

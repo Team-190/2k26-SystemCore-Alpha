@@ -7,6 +7,8 @@ plugins {
     id "io.freefair.lombok" version "8.4"
     id "io.freefair.aspectj.post-compile-weaving" version "9.5.0"
     id "jacoco"
+    // Patches PathPlannerLib alpha-4 for WPILib alpha-7 Alert ids; see buildSrc. Remove once fixed upstream.
+    id "frc190.pathplanner-alert-patch"
 }
 
 java {
@@ -38,7 +40,7 @@ def osClassifier = {
 // (mirrors what frc-nix's allwpilibSources.nix tracks: "release-2027" on frcmaven).
 // Also fall back to whatever local maven cache the WPILib alpha installer/VS Code extension
 // writes to disk, the same place GradleRIO's own pluginManagement block looks.
-String frcYear = "2027_alpha6"
+String frcYear = "2027_alpha7"
 File frcHome
 if (OperatingSystem.current().isWindows()) {
     String publicFolder = System.getenv("PUBLIC")

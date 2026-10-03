@@ -4,6 +4,7 @@
 
 package first.robot;
 
+import edu.wpi.team190.gompeilib.core.GompeiLib;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.framework.TimedRobot;
@@ -14,6 +15,7 @@ public class Robot extends TimedRobot {
   private final RobotContainer robotContainer;
 
   public Robot() {
+    GompeiLib.init(Constants.getMode(), Constants.TUNING_MODE, Constants.LOOP_PERIOD_SECONDS);
     robotContainer = new RobotContainer();
   }
 

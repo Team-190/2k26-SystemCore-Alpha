@@ -7,15 +7,15 @@ import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.wpilib.fields.FieldTag;
 import org.wpilib.math.geometry.*;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.kinematics.SwerveModulePosition;
-import org.wpilib.vision.apriltag.AprilTag;
 
 public class LocalizationTest {
   @Test
   public void testLocalization() {
-    AprilTag tag1 = new AprilTag(1, new Pose3d(1.0, 2.0, 3.0, new Rotation3d()));
+    FieldTag tag1 = new FieldTag(1, new Pose3d(1.0, 2.0, 3.0, new Rotation3d()));
     FieldZone zone = new FieldZone(Set.of(tag1));
 
     SwerveDriveKinematics kinematics =

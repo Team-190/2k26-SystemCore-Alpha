@@ -29,7 +29,7 @@ public class GenericFlywheelTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -54,10 +54,10 @@ public class GenericFlywheelTest {
             .withMomentOfInertia(0.01)
             .withGearRatio(1.0)
             .withMotorConfig(DCMotor.getNeo550(1))
-            .withVoltageGains(Gains.fromDoubles().withPrefix("voltage").build())
-            .withTorqueGains(Gains.fromDoubles().withPrefix("torque").build())
+            .withVoltageGains(Gains.builder().withPrefix("voltage").build())
+            .withTorqueGains(Gains.builder().withPrefix("torque").build())
             .withConstraints(
-                AngularVelocityConstraints.fromMeasures()
+                AngularVelocityConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.RadiansPerSecond.of(100.0))
                     .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(50.0))
@@ -182,11 +182,11 @@ public class GenericFlywheelTest {
       assertNotNull(waitCmd);
 
       // updates
-      flywheel.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
+      flywheel.updateGains(Gains.builder().withPrefix("slot0").build(), GainSlot.ZERO);
       verify(io).updateGains(any(), eq(GainSlot.ZERO));
 
       flywheel.updateConstraints(
-          AngularVelocityConstraints.fromMeasures()
+          AngularVelocityConstraints.builder()
               .withPrefix("constraints")
               .withMaxVelocity(Units.RadiansPerSecond.of(1.0))
               .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(1.0))

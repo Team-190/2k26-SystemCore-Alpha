@@ -2,8 +2,10 @@ package first.robot.v3_Horse_CV2_TR;
 
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOSim;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOSim;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOTalonFX;
 import first.robot.Constants;
@@ -12,14 +14,14 @@ import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloorConstants;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.button.CommandNiDsXboxController;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private V3_Horse_CV2_TR_RollerFloor rollerFloor;
   private V3_Horse_CV2_TR_Intake intake;
-  private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedNetworkChooser<Command> autoChooser;
   private final CommandNiDsXboxController driver;
 
   public V3_Horse_CV2_TRRobotContainer() {
@@ -55,10 +57,21 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   () -> driver.getRightTriggerAxis());
           break;
         default:
-          break;
+          if (rollerFloor == null) {
+            rollerFloor = new V3_Horse_CV2_TR_RollerFloor(new GenericRollerIO() {});
+          }
+          if (intake == null) {
+            intake =
+                new V3_Horse_CV2_TR_Intake(
+                    new GenericRollerIO() {},
+                    new GenericRollerIO() {},
+                    new ExtensionIO() {},
+                    new ExtensionIO() {},
+                    () -> driver.getRightTriggerAxis());
+          }
       }
     }
-    autoChooser = new LoggedDashboardChooser<>("Autonomous Modes");
+    autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");
   }
 
   @Override

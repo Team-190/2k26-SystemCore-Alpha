@@ -21,7 +21,7 @@ public class ArmIOSimTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -47,7 +47,7 @@ public class ArmIOSimTest {
             .withCanBus(new CANBus("rio"))
             .withArmParameters(params)
             .withSlot0Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot0")
                     .withKP(1.0)
                     .withKI(0.0)
@@ -58,7 +58,7 @@ public class ArmIOSimTest {
                     .withKG(0.1)
                     .build())
             .withSlot1Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot1")
                     .withKP(2.0)
                     .withKI(0.0)
@@ -69,7 +69,7 @@ public class ArmIOSimTest {
                     .withKG(0.0)
                     .build())
             .withSlot2Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot2")
                     .withKP(3.0)
                     .withKI(0.0)
@@ -80,7 +80,7 @@ public class ArmIOSimTest {
                     .withKG(0.0)
                     .build())
             .withConstraints(
-                AngularPositionConstraints.fromMeasures()
+                AngularPositionConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.RadiansPerSecond.of(2.0))
                     .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(2.0))
@@ -137,7 +137,7 @@ public class ArmIOSimTest {
 
     // update gains & constraints
     sim.updateGains(
-        Gains.fromDoubles()
+        Gains.builder()
             .withPrefix("slot0")
             .withKP(4.0)
             .withKI(0.0)
@@ -149,7 +149,7 @@ public class ArmIOSimTest {
             .build(),
         GainSlot.ZERO);
     sim.updateConstraints(
-        AngularPositionConstraints.fromMeasures()
+        AngularPositionConstraints.builder()
             .withPrefix("constraints")
             .withMaxVelocity(Units.RadiansPerSecond.of(3.0))
             .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(3.0))
@@ -182,7 +182,7 @@ public class ArmIOSimTest {
             .withCanBus(new CANBus("rio"))
             .withArmParameters(nonContinuousParams)
             .withSlot0Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot0")
                     .withKP(1.0)
                     .withKI(0.0)
@@ -193,7 +193,7 @@ public class ArmIOSimTest {
                     .withKG(0.1)
                     .build())
             .withConstraints(
-                AngularPositionConstraints.fromMeasures()
+                AngularPositionConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.RadiansPerSecond.of(2.0))
                     .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(2.0))

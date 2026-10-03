@@ -1,14 +1,18 @@
 
 [versions]
-wpilib = "2027.0.0-alpha-6"
-wpilib-jni = "2027.0.0-alpha-6"
-phoenix6 = "26.50.0-alpha-1"
-# choreo = "2026.0.2" # No WPILib 2027 alpha compatible release yet; re-enable once one ships.
+wpilib = "2027.0.0-alpha-7"
+wpilib-jni = "2027.0.0-alpha-7"
+phoenix6 = "26.70.0-alpha-2"
+# choreo = "2027.0.0-alpha-3" # Now WPILib 2027 alpha-7 compatible; re-enable once confirmed.
 aspectj = "1.9.25.1"
-advantagekit = "27.0.0-alpha-4"
+advantagekit = "27.0.0-alpha-6"
 quickbuf = "1.4"
-jackson = "2.17.2"
-pathplanner = "2027.0.0-alpha-3"
+jackson = "2.22.3"
+# jackson-annotations dropped its patch digit at 2.20+ (2.22, not 2.22.x) while core/databind kept theirs.
+jackson-annotations = "2.22"
+pathplanner = "2027.0.0-alpha-4"
+# Runtime dependency of wpilib-tunables (TunableConfig properties); matches what GradleRIO resolves.
+avaje-jsonb = "3.14"
 
 [libraries]
 # WPILib Core -- groupId moved from edu.wpi.first.* to org.wpilib.* for the 2027 season.
@@ -24,6 +28,9 @@ wpilib-wpiunits = { group = "org.wpilib.wpiunits", name = "wpiunits-java", versi
 wpilib-commands = { group = "org.wpilib.commandsv2", name = "commandsv2-java", version.ref = "wpilib" }
 wpilib-hal = { group = "org.wpilib.hal", name = "hal-java", version.ref = "wpilib" }
 wpilib-apriltag = {group = "org.wpilib.apriltag", name="apriltag-java", version.ref = "wpilib"}
+wpilib-fields = { group = "org.wpilib.fields", name = "fields-java", version.ref = "wpilib" }
+wpilib-telemetry = { group = "org.wpilib.telemetry", name = "telemetry-java", version.ref = "wpilib" }
+wpilib-tunables = { group = "org.wpilib.tunables", name = "tunables-java", version.ref = "wpilib" }
 # DriverStationBackend.startDataLog(DataLog) is on the classpath transitively at the bytecode
 # level even when unused, so Mockito's mockStatic() fails to load the class without this present.
 wpilib-datalog = { group = "org.wpilib.datalog", name = "datalog-java", version.ref = "wpilib" }
@@ -52,9 +59,10 @@ advantagekit-autolog = { group = "org.littletonrobotics.akit", name = "akit-auto
 
 # QuickBuf / Jackson (runtime dependencies needed for generated code)
 quickbuf = { group = "us.hebi.quickbuf", name = "quickbuf-runtime", version.ref = "quickbuf" }
-jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson" }
+jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson-annotations" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson" }
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
+avaje-jsonb = { group = "io.avaje", name = "avaje-jsonb", version.ref = "avaje-jsonb" }
 
 [bundles]
 wpilib = [
@@ -69,6 +77,10 @@ wpilib = [
     "wpilib-commands",
     "wpilib-hal",
     "wpilib-apriltag",
+    "wpilib-fields",
+    "wpilib-telemetry",
+    "wpilib-tunables",
+    "avaje-jsonb",
     "wpilib-datalog"
 ]
 

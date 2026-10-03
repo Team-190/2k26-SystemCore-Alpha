@@ -27,7 +27,7 @@ public class ExtensionTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -56,9 +56,9 @@ public class ExtensionTest {
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
             .withExtensionParameters(params)
-            .withSlot0Gains(Gains.fromDoubles().withPrefix("slot0").build())
+            .withSlot0Gains(Gains.builder().withPrefix("slot0").build())
             .withConstraints(
-                LinearConstraints.fromMeasures()
+                LinearConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.MetersPerSecond.of(2.0))
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
@@ -125,11 +125,11 @@ public class ExtensionTest {
       extension.setGainSlot(GainSlot.ONE);
       verify(io).setGainSlot(GainSlot.ONE);
 
-      extension.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
+      extension.updateGains(Gains.builder().withPrefix("slot0").build(), GainSlot.ZERO);
       verify(io).updateGains(any(), eq(GainSlot.ZERO));
 
       extension.updateConstraints(
-          LinearConstraints.fromMeasures()
+          LinearConstraints.builder()
               .withPrefix("constraints")
               .withGoalTolerance(Units.Meters.of(0.01))
               .withMaxVelocity(Units.MetersPerSecond.of(1.0))

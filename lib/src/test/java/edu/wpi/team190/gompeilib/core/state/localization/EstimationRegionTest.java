@@ -8,16 +8,16 @@ import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.wpilib.fields.FieldTag;
 import org.wpilib.math.geometry.*;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.kinematics.SwerveModulePosition;
-import org.wpilib.vision.apriltag.AprilTag;
 
 public class EstimationRegionTest {
   @Test
   public void testEstimationRegion() {
-    AprilTag tag1 = new AprilTag(1, new Pose3d(1.0, 2.0, 3.0, new Rotation3d()));
-    AprilTag tag2 = new AprilTag(2, new Pose3d(4.0, 5.0, 6.0, new Rotation3d()));
+    FieldTag tag1 = new FieldTag(1, new Pose3d(1.0, 2.0, 3.0, new Rotation3d()));
+    FieldTag tag2 = new FieldTag(2, new Pose3d(4.0, 5.0, 6.0, new Rotation3d()));
 
     SwerveDriveKinematics kinematics =
         new SwerveDriveKinematics(

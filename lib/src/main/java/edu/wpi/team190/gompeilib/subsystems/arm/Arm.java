@@ -57,6 +57,11 @@ public class Arm {
                 Seconds.of(12),
                 (state) -> Logger.recordOutput(aKitTopic + "/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(io::setVoltageGoal, null, subsystem));
+
+    constants.slot0Gains.onChange(gains -> io.updateGains(gains, GainSlot.ZERO));
+    constants.slot1Gains.onChange(gains -> io.updateGains(gains, GainSlot.ONE));
+    constants.slot2Gains.onChange(gains -> io.updateGains(gains, GainSlot.TWO));
+    constants.constraints.onChange(io::updateConstraints);
   }
 
   public Arm(ArmIO io, Subsystem subsystem, int index, ArmConstants constants) {
@@ -66,7 +71,7 @@ public class Arm {
         index,
         constants,
         new Setpoint<>(
-            Rotation2d.kZero.getMeasure(),
+            Rotation2d.ZERO.getMeasure(),
             constants.positionOffsetStep.getMeasure(),
             constants.armParameters.maxAngle().getMeasure(),
             constants.armParameters.minAngle().getMeasure()),
@@ -172,12 +177,12 @@ public class Arm {
   public Command sysIdRoutine() {
     return Commands.sequence(
         Commands.runOnce(() -> currentState = ArmState.IDLE),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kForward),
+        characterizationRoutine.quasistatic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
+        characterizationRoutine.quasistatic(SysIdRoutine.Direction.REVERSE),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kForward),
+        characterizationRoutine.dynamic(SysIdRoutine.Direction.FORWARD),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kReverse));
+        characterizationRoutine.dynamic(SysIdRoutine.Direction.REVERSE));
   }
 }

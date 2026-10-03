@@ -24,7 +24,7 @@ public class ExtensionConstantsTest {
             .build();
 
     Gains slot0 =
-        Gains.fromDoubles()
+        Gains.builder()
             .withPrefix("slot0")
             .withKP(1.0)
             .withKI(0.0)
@@ -35,7 +35,7 @@ public class ExtensionConstantsTest {
             .withKG(0.1)
             .build();
     LinearConstraints constraints =
-        LinearConstraints.fromMeasures()
+        LinearConstraints.builder()
             .withPrefix("test")
             .withMaxVelocity(Units.MetersPerSecond.of(1.0))
             .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(1.0))

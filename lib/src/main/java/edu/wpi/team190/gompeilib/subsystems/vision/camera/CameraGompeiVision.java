@@ -14,9 +14,9 @@ import lombok.Getter;
 import lombok.experimental.ExtensionMethod;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.driverstation.internal.DriverStationBackend;
+import org.wpilib.fields.Field;
 import org.wpilib.math.geometry.*;
 import org.wpilib.math.linalg.VecBuilder;
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 @ExtensionMethod(GeometryUtil.class)
 public class CameraGompeiVision extends Camera {
@@ -24,7 +24,7 @@ public class CameraGompeiVision extends Camera {
   private final CameraIOGompeiVision io;
 
   private final GompeiVisionConfig config;
-  private final Supplier<AprilTagFieldLayout> aprilTagFieldLayoutSupplier;
+  private final Supplier<Field> aprilTagFieldLayoutSupplier;
   private final double fieldBorderMarginMeters;
   private final Supplier<Pose2d> currentRobotPoseSupplier;
 
@@ -36,7 +36,7 @@ public class CameraGompeiVision extends Camera {
   public CameraGompeiVision(
       CameraIOGompeiVision io,
       GompeiVisionConfig config,
-      Supplier<AprilTagFieldLayout> aprilTagFieldLayoutSupplier,
+      Supplier<Field> aprilTagFieldLayoutSupplier,
       double fieldBorderMarginMeters,
       Supplier<Pose2d> currentRobotPoseSupplier,
       List<Consumer<List<VisionPoseObservation>>> poseObservers,
@@ -54,7 +54,7 @@ public class CameraGompeiVision extends Camera {
     this.name = this.config.key();
 
     allTagPoses = new ArrayList<>();
-    robotPose = Pose2d.kZero;
+    robotPose = Pose2d.ZERO;
 
     currentCameraPose = config.robotRelativePose();
   }
@@ -68,7 +68,7 @@ public class CameraGompeiVision extends Camera {
     Logger.processInputs("Vision/Cameras/" + this.name, inputs);
 
     allTagPoses.clear();
-    robotPose = Pose2d.kZero;
+    robotPose = Pose2d.ZERO;
 
     for (int i = 0; i < inputs.frames.length; i++) {
       double timestamp = inputs.timestamps[i];
@@ -95,7 +95,7 @@ public class CameraGompeiVision extends Camera {
           robotPose =
               cameraPose
                   .toPose2d()
-                  .transformBy(currentCameraPose.toPose2d().toTransform2d().inverse());
+                  .transformBy(GeometryUtil.toTransform2d(currentCameraPose.toPose2d()).inverse());
           break;
 
         case 2:
@@ -115,7 +115,8 @@ public class CameraGompeiVision extends Camera {
                   values[11],
                   values[12],
                   new Rotation3d(new Quaternion(values[13], values[14], values[15], values[16])));
-          Transform2d cameraToRobot = currentCameraPose.toPose2d().toTransform2d().inverse();
+          Transform2d cameraToRobot =
+              GeometryUtil.toTransform2d(currentCameraPose.toPose2d()).inverse();
           Pose2d robotPose0 = cameraPose0.toPose2d().transformBy(cameraToRobot);
           Pose2d robotPose1 = cameraPose1.toPose2d().transformBy(cameraToRobot);
 

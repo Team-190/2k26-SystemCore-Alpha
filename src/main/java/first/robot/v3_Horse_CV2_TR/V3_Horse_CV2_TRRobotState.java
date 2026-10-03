@@ -19,22 +19,23 @@ import lombok.*;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.MatchState;
+import org.wpilib.fields.Field;
 import org.wpilib.math.geometry.*;
 import org.wpilib.math.interpolation.InterpolatingTreeMap;
 import org.wpilib.math.interpolation.Interpolator;
 import org.wpilib.math.interpolation.InverseInterpolator;
 import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.shape.Rectangle2d;
 import org.wpilib.math.util.Units;
 import org.wpilib.networktables.NetworkTablesJNI;
 import org.wpilib.smartdashboard.Field2d;
-import org.wpilib.smartdashboard.SmartDashboard;
 import org.wpilib.system.Timer;
+import org.wpilib.tunable.Tunables;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class V3_Horse_CV2_TRRobotState {
-  private static final AprilTagFieldLayout fieldLayout;
+  private static final Field fieldLayout;
 
   private static final Field2d field;
 
@@ -159,7 +160,7 @@ public class V3_Horse_CV2_TRRobotState {
     feedVelocity = AngularVelocity.ofBaseUnits(0, RadiansPerSecond);
 
     field.setRobotPose(getGlobalPose());
-    SmartDashboard.putData("Field", field);
+    Tunables.publish("Field", field);
 
     headingUpdateTimestamp = NetworkTablesJNI.now();
   }
@@ -197,7 +198,8 @@ public class V3_Horse_CV2_TRRobotState {
                 .getDistance(AllianceFlipUtil.apply(FieldConstants.Outpost.BLUE_FEED_TRANSLATION)),
             Meters);
 
-    robotToHubAngle = hubTranslation.minus(hubPose.getTranslation()).getAngle();
+    robotToHubAngle =
+        hubTranslation.minus(hubPose.getTranslation()).getAngle().orElse(Rotation2d.ZERO);
 
     scoreAngle = shootAngleTree.get(distanceToHub);
     scoreVelocity = shootSpeedTree.get(distanceToHub);

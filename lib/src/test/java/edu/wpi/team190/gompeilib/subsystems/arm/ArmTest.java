@@ -29,7 +29,7 @@ public class ArmTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -55,9 +55,9 @@ public class ArmTest {
                     .withLengthMeters(0.5)
                     .withMomentOfInertia(0.1)
                     .build())
-            .withSlot0Gains(Gains.fromDoubles().withPrefix("slot0").build())
+            .withSlot0Gains(Gains.builder().withPrefix("slot0").build())
             .withConstraints(
-                AngularPositionConstraints.fromMeasures()
+                AngularPositionConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.RadiansPerSecond.of(1.0))
                     .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(1.0))
@@ -126,11 +126,11 @@ public class ArmTest {
       arm.setGainSlot(GainSlot.ONE);
       verify(io).setGainSlot(GainSlot.ONE);
 
-      arm.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
+      arm.updateGains(Gains.builder().withPrefix("slot0").build(), GainSlot.ZERO);
       verify(io).updateGains(any(), eq(GainSlot.ZERO));
 
       arm.updateConstraints(
-          AngularPositionConstraints.fromMeasures()
+          AngularPositionConstraints.builder()
               .withPrefix("constraints")
               .withGoalTolerance(Units.Radians.of(0.01))
               .withMaxVelocity(Units.RadiansPerSecond.of(1.0))

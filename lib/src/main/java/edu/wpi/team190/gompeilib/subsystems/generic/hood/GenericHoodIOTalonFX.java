@@ -153,9 +153,9 @@ public class GenericHoodIOTalonFX implements GenericHoodIO {
   @Override
   public void setProfile(AngularPositionConstraints constraints) {
     config.MotionMagic.MotionMagicCruiseVelocity =
-        constraints.maxVelocity().get(RotationsPerSecond);
+        constraints.maxVelocity().get().in(RotationsPerSecond);
     config.MotionMagic.MotionMagicAcceleration =
-        constraints.maxAcceleration().get(RotationsPerSecondPerSecond);
+        constraints.maxAcceleration().get().in(RotationsPerSecondPerSecond);
     PhoenixUtil.tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(config, 0.25));
   }
 

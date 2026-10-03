@@ -13,10 +13,9 @@ import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocityConstraints;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableMeasure;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
 import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelConstants;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodConstants;
+import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.AngularVelocity;
@@ -42,7 +41,7 @@ public class V3_Horse_CV2_TRShooterConstants {
       GenericFlywheelConstants.builder()
           .withLeaderCANID(31) // TODO: Use Real Value
           .withLeaderInversion(InvertedValue.CounterClockwise_Positive)
-          .withCanBus(CANBus.systemcore(0)) // TODO: Use Real Value
+          .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Use Real Value
           .withEnableFOC(true)
           .withCurrentLimit(
               CurrentLimits.builder()
@@ -54,31 +53,28 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withMotorConfig(DCMotor.getKrakenX60Foc(4))
           .withVoltageGains(
               Gains.builder() // TODO: Use Real Value
-                  .withKP(new LoggedTunableNumber("Shooter/Flywheel/VoltageKp", 0.5))
-                  .withKD(new LoggedTunableNumber("Shooter/Flywheel/VoltageKd", 0.0))
-                  .withKS(new LoggedTunableNumber("Shooter/Flywheel/VoltageKs", 0.21467))
-                  .withKV(new LoggedTunableNumber("Shooter/Flywheel/VoltageKv", 0.14015))
-                  .withKA(new LoggedTunableNumber("Shooter/Flywheel/VoltageKa", 0.0045447))
+                  .withPrefix("Shooter/Flywheel/Voltage")
+                  .withKP(0.5)
+                  .withKD(0.0)
+                  .withKS(0.21467)
+                  .withKV(0.14015)
+                  .withKA(0.0045447)
                   .build())
           .withTorqueGains(
               Gains.builder() // TODO: Use Real Value
-                  .withKP(new LoggedTunableNumber("Shooter/Flywheel/TorqueKp", 10))
-                  .withKD(new LoggedTunableNumber("Shooter/Flywheel/TorqueKd", 0.1))
-                  .withKS(new LoggedTunableNumber("Shooter/Flywheel/TorqueKs", 2.25))
-                  .withKV(new LoggedTunableNumber("Shooter/Flywheel/TorqueKv", 0.067114))
-                  .withKA(new LoggedTunableNumber("Shooter/Flywheel/TorqueKa", 0.11882))
+                  .withPrefix("Shooter/Flywheel/Torque")
+                  .withKP(10)
+                  .withKD(0.1)
+                  .withKS(2.25)
+                  .withKV(0.067114)
+                  .withKA(0.11882)
                   .build())
           .withConstraints(
               AngularVelocityConstraints.builder()
-                  .withMaxVelocity(
-                      new LoggedTunableMeasure<>(
-                          "Shooter/Flywheel/MaxVelocity", RadiansPerSecond.of(1000)))
-                  .withMaxAcceleration(
-                      new LoggedTunableMeasure<>(
-                          "Shooter/Flywheel/MaxAcceleration", RadiansPerSecondPerSecond.of(1000)))
-                  .withGoalTolerance(
-                      new LoggedTunableMeasure<>(
-                          "Shooter/Flywheel/GoalTolerance", RadiansPerSecond.of(5)))
+                  .withPrefix("Shooter/Flywheel")
+                  .withMaxVelocity(RadiansPerSecond.of(1000))
+                  .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
+                  .withGoalTolerance(RadiansPerSecond.of(5))
                   .build())
           .withOpposedFollowerCANID(30) // TODO: Use Real Value
           .withVelocityOffsetStep(RadiansPerSecond.of(10)) // TODO: Use Real Value
@@ -88,7 +84,7 @@ public class V3_Horse_CV2_TRShooterConstants {
   public static final GenericHoodConstants HOOD_CONSTANTS =
       GenericHoodConstants.builder()
           .withMotorCanId(32) // TODO: Use Real Value
-          .withCanBus(CANBus.systemcore(0)) // TODO: Use Real Value
+          .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Use Real Value
           .withGearRatio(70.0) // TODO: Use ASK CAM
           .withCurrentLimits(new CurrentLimits(40, 30)) // TODO: Use Real Value
           .withMomentOfInertia(0.0001)
@@ -102,22 +98,19 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withZeroCurrentEpsilon(Milliamps.of(500)) // TODO: Use Real Value
           .withGains(
               Gains.builder() // TODO: Use Real Value
-                  .withKP(new LoggedTunableNumber("Shooter/Hood/Kp", 600))
-                  .withKD(new LoggedTunableNumber("Shooter/Hood/Kd", 2))
-                  .withKS(new LoggedTunableNumber("Shooter/Hood/Ks", 0.32492))
-                  .withKV(new LoggedTunableNumber("Shooter/Hood/Kv", 1.406))
-                  .withKA(new LoggedTunableNumber("Shooter/Hood/Ka", 0))
+                  .withPrefix("Shooter/Hood")
+                  .withKP(600)
+                  .withKD(2)
+                  .withKS(0.32492)
+                  .withKV(1.406)
+                  .withKA(0)
                   .build())
           .withConstraints(
               AngularPositionConstraints.builder() // TODO: Use Real Value
-                  .withMaxVelocity(
-                      new LoggedTunableMeasure<>(
-                          "Shooter/Hood/MaxVelocity", RadiansPerSecond.of(200)))
-                  .withMaxAcceleration(
-                      new LoggedTunableMeasure<>(
-                          "Shooter/Hood/MaxAcceleration", RadiansPerSecondPerSecond.of(1000)))
-                  .withGoalTolerance(
-                      new LoggedTunableMeasure<>("Shooter/Hood/GoalTolerance", Degrees.of(1.0)))
+                  .withPrefix("Shooter/Hood")
+                  .withMaxVelocity(RadiansPerSecond.of(200))
+                  .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
+                  .withGoalTolerance(Degrees.of(1.0))
                   .build())
           .withOffsetStep(Degrees.of(0.5)) // TODO: Use Real Value
           .withVoltageStep(Volts.of(0.5)) // TODO: Use Real Value

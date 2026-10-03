@@ -242,7 +242,7 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
   public boolean atVelocityGoal(AngularVelocity velocityReference) {
     return velocityRotationsPerSecond.isNear(
         velocityReference,
-        RotationsPerSecond.of(constants.constraints.goalTolerance().get(RotationsPerSecond)));
+        RotationsPerSecond.of(constants.constraints.goalTolerance().get().in(RotationsPerSecond)));
   }
 
   @Override
@@ -279,8 +279,9 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
   public void updateConstraints(AngularVelocityConstraints constraints) {
     talonFXConfiguration
         .MotionMagic
-        .withMotionMagicAcceleration(constraints.maxAcceleration().get(RotationsPerSecondPerSecond))
-        .withMotionMagicCruiseVelocity(constraints.maxVelocity().get(RotationsPerSecond));
+        .withMotionMagicAcceleration(
+            constraints.maxAcceleration().get().in(RotationsPerSecondPerSecond))
+        .withMotionMagicCruiseVelocity(constraints.maxVelocity().get().in(RotationsPerSecond));
     PhoenixUtil.tryUntilOk(5, () -> talonFX.getConfigurator().apply(talonFXConfiguration));
     for (TalonFX follower : followerTalonFX) {
       PhoenixUtil.tryUntilOk(5, () -> follower.getConfigurator().apply(talonFXConfiguration));

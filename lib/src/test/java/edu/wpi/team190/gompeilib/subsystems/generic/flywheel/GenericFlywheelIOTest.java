@@ -25,9 +25,9 @@ public class GenericFlywheelIOTest {
     assertFalse(io.atVoltageGoal(Units.Volts.of(1.0)));
     assertFalse(io.atCurrentGoal(Units.Amps.of(1.0)));
     assertFalse(io.atVelocityGoal(Units.RadiansPerSecond.of(1.0)));
-    io.updateGains(Gains.fromDoubles().withPrefix("test").build(), GainSlot.ZERO);
+    io.updateGains(Gains.builder().withPrefix("test").build(), GainSlot.ZERO);
     io.updateConstraints(
-        AngularVelocityConstraints.fromMeasures()
+        AngularVelocityConstraints.builder()
             .withPrefix("test")
             .withGoalTolerance(Units.RadiansPerSecond.of(1.0))
             .withMaxVelocity(Units.RadiansPerSecond.of(100.0))

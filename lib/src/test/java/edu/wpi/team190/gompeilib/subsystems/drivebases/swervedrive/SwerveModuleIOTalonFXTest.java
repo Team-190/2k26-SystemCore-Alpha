@@ -23,14 +23,13 @@ import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixOdometryThread;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableMeasure;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.tunable.Tunable;
 import org.wpilib.units.measure.*;
 
 public class SwerveModuleIOTalonFXTest {
@@ -41,7 +40,7 @@ public class SwerveModuleIOTalonFXTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -86,47 +85,35 @@ public class SwerveModuleIOTalonFXTest {
             .withWheelCOF(1.2)
             .build();
 
-    Gains driveGains =
-        Gains.builder()
-            .withKP(new LoggedTunableNumber("kp_drive", 1.0))
-            .withKD(new LoggedTunableNumber("kd_drive", 0.1))
-            .build();
+    Gains driveGains = Gains.builder().withKP(1.0).withKD(0.1).build();
 
-    Gains turnGains =
-        Gains.builder()
-            .withKP(new LoggedTunableNumber("kp_turn", 2.0))
-            .withKD(new LoggedTunableNumber("kd_turn", 0.2))
-            .build();
+    Gains turnGains = Gains.builder().withKP(2.0).withKD(0.2).build();
 
     SwerveDriveConstants.AutoAlignConstants autoAlignConstants =
         SwerveDriveConstants.AutoAlignConstants.builder()
             .withXGains(driveGains)
             .withXConstraints(
                 LinearConstraints.builder()
-                    .withMaxVelocity(new LoggedTunableMeasure<>("max_v_x", MetersPerSecond.of(1.0)))
-                    .withMaxAcceleration(
-                        new LoggedTunableMeasure<>("max_a_x", MetersPerSecondPerSecond.of(1.0)))
-                    .withGoalTolerance(new LoggedTunableMeasure<>("tol_x", Meters.of(0.05)))
+                    .withMaxVelocity(MetersPerSecond.of(1.0))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
+                    .withGoalTolerance(Meters.of(0.05))
                     .build())
             .withYGains(driveGains)
             .withYConstraints(
                 LinearConstraints.builder()
-                    .withMaxVelocity(new LoggedTunableMeasure<>("max_v_y", MetersPerSecond.of(1.0)))
-                    .withMaxAcceleration(
-                        new LoggedTunableMeasure<>("max_a_y", MetersPerSecondPerSecond.of(1.0)))
-                    .withGoalTolerance(new LoggedTunableMeasure<>("tol_y", Meters.of(0.05)))
+                    .withMaxVelocity(MetersPerSecond.of(1.0))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
+                    .withGoalTolerance(Meters.of(0.05))
                     .build())
             .withRotationGains(turnGains)
             .withRotationConstraints(
                 AngularPositionConstraints.builder()
-                    .withMaxVelocity(
-                        new LoggedTunableMeasure<>("max_v_rot", RadiansPerSecond.of(1.0)))
-                    .withMaxAcceleration(
-                        new LoggedTunableMeasure<>("max_a_rot", RadiansPerSecondPerSecond.of(1.0)))
-                    .withGoalTolerance(new LoggedTunableMeasure<>("tol_rot", Radians.of(0.05)))
+                    .withMaxVelocity(RadiansPerSecond.of(1.0))
+                    .withMaxAcceleration(RadiansPerSecondPerSecond.of(1.0))
+                    .withGoalTolerance(Radians.of(0.05))
                     .build())
-            .withLinearThreshold(new LoggedTunableMeasure<>("lin_thresh", Meters.of(0.01)))
-            .withAngularThreshold(new LoggedTunableMeasure<>("ang_thresh", Radians.of(0.01)))
+            .withLinearThreshold(Tunable.create(Meters.of(0.01)))
+            .withAngularThreshold(Tunable.create(Radians.of(0.01)))
             .build();
 
     driveConstants =

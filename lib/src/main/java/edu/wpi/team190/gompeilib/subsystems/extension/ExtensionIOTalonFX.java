@@ -236,7 +236,7 @@ public class ExtensionIOTalonFX implements ExtensionIO {
   @Override
   public boolean atPositionGoal(Distance positionReference) {
     return Math.abs(positionRotations.getValueAsDouble() - positionReference.in(Meters))
-        <= constants.constraints.goalTolerance().get(Meters);
+        <= constants.constraints.goalTolerance().get().in(Meters);
   }
 
   @Override

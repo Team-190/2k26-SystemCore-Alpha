@@ -9,7 +9,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
 import org.wpilib.math.geometry.*;
-import org.wpilib.math.util.Pair;
+import org.wpilib.math.shape.Rectangle2d;
+import org.wpilib.util.Pair;
 
 @SuppressWarnings("unchecked")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -22,17 +23,17 @@ public class GeometryUtilTest {
   static {
     TRANSLATION2D_CASES =
         new Translation2d[] {
-          Translation2d.kZero, new Translation2d(190.0, 190.0), new Translation2d(42.0, 42.0)
+          Translation2d.ZERO, new Translation2d(190.0, 190.0), new Translation2d(42.0, 42.0)
         };
     XY_PAIR_CASES =
         new Pair[] {new Pair<>(0.0, 0.0), new Pair<>(190.0, 190.0), new Pair<>(42.0, 42.0)};
     ROTATION2D_CASES =
         new Rotation2d[] {
-          Rotation2d.kZero, Rotation2d.fromDegrees(190.0), Rotation2d.fromDegrees(42.0)
+          Rotation2d.ZERO, Rotation2d.fromDegrees(190.0), Rotation2d.fromDegrees(42.0)
         };
     POSE2D_CASES =
         new Pose2d[] {
-          Pose2d.kZero,
+          Pose2d.ZERO,
           new Pose2d(190.0, 190.0, Rotation2d.fromDegrees(190.0)),
           new Pose2d(42.0, 42.0, Rotation2d.fromDegrees(42.0))
         };
@@ -83,7 +84,7 @@ public class GeometryUtilTest {
   @Test
   @Order(6)
   void testSinglePose2dsAreZero() {
-    Pose2d zeroedPose2d = Pose2d.kZero;
+    Pose2d zeroedPose2d = Pose2d.ZERO;
     Pose2d nonZeroedPose2d1 = new Pose2d(1.0, 0.0, Rotation2d.fromDegrees(0.0));
     Pose2d nonZeroedPose2d2 = new Pose2d(0.0, 1.0, Rotation2d.fromDegrees(0.0));
     Pose2d nonZeroedPose2d3 = new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(1.0));
@@ -111,7 +112,7 @@ public class GeometryUtilTest {
   @Test
   @Order(9)
   void testSingleTranslation2dsAreZero() {
-    Translation2d zeroedTranslation2d = Translation2d.kZero;
+    Translation2d zeroedTranslation2d = Translation2d.ZERO;
     Translation2d nonZeroedTranslation2d1 = new Translation2d(1.0, 0.0);
     Translation2d nonZeroedTranslation2d2 = new Translation2d(0.0, 1.0);
 
@@ -123,7 +124,7 @@ public class GeometryUtilTest {
   @Test
   @Order(10)
   void testSingleRotation2dsAreZero() {
-    Rotation2d zeroedRotation2d = Rotation2d.kZero;
+    Rotation2d zeroedRotation2d = Rotation2d.ZERO;
     Rotation2d nonZeroedTranslation2d1 = Rotation2d.fromDegrees(190.0);
     Rotation2d nonZeroedTranslation2d2 = Rotation2d.fromDegrees(42.0);
 
@@ -135,7 +136,7 @@ public class GeometryUtilTest {
   @Test
   @Order(11)
   void testSinglePose2dsAreNAN() {
-    Pose2d zeroedPose2d = Pose2d.kZero;
+    Pose2d zeroedPose2d = Pose2d.ZERO;
     Pose2d nanPose2d1 = new Pose2d(Double.NaN, 0.0, Rotation2d.fromDegrees(0.0));
     Pose2d nanPose2d2 = new Pose2d(0.0, Double.NaN, Rotation2d.fromDegrees(0.0));
     Pose2d nanPose2d3 = new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(Double.NaN));
@@ -165,11 +166,11 @@ public class GeometryUtilTest {
   @Order(14)
   void testRectangleDoesNotContainsPose() {
     Rectangle2d[] rectangles = {
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 2, 2)
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 2, 2)
     };
-    Pose2d pose = new Pose2d(-5, -5, Rotation2d.kZero);
+    Pose2d pose = new Pose2d(-5, -5, Rotation2d.ZERO);
     assertFalse(GeometryUtil.contains(rectangles, pose));
   }
 
@@ -177,11 +178,11 @@ public class GeometryUtilTest {
   @Order(15)
   void testRectangleContainsPose() {
     Rectangle2d[] rectangles = {
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 2, 2),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 3, 3)
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 2, 2),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 3, 3)
     };
-    Pose2d pose = new Pose2d(1.5, 1.5, Rotation2d.kZero);
+    Pose2d pose = new Pose2d(1.5, 1.5, Rotation2d.ZERO);
     assertTrue(GeometryUtil.contains(rectangles, pose));
   }
 
@@ -189,9 +190,9 @@ public class GeometryUtilTest {
   @Order(16)
   void testRectangleDoesNotContainsTranslation() {
     Rectangle2d[] rectangles = {
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 2, 2)
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 2, 2)
     };
     Translation2d translation = new Translation2d(-5, -5);
     assertFalse(GeometryUtil.contains(rectangles, translation));
@@ -201,9 +202,9 @@ public class GeometryUtilTest {
   @Order(17)
   void testRectangleContainsTranslation() {
     Rectangle2d[] rectangles = {
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 2, 2),
-      new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 3, 3)
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 2, 2),
+      new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 3, 3)
     };
     Translation2d translation = new Translation2d(1.5, 1.5);
     assertTrue(GeometryUtil.contains(rectangles, translation));
@@ -212,14 +213,14 @@ public class GeometryUtilTest {
   @Test
   @Order(18)
   void testRectanglePose2ds() {
-    Rectangle2d rectangle = new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1);
+    Rectangle2d rectangle = new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1);
     Pose2d[] poses = GeometryUtil.rectanglePose2ds(rectangle);
     Pose2d[] correctPoses = {
-      new Pose2d(1.0, 1.0, Rotation2d.kZero),
-      new Pose2d(-1.0, 1.0, Rotation2d.kZero),
-      new Pose2d(-1.0, -1.0, Rotation2d.kZero),
-      new Pose2d(1.0, -1.0, Rotation2d.kZero),
-      new Pose2d(0, 0, Rotation2d.kZero),
+      new Pose2d(1.0, 1.0, Rotation2d.ZERO),
+      new Pose2d(-1.0, 1.0, Rotation2d.ZERO),
+      new Pose2d(-1.0, -1.0, Rotation2d.ZERO),
+      new Pose2d(1.0, -1.0, Rotation2d.ZERO),
+      new Pose2d(0, 0, Rotation2d.ZERO),
     };
     for (int i = 0; i < 5; i++) {
       assertEquals(poses[i], correctPoses[i]);
@@ -229,19 +230,19 @@ public class GeometryUtilTest {
   @Test
   @Order(19)
   void testRectangleIntersects() {
-    Rectangle2d[] rectangles = {new Rectangle2d(new Pose2d(0, 0, Rotation2d.kZero), 1, 1)};
+    Rectangle2d[] rectangles = {new Rectangle2d(new Pose2d(0, 0, Rotation2d.ZERO), 1, 1)};
 
     // Intersects center
-    assertTrue(GeometryUtil.intersects(rectangles, new Pose2d(0, 0, Rotation2d.kZero), 1, 1));
+    assertTrue(GeometryUtil.intersects(rectangles, new Pose2d(0, 0, Rotation2d.ZERO), 1, 1));
     // Does not intersect
-    assertFalse(GeometryUtil.intersects(rectangles, new Pose2d(5, 5, Rotation2d.kZero), 1, 1));
+    assertFalse(GeometryUtil.intersects(rectangles, new Pose2d(5, 5, Rotation2d.ZERO), 1, 1));
 
     // Intersects via target containing rectangle center
-    assertTrue(GeometryUtil.intersects(rectangles, new Pose2d(0.5, 0.5, Rotation2d.kZero), 3, 3));
+    assertTrue(GeometryUtil.intersects(rectangles, new Pose2d(0.5, 0.5, Rotation2d.ZERO), 3, 3));
 
     // Intersects via target containing rectangle center, with no corner or target-center overlap
-    Rectangle2d[] offsetRectangles = {new Rectangle2d(new Pose2d(3, 3, Rotation2d.kZero), 1, 1)};
+    Rectangle2d[] offsetRectangles = {new Rectangle2d(new Pose2d(3, 3, Rotation2d.ZERO), 1, 1)};
     assertTrue(
-        GeometryUtil.intersects(offsetRectangles, new Pose2d(0, 0, Rotation2d.kZero), 10, 10));
+        GeometryUtil.intersects(offsetRectangles, new Pose2d(0, 0, Rotation2d.ZERO), 10, 10));
   }
 }

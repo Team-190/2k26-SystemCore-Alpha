@@ -256,8 +256,8 @@ public class ArmIOTalonFX implements ArmIO {
     config.MotionMagic =
         new MotionMagicConfigs()
             .withMotionMagicAcceleration(
-                constraints.maxAcceleration().get(RotationsPerSecondPerSecond))
-            .withMotionMagicCruiseVelocity(constraints.maxVelocity().get(RotationsPerSecond));
+                constraints.maxAcceleration().get().in(RotationsPerSecondPerSecond))
+            .withMotionMagicCruiseVelocity(constraints.maxVelocity().get().in(RotationsPerSecond));
     PhoenixUtil.tryUntilOk(5, () -> talonFX.getConfigurator().apply(config, 0.25));
 
     for (int i = 0; i < constants.armParameters.numMotors() - 1; i++) {

@@ -6,18 +6,18 @@ import static org.mockito.Mockito.*;
 import edu.wpi.team190.gompeilib.subsystems.vision.camera.Camera;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.wpilib.fields.Field;
+import org.wpilib.fields.FieldTag;
 import org.wpilib.math.geometry.Pose3d;
 import org.wpilib.networktables.NetworkTableInstance;
-import org.wpilib.vision.apriltag.AprilTag;
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class VisionTest {
 
   @Test
   public void testVisionInitializationAndPeriodic() {
-    AprilTag tag1 =
-        new AprilTag(1, new Pose3d(1.0, 2.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
-    AprilTagFieldLayout layout = new AprilTagFieldLayout(List.of(tag1), 16.0, 8.0);
+    FieldTag tag1 =
+        new FieldTag(1, new Pose3d(1.0, 2.0, 3.0, new org.wpilib.math.geometry.Rotation3d()));
+    Field layout = new Field(null, null, null, null, 16.0, 8.0, null, List.of(tag1));
 
     Camera mockCamera1 = mock(Camera.class);
     Camera mockCamera2 = mock(Camera.class);
