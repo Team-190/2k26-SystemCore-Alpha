@@ -44,7 +44,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final double EXTENSION_INCREMENT = 0.0;
 
-  public static final double EXTENSION_STOW_POSITION = 0.0;
+  public static final double EXTENSION_STOW_POSITION = 0.04;
 
   public static final double EXTENSION_INTAKE_POSITION = 0.25;
 
