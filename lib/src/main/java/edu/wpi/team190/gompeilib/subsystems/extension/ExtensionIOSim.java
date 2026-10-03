@@ -79,6 +79,7 @@ public class ExtensionIOSim implements ExtensionIO {
 
     inputs.position = Meters.of(sim.getPosition());
     inputs.velocity = MetersPerSecond.of(sim.getVelocity());
+    inputs.linearVelocitySetpoint = MetersPerSecond.of(feedback.getSetpoint().velocity);
     inputs.acceleration =
         MetersPerSecondPerSecond.of(-1.0); // TODO: Replace with calculation based on velocity
 
