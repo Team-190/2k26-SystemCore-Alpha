@@ -13,10 +13,8 @@ import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOSim;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFX;
 import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOSim;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOTalonFX;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOSim;
-import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOTalonFX;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOSim;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOTalonFX;
@@ -87,10 +85,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
                   () -> driver.getRightTriggerAxis());
-          shooter =
-              new V3_Horse_CV2_TRShooter(
-                  new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
-                  new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
+          //   shooter =
+          //       new V3_Horse_CV2_TRShooter(
+          //           new
+          // GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+          //           new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
           vision =
               new Vision(
                   () -> FieldConstants.tagLayoutType.getLayout(),
@@ -189,6 +188,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             () -> -driver.getLeftX(),
             () -> -driver.getRightX(),
             V3_Horse_CV2_TRRobotState::getHeading));
+    driver.a().onTrue(intake.extend());
+    driver.b().onTrue(intake.retract());
   }
 
   @Override
@@ -199,6 +200,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   @Override
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    return intake.sysID();
   }
 }

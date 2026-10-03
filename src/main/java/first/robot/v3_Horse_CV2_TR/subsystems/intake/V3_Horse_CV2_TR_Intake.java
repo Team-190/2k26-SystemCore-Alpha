@@ -141,9 +141,9 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
       case OVERRIDE:
         break;
     }
-    if (extensionState != ExtensionState.OVERRIDE) {
-      updateGainSlots();
-    }
+    // if (extensionState != ExtensionState.OVERRIDE) {
+    //   updateGainSlots();
+    // }
     leftIntakeRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
     rightIntakeRoller.setVoltageGoal(
@@ -274,6 +274,13 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
+  public Command retract() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.STOW;
+        });
+  }
+
   public Command stowExtension() {
     return Commands.runOnce(
         () -> {
@@ -308,5 +315,14 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         () -> {
           extensionState = ExtensionState.MANUAL_EXTEND;
         });
+  }
+
+  public Command sysID() {
+    return Commands.runOnce(
+            () -> {
+              extensionState = ExtensionState.OVERRIDE;
+            })
+        .andThen(
+            Commands.parallel(leftExtension.runSysIdRoutine(), rightExtension.runSysIdRoutine()));
   }
 }

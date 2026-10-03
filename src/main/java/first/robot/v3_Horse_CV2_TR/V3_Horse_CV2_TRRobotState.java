@@ -9,7 +9,6 @@ import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import first.robot.FieldConstants;
 import first.robot.util.AllianceFlipUtil;
-import first.robot.util.HubActivePeriod;
 import first.robot.util.NTPrefixes;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import java.util.HashSet;
@@ -225,13 +224,14 @@ public class V3_Horse_CV2_TRRobotState {
     Logger.recordOutput(NTPrefixes.ROBOT_STATE + "Hood/Feed Angle", feedAngle);
     Logger.recordOutput(NTPrefixes.ROBOT_STATE + "Shooter/Feed Velocity", feedVelocity);
 
-    Logger.recordOutput(
-        NTPrefixes.ROBOT_STATE + "Shift Period/Active", HubActivePeriod.isHubActive());
-    Logger.recordOutput(
-        NTPrefixes.ROBOT_STATE + "Shift Period/Time Remaining",
-        (int) HubActivePeriod.getShiftTimeRemaining());
-    Logger.recordOutput(
-        NTPrefixes.ROBOT_STATE + "Shift Period/Current Shift", HubActivePeriod.getCurrentShift());
+    // Logger.recordOutput(
+    //     NTPrefixes.ROBOT_STATE + "Shift Period/Active", HubActivePeriod.isHubActive());
+    // Logger.recordOutput(
+    //     NTPrefixes.ROBOT_STATE + "Shift Period/Time Remaining",
+    //     (int) HubActivePeriod.getShiftTimeRemaining());
+    // Logger.recordOutput(
+    //     NTPrefixes.ROBOT_STATE + "Shift Period/Current Shift",
+    // HubActivePeriod.getCurrentShift());
   }
 
   public static void addLocalizerVisionMeasurement(List<VisionPoseObservation> observations) {

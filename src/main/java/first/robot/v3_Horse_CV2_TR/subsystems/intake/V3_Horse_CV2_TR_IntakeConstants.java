@@ -8,7 +8,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
+import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants.ExtensionParameters;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
 import java.util.Map;
 import org.wpilib.hardware.bus.CANPort;
@@ -131,7 +133,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
         ExtensionConstants.builder()
             .withLeaderCANID(21)
             .withExtensionGearRatio((52.0 / 30) * (52 / 16))
-            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
             .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
@@ -158,13 +160,27 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
             .withCanBus(new CANBus("Extension"))
+            .withExtensionParameters(
+                ExtensionParameters.builder()
+                    .withCARRIAGE_MASS_KG(10.0)
+                    .withEXTENSION_MOTOR_CONFIG(DCMotor.getKrakenX44Foc(1))
+                    .withMAX_LENGTH(Meters.of(MAX_EXTENSION))
+                    .withMIN_LENGTH(Meters.of(MIN_EXTENSION))
+                    .withNUM_MOTORS(1)
+                    .build())
+            .withConstraints(
+                LinearConstraints.builder()
+                    .withGoalTolerance(Meters.of(0.01))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
+                    .withMaxVelocity(MetersPerSecond.of(10))
+                    .build())
             .build();
 
     RIGHT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(22)
             .withExtensionGearRatio((52.0 / 30) * (52 / 16))
-            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
@@ -191,6 +207,20 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
             .withCanBus(new CANBus("Extension"))
+            .withExtensionParameters(
+                ExtensionParameters.builder()
+                    .withCARRIAGE_MASS_KG(10.0)
+                    .withEXTENSION_MOTOR_CONFIG(DCMotor.getKrakenX44Foc(1))
+                    .withMAX_LENGTH(Meters.of(MAX_EXTENSION))
+                    .withMIN_LENGTH(Meters.of(MIN_EXTENSION))
+                    .withNUM_MOTORS(1)
+                    .build())
+            .withConstraints(
+                LinearConstraints.builder()
+                    .withGoalTolerance(Meters.of(0.01))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
+                    .withMaxVelocity(MetersPerSecond.of(10))
+                    .build())
             .build();
 
     LEFT_EXTENSION_STATES =
