@@ -29,7 +29,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   @Getter private ExtensionState extensionState;
   @Getter private RollerState rollerState;
 
-  private final GenericRoller intakeRoller;
+  private final GenericRoller leftIntakeRoller;
+  private final GenericRoller rightIntakeRoller;
 
   public final Extension leftExtension;
 
@@ -46,7 +47,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   private final Setpoint<DistanceUnit> rightManualPositionGoal;
 
   public V3_Horse_CV2_TR_Intake(
-      GenericRollerIO intakeRollerIO,
+      GenericRollerIO leftIntakeRollerIO,
+      GenericRollerIO rightIntakeRollerIO,
       GenericRollerIO kickerRollerIO,
       ExtensionIO leftExtensionIO,
       ExtensionIO rightExtensionIO,
@@ -58,12 +60,19 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     agitateIn = false;
     this.triggerSupplier = triggerSupplier;
 
-    intakeRoller =
+    leftIntakeRoller =
         new GenericRoller(
-            intakeRollerIO,
+            leftIntakeRollerIO,
             this,
-            V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_CONSTANTS,
-            "Intake Roller",
+            V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS,
+            "Left Intake Roller",
+            V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
+    rightIntakeRoller =
+        new GenericRoller(
+            rightIntakeRollerIO,
+            this,
+            V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS,
+            "Right Intake Roller",
             V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
 
     kickerRoller =
@@ -135,11 +144,14 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     if (extensionState != ExtensionState.OVERRIDE) {
       updateGainSlots();
     }
-    intakeRoller.setVoltageGoal(
+    leftIntakeRoller.setVoltageGoal(
+        V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
+    rightIntakeRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
     kickerRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
-    intakeRoller.periodic();
+    leftIntakeRoller.periodic();
+    rightIntakeRoller.periodic();
     kickerRoller.periodic();
     leftExtension.periodic();
     rightExtension.periodic();
@@ -207,7 +219,11 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   public Command setIntakeVoltage(double voltage) {
-    return Commands.runOnce(() -> intakeRoller.setVoltageGoal(Volts.of(voltage)));
+    return Commands.runOnce(
+        () -> {
+          leftIntakeRoller.setVoltageGoal(Volts.of(voltage));
+          rightIntakeRoller.setVoltageGoal(Volts.of(voltage));
+        });
   }
 
   public Command setKickerVoltage(double voltage) {

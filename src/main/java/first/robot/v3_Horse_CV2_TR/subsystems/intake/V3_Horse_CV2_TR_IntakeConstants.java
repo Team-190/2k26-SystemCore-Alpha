@@ -22,7 +22,8 @@ import org.wpilib.units.measure.Voltage;
 
 public class V3_Horse_CV2_TR_IntakeConstants {
 
-  public static final GenericRollerConstants INTAKE_ROLLER_CONSTANTS;
+  public static final GenericRollerConstants LEFT_INTAKE_ROLLER_CONSTANTS;
+  public static final GenericRollerConstants RIGHT_INTAKE_ROLLER_CONSTANTS;
   public static final GenericRollerConstants KICKER_ROLLER_CONSTANTS;
   public static final ExtensionConstants LEFT_EXTENSION_CONSTANTS;
   public static final ExtensionConstants RIGHT_EXTENSION_CONSTANTS;
@@ -74,7 +75,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     EXTENSION_SWITCH_CURRENT = Amps.of(35);
     EXTENSION_SWITCH_VELOCITY = MetersPerSecond.of(0.001);
 
-    INTAKE_ROLLER_CONSTANTS =
+    LEFT_INTAKE_ROLLER_CONSTANTS =
         GenericRollerConstants.builder()
             .withLeaderCANID(23)
             .withCurrentLimits(
@@ -86,10 +87,26 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
             .withRollerMotorGearRatio((1.0 / 2.0)) // please god someone change this
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withOpposedFollowerCANID(24)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus(CANPort.CAN_S0))
+            .withCanBus(new CANBus(CANPort.CAN_S2))
+            .withEnableFOC(false)
+            .build();
+    RIGHT_INTAKE_ROLLER_CONSTANTS =
+        GenericRollerConstants.builder()
+            .withLeaderCANID(24)
+            .withCurrentLimits(
+                CurrentLimits.builder()
+                    .withSupplyCurrentLimit(Amps.of(40.0))
+                    .withStatorCurrentLimit(Amps.of(40.0))
+                    .build())
+            .withNeutralMode(NeutralModeValue.Coast)
+            .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
+            .withRollerMotorGearRatio((1.0 / 2.0)) // TODO: please god someone change this
+            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
+            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+            .withVoltageOffsetStep(Volts.of(1))
+            .withCanBus(new CANBus(CANPort.CAN_S1))
             .withEnableFOC(false)
             .build();
     KICKER_ROLLER_CONSTANTS =
@@ -106,14 +123,14 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus(CANPort.CAN_S0))
+            .withCanBus(new CANBus("Extension"))
             .withEnableFOC(false)
             .build();
 
     LEFT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(21)
-            .withExtensionGearRatio(null) // and here
+            .withExtensionGearRatio(null) // TODO: and here
             .withDrumRadius(0.025)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
@@ -139,12 +156,13 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withVerticalGravity(false)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
+            .withCanBus(new CANBus("Extension"))
             .build();
 
     RIGHT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
             .withLeaderCANID(22)
-            .withExtensionGearRatio(null) // and here
+            .withExtensionGearRatio(null) // TODO: and here
             .withDrumRadius(0.025)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
@@ -170,6 +188,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withVerticalGravity(false)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
+            .withCanBus(new CANBus("Extension"))
             .build();
 
     LEFT_EXTENSION_STATES =
@@ -219,19 +238,19 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             RollerState.INTAKE,
             new Setpoint<>(
                 INTAKE_IN_ROLLER_VOLTAGE,
-                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
             RollerState.EXTAKE,
             new Setpoint<>(
                 INTAKE_OUT_ROLLER_VOLTAGE,
-                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
             RollerState.STOP,
             new Setpoint<>(
                 Volts.of(0),
-                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)));
 

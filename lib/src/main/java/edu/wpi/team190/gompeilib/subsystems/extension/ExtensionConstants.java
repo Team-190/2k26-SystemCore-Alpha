@@ -14,7 +14,7 @@ import org.wpilib.units.measure.Voltage;
 @Builder(setterPrefix = "with")
 public class ExtensionConstants {
   @NonNull public final Integer leaderCANID;
-  @NonNull public final CANBus canBus = new CANBus();
+  @NonNull public final CANBus canBus;
   @NonNull public final Double extensionGearRatio;
   @NonNull public final Double drumRadius;
 

@@ -28,16 +28,16 @@ public class V3_Horse_CV2_TR_RollerFloorConstants {
             .withCurrentLimits(
                 CurrentLimits.builder()
                     .withSupplyCurrentLimit(Amps.of(40.0))
-                    .withStatorCurrentLimit(Amps.of(30.0))
+                    .withStatorCurrentLimit(Amps.of(40.0))
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(2))
-            .withRollerMotorGearRatio(3.0 / 2.0) // TODO: Update to actual value
+            .withRollerMotorGearRatio(3.0 / 2.0)
             .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withMomentOfInertia(
-                Units.KilogramSquareMeters.of(0.0001)) // TODO: Update to actual value
-            .withVoltageOffsetStep(Volts.of(1)) // TODO: Update to actual value
-            .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Update to actual value
+                Units.KilogramSquareMeters.of(0.0001)) 
+            .withVoltageOffsetStep(Volts.of(1))
+            .withCanBus(new CANBus(CANPort.CAN_S3)) 
             .withEnableFOC(false)
             .withAlignedFollowerCANID(32)
             .build();
