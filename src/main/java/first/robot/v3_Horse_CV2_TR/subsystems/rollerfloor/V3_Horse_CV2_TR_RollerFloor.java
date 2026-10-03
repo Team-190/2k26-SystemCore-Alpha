@@ -20,7 +20,7 @@ public class V3_Horse_CV2_TR_RollerFloor extends SubsystemBase {
   private final Setpoint<VoltageUnit> rollerFloorSetpoint, rollerFloorOverrideSetpoint;
 
   public V3_Horse_CV2_TR_RollerFloor(GenericRollerIO rollerFloorIO) {
-
+    rollerFloorGoal = RollerFloorState.STOP;
     rollerFloorSetpoint =
         new Setpoint<>(
             V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE,
