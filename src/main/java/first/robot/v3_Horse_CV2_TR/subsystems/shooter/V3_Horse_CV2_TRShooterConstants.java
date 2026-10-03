@@ -39,8 +39,8 @@ public class V3_Horse_CV2_TRShooterConstants {
 
   public static final GenericFlywheelConstants SHOOT_CONSTANTS =
       GenericFlywheelConstants.builder()
-          .withLeaderCANID(31) // TODO: Use Real Value
-          .withLeaderInversion(InvertedValue.CounterClockwise_Positive)
+          .withLeaderCANID(41)
+          .withLeaderInversion(InvertedValue.Clockwise_Positive)
           .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Use Real Value
           .withEnableFOC(true)
           .withCurrentLimit(
@@ -76,16 +76,18 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
                   .withGoalTolerance(RadiansPerSecond.of(5))
                   .build())
-          .withOpposedFollowerCANID(30) // TODO: Use Real Value
+          .withOpposedFollowerCANID(42)
+          .withOpposedFollowerCANID(44)
+          .withAlignedFollowerCANID(43)
           .withVelocityOffsetStep(RadiansPerSecond.of(10)) // TODO: Use Real Value
           .withVoltageOffsetStep(Volts.of(1)) // TODO: Use Real Value
           .build();
 
   public static final GenericHoodConstants HOOD_CONSTANTS =
       GenericHoodConstants.builder()
-          .withMotorCanId(32) // TODO: Use Real Value
+          .withMotorCanId(45)
           .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Use Real Value
-          .withGearRatio(70.0) // TODO: Use ASK CAM
+          .withGearRatio(70.0)
           .withCurrentLimits(new CurrentLimits(40, 30)) // TODO: Use Real Value
           .withMomentOfInertia(0.0001)
           .withInvertedValue(InvertedValue.CounterClockwise_Positive)

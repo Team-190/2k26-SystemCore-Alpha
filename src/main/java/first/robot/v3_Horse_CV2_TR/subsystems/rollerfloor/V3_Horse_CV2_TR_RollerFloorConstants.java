@@ -24,7 +24,7 @@ public class V3_Horse_CV2_TR_RollerFloorConstants {
     ROLLER_FLOOR_OVERRIDE_VOLTAGE = Volts.of(9); // TODO: Update to actual value
     ROLLER_FLOOR_CONSTANTS =
         GenericRollerConstants.builder()
-            .withLeaderCANID(32) // TODO: Update to actual value
+            .withLeaderCANID(31)
             .withCurrentLimits(
                 CurrentLimits.builder()
                     .withSupplyCurrentLimit(Amps.of(40.0))
@@ -39,7 +39,7 @@ public class V3_Horse_CV2_TR_RollerFloorConstants {
             .withVoltageOffsetStep(Volts.of(1)) // TODO: Update to actual value
             .withCanBus(new CANBus(CANPort.CAN_S0)) // TODO: Update to actual value
             .withEnableFOC(false)
-            .withAlignedFollowerCANID(33) // TODO: Update to actual value
+            .withAlignedFollowerCANID(32)
             .build();
   }
 

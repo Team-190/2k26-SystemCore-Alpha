@@ -89,7 +89,7 @@ public class V3_Horse_CV2_TRTunerConstants {
   public static final boolean kInvertLeftSide = false;
   public static final boolean kInvertRightSide = true;
 
-  public static final int kPigeonId = 50;
+  public static final int kPigeonId = 13;
 
   // These are only used for simulation
   public static final MomentOfInertia kSteerInertia = KilogramSquareMeters.of(0.01);
@@ -133,7 +133,7 @@ public class V3_Horse_CV2_TRTunerConstants {
   // Front Left
   public static final int kFrontLeftDriveMotorId = 1;
   public static final int kFrontLeftSteerMotorId = 5;
-  public static final int kFrontLeftEncoderId = 10;
+  public static final int kFrontLeftEncoderId = 9;
   public static final Angle kFrontLeftEncoderOffset = Rotations.of(-0.25634765625);
   public static final boolean kFrontLeftSteerMotorInverted = false;
   public static final boolean kFrontLeftEncoderInverted = false;
@@ -144,7 +144,7 @@ public class V3_Horse_CV2_TRTunerConstants {
   // Front Right
   public static final int kFrontRightDriveMotorId = 2;
   public static final int kFrontRightSteerMotorId = 6;
-  public static final int kFrontRightEncoderId = 11;
+  public static final int kFrontRightEncoderId = 10;
   public static final Angle kFrontRightEncoderOffset = Rotations.of(-0.127685546875);
   public static final boolean kFrontRightSteerMotorInverted = false;
   public static final boolean kFrontRightEncoderInverted = false;
@@ -155,7 +155,7 @@ public class V3_Horse_CV2_TRTunerConstants {
   // Back Left
   public static final int kBackLeftDriveMotorId = 3;
   public static final int kBackLeftSteerMotorId = 7;
-  public static final int kBackLeftEncoderId = 12;
+  public static final int kBackLeftEncoderId = 11;
   public static final Angle kBackLeftEncoderOffset = Rotations.of(-0.427001953125);
   public static final boolean kBackLeftSteerMotorInverted = false;
   public static final boolean kBackLeftEncoderInverted = false;
@@ -166,7 +166,7 @@ public class V3_Horse_CV2_TRTunerConstants {
   // Back Right
   public static final int kBackRightDriveMotorId = 4;
   public static final int kBackRightSteerMotorId = 8;
-  public static final int kBackRightEncoderId = 13;
+  public static final int kBackRightEncoderId = 12;
   public static final Angle kBackRightEncoderOffset = Rotations.of(-0.1875);
   public static final boolean kBackRightSteerMotorInverted = false;
   public static final boolean kBackRightEncoderInverted = false;
