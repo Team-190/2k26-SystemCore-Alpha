@@ -31,7 +31,7 @@ import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
 import org.wpilib.util.Pair;
 
-public final class DriveCommands {
+public final class V3_Horse_CV2_TRDriveCommands {
 
   @Setter private static double lastCardinalDirection = 0.0;
   @Getter private static double slowFactor = 0.5;

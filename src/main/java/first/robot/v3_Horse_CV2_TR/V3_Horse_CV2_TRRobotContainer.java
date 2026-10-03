@@ -24,21 +24,23 @@ import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
-import first.robot.v3_Horse_CV2_TR.commands.DriveCommands;
+import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
+import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
-import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloor;
-import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloorConstants;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import java.util.List;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandNiDsXboxController;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
-  private V3_Horse_CV2_TR_RollerFloor rollerFloor;
+  private V3_Horse_CV2_TRRollerFloor rollerFloor;
   private V3_Horse_CV2_TR_Intake intake;
   private V3_Horse_CV2_TRShooter shooter;
   private Vision vision;
@@ -71,9 +73,9 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   V3_Horse_CV2_TRRobotState::getGlobalPose,
                   V3_Horse_CV2_TRRobotState::resetPose);
           rollerFloor =
-              new V3_Horse_CV2_TR_RollerFloor(
+              new V3_Horse_CV2_TRRollerFloor(
                   new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
           intake =
               new V3_Horse_CV2_TR_Intake(
                   new GenericRollerIOTalonFX(
@@ -122,9 +124,9 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   V3_Horse_CV2_TRRobotState::getGlobalPose,
                   V3_Horse_CV2_TRRobotState::resetPose);
           rollerFloor =
-              new V3_Horse_CV2_TR_RollerFloor(
+              new V3_Horse_CV2_TRRollerFloor(
                   new GenericRollerIOSim(
-                      V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
           intake =
               new V3_Horse_CV2_TR_Intake(
                   new GenericRollerIOSim(
@@ -159,7 +161,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               V3_Horse_CV2_TRRobotState::resetPose);
     }
     if (rollerFloor == null) {
-      rollerFloor = new V3_Horse_CV2_TR_RollerFloor(new GenericRollerIO() {});
+      rollerFloor = new V3_Horse_CV2_TRRollerFloor(new GenericRollerIO() {});
     }
     if (intake == null) {
       intake =
@@ -174,6 +176,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     if (shooter == null) {
       shooter = new V3_Horse_CV2_TRShooter(new GenericFlywheelIO() {}, new GenericHoodIO() {});
     }
+
     if (vision == null) {
       vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
     }
@@ -181,7 +184,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");
 
     drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
+        V3_Horse_CV2_TRDriveCommands.joystickDrive(
             drive,
             V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
             () -> -driver.getLeftY(),
@@ -190,6 +193,75 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             V3_Horse_CV2_TRRobotState::getHeading));
     driver.a().onTrue(intake.extend());
     driver.b().onTrue(intake.retract());
+  }
+
+  private void configureButtonBindings() {
+    drive.setDefaultCommand(
+        V3_Horse_CV2_TRDriveCommands.joystickDriveRotationLock(
+                drive,
+                V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX(),
+                V3_Horse_CV2_TRRobotState::getHeading,
+                driver.rightTrigger(),
+                () -> V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
+                () -> 0.0,
+                driver.leftTrigger())
+            .withName("joystickDriveRotationLock"));
+
+    driver
+        .leftTrigger()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        V3_Horse_CV2_TRDriveCommands.setLastCardinalDirection(
+                            Math.round(
+                                    V3_Horse_CV2_TRRobotState.getHeading().getRadians()
+                                        / (Math.PI / 2.0))
+                                * (Math.PI / 2.0)))
+                .withName("cardinal-direction-set"));
+
+    driver
+        .leftBumper()
+        .onTrue(Commands.none().withName("driver-leftBumper-true")); // Intake collect
+
+    driver
+        .rightBumper()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter)
+                .withName("driver-rightBumper-true"));
+
+    driver.rightTrigger().onTrue(Commands.print("Agitate").withName("driver-rightTrigger-true"));
+
+    driver
+        .dpadDown()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.resetHeading(
+                    drive,
+                    V3_Horse_CV2_TRRobotState::resetPose,
+                    () -> V3_Horse_CV2_TRRobotState.getGlobalPose().getTranslation())
+                .withName("driver-dpadDown-true"));
+
+    driver
+        .northFace()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.farShotCommand(rollerFloor, shooter)
+                .withName("driver-Y-true"));
+
+    driver
+        .southFace()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.bumpShotCommand(rollerFloor, shooter)
+                .withName("driver-A-true"));
+
+    driver
+        .westFace()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.trenchShotCommand(rollerFloor, shooter)
+                .withName("driver-X-true"));
+
+    driver.eastFace().onTrue(Commands.print("Intake Stow").withName("driver-B-true"));
   }
 
   @Override
