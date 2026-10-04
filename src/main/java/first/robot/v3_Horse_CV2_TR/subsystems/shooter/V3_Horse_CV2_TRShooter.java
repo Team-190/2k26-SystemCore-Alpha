@@ -126,7 +126,6 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   @Trace
   public void periodic() {
-
     switch (shooterGoal) {
       case STOW:
         hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.minAngle);
@@ -134,11 +133,11 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         break;
       case SCORE:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
-        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity());
+        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity(), Amps.of(0));
         break;
       case FEED:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
-        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity());
+        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity(), Amps.of(0));
         break;
       case BUMP_SHOT:
         hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.BUMP_SHOT_HOOD_ANGLE);
@@ -270,7 +269,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public Command setFlywheelVelocity(AngularVelocity velocity) {
     return setGoal(ShooterGoal.IDLE)
-        .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity)));
+        .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity, Amps.of(0))));
   }
 
   public Command resetHoodZero() {

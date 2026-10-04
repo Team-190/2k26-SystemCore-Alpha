@@ -33,7 +33,7 @@ public class Extension {
 
   private final SysIdRoutine characterizationRoutine;
 
-  public final ExtensionConstants constants;
+  @Getter public final ExtensionConstants constants;
 
   public Extension(
       ExtensionConstants constants,
@@ -215,6 +215,24 @@ public class Extension {
             subsystem));
   }
 
+  /**
+   * Returns true once any extension has reached the end stop in the direction of travel. The check
+   * is one-sided so a fast dynamic test can't overshoot the tolerance band and keep driving.
+   */
+  private static boolean anyAtEndStop(SysIdRoutine.Direction direction, Extension... extensions) {
+    for (Extension extension : extensions) {
+      double position = extension.getExtensionPosition().in(Meters);
+      double tolerance = extension.constants.constraints.goalTolerance().get().in(Meters);
+      if (direction == SysIdRoutine.Direction.FORWARD
+          ? position >= extension.constants.extensionParameters.MAX_LENGTH().in(Meters) - tolerance
+          : position
+              <= extension.constants.extensionParameters.MIN_LENGTH().in(Meters) + tolerance) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static Command runSysIdRoutine(SysIdRoutine routine, Extension... extensions) {
     return Commands.sequence(
         Commands.runOnce(
@@ -223,12 +241,20 @@ public class Extension {
                 extension.currentState = ExtensionState.IDLE;
               }
             }),
-        routine.quasistatic(SysIdRoutine.Direction.FORWARD),
+        routine
+            .quasistatic(SysIdRoutine.Direction.FORWARD)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD, extensions)),
         Commands.waitSeconds(1.0),
-        routine.quasistatic(SysIdRoutine.Direction.REVERSE),
+        routine
+            .quasistatic(SysIdRoutine.Direction.REVERSE)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE, extensions)),
         Commands.waitSeconds(1.0),
-        routine.dynamic(SysIdRoutine.Direction.FORWARD),
+        routine
+            .dynamic(SysIdRoutine.Direction.FORWARD)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD, extensions)),
         Commands.waitSeconds(1.0),
-        routine.dynamic(SysIdRoutine.Direction.REVERSE));
+        routine
+            .dynamic(SysIdRoutine.Direction.REVERSE)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE, extensions)));
   }
 }

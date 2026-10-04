@@ -61,6 +61,14 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
         .withSupplyCurrentLimitEnable(true)
         .withStatorCurrentLimit(constants.currentLimit.statorCurrentLimit())
         .withStatorCurrentLimitEnable(true);
+    if (constants.peakForwardTorqueCurrent != null) {
+      talonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent =
+          constants.peakForwardTorqueCurrent.in(Amps);
+    }
+    if (constants.peakReverseTorqueCurrent != null) {
+      talonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent =
+          constants.peakReverseTorqueCurrent.in(Amps);
+    }
     talonFXConfiguration.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
     talonFXConfiguration
         .Slot0
@@ -157,7 +165,7 @@ public class GenericFlywheelIOTalonFX implements GenericFlywheelIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(1 / GompeiLib.getLoopPeriod(), statusSignals);
 
-    PhoenixUtil.registerSignals(constants.canBus.isNetworkFD(), statusSignals);
+    PhoenixUtil.registerSignals(constants.canBus, statusSignals);
 
     talonFX.optimizeBusUtilization();
     for (TalonFX follower : followerTalonFX) {

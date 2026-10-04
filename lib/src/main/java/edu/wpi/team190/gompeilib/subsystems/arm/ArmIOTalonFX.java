@@ -141,7 +141,7 @@ public class ArmIOTalonFX implements ArmIO {
 
     talonFX.optimizeBusUtilization();
 
-    PhoenixUtil.registerSignals(constants.canBus.isNetworkFD(), statusSignals);
+    PhoenixUtil.registerSignals(constants.canBus, statusSignals);
 
     talonFX.setPosition(0);
 

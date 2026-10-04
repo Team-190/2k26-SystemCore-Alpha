@@ -90,7 +90,7 @@ public class GenericHoodIOTalonFX implements GenericHoodIO {
     hoodMotor.optimizeBusUtilization();
 
     PhoenixUtil.registerSignals(
-        constants.canBus.isNetworkFD(),
+        constants.canBus,
         positionRotations,
         velocity,
         torqueCurrent,

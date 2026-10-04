@@ -57,7 +57,7 @@ public class GyroIOPigeon2 implements GyroIO {
     pigeon.optimizeBusUtilization();
 
     PhoenixUtil.registerSignals(
-        driveConstants.driveConfig.canBus().isNetworkFD(),
+        driveConstants.driveConfig.canBus(),
         yaw,
         yawVelocity,
         pitch,
