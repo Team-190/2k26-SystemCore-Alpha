@@ -44,9 +44,9 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final double EXTENSION_INCREMENT = 0.0;
 
-  public static final double EXTENSION_STOW_POSITION = 0.04;
+  public static final double EXTENSION_STOW_POSITION = 0.02;
 
-  public static final double EXTENSION_INTAKE_POSITION = 0.5;
+  public static final double EXTENSION_INTAKE_POSITION = 0.3;
 
   public static final Map<ExtensionState, Setpoint<DistanceUnit>> LEFT_EXTENSION_STATES;
 
@@ -141,7 +141,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 Gains.builder()
                     .withPrefix("Intake/Left Extension/Slot0")
                     .withKP(10)
-                    .withKD(0.1)
+                    .withKD(0.0)
                     .withKS(0.42002)
                     .withKV(6.3697)
                     .withKA(0.0)
@@ -172,8 +172,8 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 LinearConstraints.builder()
                     .withPrefix("Intake/Left Extension/Constraints")
                     .withGoalTolerance(Meters.of(0.01))
-                    .withMaxAcceleration(MetersPerSecondPerSecond.of(20))
-                    .withMaxVelocity(MetersPerSecond.of(10))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
+                    .withMaxVelocity(MetersPerSecond.of(20))
                     .build())
             .build();
 
@@ -189,7 +189,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 Gains.builder()
                     .withPrefix("Intake/Right Extension/Slot0")
                     .withKP(10)
-                    .withKD(0.1)
+                    .withKD(0.0)
                     .withKS(0.42002)
                     .withKV(6.3697)
                     .withKA(0.0)
@@ -220,8 +220,8 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 LinearConstraints.builder()
                     .withPrefix("Intake/Right Extension/Constraints")
                     .withGoalTolerance(Meters.of(0.01))
-                    .withMaxAcceleration(MetersPerSecondPerSecond.of(20))
-                    .withMaxVelocity(MetersPerSecond.of(10))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
+                    .withMaxVelocity(MetersPerSecond.of(20))
                     .build())
             .build();
 
