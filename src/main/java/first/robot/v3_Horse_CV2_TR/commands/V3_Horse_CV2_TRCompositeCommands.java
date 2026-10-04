@@ -3,6 +3,8 @@ package first.robot.v3_Horse_CV2_TR.commands;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import first.robot.util.AllianceFlipUtil;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
+import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
+import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
@@ -55,46 +57,49 @@ public class V3_Horse_CV2_TRCompositeCommands {
   }
 
   public static Command shootWithAgitateCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    // V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter,
+    V3_Horse_CV2_TR_Intake intake) {
     return Commands.parallel(
-        V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter));
-    // intake.setState(intakeState.AGITATE));
+        V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter),
+        intake.setIntakeState(V3_Horse_CV2_TR_IntakeConstants.ExtensionState.AGITATE, V3_Horse_CV2_TR_IntakeConstants.RollerState.STOP));
   }
 
   public static Command bumpShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    // V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter,
+    V3_Horse_CV2_TR_Intake intake) {
 
     return Commands.parallel(
         Commands.sequence(
             shooter.setGoal(ShooterGoal.BUMP_SHOT),
             shooter.waitUntilAtGoal(),
-            rollerFloor.setState(null)));
-    // intake.setState(intakeState.AGITATE))
+            rollerFloor.setState(null)),
+            intake.setIntakeState(V3_Horse_CV2_TR_IntakeConstants.ExtensionState.AGITATE, V3_Horse_CV2_TR_IntakeConstants.RollerState.STOP));
+            
   }
 
   public static Command trenchShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    //   V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter,
+    V3_Horse_CV2_TR_Intake intake) {
 
     return Commands.parallel(
         Commands.sequence(
             shooter.setGoal(ShooterGoal.TRENCH_SHOT),
             shooter.waitUntilAtGoal(),
-            rollerFloor.setState(null)));
-    // intake.setState(intakeState.AGITATE))
+            rollerFloor.setState(null)),
+            intake.setIntakeState(V3_Horse_CV2_TR_IntakeConstants.ExtensionState.AGITATE, V3_Horse_CV2_TR_IntakeConstants.RollerState.STOP));
+            
   }
 
   public static Command farShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    // V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter,
+    V3_Horse_CV2_TR_Intake intake) {
 
     return Commands.parallel(
         Commands.sequence(
             shooter.setGoal(ShooterGoal.FAR_SHOT),
             shooter.waitUntilAtGoal(),
-            rollerFloor.setState(null)));
-    // intake.setState(intakeState.AGITATE));
+            rollerFloor.setState(null)),
+            intake.setIntakeState(V3_Horse_CV2_TR_IntakeConstants.ExtensionState.AGITATE, V3_Horse_CV2_TR_IntakeConstants.RollerState.STOP));
+            
   }
 }

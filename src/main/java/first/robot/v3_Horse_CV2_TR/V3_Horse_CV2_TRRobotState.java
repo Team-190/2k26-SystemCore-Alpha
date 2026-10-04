@@ -295,7 +295,6 @@ public class V3_Horse_CV2_TRRobotState {
   public record FixedShotParameters(
       Rotation2d robotAngle, Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
 
-
   @Data
   @AllArgsConstructor
   public static class LEDStates {

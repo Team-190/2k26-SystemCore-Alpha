@@ -90,7 +90,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
                         <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
                             .constraints
                             .goalTolerance()
-                            .get(RadiansPerSecond))
+                            .get()
+                            .in(RadiansPerSecond))
             .debounce(.75, Debouncer.DebounceType.FALLING);
     flywheelFeedingTrigger =
         new Trigger(
@@ -103,7 +104,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
                     <= (V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
                             .constraints
                             .goalTolerance()
-                            .get(RadiansPerSecond)
+                            .get()
+                            .in(RadiansPerSecond)
                         + 35));
 
     hoodFeedingTrigger =
@@ -117,7 +119,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
                     <= (V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS
                             .constraints
                             .goalTolerance()
-                            .get(Radians)
+                            .get()
+                            .in(Radians)
                         + Units.degreesToRadians(5)));
   }
 
@@ -153,7 +156,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             V3_Horse_CV2_TRShooterConstants.FAR_SHOT_FLYWHEEL_SPEED.plus(farVelocityOffset));
         break;
       case ZERO:
-        hood.setPositionGoal(Rotation2d.kZero);
+        hood.setPositionGoal(Rotation2d.ZERO);
         flywheel.stop();
         break;
       case STOP:
