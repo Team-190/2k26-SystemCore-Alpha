@@ -245,7 +245,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public Command setFlywheelVelocity(AngularVelocity velocity) {
     return setGoal(ShooterGoal.IDLE)
-        .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity)));
+        .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity, Amps.of(0))));
   }
 
   public Command resetHoodZero() {

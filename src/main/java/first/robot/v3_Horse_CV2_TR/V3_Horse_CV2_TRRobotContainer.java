@@ -1,5 +1,7 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import static org.wpilib.units.Units.RotationsPerMinute;
+
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
@@ -37,7 +39,6 @@ import java.util.List;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.button.CommandNiDsXboxController;
-import org.wpilib.math.geometry.Rotation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -190,8 +191,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             () -> -driver.getLeftX(),
             () -> -driver.getRightX(),
             V3_Horse_CV2_TRRobotState::getHeading));
-    driver.a().onTrue(shooter.setHoodAngle(Rotation2d.ZERO));
-    driver.b().onTrue(shooter.setHoodAngle(Rotation2d.fromDegrees(35)));
+    driver.a().onTrue(shooter.setFlywheelVelocity(RotationsPerMinute.of(348)));
+    driver.b().onTrue(shooter.setFlywheelVelocity(RotationsPerMinute.of(2784)));
   }
 
   @Override
@@ -202,6 +203,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   @Override
   public Command getAutonomousCommand() {
-    return shooter.hoodSysId();
+    return shooter.flywheelSysId();
   }
 }

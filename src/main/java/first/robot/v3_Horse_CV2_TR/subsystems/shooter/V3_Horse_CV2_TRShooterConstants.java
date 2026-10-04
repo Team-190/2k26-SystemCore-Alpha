@@ -63,11 +63,11 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withTorqueGains(
               Gains.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(0)
+                  .withKP(4.0)
                   .withKD(0)
-                  .withKS(0.0)
-                  .withKV(0.0)
-                  .withKA(0.0)
+                  .withKS(6.5)
+                  .withKV(0.25)
+                  .withKA(0.92854)
                   .build())
           .withConstraints(
               AngularVelocityConstraints.builder()
