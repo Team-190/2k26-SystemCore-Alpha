@@ -1,7 +1,6 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 
 import static org.wpilib.units.Units.Meters;
-import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.utility.ExtensionMethods;
@@ -38,8 +37,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   private final GenericRoller kickerRoller;
 
-  private boolean agitateIn;
-
   private DoubleSupplier triggerSupplier;
 
   private final Setpoint<DistanceUnit> leftManualPositionGoal;
@@ -57,7 +54,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
     extensionState = ExtensionState.STOW;
     rollerState = RollerState.STOP;
-    agitateIn = false;
     this.triggerSupplier = triggerSupplier;
 
     leftIntakeRoller =
@@ -115,6 +111,10 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   @Trace
   @Override
   public void periodic() {
+    if (extensionState == ExtensionState.MANUAL_RELEASE) {
+      extensionState = isNearStow() ? ExtensionState.STOW : ExtensionState.INTAKE;
+    }
+
     switch (extensionState) {
       case INTAKE, STOW:
         leftExtension.setPositionGoal(
@@ -122,23 +122,13 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         rightExtension.setPositionGoal(
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
         break;
-      case AGITATE:
-        if (switchDirection(agitateIn)) {
-          agitateIn = !agitateIn;
-        }
-        setAgitateGoals(agitateIn);
-        break;
       case MANUAL_EXTEND:
-        if (triggerSupplier.getAsDouble() < 0.9) {
-          leftManualPositionGoal.setSetpoint(linearExtensionMap());
-          rightManualPositionGoal.setSetpoint(linearExtensionMap());
-          leftExtension.setPositionGoal(leftManualPositionGoal);
-          rightExtension.setPositionGoal(rightManualPositionGoal);
-        } else {
-          extensionState = ExtensionState.STOW;
-        }
+        leftManualPositionGoal.setSetpoint(linearExtensionMap());
+        rightManualPositionGoal.setSetpoint(linearExtensionMap());
+        leftExtension.setPositionGoal(leftManualPositionGoal);
+        rightExtension.setPositionGoal(rightManualPositionGoal);
         break;
-      case OVERRIDE:
+      case MANUAL_RELEASE, OVERRIDE:
         break;
     }
     // if (extensionState != ExtensionState.OVERRIDE) {
@@ -169,81 +159,10 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     return position;
   }
 
-  private boolean switchDirection(boolean agitateIn) {
-    ExtensionState agitateGoal;
-    if (agitateIn) {
-      agitateGoal = ExtensionState.AGITATE;
-    } else {
-      agitateGoal = ExtensionState.INTAKE;
-    }
-    return ((leftExtension
-                    .getPositionGoal()
-                    .getNewSetpoint()
-                    .matchesSetpoint(
-                        V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(agitateGoal))
-                && leftExtension.atPositionGoal())
-            && (rightExtension
-                    .getPositionGoal()
-                    .getNewSetpoint()
-                    .matchesSetpoint(
-                        V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal))
-                && rightExtension.atPositionGoal()))
-        || (leftExtension
-            .getTorqueCurrent()
-            .abs()
-            .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT))
-        || rightExtension
-            .getTorqueCurrent()
-            .abs()
-            .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT);
-  }
-
-  private void setAgitateGoals(boolean agitateIn) {
-    ExtensionState agitateGoal;
-    if (agitateIn) {
-      agitateGoal = ExtensionState.AGITATE;
-    } else {
-      agitateGoal = ExtensionState.INTAKE;
-    }
-
-    leftExtension.setPositionGoal(
-        V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(agitateGoal));
-    rightExtension.setPositionGoal(
-        V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal));
-  }
-
   // Compliant (ZERO) at rest, firmer (ONE) while driving to a new goal.
   private void updateGainSlots() {
     leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
     rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
-  }
-
-  public Command setIntakeVoltage(double voltage) {
-    return Commands.runOnce(
-        () -> {
-          leftIntakeRoller.setVoltageGoal(Volts.of(voltage));
-          rightIntakeRoller.setVoltageGoal(Volts.of(voltage));
-        });
-  }
-
-  public Command setKickerVoltage(double voltage) {
-    return Commands.runOnce(() -> kickerRoller.setVoltageGoal(Volts.of(voltage)));
-  }
-
-  public Command deploy() {
-    return Commands.runOnce(
-        () -> {
-          extensionState = ExtensionState.INTAKE;
-          rollerState = RollerState.INTAKE;
-        });
-  }
-
-  public Command stowAndStop() {
-    return Commands.runOnce(
-        () -> {
-          extensionState = ExtensionState.STOW;
-          rollerState = RollerState.STOP;
-        });
   }
 
   public Command stopRollers() {
@@ -302,14 +221,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
-  public Command setIntakeState(ExtensionState e_state, RollerState r_state) {
-    return Commands.runOnce(
-        () -> {
-          extensionState = e_state;
-          rollerState = r_state;
-        });
-  }
-
   public Command setManualExtendState() {
     return Commands.runOnce(
         () -> {
@@ -317,11 +228,16 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
+  private boolean isNearStow() {
+    double threshold =
+        V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
+            + V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD;
+    return leftExtension.getExtensionPosition().in(Meters) <= threshold
+        && rightExtension.getExtensionPosition().in(Meters) <= threshold;
+  }
+
   public Command sysID() {
-    return Commands.runOnce(
-            () -> {
-              extensionState = ExtensionState.OVERRIDE;
-            })
+    return setExtensionState(ExtensionState.OVERRIDE)
         .andThen(Extension.runSysIdRoutine(this, leftExtension, rightExtension));
   }
 }

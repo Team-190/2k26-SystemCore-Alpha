@@ -194,8 +194,8 @@ public final class V3_Horse_CV2_TRDriveCommands {
                         lastCardinalDirection,
                         rotationSupplier.get().getRadians(),
                         drive.getMeasuredChassisVelocities().omega))),
-        cardinalDirectionAlign,
-        hubFeedforward);
+        () -> false,
+        () -> 1.0);
   }
 
   public static Command joystickDriveRotationLock(

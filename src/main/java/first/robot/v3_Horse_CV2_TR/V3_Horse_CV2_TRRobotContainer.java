@@ -27,7 +27,6 @@ import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
 import first.robot.util.CV2_input.XKeysInput;
-import first.robot.util.CV2_input.XboxElite2Input;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
@@ -43,6 +42,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
+import org.wpilib.command2.button.CommandXboxController;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -52,9 +52,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private Vision vision;
   private final LoggedNetworkChooser<Command> autoChooser;
 
-  private final XboxElite2Input driver = new XboxElite2Input(0);
-
-  private final CommandGamepad driverController = new CommandGamepad(0);
+  private final CommandXboxController driver = new CommandXboxController(0);
 
   private final XKeysInput xkeys = new XKeysInput(1);
 
@@ -205,7 +203,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 () -> -driver.getLeftX(),
                 () -> -driver.getRightX(),
                 V3_Horse_CV2_TRRobotState::getHeading,
-                driver.rightTrigger(),
+                () -> driver.rightBumper().getAsBoolean(), // Aim at goal: not yet bound
                 () -> V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
                 () -> 0.0,
                 driver.leftTrigger())
@@ -225,15 +223,28 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
     driver
         .leftBumper()
-        .onTrue(intake.deploy().withName("driver-leftBumper-true")); 
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
+                .withName("driver-leftBumper-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("driver-leftBumper-false"));
 
     driver
         .rightBumper()
-        .onTrue(
+        .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter)
-                .withName("driver-rightBumper-true"));
+                .withName("driver-rightBumper-true"))
+        .onFalse(stopShooter("driver-rightBumper-false"));
 
-    driver.rightTrigger().onTrue(intake.setIntakeState(ExtensionState.AGITATE, RollerState.STOP).withName("driver-rightTrigger-true"));
+    driver
+        .rightTrigger(V3_Horse_CV2_TR_IntakeConstants.AGITATE_TRIGGER_THRESHOLD)
+        .onTrue(
+            intake
+                .setExtensionState(ExtensionState.MANUAL_EXTEND)
+                .withName("driver-rightTrigger-true"))
+        .onFalse(
+            intake
+                .setExtensionState(ExtensionState.MANUAL_RELEASE)
+                .withName("driver-rightTrigger-false"));
 
     driver
         .dpadDown()
@@ -245,24 +256,33 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 .withName("driver-dpadDown-true"));
 
     driver
-        .faceUp()
-        .onTrue(
-            V3_Horse_CV2_TRCompositeCommands.farShotCommand(rollerFloor, shooter, intake)
-                .withName("driver-Y-true"));
+        .y()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.farShotCommand(rollerFloor, shooter)
+                .withName("driver-Y-true"))
+        .onFalse(stopShooter("driver-Y-false"));
 
     driver
-        .faceDown()
-        .onTrue(
-            V3_Horse_CV2_TRCompositeCommands.bumpShotCommand(rollerFloor, shooter, intake)
-                .withName("driver-A-true"));
+        .a()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.bumpShotCommand(rollerFloor, shooter)
+                .withName("driver-A-true"))
+        .onFalse(stopShooter("driver-A-false"));
 
     driver
-        .faceLeft()
-        .onTrue(
-            V3_Horse_CV2_TRCompositeCommands.trenchShotCommand(rollerFloor, shooter, intake)
-                .withName("driver-X-true"));
+        .x()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.trenchShotCommand(rollerFloor, shooter)
+                .withName("driver-X-true"))
+        .onFalse(stopShooter("driver-X-false"));
 
-    driver.faceRight().onTrue(intake.stowAndStop().withName("driver-B-true"));
+    driver
+        .b()
+        .onTrue(V3_Horse_CV2_TRCompositeCommands.intakeStow(intake).withName("driver-B-true"));
+  }
+
+  private Command stopShooter(String name) {
+    return V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter).withName(name);
   }
 
   @Override

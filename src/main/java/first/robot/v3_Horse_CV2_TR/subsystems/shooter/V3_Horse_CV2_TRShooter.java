@@ -20,7 +20,6 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.Trigger;
-import org.wpilib.math.filter.Debouncer;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.AngleUnit;
@@ -32,6 +31,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private final GenericFlywheel flywheel;
   private ShooterGoal shooterGoal;
+  // Goal most recently pushed to the flywheel and hood in periodic
+  private ShooterGoal appliedGoal;
 
   private final GenericHood hood;
 
@@ -81,18 +82,17 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     flywheelShootingTrigger =
         new Trigger(
-                () ->
-                    Math.abs(
-                            flywheel
-                                .getFlywheelVelocity()
-                                .minus(flywheel.getVelocityGoal().getNewSetpoint())
-                                .in(RadiansPerSecond))
-                        <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
-                            .constraints
-                            .goalTolerance()
-                            .get()
+            () ->
+                Math.abs(
+                        flywheel
+                            .getFlywheelVelocity()
+                            .minus(flywheel.getVelocityGoal().getNewSetpoint())
                             .in(RadiansPerSecond))
-            .debounce(.75, Debouncer.DebounceType.FALLING);
+                    <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
+                        .constraints
+                        .goalTolerance()
+                        .get()
+                        .in(RadiansPerSecond));
     flywheelFeedingTrigger =
         new Trigger(
             () ->
@@ -168,6 +168,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     hood.periodic();
     flywheel.periodic();
+    appliedGoal = shooterGoal;
 
     Logger.recordOutput("Shooter/Goal", shooterGoal);
 
@@ -206,9 +207,10 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   }
 
   public boolean atGoal() {
-    return (V3_Horse_CV2_TRRobotState.isInAllianceZone()
-        ? (flywheelShootingTrigger.getAsBoolean() && hood.atPositionGoal())
-        : (flywheelFeedingTrigger.getAsBoolean() && hoodFeedingTrigger.getAsBoolean()));
+    return shooterGoal == appliedGoal
+        && (V3_Horse_CV2_TRRobotState.isInAllianceZone()
+            ? (flywheelShootingTrigger.getAsBoolean() && hood.atPositionGoal())
+            : (flywheelFeedingTrigger.getAsBoolean() && hoodFeedingTrigger.getAsBoolean()));
   }
 
   public Command waitUntilAtGoal() {
