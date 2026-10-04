@@ -45,8 +45,8 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withEnableFOC(true)
           .withCurrentLimit(
               CurrentLimits.builder()
-                  .withSupplyCurrentLimit(Amps.of(60.0)) // TODO: Use Real Value
-                  .withStatorCurrentLimit(Amps.of(80.0)) // TODO: Use Real Value
+                  .withSupplyCurrentLimit(Amps.of(60.0))
+                  .withStatorCurrentLimit(Amps.of(80.0))
                   .build())
           .withMomentOfInertia(0.09473883059)
           .withGearRatio(30.0 / 18.0)
@@ -88,18 +88,18 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withMotorCanId(45)
           .withCanBus(new CANBus(CANPort.CAN_S4))
           .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
-          .withCurrentLimits(new CurrentLimits(40, 30)) // TODO: Use Real Value
+          .withCurrentLimits(new CurrentLimits(40, 30))
           .withMomentOfInertia(0.0001)
           .withInvertedValue(InvertedValue.Clockwise_Positive)
           .withMotorConfig(DCMotor.getKrakenX44Foc(1))
           .withLengthMeters(0.211582)
           .withMinAngle(Rotation2d.fromDegrees(0.5))
           .withMaxAngle(Rotation2d.fromDegrees(35.0))
-          .withZeroVoltage(Volts.of(1.0)) // TODO: Use Real Value
-          .withZeroCurrentThreshold(Amps.of(40.0)) // TODO: Use Real Value
-          .withZeroCurrentEpsilon(Milliamps.of(500)) // TODO: Use Real Value
+          .withZeroVoltage(Volts.of(1.0))
+          .withZeroCurrentThreshold(Amps.of(40.0))
+          .withZeroCurrentEpsilon(Milliamps.of(500))
           .withGains(
-              Gains.builder() // TODO: Use Real Value
+              Gains.builder()
                   .withPrefix("Shooter/Hood")
                   .withKP(1152)
                   .withKD(20)
@@ -108,7 +108,7 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withKA(0.13428)
                   .build())
           .withConstraints(
-              AngularPositionConstraints.builder() // TODO: Use Real Value
+              AngularPositionConstraints.builder()
                   .withPrefix("Shooter/Hood")
                   .withMaxVelocity(RadiansPerSecond.of(37.5))
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
