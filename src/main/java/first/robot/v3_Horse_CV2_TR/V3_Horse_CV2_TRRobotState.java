@@ -295,32 +295,6 @@ public class V3_Horse_CV2_TRRobotState {
   public record FixedShotParameters(
       Rotation2d robotAngle, Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
 
-  @RequiredArgsConstructor
-  public enum FixedShots {
-    LEFT_TRENCH(
-        new FixedShotParameters(
-            Rotation2d.fromDegrees(-80.0 + 180),
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED)),
-    RIGHT_TRENCH(
-        new FixedShotParameters(
-            Rotation2d.fromDegrees(80 + 180),
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED)),
-    HUB(
-        new FixedShotParameters(
-            Rotation2d.fromDegrees(180),
-            V3_Horse_CV2_TRShooterConstants.HUB_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.HUB_SHOT_FLYWHEEL_SPEED)),
-    TOWER(
-        new FixedShotParameters(
-            Rotation2d.fromDegrees(180),
-            V3_Horse_CV2_TRShooterConstants.TOWER_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.TOWER_SHOT_FLYWHEEL_SPEED));
-
-    @Getter private final FixedShotParameters parameters;
-  }
-
   @Data
   @AllArgsConstructor
   public static class LEDStates {

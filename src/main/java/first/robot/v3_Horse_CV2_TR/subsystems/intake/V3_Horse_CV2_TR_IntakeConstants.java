@@ -18,8 +18,6 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.VoltageUnit;
-import org.wpilib.units.measure.Current;
-import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Voltage;
 
 public class V3_Horse_CV2_TR_IntakeConstants {
@@ -48,6 +46,11 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final double EXTENSION_INTAKE_POSITION = 0.3;
 
+  // Releasing agitate within this distance of stow stows the intake
+  public static final double AGITATE_STOW_THRESHOLD = 0.05; // TODO: tune
+
+  public static final double AGITATE_TRIGGER_THRESHOLD = 0.1;
+
   public static final Map<ExtensionState, Setpoint<DistanceUnit>> LEFT_EXTENSION_STATES;
 
   public static final Map<ExtensionState, Setpoint<DistanceUnit>> RIGHT_EXTENSION_STATES;
@@ -64,18 +67,14 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final Voltage KICKER_OUT_ROLLER_VOLTAGE;
 
-  public static final Current EXTENSION_SWITCH_CURRENT;
-
-  public static final LinearVelocity EXTENSION_SWITCH_VELOCITY;
+  public static final Voltage IDLE_ROLLER_VOLTAGE;
 
   static {
-    INTAKE_IN_ROLLER_VOLTAGE = Volts.of(12.0);
+    INTAKE_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     INTAKE_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
-    KICKER_IN_ROLLER_VOLTAGE = Volts.of(12.0);
+    KICKER_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     KICKER_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
-
-    EXTENSION_SWITCH_CURRENT = Amps.of(35);
-    EXTENSION_SWITCH_VELOCITY = MetersPerSecond.of(0.001);
+    IDLE_ROLLER_VOLTAGE = Volts.of(4.0); // TODO: tune
 
     LEFT_INTAKE_ROLLER_CONSTANTS =
         GenericRollerConstants.builder()
@@ -238,12 +237,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 Meters.of(EXTENSION_INTAKE_POSITION),
                 Meters.of(0.01),
                 Meters.of(MIN_EXTENSION),
-                Meters.of(MAX_EXTENSION)),
-            ExtensionState.AGITATE,
-            new Setpoint<>(
-                Meters.of(0.25),
-                Meters.of(0.01),
-                Meters.of(MIN_EXTENSION),
                 Meters.of(MAX_EXTENSION)));
 
     RIGHT_EXTENSION_STATES =
@@ -259,12 +252,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 Meters.of(EXTENSION_INTAKE_POSITION),
                 Meters.of(0.01),
                 Meters.of(MIN_EXTENSION),
-                Meters.of(MAX_EXTENSION)),
-            ExtensionState.AGITATE,
-            new Setpoint<>(
-                Meters.of(0.25),
-                Meters.of(0.01),
-                Meters.of(MIN_EXTENSION),
                 Meters.of(MAX_EXTENSION)));
 
     INTAKE_ROLLER_STATES =
@@ -278,6 +265,12 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             RollerState.EXTAKE,
             new Setpoint<>(
                 INTAKE_OUT_ROLLER_VOLTAGE,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                Volts.of(-12.0),
+                Volts.of(12.0)),
+            RollerState.IDLE,
+            new Setpoint<>(
+                IDLE_ROLLER_VOLTAGE,
                 LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
@@ -302,6 +295,12 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 KICKER_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
+            RollerState.IDLE,
+            new Setpoint<>(
+                IDLE_ROLLER_VOLTAGE,
+                KICKER_ROLLER_CONSTANTS.voltageOffsetStep,
+                Volts.of(-12.0),
+                Volts.of(12.0)),
             RollerState.STOP,
             new Setpoint<>(
                 Volts.of(0),
@@ -313,13 +312,14 @@ public class V3_Horse_CV2_TR_IntakeConstants {
   public enum ExtensionState {
     STOW,
     INTAKE,
-    AGITATE,
     MANUAL_EXTEND,
+    MANUAL_RELEASE,
     OVERRIDE
   }
 
   public enum RollerState {
     INTAKE,
+    IDLE,
     EXTAKE,
     STOP
   }

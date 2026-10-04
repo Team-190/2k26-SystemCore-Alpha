@@ -13,7 +13,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.Voltage;
 
-public class V3_Horse_CV2_TR_RollerFloorConstants {
+public class V3_Horse_CV2_TRRollerFloorConstants {
   public static final GenericRollerConstants ROLLER_FLOOR_CONSTANTS;
 
   public static final Voltage ROLLER_FLOOR_RUN_VOLTAGE;

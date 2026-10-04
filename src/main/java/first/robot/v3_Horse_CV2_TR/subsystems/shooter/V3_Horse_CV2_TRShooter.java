@@ -14,12 +14,12 @@ import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHood;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.Trigger;
-import org.wpilib.math.filter.Debouncer;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.AngleUnit;
@@ -31,6 +31,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private final GenericFlywheel flywheel;
   private ShooterGoal shooterGoal;
+  // Goal most recently pushed to the flywheel and hood in periodic
+  private ShooterGoal appliedGoal;
 
   private final GenericHood hood;
 
@@ -38,6 +40,10 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   private final Trigger flywheelFeedingTrigger;
 
   private final Trigger hoodFeedingTrigger;
+
+  private AngularVelocity bumpVelocityOffset = AngularVelocity.ofBaseUnits(0.0, RadiansPerSecond);
+  private AngularVelocity trenchVelocityOffset = AngularVelocity.ofBaseUnits(0.0, RadiansPerSecond);
+  private AngularVelocity farVelocityOffset = AngularVelocity.ofBaseUnits(0.0, RadiansPerSecond);
 
   public V3_Horse_CV2_TRShooter(GenericFlywheelIO flywheelIO, GenericHoodIO hoodIO) {
 
@@ -76,18 +82,17 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     flywheelShootingTrigger =
         new Trigger(
-                () ->
-                    Math.abs(
-                            flywheel
-                                .getFlywheelVelocity()
-                                .minus(flywheel.getVelocityGoal().getNewSetpoint())
-                                .in(RadiansPerSecond))
-                        <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
-                            .constraints
-                            .goalTolerance()
-                            .get()
+            () ->
+                Math.abs(
+                        flywheel
+                            .getFlywheelVelocity()
+                            .minus(flywheel.getVelocityGoal().getNewSetpoint())
                             .in(RadiansPerSecond))
-            .debounce(.75, Debouncer.DebounceType.FALLING);
+                    <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
+                        .constraints
+                        .goalTolerance()
+                        .get()
+                        .in(RadiansPerSecond));
     flywheelFeedingTrigger =
         new Trigger(
             () ->
@@ -134,6 +139,21 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
         flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity(), Amps.of(0));
         break;
+      case BUMP_SHOT:
+        hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.BUMP_SHOT_HOOD_ANGLE);
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRShooterConstants.BUMP_SHOT_FLYWHEEL_SPEED.plus(bumpVelocityOffset));
+        break;
+      case TRENCH_SHOT:
+        hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE);
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED.plus(trenchVelocityOffset));
+        break;
+      case FAR_SHOT:
+        hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.FAR_SHOT_HOOD_ANGLE);
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRShooterConstants.FAR_SHOT_FLYWHEEL_SPEED.plus(farVelocityOffset));
+        break;
       case ZERO:
         hood.setPositionGoal(Rotation2d.ZERO);
         flywheel.stop();
@@ -148,6 +168,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     hood.periodic();
     flywheel.periodic();
+    appliedGoal = shooterGoal;
 
     Logger.recordOutput("Shooter/Goal", shooterGoal);
 
@@ -181,10 +202,15 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
     return this.runOnce(() -> this.shooterGoal = shooterGoal);
   }
 
+  public Command setGoal(Supplier<ShooterGoal> goalSupplier) {
+    return this.run(() -> this.shooterGoal = goalSupplier.get());
+  }
+
   public boolean atGoal() {
-    return (V3_Horse_CV2_TRRobotState.isInAllianceZone()
-        ? (flywheelShootingTrigger.getAsBoolean() && hood.atPositionGoal())
-        : (flywheelFeedingTrigger.getAsBoolean() && hoodFeedingTrigger.getAsBoolean()));
+    return shooterGoal == appliedGoal
+        && (V3_Horse_CV2_TRRobotState.isInAllianceZone()
+            ? (flywheelShootingTrigger.getAsBoolean() && hood.atPositionGoal())
+            : (flywheelFeedingTrigger.getAsBoolean() && hoodFeedingTrigger.getAsBoolean()));
   }
 
   public Command waitUntilAtGoal() {
@@ -258,5 +284,29 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public AngularVelocity getFlywheelVelocity() {
     return flywheel.getFlywheelVelocity();
+  }
+
+  public Command incrememntBumpVelocityOffset() {
+    return Commands.runOnce(
+        () ->
+            bumpVelocityOffset =
+                bumpVelocityOffset.plus(
+                    V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS.velocityOffsetStep));
+  }
+
+  public Command incrememntTrenchVelocityOffset() {
+    return Commands.runOnce(
+        () ->
+            trenchVelocityOffset =
+                trenchVelocityOffset.plus(
+                    V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS.velocityOffsetStep));
+  }
+
+  public Command incrememntFarVelocityOffset() {
+    return Commands.runOnce(
+        () ->
+            farVelocityOffset =
+                farVelocityOffset.plus(
+                    V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS.velocityOffsetStep));
   }
 }

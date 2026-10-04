@@ -31,7 +31,7 @@ import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
 import org.wpilib.util.Pair;
 
-public final class DriveCommands {
+public final class V3_Horse_CV2_TRDriveCommands {
 
   @Setter private static double lastCardinalDirection = 0.0;
   @Getter private static double slowFactor = 0.5;
@@ -164,9 +164,7 @@ public final class DriveCommands {
       BooleanSupplier pointAtHub,
       DoubleSupplier hubSetpoint,
       DoubleSupplier hubFeedforward,
-      BooleanSupplier cardinalDirectionAlign,
-      BooleanSupplier slowMode,
-      DoubleSupplier slowFactor) {
+      BooleanSupplier cardinalDirectionAlign) {
     ProfiledPIDController omegaController = createTunedOmegaController(driveConstants);
 
     return joystickDrive(
@@ -182,7 +180,7 @@ public final class DriveCommands {
             Pair.of(
                 pointAtHub,
                 () ->
-                    AutoAlignCommand.calculate(
+                    V3_Horse_CV2_TRAutoAlignCommands.calculate(
                             omegaController,
                             hubSetpoint.getAsDouble(),
                             rotationSupplier.get().getRadians(),
@@ -191,13 +189,13 @@ public final class DriveCommands {
             Pair.of(
                 cardinalDirectionAlign,
                 () ->
-                    AutoAlignCommand.calculate(
+                    V3_Horse_CV2_TRAutoAlignCommands.calculate(
                         omegaController,
                         lastCardinalDirection,
                         rotationSupplier.get().getRadians(),
                         drive.getMeasuredChassisVelocities().omega))),
-        slowMode,
-        slowFactor);
+        () -> false,
+        () -> 1.0);
   }
 
   public static Command joystickDriveRotationLock(
@@ -222,9 +220,7 @@ public final class DriveCommands {
         pointAtHub,
         hubSetpoint,
         hubFeedforward,
-        cardinalDirectionAlign,
-        climbSlowMode,
-        () -> .1);
+        cardinalDirectionAlign);
   }
 
   public static Command joystickDriveWithCardinalDirection(
@@ -251,7 +247,7 @@ public final class DriveCommands {
             Pair.of(
                 cardinalDirectionAlign,
                 () ->
-                    AutoAlignCommand.calculate(
+                    V3_Horse_CV2_TRAutoAlignCommands.calculate(
                         omegaController,
                         lastCardinalDirection,
                         rotationSupplier.get().getRadians(),
@@ -281,7 +277,7 @@ public final class DriveCommands {
                 new ChassisVelocities(
                         0.0,
                         0.0,
-                        AutoAlignCommand.calculate(
+                        V3_Horse_CV2_TRAutoAlignCommands.calculate(
                             omegaController,
                             targetRotation.get().getRadians(),
                             currentRotation.get().getRadians(),
@@ -313,7 +309,7 @@ public final class DriveCommands {
       Supplier<Pose2d> robotPoseSupplier,
       Pose2d targetPose,
       AutoAlignConstants constants) {
-    return new AutoAlignCommand(
+    return new V3_Horse_CV2_TRAutoAlignCommands(
         drive, targetPose, () -> true, robotPoseSupplier, constants, Double.POSITIVE_INFINITY);
   }
 
@@ -335,7 +331,7 @@ public final class DriveCommands {
                 new ChassisVelocities(
                         0.0,
                         0.0,
-                        AutoAlignCommand.calculate(
+                        V3_Horse_CV2_TRAutoAlignCommands.calculate(
                             omegaController,
                             V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
                             V3_Horse_CV2_TRRobotState.getHeading().getRadians(),

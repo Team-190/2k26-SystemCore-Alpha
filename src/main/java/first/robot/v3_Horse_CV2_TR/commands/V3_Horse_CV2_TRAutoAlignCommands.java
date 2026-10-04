@@ -16,7 +16,7 @@ import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.trajectory.TrapezoidProfile;
 
-public class AutoAlignCommand extends Command {
+public class V3_Horse_CV2_TRAutoAlignCommands extends Command {
   private final SwerveDrive drive;
   private final Pose2d targetPose;
   private final BooleanSupplier valid;
@@ -38,7 +38,7 @@ public class AutoAlignCommand extends Command {
    * @param robotPose A supplier that returns the robot's current pose
    * @param constants The swerve drive constants
    */
-  public AutoAlignCommand(
+  public V3_Horse_CV2_TRAutoAlignCommands(
       SwerveDrive drive,
       Pose2d targetPose,
       BooleanSupplier valid,

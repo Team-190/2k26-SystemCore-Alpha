@@ -27,15 +27,15 @@ public class V3_Horse_CV2_TRShooterConstants {
   public static final Rotation2d TRENCH_SHOT_HOOD_ANGLE =
       Rotation2d.fromDegrees(20.0); // TODO: Use Real Value
 
-  public static final AngularVelocity HUB_SHOT_FLYWHEEL_SPEED =
-      RadiansPerSecond.of(350); // TODO: Use Real Value
-  public static final Rotation2d HUB_SHOT_HOOD_ANGLE =
-      Rotation2d.fromDegrees(5.0); // TODO: Use Real Value
+  public static final AngularVelocity BUMP_SHOT_FLYWHEEL_SPEED =
+      RadiansPerSecond.of(420.0); // TODO: Use Real Value
+  public static final Rotation2d BUMP_SHOT_HOOD_ANGLE =
+      Rotation2d.fromDegrees(20.0); // TODO: Use Real Value
 
-  public static final AngularVelocity TOWER_SHOT_FLYWHEEL_SPEED =
-      RadiansPerSecond.of(402.00); // TODO: Use Real Value
-  public static final Rotation2d TOWER_SHOT_HOOD_ANGLE =
-      Rotation2d.fromDegrees(18.5); // TODO: Use Real Value
+  public static final AngularVelocity FAR_SHOT_FLYWHEEL_SPEED =
+      RadiansPerSecond.of(420.0); // TODO: Use Real Value
+  public static final Rotation2d FAR_SHOT_HOOD_ANGLE =
+      Rotation2d.fromDegrees(20.0); // TODO: Use Real Value
 
   public static final GenericFlywheelConstants SHOOT_CONSTANTS =
       GenericFlywheelConstants.builder()
@@ -122,6 +122,9 @@ public class V3_Horse_CV2_TRShooterConstants {
   public enum ShooterGoal {
     SCORE,
     FEED,
+    BUMP_SHOT,
+    TRENCH_SHOT,
+    FAR_SHOT,
     STOW,
     ZERO,
     STOP,
