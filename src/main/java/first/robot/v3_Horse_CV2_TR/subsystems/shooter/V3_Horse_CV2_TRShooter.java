@@ -121,7 +121,6 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   @Trace
   public void periodic() {
-
     switch (shooterGoal) {
       case STOW:
         hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.minAngle);

@@ -49,25 +49,25 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withStatorCurrentLimit(Amps.of(80.0)) // TODO: Use Real Value
                   .build())
           .withMomentOfInertia(0.09473883059)
-          .withGearRatio(18.0 / 30.0)
+          .withGearRatio(30.0 / 18.0)
           .withMotorConfig(DCMotor.getKrakenX60Foc(4))
           .withVoltageGains(
               Gains.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Voltage")
-                  .withKP(0.5)
+                  .withKP(0.0)
                   .withKD(0.0)
-                  .withKS(0.21467)
-                  .withKV(0.14015)
-                  .withKA(0.0045447)
+                  .withKS(0.0)
+                  .withKV(0.0)
+                  .withKA(0.0)
                   .build())
           .withTorqueGains(
               Gains.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(10)
-                  .withKD(0.1)
-                  .withKS(2.25)
-                  .withKV(0.067114)
-                  .withKA(0.11882)
+                  .withKP(0)
+                  .withKD(0)
+                  .withKS(0.0)
+                  .withKV(0.0)
+                  .withKA(0.0)
                   .build())
           .withConstraints(
               AngularVelocityConstraints.builder()
@@ -87,32 +87,32 @@ public class V3_Horse_CV2_TRShooterConstants {
       GenericHoodConstants.builder()
           .withMotorCanId(45)
           .withCanBus(new CANBus(CANPort.CAN_S4))
-          .withGearRatio(70.0)
+          .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
           .withCurrentLimits(new CurrentLimits(40, 30)) // TODO: Use Real Value
           .withMomentOfInertia(0.0001)
-          .withInvertedValue(InvertedValue.CounterClockwise_Positive)
+          .withInvertedValue(InvertedValue.Clockwise_Positive)
           .withMotorConfig(DCMotor.getKrakenX44Foc(1))
           .withLengthMeters(0.211582)
-          .withMinAngle(Rotation2d.fromDegrees(2))
-          .withMaxAngle(Rotation2d.fromDegrees(40))
+          .withMinAngle(Rotation2d.fromDegrees(0.5))
+          .withMaxAngle(Rotation2d.fromDegrees(35.0))
           .withZeroVoltage(Volts.of(1.0)) // TODO: Use Real Value
           .withZeroCurrentThreshold(Amps.of(40.0)) // TODO: Use Real Value
           .withZeroCurrentEpsilon(Milliamps.of(500)) // TODO: Use Real Value
           .withGains(
               Gains.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Hood")
-                  .withKP(600)
-                  .withKD(2)
-                  .withKS(0.32492)
-                  .withKV(1.406)
-                  .withKA(0)
+                  .withKP(1152)
+                  .withKD(20)
+                  .withKS(0.60085)
+                  .withKV(0.15846)
+                  .withKA(0.13428)
                   .build())
           .withConstraints(
               AngularPositionConstraints.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Hood")
-                  .withMaxVelocity(RadiansPerSecond.of(200))
-                  .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
-                  .withGoalTolerance(Degrees.of(1.0))
+                  .withMaxVelocity(RadiansPerSecond.of(37.5))
+                  .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
+                  .withGoalTolerance(Degrees.of(0.1))
                   .build())
           .withOffsetStep(Degrees.of(0.5))
           .withVoltageStep(Volts.of(0.5))
