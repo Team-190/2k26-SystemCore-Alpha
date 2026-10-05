@@ -44,6 +44,21 @@ dependencies {
     }
     nativeDeps "com.ctre.phoenix6.sim:tools-sim:${phoenix6Ver}:${osClassifier}@zip"
     nativeDeps "com.ctre.phoenix6.sim:api-cpp-sim:${phoenix6Ver}:${osClassifier}@zip"
+
+    [
+        "simTalonSRX",
+        "simVictorSPX",
+        "simPigeonIMU",
+        "simProTalonFX",
+        "simProTalonFXS",
+        "simProCANcoder",
+        "simProPigeon2",
+        "simProCANrange",
+        "simProCANdi",
+        "simProCANdle"
+    ].each { simDevice ->
+        nativeDeps "com.ctre.phoenix6.sim:${simDevice}:${phoenix6Ver}:${osClassifier}@zip"
+    }
 }
 
 def jniDestDir = layout.buildDirectory.dir("jni")

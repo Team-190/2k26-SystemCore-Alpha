@@ -70,6 +70,10 @@ public class Localization {
                 .forEach(zone::addTxTyObservation));
   }
 
+  public Pose2d getGlobalPose() {
+    return globalPoseEstimator.getEstimatedPosition();
+  }
+
   public Pose2d getEstimatedPose(FieldZone fieldZone) {
     Set<Integer> zoneTagIDs =
         fieldZone.aprilTags().stream().map(t -> t.ID).collect(Collectors.toSet());
