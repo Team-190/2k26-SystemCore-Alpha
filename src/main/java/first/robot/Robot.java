@@ -7,18 +7,24 @@ package first.robot;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import first.robot.v3_Horse_CV2_TR.subsystems.V3_Horse_CV2_TRRobotContainer;
+import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.framework.TimedRobot;
 
-public class Robot extends TimedRobot {
+public class Robot extends LoggedRobot {
   private Command autonomousCommand;
 
   private final V3_Horse_CV2_TRRobotContainer robotContainer;
 
   public Robot() {
-    GompeiLib.init(RobotMode.SIM, false, DEFAULT_PERIOD);
+    GompeiLib.init(RobotMode.SIM, false, TimedRobot.DEFAULT_PERIOD);
+
+    Logger.addDataReceiver(new NT4Publisher());
+    Logger.start();
+
     robotContainer = new V3_Horse_CV2_TRRobotContainer();
   }
 

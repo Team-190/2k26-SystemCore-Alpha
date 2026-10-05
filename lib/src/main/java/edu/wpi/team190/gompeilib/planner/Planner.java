@@ -50,6 +50,7 @@ public class Planner {
                         driveController.calculate(
                             targetPose, robotPose.get(), node.desiredLinearVelocity));
                   })
+              .repeatedly()
               .until(
                   () -> {
                     return driveController.atReference();
