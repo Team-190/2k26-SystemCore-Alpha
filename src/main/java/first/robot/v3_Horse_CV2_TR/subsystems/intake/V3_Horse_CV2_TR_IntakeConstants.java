@@ -37,19 +37,23 @@ public class V3_Horse_CV2_TR_IntakeConstants {
   public static final double MOMENT_OF_INERTIA = 0.0004;
   public static final DCMotor MOTOR_CONFIG = DCMotor.getKrakenX60Foc(1);
 
-  public static final double MAX_EXTENSION = 0.5;
+  public static final double MAX_EXTENSION = 0.3;
   public static final double MIN_EXTENSION = 0.0;
 
   public static final double EXTENSION_INCREMENT = 0.0;
 
-  public static final double EXTENSION_STOW_POSITION = 0.02;
+  public static final double EXTENSION_STOW_POSITION = 0.0;
 
   public static final double EXTENSION_INTAKE_POSITION = 0.3;
 
   // Releasing agitate within this distance of stow stows the intake
   public static final double AGITATE_STOW_THRESHOLD = 0.05; // TODO: tune
 
-  public static final double AGITATE_TRIGGER_THRESHOLD = 0.1;
+  // While agitating, reaching within this distance of stow latches the intake to stow
+  public static final double AGITATE_AUTO_STOW_THRESHOLD = 0.01;
+
+  // Trigger-to-extension curve, 0 = linear, 1 = full S-curve (flat at the ends)
+  public static final double TRIGGER_CURVE = 0;
 
   public static final Map<ExtensionState, Setpoint<DistanceUnit>> LEFT_EXTENSION_STATES;
 

@@ -43,6 +43,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   private final Setpoint<DistanceUnit> rightManualPositionGoal;
 
+  @Getter private Distance extensionPosition;
+
   public V3_Horse_CV2_TR_Intake(
       GenericRollerIO leftIntakeRollerIO,
       GenericRollerIO rightIntakeRollerIO,
@@ -106,13 +108,26 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             Meters.of(0.01),
             Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
             Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
+
+    extensionPosition = Meters.zero();
   }
 
   @Trace
   @Override
   public void periodic() {
     if (extensionState == ExtensionState.MANUAL_RELEASE) {
-      extensionState = isNearStow() ? ExtensionState.STOW : ExtensionState.INTAKE;
+      extensionState =
+          isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD)
+              ? ExtensionState.STOW
+              : ExtensionState.INTAKE;
+    } else if (extensionState == ExtensionState.MANUAL_EXTEND
+        && linearExtensionMap().in(Meters)
+            <= V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
+                + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD
+        && isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD)) {
+      // Pulled in to stow: latch so releasing the trigger doesn't drive it back out. The goal
+      // check keeps a light press from an already-stowed intake from latching immediately.
+      extensionState = ExtensionState.STOW;
     }
 
     switch (extensionState) {
@@ -145,14 +160,23 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     kickerRoller.periodic();
     leftExtension.periodic();
     rightExtension.periodic();
+
+    extensionPosition = leftExtension.getExtensionPosition();
+
     Logger.recordOutput("Intake/Rollers/State", rollerState.toString());
     Logger.recordOutput("Intake/Extension/State", extensionState.toString());
+    Logger.recordOutput("Intake/Extension/Trigger", triggerSupplier.getAsDouble());
   }
 
   private Distance linearExtensionMap() {
+    // Blend linear with smoothstep so the ends of the trigger are finer than the middle.
+    // Slope is (1 - k) at the ends and (1 + k/2) in the middle.
+    double t = Math.clamp(triggerSupplier.getAsDouble(), 0.0, 1.0);
+    double k = V3_Horse_CV2_TR_IntakeConstants.TRIGGER_CURVE;
+    double shaped = (1 - k) * t + k * t * t * (3 - 2 * t);
     Distance position =
         Meters.of(
-            (1 - triggerSupplier.getAsDouble())
+            (1 - shaped)
                     * (V3_Horse_CV2_TR_IntakeConstants.EXTENSION_INTAKE_POSITION
                         - V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION)
                 + V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION);
@@ -228,10 +252,18 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
-  private boolean isNearStow() {
-    double threshold =
-        V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
-            + V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD;
+  /** Releases manual control, unless it already latched to stow. */
+  public Command releaseManualExtend() {
+    return Commands.runOnce(
+        () -> {
+          if (extensionState == ExtensionState.MANUAL_EXTEND) {
+            extensionState = ExtensionState.MANUAL_RELEASE;
+          }
+        });
+  }
+
+  private boolean isNearStow(double tolerance) {
+    double threshold = V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION + tolerance;
     return leftExtension.getExtensionPosition().in(Meters) <= threshold
         && rightExtension.getExtensionPosition().in(Meters) <= threshold;
   }

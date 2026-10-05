@@ -4,6 +4,7 @@ import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.MetersPerSecond;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
+import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants.AutoAlignConstants;
@@ -75,7 +76,12 @@ public class V3_Horse_CV2_TRAutoAlignCommands extends Command {
             constants.rotationGains().kD().get(),
             new TrapezoidProfile.Constraints(
                 constants.rotationConstraints().maxVelocity().get().in(RadiansPerSecond),
-                Double.POSITIVE_INFINITY));
+                // Must be finite: alpha-7 TrapezoidProfile computes inf * 0 = NaN otherwise
+                constants
+                    .rotationConstraints()
+                    .maxAcceleration()
+                    .get()
+                    .in(RadiansPerSecondPerSecond)));
 
     alignXController.setTolerance(constants.xConstraints().goalTolerance().get().in(Meters), 0);
     alignYController.setTolerance(constants.yConstraints().goalTolerance().get().in(Meters), 0);

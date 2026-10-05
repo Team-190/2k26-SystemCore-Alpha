@@ -77,7 +77,7 @@ public class V3_Horse_CV2_TRConstants {
       LinearConstraints.builder()
           .withPrefix("Drive/Auto Align/X")
           .withMaxVelocity(MetersPerSecond.of(2.5))
-          .withMaxAcceleration(MetersPerSecondPerSecond.of(0.0))
+          .withMaxAcceleration(MetersPerSecondPerSecond.of(4.0))
           .withGoalTolerance(Meters.of(0.03))
           .build();
 
@@ -88,7 +88,7 @@ public class V3_Horse_CV2_TRConstants {
       LinearConstraints.builder()
           .withPrefix("Drive/Auto Align/Y")
           .withMaxVelocity(MetersPerSecond.of(2.5))
-          .withMaxAcceleration(MetersPerSecondPerSecond.of(0.0))
+          .withMaxAcceleration(MetersPerSecondPerSecond.of(4.0))
           .withGoalTolerance(Meters.of(0.05))
           .build();
 
@@ -100,7 +100,7 @@ public class V3_Horse_CV2_TRConstants {
       AngularPositionConstraints.builder()
               .withPrefix("Drive/Auto Align/Theta")
               .withMaxVelocity(RadiansPerSecond.of(Math.PI))
-              .withMaxAcceleration(RadiansPerSecondPerSecond.of(0.0))
+              .withMaxAcceleration(RadiansPerSecondPerSecond.of(4 * Math.PI))
               .withGoalTolerance(Degrees.of(0.5))
               .build();
 

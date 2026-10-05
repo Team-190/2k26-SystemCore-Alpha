@@ -1,7 +1,9 @@
 package first.robot.v3_Horse_CV2_TR.commands;
 
+import static org.wpilib.units.Units.MetersPerSecondPerSecond;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
+import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
@@ -282,7 +284,8 @@ public final class V3_Horse_CV2_TRDriveCommands {
                             targetRotation.get().getRadians(),
                             currentRotation.get().getRadians(),
                             drive.getMeasuredChassisVelocities().omega))
-                    .toRobotRelative(AllianceFlipUtil.apply(currentRotation.get()))));
+                    .toRobotRelative(AllianceFlipUtil.apply(currentRotation.get()))),
+        drive);
   }
 
   public static boolean atAngle(Rotation2d currentRotation, Rotation2d targetRotation) {
@@ -310,7 +313,13 @@ public final class V3_Horse_CV2_TRDriveCommands {
       Pose2d targetPose,
       AutoAlignConstants constants) {
     return new V3_Horse_CV2_TRAutoAlignCommands(
-        drive, targetPose, () -> true, robotPoseSupplier, constants, Double.POSITIVE_INFINITY);
+        drive,
+        targetPose,
+        () -> true,
+        robotPoseSupplier,
+        constants,
+        // Must be finite: alpha-7 TrapezoidProfile computes inf * 0 = NaN otherwise
+        constants.xConstraints().maxAcceleration().get().in(MetersPerSecondPerSecond));
   }
 
   public static Command autoAlignTowerCommand(
@@ -333,7 +342,7 @@ public final class V3_Horse_CV2_TRDriveCommands {
                         0.0,
                         V3_Horse_CV2_TRAutoAlignCommands.calculate(
                             omegaController,
-                            V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
+                            V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
                             V3_Horse_CV2_TRRobotState.getHeading().getRadians(),
                             drive.getMeasuredChassisVelocities().omega))
                     .toRobotRelative(V3_Horse_CV2_TRRobotState.getHeading())));
@@ -418,7 +427,12 @@ public final class V3_Horse_CV2_TRDriveCommands {
             constants.rotationGains().kD().get(),
             new TrapezoidProfile.Constraints(
                 constants.rotationConstraints().maxVelocity().get().in(RadiansPerSecond),
-                Double.POSITIVE_INFINITY));
+                // Must be finite: alpha-7 TrapezoidProfile computes inf * 0 = NaN otherwise
+                constants
+                    .rotationConstraints()
+                    .maxAcceleration()
+                    .get()
+                    .in(RadiansPerSecondPerSecond)));
     omegaController.enableContinuousInput(-Math.PI, Math.PI);
     omegaController.setTolerance(
         constants.rotationConstraints().goalTolerance().get().in(Radians), 0);

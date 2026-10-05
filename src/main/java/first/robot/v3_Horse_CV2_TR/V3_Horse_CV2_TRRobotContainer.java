@@ -38,11 +38,13 @@ import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerF
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import java.util.List;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
 import org.wpilib.command2.button.CommandXboxController;
+import org.wpilib.math.geometry.Rotation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -203,8 +205,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 () -> -driver.getLeftX(),
                 () -> -driver.getRightX(),
                 V3_Horse_CV2_TRRobotState::getHeading,
-                () -> driver.rightBumper().getAsBoolean(), // Aim at goal: not yet bound
-                () -> V3_Horse_CV2_TRRobotState.getRobotToHubAngle().getRadians(),
+                () -> driver.rightBumper().getAsBoolean(), // Aim at hub or feed point
+                () -> V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
                 () -> 0.0,
                 driver.leftTrigger())
             .withName("joystickDriveRotationLock"));
@@ -236,15 +238,12 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(stopShooter("driver-rightBumper-false"));
 
     driver
-        .rightTrigger(V3_Horse_CV2_TR_IntakeConstants.AGITATE_TRIGGER_THRESHOLD)
+        .rightTrigger(0.0)
         .onTrue(
             intake
                 .setExtensionState(ExtensionState.MANUAL_EXTEND)
                 .withName("driver-rightTrigger-true"))
-        .onFalse(
-            intake
-                .setExtensionState(ExtensionState.MANUAL_RELEASE)
-                .withName("driver-rightTrigger-false"));
+        .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
 
     driver
         .dpadDown()
@@ -258,21 +257,24 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     driver
         .y()
         .whileTrue(
-            V3_Horse_CV2_TRCompositeCommands.farShotCommand(rollerFloor, shooter)
+            V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.FAR)
                 .withName("driver-Y-true"))
         .onFalse(stopShooter("driver-Y-false"));
 
     driver
         .a()
         .whileTrue(
-            V3_Horse_CV2_TRCompositeCommands.bumpShotCommand(rollerFloor, shooter)
+            V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.BUMP)
                 .withName("driver-A-true"))
         .onFalse(stopShooter("driver-A-false"));
 
     driver
         .x()
         .whileTrue(
-            V3_Horse_CV2_TRCompositeCommands.trenchShotCommand(rollerFloor, shooter)
+            V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.TRENCH)
                 .withName("driver-X-true"))
         .onFalse(stopShooter("driver-X-false"));
 
@@ -293,6 +295,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   @Override
   public Command getAutonomousCommand() {
-    return shooter.flywheelSysId();
+    return Commands.none();
   }
 }

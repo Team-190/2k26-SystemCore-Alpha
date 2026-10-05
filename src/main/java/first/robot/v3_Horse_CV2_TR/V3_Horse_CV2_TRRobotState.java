@@ -49,8 +49,10 @@ public class V3_Horse_CV2_TRRobotState {
   private static final Localization localization;
 
   @Getter private static Distance distanceToHub;
-  @Getter private static Rotation2d robotToHubAngle;
   @Getter private static Distance distanceToFeedTranslation;
+
+  /** Field heading that points the shooter at the hub (in alliance zone) or nearest feed point. */
+  @Getter private static Rotation2d aimAngle;
 
   @Getter private static boolean inAllianceZone;
 
@@ -101,7 +103,7 @@ public class V3_Horse_CV2_TRRobotState {
                 .getNorm(),
             Meters);
 
-    robotToHubAngle = Rotation2d.fromDegrees(0);
+    aimAngle = Rotation2d.fromDegrees(0);
 
     ledStates = new LEDStates(false, false, false, false, false);
 
@@ -174,10 +176,10 @@ public class V3_Horse_CV2_TRRobotState {
 
     localization.addOdometryObservation(Timer.getTimestamp(), robotHeading, modulePositions);
 
-    Pose2d hubPose = getHubZonePose();
+    Pose2d robotHubZonePose = getHubZonePose();
 
     Logger.recordOutput(NTPrefixes.POSE_DATA + "Global Pose", getGlobalPose());
-    Logger.recordOutput(NTPrefixes.POSE_DATA + "Hub Zone Pose", hubPose);
+    Logger.recordOutput(NTPrefixes.POSE_DATA + "Hub Zone Pose", robotHubZonePose);
     Logger.recordOutput(NTPrefixes.POSE_DATA + "Tower Zone Pose", getTowerZonePose());
     Translation2d hubTranslation =
         AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
@@ -190,15 +192,15 @@ public class V3_Horse_CV2_TRRobotState {
                 .getNorm(),
             Meters);
 
-    distanceToFeedTranslation =
-        Distance.ofBaseUnits(
-            getGlobalPose()
-                .getTranslation()
-                .getDistance(AllianceFlipUtil.apply(FieldConstants.Outpost.BLUE_FEED_TRANSLATION)),
-            Meters);
+    Translation2d globalTranslation = getGlobalPose().getTranslation();
+    Translation2d feedTranslation =
+        globalTranslation.nearest(
+            List.of(
+                AllianceFlipUtil.apply(FieldConstants.Depot.BLUE_FEED_TRANSLATION),
+                AllianceFlipUtil.apply(FieldConstants.Outpost.BLUE_FEED_TRANSLATION)));
 
-    robotToHubAngle =
-        hubTranslation.minus(hubPose.getTranslation()).getAngle().orElse(Rotation2d.ZERO);
+    distanceToFeedTranslation =
+        Distance.ofBaseUnits(globalTranslation.getDistance(feedTranslation), Meters);
 
     scoreAngle = shootAngleTree.get(distanceToHub);
     scoreVelocity = shootSpeedTree.get(distanceToHub);
@@ -215,6 +217,11 @@ public class V3_Horse_CV2_TRRobotState {
             AllianceFlipUtil.apply(new Translation2d(0, -Units.inchesToMeters(-15))));
 
     inAllianceZone = allianceZone.contains(getGlobalPose().getTranslation());
+
+    Translation2d aimFrom = inAllianceZone ? robotHubZonePose.getTranslation() : globalTranslation;
+    Translation2d aimTarget = inAllianceZone ? hubTranslation : feedTranslation;
+    // Shooter fires out the back of the robot, so face the rear toward the target
+    aimAngle = aimTarget.minus(aimFrom).getAngle().orElse(Rotation2d.ZERO).plus(Rotation2d.PI);
 
     field.setRobotPose(getGlobalPose());
 
@@ -294,6 +301,28 @@ public class V3_Horse_CV2_TRRobotState {
 
   public record FixedShotParameters(
       Rotation2d robotAngle, Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
+
+  /** Robot angles are blue-alliance field headings; they are alliance-flipped at use time. */
+  @RequiredArgsConstructor
+  public enum FixedShots {
+    BUMP(
+        new FixedShotParameters(
+            Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
+            Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
+            RadiansPerSecond.of(420.0))), // TODO: Use Real Value
+    TRENCH(
+        new FixedShotParameters(
+            Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
+            Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
+            RadiansPerSecond.of(420.0))), // TODO: Use Real Value
+    FAR(
+        new FixedShotParameters(
+            Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
+            Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
+            RadiansPerSecond.of(420.0))); // TODO: Use Real Value
+
+    @Getter private final FixedShotParameters parameters;
+  }
 
   @Data
   @AllArgsConstructor

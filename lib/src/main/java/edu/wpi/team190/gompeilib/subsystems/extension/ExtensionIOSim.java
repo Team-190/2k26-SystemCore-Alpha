@@ -37,7 +37,7 @@ public class ExtensionIOSim implements ExtensionIO {
             constants.extensionParameters.EXTENSION_MOTOR_CONFIG(),
             constants.extensionParameters.MIN_LENGTH().in(Meters),
             constants.extensionParameters.MAX_LENGTH().in(Meters),
-            true,
+            constants.verticalGravity,
             constants.extensionParameters.MIN_LENGTH().in(Meters));
 
     appliedVolts = Volts.of(0.0);

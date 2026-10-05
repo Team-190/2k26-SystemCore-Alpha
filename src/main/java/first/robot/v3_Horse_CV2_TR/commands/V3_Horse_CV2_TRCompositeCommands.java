@@ -2,7 +2,9 @@ package first.robot.v3_Horse_CV2_TR.commands;
 
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import first.robot.util.AllianceFlipUtil;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRConstants;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
@@ -66,9 +68,8 @@ public class V3_Horse_CV2_TRCompositeCommands {
   }
 
   private static boolean isAimedForShot() {
-    return !V3_Horse_CV2_TRRobotState.isInAllianceZone()
-        || V3_Horse_CV2_TRDriveCommands.atAngle(
-            V3_Horse_CV2_TRRobotState.getHeading(), V3_Horse_CV2_TRRobotState.getRobotToHubAngle());
+    return V3_Horse_CV2_TRDriveCommands.atAngle(
+        V3_Horse_CV2_TRRobotState.getHeading(), V3_Horse_CV2_TRRobotState.getAimAngle());
   }
 
   public static Command stopShooter(
@@ -77,26 +78,30 @@ public class V3_Horse_CV2_TRCompositeCommands {
         shooter.setGoal(ShooterGoal.STOP), rollerFloor.setState(RollerFloorState.STOP));
   }
 
-  public static Command bumpShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    return fixedShotCommand(rollerFloor, shooter, ShooterGoal.BUMP_SHOT);
-  }
-
-  public static Command trenchShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    return fixedShotCommand(rollerFloor, shooter, ShooterGoal.TRENCH_SHOT);
-  }
-
-  public static Command farShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
-    return fixedShotCommand(rollerFloor, shooter, ShooterGoal.FAR_SHOT);
-  }
-
-  private static Command fixedShotCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter, ShooterGoal goal) {
-    return Commands.sequence(
-        shooter.setGoal(goal),
-        shooter.waitUntilAtGoal(),
-        rollerFloor.setState(RollerFloorState.RUN));
+  /**
+   * Holds the fixed robot heading while spinning up, then runs the roller floor once the shooter
+   * and heading are ready.
+   */
+  public static Command fixedShotCommand(
+      SwerveDrive drive,
+      V3_Horse_CV2_TRRollerFloor rollerFloor,
+      V3_Horse_CV2_TRShooter shooter,
+      FixedShots fixedShot) {
+    Supplier<Rotation2d> targetAngle =
+        () -> AllianceFlipUtil.apply(fixedShot.getParameters().robotAngle());
+    return Commands.parallel(
+        V3_Horse_CV2_TRDriveCommands.rotateToAngle(
+            drive,
+            V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+            V3_Horse_CV2_TRRobotState::getHeading,
+            targetAngle),
+        Commands.sequence(
+            shooter.runFixedShot(fixedShot),
+            Commands.waitUntil(
+                () ->
+                    shooter.atGoal()
+                        && V3_Horse_CV2_TRDriveCommands.atAngle(
+                            V3_Horse_CV2_TRRobotState.getHeading(), targetAngle.get())),
+            rollerFloor.setState(RollerFloorState.RUN)));
   }
 }

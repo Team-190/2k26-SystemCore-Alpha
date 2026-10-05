@@ -13,6 +13,8 @@ import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHood;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShotParameters;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -41,9 +43,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private final Trigger hoodFeedingTrigger;
 
-  private AngularVelocity bumpVelocityOffset = AngularVelocity.ofBaseUnits(0.0, RadiansPerSecond);
-  private AngularVelocity trenchVelocityOffset = AngularVelocity.ofBaseUnits(0.0, RadiansPerSecond);
-  private AngularVelocity farVelocityOffset = AngularVelocity.ofBaseUnits(0.0, RadiansPerSecond);
+  private FixedShotParameters fixedShotParameters;
 
   public V3_Horse_CV2_TRShooter(GenericFlywheelIO flywheelIO, GenericHoodIO hoodIO) {
 
@@ -79,6 +79,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
     this.shooterGoal = ShooterGoal.STOW;
+    this.fixedShotParameters = FixedShots.BUMP.getParameters();
 
     flywheelShootingTrigger =
         new Trigger(
@@ -139,20 +140,9 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
         flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity(), Amps.of(0));
         break;
-      case BUMP_SHOT:
-        hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.BUMP_SHOT_HOOD_ANGLE);
-        flywheel.setVelocityGoal(
-            V3_Horse_CV2_TRShooterConstants.BUMP_SHOT_FLYWHEEL_SPEED.plus(bumpVelocityOffset));
-        break;
-      case TRENCH_SHOT:
-        hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE);
-        flywheel.setVelocityGoal(
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED.plus(trenchVelocityOffset));
-        break;
-      case FAR_SHOT:
-        hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.FAR_SHOT_HOOD_ANGLE);
-        flywheel.setVelocityGoal(
-            V3_Horse_CV2_TRShooterConstants.FAR_SHOT_FLYWHEEL_SPEED.plus(farVelocityOffset));
+      case FIXED_SHOTS:
+        hood.setPositionGoal(fixedShotParameters.hoodAngle());
+        flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed(), Amps.of(0));
         break;
       case ZERO:
         hood.setPositionGoal(Rotation2d.ZERO);
@@ -204,6 +194,11 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public Command setGoal(Supplier<ShooterGoal> goalSupplier) {
     return this.run(() -> this.shooterGoal = goalSupplier.get());
+  }
+
+  public Command runFixedShot(FixedShots shot) {
+    return Commands.runOnce(() -> fixedShotParameters = shot.getParameters())
+        .andThen(setGoal(ShooterGoal.FIXED_SHOTS));
   }
 
   public boolean atGoal() {
@@ -284,29 +279,5 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public AngularVelocity getFlywheelVelocity() {
     return flywheel.getFlywheelVelocity();
-  }
-
-  public Command incrememntBumpVelocityOffset() {
-    return Commands.runOnce(
-        () ->
-            bumpVelocityOffset =
-                bumpVelocityOffset.plus(
-                    V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS.velocityOffsetStep));
-  }
-
-  public Command incrememntTrenchVelocityOffset() {
-    return Commands.runOnce(
-        () ->
-            trenchVelocityOffset =
-                trenchVelocityOffset.plus(
-                    V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS.velocityOffsetStep));
-  }
-
-  public Command incrememntFarVelocityOffset() {
-    return Commands.runOnce(
-        () ->
-            farVelocityOffset =
-                farVelocityOffset.plus(
-                    V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS.velocityOffsetStep));
   }
 }
