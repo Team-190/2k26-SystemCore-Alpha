@@ -14,6 +14,7 @@ import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.math.geometry.Pose2d;
@@ -90,22 +91,25 @@ public class V3_Horse_CV2_TRCompositeCommands {
     Supplier<Rotation2d> targetAngle =
         () -> AllianceFlipUtil.apply(fixedShot.getParameters().robotAngle());
     return Commands.parallel(
+        // Keep holding the heading for the whole shot; the feed gate below needs it on target
         V3_Horse_CV2_TRDriveCommands.rotateToAngle(
-                drive,
-                V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                V3_Horse_CV2_TRRobotState::getHeading,
-                targetAngle)
-            .until(
-                () ->
-                    V3_Horse_CV2_TRDriveCommands.atAngle(
-                        V3_Horse_CV2_TRRobotState.getHeading(), targetAngle.get())),
+            drive,
+            V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+            V3_Horse_CV2_TRRobotState::getHeading,
+            targetAngle),
         Commands.sequence(
             shooter.runFixedShot(fixedShot),
             Commands.waitUntil(
-                () ->
-                    shooter.atGoal()
-                        && V3_Horse_CV2_TRDriveCommands.atAngle(
-                            V3_Horse_CV2_TRRobotState.getHeading(), targetAngle.get())),
+                () -> {
+                  Rotation2d heading = V3_Horse_CV2_TRRobotState.getHeading();
+                  boolean aimed = V3_Horse_CV2_TRDriveCommands.atAngle(heading, targetAngle.get());
+                  Logger.recordOutput("FixedShot/Target Heading", targetAngle.get());
+                  Logger.recordOutput(
+                      "FixedShot/Heading Error Degrees",
+                      heading.minus(targetAngle.get()).getDegrees());
+                  Logger.recordOutput("FixedShot/Aimed", aimed);
+                  return shooter.atGoal() && aimed;
+                }),
             rollerFloor.setState(RollerFloorState.RUN)));
   }
 }

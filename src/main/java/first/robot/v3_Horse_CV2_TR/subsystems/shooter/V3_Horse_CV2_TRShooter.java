@@ -149,7 +149,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         flywheel.stop();
         break;
       case STOP:
-        hood.setVoltageGoal(Volts.of(0.0));
+        hood.setPositionGoal(Rotation2d.ZERO);
         flywheel.stop();
         break;
       default:
@@ -175,11 +175,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         "Shooter/Flywheel/Velocity Magnitude",
         (int) Math.abs(flywheel.getVelocityGoal().getSetpoint().in(RadiansPerSecond)));
 
-    Logger.recordOutput(
-        "Shooter/Flywheel Ready",
-        V3_Horse_CV2_TRRobotState.isInAllianceZone()
-            ? flywheelShootingTrigger.getAsBoolean()
-            : flywheelFeedingTrigger.getAsBoolean());
+    Logger.recordOutput("Shooter/Flywheel At Goal", atGoal());
 
     Logger.recordOutput(
         "Shooter/Hood At Goal",

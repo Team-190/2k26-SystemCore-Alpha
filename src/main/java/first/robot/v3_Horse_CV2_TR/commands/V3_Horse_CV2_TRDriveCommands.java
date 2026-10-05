@@ -31,6 +31,7 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.trajectory.TrapezoidProfile;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
+import org.wpilib.system.Timer;
 import org.wpilib.util.Pair;
 
 public final class V3_Horse_CV2_TRDriveCommands {
@@ -169,6 +170,10 @@ public final class V3_Horse_CV2_TRDriveCommands {
       BooleanSupplier cardinalDirectionAlign,
       Supplier<Rotation2d> cardinalDirection) {
     ProfiledPIDController omegaController = createTunedOmegaController(driveConstants);
+    DoubleSupplier hubOmega = omegaHijack(drive, omegaController, rotationSupplier, hubSetpoint);
+    DoubleSupplier cardinalOmega =
+        omegaHijack(
+            drive, omegaController, rotationSupplier, () -> cardinalDirection.get().getRadians());
 
     return joystickDrive(
         drive,
@@ -180,23 +185,8 @@ public final class V3_Horse_CV2_TRDriveCommands {
         List.of(),
         List.of(),
         List.of(
-            Pair.of(
-                pointAtHub,
-                () ->
-                    V3_Horse_CV2_TRAutoAlignCommands.calculate(
-                            omegaController,
-                            hubSetpoint.getAsDouble(),
-                            rotationSupplier.get().getRadians(),
-                            drive.getMeasuredChassisVelocities().omega)
-                        + hubFeedforward.getAsDouble()),
-            Pair.of(
-                cardinalDirectionAlign,
-                () ->
-                    V3_Horse_CV2_TRAutoAlignCommands.calculate(
-                        omegaController,
-                        cardinalDirection.get().getRadians(),
-                        rotationSupplier.get().getRadians(),
-                        drive.getMeasuredChassisVelocities().omega))),
+            Pair.of(pointAtHub, () -> hubOmega.getAsDouble() + hubFeedforward.getAsDouble()),
+            Pair.of(cardinalDirectionAlign, cardinalOmega)),
         () -> false,
         () -> 1.0);
   }
@@ -251,12 +241,8 @@ public final class V3_Horse_CV2_TRDriveCommands {
         List.of(
             Pair.of(
                 cardinalDirectionAlign,
-                () ->
-                    V3_Horse_CV2_TRAutoAlignCommands.calculate(
-                        omegaController,
-                        lastCardinalDirection,
-                        rotationSupplier.get().getRadians(),
-                        drive.getMeasuredChassisVelocities().omega))),
+                omegaHijack(
+                    drive, omegaController, rotationSupplier, () -> lastCardinalDirection))),
         slowMode,
         () -> slowFactor);
   }
@@ -274,19 +260,17 @@ public final class V3_Horse_CV2_TRDriveCommands {
       SwerveDriveConstants driveConstants,
       Supplier<Rotation2d> currentRotation,
       Supplier<Rotation2d> targetRotation) {
-    ProfiledPIDController omegaController = createOmegaController(driveConstants);
+    DoubleSupplier omega =
+        omegaHijack(
+            drive,
+            createOmegaController(driveConstants),
+            currentRotation,
+            () -> targetRotation.get().getRadians());
 
     return Commands.run(
         () ->
             drive.runVelocity(
-                new ChassisVelocities(
-                        0.0,
-                        0.0,
-                        V3_Horse_CV2_TRAutoAlignCommands.calculate(
-                            omegaController,
-                            targetRotation.get().getRadians(),
-                            currentRotation.get().getRadians(),
-                            drive.getMeasuredChassisVelocities().omega))
+                new ChassisVelocities(0.0, 0.0, omega.getAsDouble())
                     .toRobotRelative(AllianceFlipUtil.apply(currentRotation.get()))),
         drive);
   }
@@ -440,6 +424,28 @@ public final class V3_Horse_CV2_TRDriveCommands {
     omegaController.setTolerance(
         constants.rotationConstraints().goalTolerance().get().in(Radians), 0);
     return omegaController;
+  }
+
+  /**
+   * Runs an omega controller toward a goal heading, restarting its motion profile from the current
+   * heading whenever the hijack engages. Without this, the profile resumes from the setpoint left
+   * over from the previous engagement, so the robot swings back to the old angle first.
+   */
+  private static DoubleSupplier omegaHijack(
+      SwerveDrive drive,
+      ProfiledPIDController omegaController,
+      Supplier<Rotation2d> rotationSupplier,
+      DoubleSupplier goalRadians) {
+    double[] lastRunTimestamp = {Double.NEGATIVE_INFINITY};
+    return () -> {
+      double timestamp = Timer.getTimestamp();
+      double measurement = rotationSupplier.get().getRadians();
+      double omega = drive.getMeasuredChassisVelocities().omega;
+      if (timestamp - lastRunTimestamp[0] > 0.1) omegaController.reset(measurement, omega);
+      lastRunTimestamp[0] = timestamp;
+      return V3_Horse_CV2_TRAutoAlignCommands.calculate(
+          omegaController, goalRadians.getAsDouble(), measurement, omega);
+    };
   }
 
   /** Creates an omega controller whose PID gains follow live edits to the rotation gains. */

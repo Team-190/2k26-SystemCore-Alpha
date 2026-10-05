@@ -18,6 +18,8 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
   private final GenericRoller rollerFloor;
   @Getter private RollerFloorState rollerFloorGoal;
   private final Setpoint<VoltageUnit> rollerFloorSetpoint, rollerFloorOverrideSetpoint;
+  // Separate 0 V setpoint so stopping never overwrites the run or override voltage
+  private final Setpoint<VoltageUnit> rollerFloorStopSetpoint;
 
   public V3_Horse_CV2_TRRollerFloor(GenericRollerIO rollerFloorIO) {
     rollerFloorGoal = RollerFloorState.STOP;
@@ -33,6 +35,12 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
             V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(-12),
             Volts.of(12));
+    rollerFloorStopSetpoint =
+        new Setpoint<>(
+            Volts.of(0),
+            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
+            Volts.of(0),
+            Volts.of(0));
     rollerFloor =
         new GenericRoller(
             rollerFloorIO,
@@ -84,7 +92,7 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
   }
 
   public void stopRollerFloor() {
-    rollerFloor.setVoltageGoal(Volts.of(0));
+    rollerFloor.setVoltageGoal(rollerFloorStopSetpoint);
   }
 
   public Command incrementRollerFloorVelocity() {
