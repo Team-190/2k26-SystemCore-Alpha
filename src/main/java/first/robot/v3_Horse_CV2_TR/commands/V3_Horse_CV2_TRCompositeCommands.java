@@ -91,10 +91,14 @@ public class V3_Horse_CV2_TRCompositeCommands {
         () -> AllianceFlipUtil.apply(fixedShot.getParameters().robotAngle());
     return Commands.parallel(
         V3_Horse_CV2_TRDriveCommands.rotateToAngle(
-            drive,
-            V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-            V3_Horse_CV2_TRRobotState::getHeading,
-            targetAngle),
+                drive,
+                V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                V3_Horse_CV2_TRRobotState::getHeading,
+                targetAngle)
+            .until(
+                () ->
+                    V3_Horse_CV2_TRDriveCommands.atAngle(
+                        V3_Horse_CV2_TRRobotState.getHeading(), targetAngle.get())),
         Commands.sequence(
             shooter.runFixedShot(fixedShot),
             Commands.waitUntil(

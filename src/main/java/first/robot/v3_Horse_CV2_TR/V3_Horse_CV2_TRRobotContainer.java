@@ -42,7 +42,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
-import org.wpilib.command2.button.CommandXboxController;
+import org.wpilib.command2.button.CommandNiDsXboxController;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -52,7 +52,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private Vision vision;
   private final LoggedNetworkChooser<Command> autoChooser;
 
-  private final CommandXboxController driver = new CommandXboxController(0);
+  private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
 
   private final XKeysInput xkeys = new XKeysInput(1);
 
@@ -96,7 +96,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTrigger());
+                  () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -145,7 +145,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTrigger());
+                  () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -180,7 +180,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new GenericRollerIO() {},
               new ExtensionIO() {},
               new ExtensionIO() {},
-              () -> driver.getRightTrigger());
+              () -> driver.getRightTriggerAxis());
     }
     if (shooter == null) {
       shooter = new V3_Horse_CV2_TRShooter(new GenericFlywheelIO() {}, new GenericHoodIO() {});
@@ -206,20 +206,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 () -> driver.rightBumper().getAsBoolean(), // Aim at hub or feed point
                 () -> V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
                 () -> 0.0,
-                driver.leftTrigger())
+                driver.leftTrigger(),
+                () -> V3_Horse_CV2_TRRobotState.getCardinalDirection())
             .withName("joystickDriveRotationLock"));
 
-    driver
-        .leftTrigger()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        V3_Horse_CV2_TRDriveCommands.setLastCardinalDirection(
-                            Math.round(
-                                    V3_Horse_CV2_TRRobotState.getHeading().getRadians()
-                                        / (Math.PI / 2.0))
-                                * (Math.PI / 2.0)))
-                .withName("cardinal-direction-set"));
+    driver.leftTrigger().onTrue(Commands.runOnce(() -> {}).withName("cardinal-direction-set"));
 
     driver
         .leftBumper()
@@ -244,7 +235,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
 
     driver
-        .dpadDown()
+        .start()
         .onTrue(
             V3_Horse_CV2_TRCompositeCommands.resetHeading(
                     drive,

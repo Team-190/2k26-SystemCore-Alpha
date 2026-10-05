@@ -166,7 +166,8 @@ public final class V3_Horse_CV2_TRDriveCommands {
       BooleanSupplier pointAtHub,
       DoubleSupplier hubSetpoint,
       DoubleSupplier hubFeedforward,
-      BooleanSupplier cardinalDirectionAlign) {
+      BooleanSupplier cardinalDirectionAlign,
+      Supplier<Rotation2d> cardinalDirection) {
     ProfiledPIDController omegaController = createTunedOmegaController(driveConstants);
 
     return joystickDrive(
@@ -193,7 +194,7 @@ public final class V3_Horse_CV2_TRDriveCommands {
                 () ->
                     V3_Horse_CV2_TRAutoAlignCommands.calculate(
                         omegaController,
-                        lastCardinalDirection,
+                        cardinalDirection.get().getRadians(),
                         rotationSupplier.get().getRadians(),
                         drive.getMeasuredChassisVelocities().omega))),
         () -> false,
@@ -211,6 +212,7 @@ public final class V3_Horse_CV2_TRDriveCommands {
       DoubleSupplier hubSetpoint,
       DoubleSupplier hubFeedforward,
       BooleanSupplier cardinalDirectionAlign,
+      Supplier<Rotation2d> cardinalDirection,
       BooleanSupplier climbSlowMode) {
     return joystickDriveRotationLock(
         drive,
@@ -222,7 +224,8 @@ public final class V3_Horse_CV2_TRDriveCommands {
         pointAtHub,
         hubSetpoint,
         hubFeedforward,
-        cardinalDirectionAlign);
+        cardinalDirectionAlign,
+        cardinalDirection);
   }
 
   public static Command joystickDriveWithCardinalDirection(

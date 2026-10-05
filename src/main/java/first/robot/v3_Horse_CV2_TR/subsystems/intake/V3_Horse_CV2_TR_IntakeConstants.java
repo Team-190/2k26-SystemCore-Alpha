@@ -125,7 +125,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
             .withRollerMotorGearRatio(((58.0 / 26) * (24.0 / 18)))
-            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
             .withCanBus(new CANBus("Extension"))

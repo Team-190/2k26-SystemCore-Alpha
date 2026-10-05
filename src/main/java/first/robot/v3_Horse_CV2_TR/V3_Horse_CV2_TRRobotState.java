@@ -35,6 +35,7 @@ import org.wpilib.units.measure.Distance;
 
 public class V3_Horse_CV2_TRRobotState {
   @Getter private static final Field fieldLayout;
+  @Getter private static Rotation2d cardinalDirection;
 
   private static final Field2d field;
 
@@ -191,7 +192,10 @@ public class V3_Horse_CV2_TRRobotState {
                 .minus(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))
                 .getNorm(),
             Meters);
-
+    cardinalDirection =
+        Rotation2d.fromRadians(
+            Math.round(V3_Horse_CV2_TRRobotState.getHeading().getRadians() / (Math.PI / 2.0))
+                * (Math.PI / 2.0));
     Translation2d globalTranslation = getGlobalPose().getTranslation();
     Translation2d feedTranslation =
         globalTranslation.nearest(
@@ -309,17 +313,17 @@ public class V3_Horse_CV2_TRRobotState {
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
-            RadiansPerSecond.of(420.0))), // TODO: Use Real Value
+            RadiansPerSecond.of(300.0))), // TODO: Use Real Value
     TRENCH(
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
-            RadiansPerSecond.of(420.0))), // TODO: Use Real Value
+            RadiansPerSecond.of(300.0))), // TODO: Use Real Value
     FAR(
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
-            RadiansPerSecond.of(420.0))); // TODO: Use Real Value
+            RadiansPerSecond.of(300.0))); // TODO: Use Real Value
 
     @Getter private final FixedShotParameters parameters;
   }

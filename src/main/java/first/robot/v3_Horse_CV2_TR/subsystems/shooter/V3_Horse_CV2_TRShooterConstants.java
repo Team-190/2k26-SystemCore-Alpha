@@ -97,7 +97,7 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withPrefix("Shooter/Hood")
                   .withMaxVelocity(RadiansPerSecond.of(37.5))
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
-                  .withGoalTolerance(Degrees.of(0.1))
+                  .withGoalTolerance(Degrees.of(1))
                   .build())
           .withOffsetStep(Degrees.of(0.5))
           .withVoltageStep(Volts.of(0.5))
