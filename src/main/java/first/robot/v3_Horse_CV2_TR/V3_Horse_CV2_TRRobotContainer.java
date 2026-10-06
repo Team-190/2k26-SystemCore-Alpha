@@ -38,11 +38,13 @@ import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerF
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import java.util.List;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
 import org.wpilib.command2.button.CommandNiDsXboxController;
+import org.wpilib.math.geometry.Rotation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -280,6 +282,10 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   public void robotPeriodic() {
     V3_Horse_CV2_TRRobotState.periodic(
         drive.getRawGyroRotation(), drive.getYawVelocity(), drive.getModulePositions(), drive);
+    Logger.recordOutput(
+        "Mechanism3D",
+        V3_Horse_CV2_TRMechanism3D.getPoses(
+            intake.getExtensionPosition(), shooter.getHoodAngle().getMeasure()));
   }
 
   @Override
