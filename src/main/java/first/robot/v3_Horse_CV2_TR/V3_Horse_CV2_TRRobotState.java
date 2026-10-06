@@ -312,8 +312,8 @@ public class V3_Horse_CV2_TRRobotState {
     BUMP(
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
-            Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
-            RadiansPerSecond.of(300.0))), // TODO: Use Real Value
+            Rotation2d.fromDegrees(10.0), // TODO: Use Real Value
+            RadiansPerSecond.of(150.0))), // TODO: Use Real Value
     TRENCH(
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
