@@ -147,13 +147,13 @@ public class V3_Horse_CV2_TRConstants {
           .megatag2XYStdev(CameraType.LIMELIGHT_4.primaryXYStandardDeviationCoefficient)
           .robotToCameraTransform(
               new Transform3d(
-                  -0.055,
-                  0.054,
-                  0.538,
+                  -0.321,
+                  0,
+                  0.391,
                   new Rotation3d(
                       Units.degreesToRadians(0),
-                      Units.degreesToRadians(90 - 62.000),
-                      Units.degreesToRadians(-90.000))))
+                      Units.degreesToRadians(20),
+                      Units.degreesToRadians(180))))
           .enableRewind(true)
           .build();
 

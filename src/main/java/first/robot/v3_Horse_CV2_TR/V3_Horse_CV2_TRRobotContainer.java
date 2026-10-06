@@ -105,8 +105,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new Vision(
                   () -> FieldConstants.tagLayoutType.getLayout(),
                   new CameraStaticLimelight(
-                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.frontcamera),
-                      V3_Horse_CV2_TRConstants.frontcamera,
+                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG),
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG,
                       V3_Horse_CV2_TRRobotState::getHeading,
                       drive::getMeasuredChassisVelocities,
                       V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
