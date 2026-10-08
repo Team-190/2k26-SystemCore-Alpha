@@ -33,9 +33,9 @@ public class V3_Horse_CV2_TRRobotContainer {
 
     PlannerControllerConfig plannerConfig =
         new PlannerControllerConfig(
-            new PIDController(0.1, 0.1, 0.1),
-            new PIDController(0.1, 0.1, 0.1),
-            new ProfiledPIDController(0.1, 0.1, 0.1, new TrapezoidProfile.Constraints(1, 1)));
+            new PIDController(1, 1, 1),
+            new PIDController(1, 1, 1),
+            new ProfiledPIDController(1, 1, 1, new TrapezoidProfile.Constraints(1, 1)));
 
     Planner.setConfig(plannerConfig);
     drive =
