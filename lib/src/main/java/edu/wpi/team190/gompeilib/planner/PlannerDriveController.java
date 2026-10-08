@@ -11,8 +11,9 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 public class PlannerDriveController {
   private Pose2d m_poseError = new Pose2d();
   private Rotation2d m_rotationError = new Rotation2d();
-  private Pose2d m_poseTolerance = new Pose2d(new Translation2d(0.05, 0.05), new Rotation2d(2));
+  private Pose2d m_poseTolerance = new Pose2d(new Translation2d(1, 1), new Rotation2d(2));
   private Boolean m_firstRun = true;
+  private int count = 0;
 
   private final PIDController m_xController;
   private final PIDController m_yController;
@@ -52,6 +53,9 @@ public class PlannerDriveController {
     // calculate feedforward velocities
     double xFF = desiredLinearVelocity * trajectoryPose.getRotation().getCos();
     double yFF = desiredLinearVelocity * trajectoryPose.getRotation().getSin();
+    // ts is the issue rn
+    Logger.recordOutput("xFF", xFF);
+    Logger.recordOutput("yFF", yFF);
     double thetaFF =
         m_thetaController.calculate(
             currentPose.getRotation().getRadians(), trajectoryPose.getRotation().getRadians());
@@ -67,6 +71,8 @@ public class PlannerDriveController {
     Logger.recordOutput("currentPose", currentPose);
     Logger.recordOutput("trajectoryPose", trajectoryPose);
     Logger.recordOutput("PlannerVel", vel);
+    Logger.recordOutput("count", count);
+    count++;
     return vel;
   }
 }
