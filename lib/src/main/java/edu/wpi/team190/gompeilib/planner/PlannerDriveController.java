@@ -5,13 +5,12 @@ import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class PlannerDriveController {
   private Pose2d m_poseError = new Pose2d();
   private Rotation2d m_rotationError = new Rotation2d();
-  private Pose2d m_poseTolerance = new Pose2d(new Translation2d(1, 1), new Rotation2d(2));
+  private double m_poseTolerance = 1;
   private Boolean m_firstRun = true;
   private int count = 0;
 
@@ -26,17 +25,12 @@ public class PlannerDriveController {
     m_thetaController.enableContinuousInput(0, Math.PI * 2);
   }
 
-  public boolean atReference() {
-    final Translation2d eTransate = m_poseError.getTranslation();
-    final Rotation2d eRotate = m_rotationError;
-    final Translation2d tolTranslate = m_poseTolerance.getTranslation();
-    final Rotation2d tolRotate = m_poseTolerance.getRotation();
-    return Math.abs(eTransate.getX()) < tolTranslate.getX()
-        && Math.abs(eTransate.getY()) < tolTranslate.getY()
-        && Math.abs(eRotate.getRadians()) < tolRotate.getRadians();
+  public boolean atReference(Pose2d currentPose, Pose2d trajectoryPose) {
+    return (m_poseTolerance
+        >= currentPose.getTranslation().getDistance(trajectoryPose.getTranslation()));
   }
 
-  public void setTolerance(Pose2d tolerance) {
+  public void setTolerance(double tolerance) {
     m_poseTolerance = tolerance;
   }
 
@@ -52,8 +46,10 @@ public class PlannerDriveController {
     Rotation2d rotation =
         currentPose.getTranslation().minus(trajectoryPose.getTranslation()).getAngle();
     // calculate feedforward velocities
-    double xFF = -1 * desiredLinearVelocity * rotation.getCos();
-    double yFF = -1 * desiredLinearVelocity * rotation.getSin();
+    double xFF =
+        -1 * (currentPose.getTranslation().getX() - trajectoryPose.getTranslation().getX());
+    double yFF =
+        -1 * (currentPose.getTranslation().getY() - trajectoryPose.getTranslation().getY());
     // ts is the issue rn
     Logger.recordOutput("rotation", rotation);
     Logger.recordOutput("xFF", xFF);

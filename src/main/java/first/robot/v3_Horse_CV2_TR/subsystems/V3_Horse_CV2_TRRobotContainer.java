@@ -25,7 +25,10 @@ public class V3_Horse_CV2_TRRobotContainer {
   private SwerveDrive drive;
   private ArrayList<PathNode> path =
       new ArrayList<PathNode>(
-          List.of(new PathNode(new Pose2d(new Translation2d(3, 3), new Rotation2d(45)), 2)));
+          List.of(
+            new PathNode(new Pose2d(new Translation2d(3, 3), new Rotation2d(45)), 2),
+          new PathNode(new Pose2d(new Translation2d(5, 5), new Rotation2d(45)), 2),
+          new PathNode(new Pose2d(new Translation2d(10, 10), new Rotation2d(45)), 2)));
 
   public V3_Horse_CV2_TRRobotContainer() {
 

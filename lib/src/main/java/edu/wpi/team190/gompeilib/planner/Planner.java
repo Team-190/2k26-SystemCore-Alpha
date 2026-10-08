@@ -43,15 +43,26 @@ public class Planner {
               node.translation.orElse(pose.getTranslation()),
               node.rotation.orElse(pose.getRotation()));
       command =
-          command.andThen(
-              Commands.run(
-                      () -> {
-                        Logger.recordOutput("pose passed", robotPose.get());
-                        driveCommand.accept(
-                            driveController.calculate(
-                                robotPose.get(), targetPose, node.desiredLinearVelocity));
-                      })
-                  .until(driveController::atReference));
+          command
+              .andThen(
+                  Commands.run(
+                          () -> {
+                            Logger.recordOutput("pose passed", robotPose.get());
+                            driveCommand.accept(
+                                driveController.calculate(
+                                    robotPose.get(), targetPose, node.desiredLinearVelocity));
+                          })
+                      .until(
+                          () -> {
+                            boolean atReference =
+                                driveController.atReference(robotPose.get(), targetPose);
+                            Logger.recordOutput("atref", atReference);
+                            return atReference;
+                          }))
+              .finallyDo(
+                  () -> {
+                    driveCommand.accept(new ChassisVelocities());
+                  });
     }
     return command;
   }
