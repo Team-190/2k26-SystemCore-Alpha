@@ -31,6 +31,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    robotContainer.robotPeriodic();
     Logger.recordOutput("RobotPose", robotContainer.getPose());
   }
 
@@ -48,6 +49,7 @@ public class Robot extends LoggedRobot {
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
+      Logger.recordOutput("is it running (please god)", true);
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
   }

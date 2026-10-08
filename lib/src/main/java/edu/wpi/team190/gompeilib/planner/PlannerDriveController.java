@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.planner;
 
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.geometry.Pose2d;
@@ -61,6 +62,11 @@ public class PlannerDriveController {
     double xFeedBack = m_xController.calculate(currentPose.getX());
     double yFeedback = m_yController.calculate(currentPose.getY());
 
-    return new ChassisVelocities(xFF, yFF, thetaFF).toRobotRelative(currentPose.getRotation());
+    ChassisVelocities vel =
+        new ChassisVelocities(xFF, yFF, thetaFF).toRobotRelative(currentPose.getRotation());
+    Logger.recordOutput("currentPose", currentPose);
+    Logger.recordOutput("trajectoryPose", trajectoryPose);
+    Logger.recordOutput("PlannerVel", vel);
+    return vel;
   }
 }

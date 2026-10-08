@@ -66,6 +66,11 @@ public class V3_Horse_CV2_TRRobotContainer {
     return Planner.followPath(path, V3_Horse_CV2_TRRobotState::getGlobalPose);
   }
 
+  public void robotPeriodic() {
+    V3_Horse_CV2_TRRobotState.addOdometryObservation(
+        drive.getRawGyroRotation(), drive.getModulePositions());
+  }
+
   public Pose2d getPose() {
     return V3_Horse_CV2_TRRobotState.getGlobalPose();
   }

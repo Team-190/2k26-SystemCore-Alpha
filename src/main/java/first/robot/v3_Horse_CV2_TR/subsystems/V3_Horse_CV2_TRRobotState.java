@@ -6,6 +6,9 @@ import first.robot.FieldConstants;
 import java.util.HashSet;
 import java.util.List;
 import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.system.Timer;
 
 public class V3_Horse_CV2_TRRobotState {
 
@@ -33,5 +36,10 @@ public class V3_Horse_CV2_TRRobotState {
 
   public static Pose2d getGlobalPose() {
     return localization.getEstimatedPose(globalZone);
+  }
+
+  public static void addOdometryObservation(
+      Rotation2d rawHeading, SwerveModulePosition[] modulePositions) {
+    localization.addOdometryObservation(Timer.getTimestamp(), rawHeading, modulePositions);
   }
 }
