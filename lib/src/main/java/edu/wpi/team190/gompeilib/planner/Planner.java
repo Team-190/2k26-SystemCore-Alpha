@@ -43,18 +43,13 @@ public class Planner {
                   : robotPose.get().getTranslation(),
               node.rotation.isPresent() ? node.rotation.get() : robotPose.get().getRotation());
       command =
-          command
-              .andThen(
-                  () -> {
-                    driveCommand.accept(
-                        driveController.calculate(
-                            targetPose, robotPose.get(), node.desiredLinearVelocity));
-                  })
-              .repeatedly()
-              .until(
-                  () -> {
-                    return driveController.atReference();
-                  });
+          command.andThen(
+              Commands.run(
+                      () ->
+                          driveCommand.accept(
+                              driveController.calculate(
+                                  robotPose.get(), targetPose, node.desiredLinearVelocity)))
+                  .until(driveController::atReference));
     }
     return command;
   }

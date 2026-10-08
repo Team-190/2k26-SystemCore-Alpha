@@ -44,7 +44,7 @@ public class PlannerDriveController {
       double desiredLinearVelocity // m/s velocity at time of call
       ) {
     if (m_firstRun) {
-      m_thetaController.reset(currentPose.getTranslation().getAngle().getRadians());
+      m_thetaController.reset(currentPose.getRotation().getRadians());
       m_firstRun = false;
     }
 
