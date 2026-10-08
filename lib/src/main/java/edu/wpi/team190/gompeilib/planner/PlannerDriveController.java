@@ -10,7 +10,7 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 public class PlannerDriveController {
   private Pose2d m_poseError = new Pose2d();
   private Rotation2d m_rotationError = new Rotation2d();
-  private Pose2d m_poseTolerance = new Pose2d();
+  private Pose2d m_poseTolerance = new Pose2d(new Translation2d(0.05,0.05), new Rotation2d(2));
   private Boolean m_firstRun = true;
 
   private final PIDController m_xController;

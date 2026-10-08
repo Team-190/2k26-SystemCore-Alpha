@@ -36,12 +36,11 @@ public class Planner {
     Command command = Commands.none();
 
     for (PathNode node : path) {
+      Pose2d pose = robotPose.get();
       Pose2d targetPose =
           new Pose2d(
-              node.translation.isPresent()
-                  ? node.translation.get()
-                  : robotPose.get().getTranslation(),
-              node.rotation.isPresent() ? node.rotation.get() : robotPose.get().getRotation());
+              node.translation.orElse(pose.getTranslation()),
+              node.rotation.orElse(pose.getRotation()));
       command =
           command.andThen(
               Commands.run(
