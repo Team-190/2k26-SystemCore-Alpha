@@ -49,22 +49,16 @@ public class PlannerDriveController {
       m_thetaController.reset(currentPose.getRotation().getRadians());
       m_firstRun = false;
     }
-
+    Rotation2d rotation =
+        currentPose.getTranslation().minus(trajectoryPose.getTranslation()).getAngle();
     // calculate feedforward velocities
-    double xFF = desiredLinearVelocity * trajectoryPose.getRotation().getCos();
-    double yFF = desiredLinearVelocity * trajectoryPose.getRotation().getSin();
+    double xFF = -1 * desiredLinearVelocity * rotation.getCos();
+    double yFF = -1 * desiredLinearVelocity * rotation.getSin();
     // ts is the issue rn
+    Logger.recordOutput("rotation", rotation);
     Logger.recordOutput("xFF", xFF);
     Logger.recordOutput("yFF", yFF);
-    double thetaFF =
-        m_thetaController.calculate(
-            currentPose.getRotation().getRadians(), trajectoryPose.getRotation().getRadians());
-
-    m_poseError = trajectoryPose.relativeTo(currentPose);
-    m_rotationError = trajectoryPose.getRotation().minus(currentPose.getRotation());
-
-    double xFeedBack = m_xController.calculate(currentPose.getX());
-    double yFeedback = m_yController.calculate(currentPose.getY());
+    double thetaFF = 0;
 
     ChassisVelocities vel =
         new ChassisVelocities(xFF, yFF, thetaFF).toRobotRelative(currentPose.getRotation());
