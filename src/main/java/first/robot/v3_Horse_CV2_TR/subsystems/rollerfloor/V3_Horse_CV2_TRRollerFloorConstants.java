@@ -18,10 +18,12 @@ public class V3_Horse_CV2_TRRollerFloorConstants {
 
   public static final Voltage ROLLER_FLOOR_RUN_VOLTAGE;
   public static final Voltage ROLLER_FLOOR_OVERRIDE_VOLTAGE;
+  public static final Voltage ROLLER_FLOOR_SLOW_VOLTAGE;
 
   static {
     ROLLER_FLOOR_RUN_VOLTAGE = Volts.of(12); // TODO: Update to actual value
     ROLLER_FLOOR_OVERRIDE_VOLTAGE = Volts.of(12); // TODO: Update to actual value
+    ROLLER_FLOOR_SLOW_VOLTAGE = Volts.of(6);
     ROLLER_FLOOR_CONSTANTS =
         GenericRollerConstants.builder()
             .withLeaderCANID(31)

@@ -35,6 +35,7 @@ import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConst
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import java.util.List;
@@ -43,8 +44,6 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
-import org.wpilib.command2.button.CommandNiDsXboxController;
-import org.wpilib.math.geometry.Rotation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -54,11 +53,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private Vision vision;
   private final LoggedNetworkChooser<Command> autoChooser;
 
-  private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
+  private final CommandGamepad driver = new CommandGamepad(0);
 
   private final XKeysInput xkeys = new XKeysInput(1);
 
-  private final CommandGamepad operatorController = new CommandGamepad(1);
+  private final CommandGamepad operator = new CommandGamepad(1);
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -98,7 +97,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTriggerAxis());
+                  () -> driver.getRightTrigger());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -147,7 +146,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTriggerAxis());
+                  () -> driver.getRightTrigger());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -182,7 +181,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new GenericRollerIO() {},
               new ExtensionIO() {},
               new ExtensionIO() {},
-              () -> driver.getRightTriggerAxis());
+              () -> driver.getRightTrigger());
     }
     if (shooter == null) {
       shooter = new V3_Horse_CV2_TRShooter(new GenericFlywheelIO() {}, new GenericHoodIO() {});
@@ -216,7 +215,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
     driver
         .leftBumper()
-        .onTrue(
+        .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
                 .withName("driver-leftBumper-true"))
         .onFalse(intake.setRollerState(RollerState.IDLE).withName("driver-leftBumper-false"));
@@ -237,7 +236,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
 
     driver
-        .start()
+        .dpadDown()
         .onTrue(
             V3_Horse_CV2_TRCompositeCommands.resetHeading(
                     drive,
@@ -246,7 +245,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 .withName("driver-dpadDown-true"));
 
     driver
-        .y()
+        .faceUp()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
                     drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.FAR)
@@ -254,7 +253,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(stopShooter("driver-Y-false"));
 
     driver
-        .a()
+        .faceDown()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
                     drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.BUMP)
@@ -262,7 +261,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(stopShooter("driver-A-false"));
 
     driver
-        .x()
+        .faceLeft()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
                     drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.TRENCH)
@@ -270,8 +269,54 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(stopShooter("driver-X-false"));
 
     driver
-        .b()
+        .faceRight()
         .onTrue(V3_Horse_CV2_TRCompositeCommands.intakeStow(intake).withName("driver-B-true"));
+
+    operator
+        .leftBumper()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeStow(intake)
+                .withName("operator-leftBumper-true"));
+
+    operator
+        .rightBumper()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
+                .withName("operator-rightBumper-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftBumper-false"));
+
+    operator
+        .leftTrigger()
+        .whileTrue(intake.intakeRollers().withName("operator-leftTrigger-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+
+    operator
+        .rightTrigger()
+        .whileTrue(intake.extakeRollers().withName("operator-rightTrigger-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+
+    operator
+        .dpadUp()
+        .whileTrue(
+            Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE)))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+
+    operator
+        .dpadDown()
+        .whileTrue(
+            Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+
+    operator.faceUp().onTrue(shooter.incrementFlywheelVelocity());
+    operator.faceLeft().onTrue(shooter.decrementFlywheelVelocity());
+    operator.faceRight().onTrue(shooter.incrementHoodAngle());
+    operator.faceDown().onTrue(shooter.decrementHoodAngle());
   }
 
   private Command stopShooter(String name) {
