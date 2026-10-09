@@ -54,7 +54,9 @@ public class PlannerDriveController {
     Logger.recordOutput("rotation", rotation);
     Logger.recordOutput("xFF", xFF);
     Logger.recordOutput("yFF", yFF);
-    double thetaFF = 0;
+    double thetaFF =
+        (currentPose.getRotation().getDegrees() - trajectoryPose.getRotation().getDegrees())
+            * -0.07;
 
     ChassisVelocities vel =
         new ChassisVelocities(xFF, yFF, thetaFF).toRobotRelative(currentPose.getRotation());
