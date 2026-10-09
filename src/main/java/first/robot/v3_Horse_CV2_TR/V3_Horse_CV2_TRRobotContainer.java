@@ -44,6 +44,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
+import org.wpilib.command2.button.CommandNiDsXboxController;
 import org.wpilib.command2.button.CommandXboxController;
 import org.wpilib.driverstation.Gamepad.Axis;
 
@@ -55,11 +56,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private Vision vision;
   private final LoggedNetworkChooser<Command> autoChooser;
 
-  private final CommandXboxController driver = new CommandXboxController(0);
+  private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
 
   private final XKeysInput xkeys = new XKeysInput(1);
 
-  private final CommandXboxController operator = new CommandXboxController(2);
+  private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -99,7 +100,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTrigger());
+                  () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -148,7 +149,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTrigger());
+                  () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -183,7 +184,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new GenericRollerIO() {},
               new ExtensionIO() {},
               new ExtensionIO() {},
-              () -> driver.getRightTrigger());
+              () -> driver.getRightTriggerAxis());
     }
     if (shooter == null) {
       shooter = new V3_Horse_CV2_TRShooter(new GenericFlywheelIO() {}, new GenericHoodIO() {});
@@ -237,14 +238,14 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 .withName("driver-rightTrigger-true"))
         .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
 
-    driver
-        .dpadDown()
-        .onTrue(
-            V3_Horse_CV2_TRCompositeCommands.resetHeading(
-                    drive,
-                    V3_Horse_CV2_TRRobotState::resetPose,
-                    () -> V3_Horse_CV2_TRRobotState.getGlobalPose().getTranslation())
-                .withName("driver-dpadDown-true"));
+    // driver
+    //     .pov()
+    //     .onTrue(
+    //         V3_Horse_CV2_TRCompositeCommands.resetHeading(
+    //                 drive,
+    //                 V3_Horse_CV2_TRRobotState::resetPose,
+    //                 () -> V3_Horse_CV2_TRRobotState.getGlobalPose().getTranslation())
+    //             .withName("driver-dpadDown-true"));
 
     driver
         .y()
@@ -297,23 +298,23 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .whileTrue(intake.extakeRollers().withName("operator-rightTrigger-true"))
         .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
 
-    operator
-        .dpadUp()
-        .whileTrue(
-            Commands.runOnce(
-                () ->
-                    rollerFloor.setOverrideRollerFloorVoltage(
-                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE)))
-        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+    // operator
+    //     .dpadUp()
+    //     .whileTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 rollerFloor.setOverrideRollerFloorVoltage(
+    //                     V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE)))
+    //     .onFalse(rollerFloor.setState(RollerFloorState.STOP));
 
-    operator
-        .dpadDown()
-        .whileTrue(
-            Commands.runOnce(
-                () ->
-                    rollerFloor.setOverrideRollerFloorVoltage(
-                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
-        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+    // operator
+    //     .dpadDown()
+    //     .whileTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 rollerFloor.setOverrideRollerFloorVoltage(
+    //                     V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
+    //     .onFalse(rollerFloor.setState(RollerFloorState.STOP));
 
     operator.y().onTrue(shooter.incrementFlywheelVelocity());
     operator.x().onTrue(shooter.decrementFlywheelVelocity());
