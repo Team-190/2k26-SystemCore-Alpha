@@ -44,6 +44,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
+import org.wpilib.command2.button.CommandXboxController;
 import org.wpilib.driverstation.Gamepad.Axis;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
@@ -54,11 +55,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private Vision vision;
   private final LoggedNetworkChooser<Command> autoChooser;
 
-  private final CommandGamepad driver = new CommandGamepad(0);
+  private final CommandXboxController driver = new CommandXboxController(0);
 
   private final XKeysInput xkeys = new XKeysInput(1);
 
-  private final CommandGamepad operator = new CommandGamepad(2);
+  private final CommandXboxController operator = new CommandXboxController(2);
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -98,7 +99,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getAxis(Axis.RIGHT_TRIGGER));
+                  () -> driver.getRightTrigger());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -147,7 +148,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getAxis(Axis.RIGHT_TRIGGER));
+                  () -> driver.getRightTrigger());
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -246,7 +247,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 .withName("driver-dpadDown-true"));
 
     driver
-        .faceUp()
+        .y()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
                     drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.FAR)
@@ -254,7 +255,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(stopShooter("driver-Y-false"));
 
     driver
-        .faceDown()
+        .a()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
                     drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.BUMP)
@@ -262,7 +263,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(stopShooter("driver-A-false"));
 
     driver
-        .faceLeft()
+        .x()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
                     drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.TRENCH)
@@ -270,7 +271,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(stopShooter("driver-X-false"));
 
     driver
-        .faceRight()
+        .b()
         .onTrue(V3_Horse_CV2_TRCompositeCommands.intakeStow(intake).withName("driver-B-true"));
 
     operator
@@ -314,10 +315,10 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                         V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
         .onFalse(rollerFloor.setState(RollerFloorState.STOP));
 
-    operator.faceUp().onTrue(shooter.incrementFlywheelVelocity());
-    operator.faceLeft().onTrue(shooter.decrementFlywheelVelocity());
-    operator.faceRight().onTrue(shooter.incrementHoodAngle());
-    operator.faceDown().onTrue(shooter.decrementHoodAngle());
+    operator.y().onTrue(shooter.incrementFlywheelVelocity());
+    operator.x().onTrue(shooter.decrementFlywheelVelocity());
+    operator.b().onTrue(shooter.incrementHoodAngle());
+    operator.a().onTrue(shooter.decrementHoodAngle());
   }
 
   private Command stopShooter(String name) {
