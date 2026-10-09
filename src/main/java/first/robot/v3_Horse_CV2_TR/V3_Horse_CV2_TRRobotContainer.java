@@ -44,6 +44,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandGamepad;
+import org.wpilib.driverstation.Gamepad.Axis;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -97,7 +98,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTrigger());
+                  () -> driver.getAxis(Axis.RIGHT_TRIGGER));
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
@@ -146,7 +147,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
-                  () -> driver.getRightTrigger());
+                  () -> driver.getAxis(Axis.RIGHT_TRIGGER));
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
