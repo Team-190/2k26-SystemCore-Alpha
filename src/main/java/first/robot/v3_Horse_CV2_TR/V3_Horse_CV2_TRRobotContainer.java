@@ -238,14 +238,14 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 .withName("driver-rightTrigger-true"))
         .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
 
-    // driver
-    //     .pov()
-    //     .onTrue(
-    //         V3_Horse_CV2_TRCompositeCommands.resetHeading(
-    //                 drive,
-    //                 V3_Horse_CV2_TRRobotState::resetPose,
-    //                 () -> V3_Horse_CV2_TRRobotState.getGlobalPose().getTranslation())
-    //             .withName("driver-dpadDown-true"));
+    driver
+        .getHID().povDown()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.resetHeading(
+                    drive,
+                    V3_Horse_CV2_TRRobotState::resetPose,
+                    () -> V3_Horse_CV2_TRRobotState.getGlobalPose().getTranslation())
+                .withName("driver-dpadDown-true"));
 
     driver
         .y()
@@ -298,23 +298,23 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .whileTrue(intake.extakeRollers().withName("operator-rightTrigger-true"))
         .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
 
-    // operator
-    //     .dpadUp()
-    //     .whileTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 rollerFloor.setOverrideRollerFloorVoltage(
-    //                     V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE)))
-    //     .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+    operator
+        .getHID().povUp()
+        .whileTrue(
+            Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE)))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
 
-    // operator
-    //     .dpadDown()
-    //     .whileTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 rollerFloor.setOverrideRollerFloorVoltage(
-    //                     V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
-    //     .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+    operator
+        .getHID().povDown()
+        .whileTrue(
+            Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
 
     operator.y().onTrue(shooter.incrementFlywheelVelocity());
     operator.x().onTrue(shooter.decrementFlywheelVelocity());
