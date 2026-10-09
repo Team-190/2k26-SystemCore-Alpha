@@ -57,7 +57,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   private final XKeysInput xkeys = new XKeysInput(1);
 
-  private final CommandGamepad operator = new CommandGamepad(1);
+  private final CommandGamepad operator = new CommandGamepad(2);
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
