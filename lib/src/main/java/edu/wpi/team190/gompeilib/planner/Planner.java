@@ -3,7 +3,6 @@ package edu.wpi.team190.gompeilib.planner;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.math.geometry.Pose2d;
@@ -46,23 +45,12 @@ public class Planner {
           command
               .andThen(
                   Commands.run(
-                          () -> {
-                            Logger.recordOutput("pose passed", robotPose.get());
-                            driveCommand.accept(
-                                driveController.calculate(
-                                    robotPose.get(), targetPose, node.desiredLinearVelocity));
-                          })
-                      .until(
-                          () -> {
-                            boolean atReference =
-                                driveController.atReference(robotPose.get(), targetPose);
-                            Logger.recordOutput("atref", atReference);
-                            return atReference;
-                          }))
-              .finallyDo(
-                  () -> {
-                    driveCommand.accept(new ChassisVelocities());
-                  });
+                          () ->
+                              driveCommand.accept(
+                                  driveController.calculate(
+                                      robotPose.get(), targetPose, node.desiredLinearVelocity)))
+                      .until(() -> driveController.atReference(robotPose.get(), targetPose)))
+              .finallyDo(() -> driveCommand.accept(new ChassisVelocities()));
     }
     return command;
   }
