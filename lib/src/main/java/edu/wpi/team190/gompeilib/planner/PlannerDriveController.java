@@ -1,8 +1,6 @@
 package edu.wpi.team190.gompeilib.planner;
 
 import org.littletonrobotics.junction.Logger;
-import org.wpilib.math.controller.PIDController;
-import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
@@ -23,10 +21,7 @@ public class PlannerDriveController {
   }
 
   public ChassisVelocities calculate(
-      Pose2d currentPose,
-      Pose2d trajectoryPose,
-      double desiredLinearVelocity 
-      ) {
+      Pose2d currentPose, Pose2d trajectoryPose, double desiredLinearVelocity) {
     double xFF =
         -1 * (currentPose.getTranslation().getX() - trajectoryPose.getTranslation().getX());
     double yFF =
