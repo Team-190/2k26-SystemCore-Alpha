@@ -1,5 +1,7 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import static org.wpilib.units.Units.RadiansPerSecond;
+
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
@@ -43,10 +45,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
-import org.wpilib.command2.button.CommandGamepad;
 import org.wpilib.command2.button.CommandNiDsXboxController;
-import org.wpilib.command2.button.CommandXboxController;
-import org.wpilib.driverstation.Gamepad.Axis;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -239,7 +238,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
 
     driver
-        .getHID().povDown()
+        .getHID()
+        .povDown()
         .onTrue(
             V3_Horse_CV2_TRCompositeCommands.resetHeading(
                     drive,
@@ -299,7 +299,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
 
     operator
-        .getHID().povUp()
+        .getHID()
+        .povUp()
         .whileTrue(
             Commands.runOnce(
                 () ->
@@ -308,13 +309,15 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(rollerFloor.setState(RollerFloorState.STOP));
 
     operator
-        .getHID().povDown()
+        .getHID()
+        .povDown()
         .whileTrue(
             Commands.runOnce(
                 () ->
                     rollerFloor.setOverrideRollerFloorVoltage(
                         V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
         .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+    operator.getHID().povLeft().whileTrue(shooter.setFlywheelVelocity(RadiansPerSecond.of(190)));
 
     operator.y().onTrue(shooter.incrementFlywheelVelocity());
     operator.x().onTrue(shooter.decrementFlywheelVelocity());

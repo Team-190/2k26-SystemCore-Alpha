@@ -48,7 +48,7 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withTorqueGains(
               Gains.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(4.0)
+                  .withKP(12)
                   .withKD(0)
                   .withKS(6.5)
                   .withKV(0.25)
@@ -59,12 +59,12 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withPrefix("Shooter/Flywheel")
                   .withMaxVelocity(RadiansPerSecond.of(1000))
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
-                  .withGoalTolerance(RadiansPerSecond.of(50))
+                  .withGoalTolerance(RadiansPerSecond.of(10))
                   .build())
           .withOpposedFollowerCANID(42)
           .withOpposedFollowerCANID(44)
           .withAlignedFollowerCANID(43)
-          .withVelocityOffsetStep(RadiansPerSecond.of(10))
+          .withVelocityOffsetStep(RadiansPerSecond.of(5))
           .withVoltageOffsetStep(Volts.of(1))
           .build();
 
@@ -99,7 +99,7 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
                   .withGoalTolerance(Degrees.of(1))
                   .build())
-          .withOffsetStep(Degrees.of(0.5))
+          .withOffsetStep(Degrees.of(1))
           .withVoltageStep(Volts.of(0.5))
           .build();
 
