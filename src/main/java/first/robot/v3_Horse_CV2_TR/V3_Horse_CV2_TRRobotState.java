@@ -142,11 +142,32 @@ public class V3_Horse_CV2_TRRobotState {
                         .interpolate(start.in(RadiansPerSecond), end.in(RadiansPerSecond), t),
                     RadiansPerSecond));
 
-    shootAngleTree.put(Meters.of(1.1038981214244048), Rotation2d.fromDegrees(5.0));
-    shootSpeedTree.put(Meters.of(1.1038981214244048), RadiansPerSecond.of(340.0));
+    shootAngleTree.put(Meters.of(1.090), Rotation2d.fromDegrees(0.17));
+    shootSpeedTree.put(Meters.of(1.090), RadiansPerSecond.of(140.0));
 
-    shootAngleTree.put(Meters.of(1.491203295344588), Rotation2d.fromDegrees(6.0));
-    shootSpeedTree.put(Meters.of(1.491203295344588), RadiansPerSecond.of(345.0));
+    shootAngleTree.put(Meters.of(1.348), Rotation2d.fromDegrees(4.0));
+    shootSpeedTree.put(Meters.of(1.348), RadiansPerSecond.of(140.0));
+
+    shootAngleTree.put(Meters.of(1.661), Rotation2d.fromDegrees(8.0));
+    shootSpeedTree.put(Meters.of(1.661), RadiansPerSecond.of(145.0));
+
+    shootAngleTree.put(Meters.of(2.0), Rotation2d.fromDegrees(10.0));
+    shootSpeedTree.put(Meters.of(2.0), RadiansPerSecond.of(160.0));
+
+    shootAngleTree.put(Meters.of(2.49), Rotation2d.fromDegrees(14.0));
+    shootSpeedTree.put(Meters.of(2.49), RadiansPerSecond.of(165.0));
+
+    shootAngleTree.put(Meters.of(3), Rotation2d.fromDegrees(18.0));
+    shootSpeedTree.put(Meters.of(3), RadiansPerSecond.of(165.0));
+
+    shootAngleTree.put(Meters.of(3.5), Rotation2d.fromDegrees(22.0));
+    shootSpeedTree.put(Meters.of(3.5), RadiansPerSecond.of(165.0));
+
+    shootAngleTree.put(Meters.of(4.0), Rotation2d.fromDegrees(21.3));
+    shootSpeedTree.put(Meters.of(4.0), RadiansPerSecond.of(185.0));
+
+    shootAngleTree.put(Meters.of(4.5), Rotation2d.fromDegrees(21.3));
+    shootSpeedTree.put(Meters.of(4.5), RadiansPerSecond.of(190.0));
 
     feedAngleTree.put(
         Meters.of(0.0),
@@ -313,17 +334,17 @@ public class V3_Horse_CV2_TRRobotState {
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(10.0), // TODO: Use Real Value
-            RadiansPerSecond.of(150.0))), // TODO: Use Real Value
+            RadiansPerSecond.of(160.0))), // TODO: Use Real Value
     TRENCH(
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
-            RadiansPerSecond.of(300.0))), // TODO: Use Real Value
+            RadiansPerSecond.of(165.0))), // TODO: Use Real Value
     FAR(
         new FixedShotParameters(
             Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
-            Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
-            RadiansPerSecond.of(300.0))); // TODO: Use Real Value
+            Rotation2d.fromDegrees(21.3), // TODO: Use Real Value
+            RadiansPerSecond.of(190.0))); // TODO: Use Real Value
 
     @Getter private final FixedShotParameters parameters;
   }

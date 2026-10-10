@@ -1,5 +1,7 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import static org.wpilib.units.Units.RadiansPerSecond;
+
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
@@ -35,6 +37,7 @@ import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConst
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import java.util.List;
@@ -42,9 +45,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
-import org.wpilib.command2.button.CommandGamepad;
 import org.wpilib.command2.button.CommandNiDsXboxController;
-import org.wpilib.math.geometry.Rotation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -58,7 +59,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   private final XKeysInput xkeys = new XKeysInput(1);
 
-  private final CommandGamepad operatorController = new CommandGamepad(1);
+  private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -216,7 +217,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
     driver
         .leftBumper()
-        .onTrue(
+        .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
                 .withName("driver-leftBumper-true"))
         .onFalse(intake.setRollerState(RollerState.IDLE).withName("driver-leftBumper-false"));
@@ -237,7 +238,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
 
     driver
-        .start()
+        .getHID()
+        .povDown()
         .onTrue(
             V3_Horse_CV2_TRCompositeCommands.resetHeading(
                     drive,
@@ -272,6 +274,55 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     driver
         .b()
         .onTrue(V3_Horse_CV2_TRCompositeCommands.intakeStow(intake).withName("driver-B-true"));
+
+    operator
+        .leftBumper()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeStow(intake)
+                .withName("operator-leftBumper-true"));
+
+    operator
+        .rightBumper()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
+                .withName("operator-rightBumper-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftBumper-false"));
+
+    operator
+        .leftTrigger()
+        .whileTrue(intake.intakeRollers().withName("operator-leftTrigger-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+
+    operator
+        .rightTrigger()
+        .whileTrue(intake.extakeRollers().withName("operator-rightTrigger-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+
+    operator
+        .getHID()
+        .povUp()
+        .whileTrue(
+            Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE)))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+
+    operator
+        .getHID()
+        .povDown()
+        .whileTrue(
+            Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+    operator.getHID().povLeft().whileTrue(shooter.setFlywheelVelocity(RadiansPerSecond.of(190)));
+
+    operator.y().onTrue(shooter.incrementFlywheelVelocity());
+    operator.x().onTrue(shooter.decrementFlywheelVelocity());
+    operator.b().onTrue(shooter.incrementHoodAngle());
+    operator.a().onTrue(shooter.decrementHoodAngle());
   }
 
   private Command stopShooter(String name) {

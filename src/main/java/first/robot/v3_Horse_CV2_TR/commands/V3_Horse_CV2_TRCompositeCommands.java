@@ -9,6 +9,7 @@ import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
@@ -52,6 +53,17 @@ public class V3_Horse_CV2_TRCompositeCommands {
         intake.setExtensionState(ExtensionState.STOW), intake.setRollerState(RollerState.IDLE));
   }
 
+  public static Command intakeSpit(
+      V3_Horse_CV2_TR_Intake intake, V3_Horse_CV2_TRRollerFloor rollerfloor) {
+    return Commands.parallel(
+        intake.setExtensionState(ExtensionState.INTAKE),
+        intake.setRollerState(RollerState.EXTAKE),
+        Commands.runOnce(
+            () ->
+                rollerfloor.setOverrideRollerFloorVoltage(
+                    V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))));
+  }
+
   /**
    * Spins up for score or feed, then runs the roller floor once the shooter and heading are ready.
    */
@@ -91,7 +103,8 @@ public class V3_Horse_CV2_TRCompositeCommands {
     Supplier<Rotation2d> targetAngle =
         () -> AllianceFlipUtil.apply(fixedShot.getParameters().robotAngle());
     return Commands.parallel(
-        // Keep holding the heading for the whole shot; the feed gate below needs it on target
+        // Keep holding the heading for the whole shot; the feed gate below needs it on
+        // target
         V3_Horse_CV2_TRDriveCommands.rotateToAngle(
             drive,
             V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
