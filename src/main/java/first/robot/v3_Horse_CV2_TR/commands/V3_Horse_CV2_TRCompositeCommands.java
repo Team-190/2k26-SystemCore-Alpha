@@ -56,6 +56,7 @@ public class V3_Horse_CV2_TRCompositeCommands {
     return Commands.parallel(
         intake.setExtensionState(ExtensionState.INTAKE),
         intake.setRollerState(RollerState.EXTAKE),
+        rollerfloor.setState(RollerFloorState.OVERRIDE),
         Commands.runOnce(
             () ->
                 rollerfloor.setOverrideRollerFloorVoltage(

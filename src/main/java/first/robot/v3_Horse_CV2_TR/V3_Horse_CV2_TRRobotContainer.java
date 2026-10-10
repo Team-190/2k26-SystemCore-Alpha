@@ -307,28 +307,29 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .rightTrigger()
         .whileTrue(intake.extakeRollers().withName("operator-rightTrigger-true"))
         .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+operator
+    .getHID()
+    .povUp()
+    .whileTrue(
+        Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE))
+            .andThen(rollerFloor.setState(RollerFloorState.OVERRIDE))
+            .withName("operator-dPadUp-true"))
+    .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadUp-false"));
 
-    operator
-        .getHID()
-        .povUp()
-        .whileTrue(
-            Commands.runOnce(
-                    () ->
-                        rollerFloor.setOverrideRollerFloorVoltage(
-                            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE))
-                .withName("operator-dPadUp-true"))
-        .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadUp-false"));
-
-    operator
-        .getHID()
-        .povDown()
-        .whileTrue(
-            Commands.runOnce(
-                    () ->
-                        rollerFloor.setOverrideRollerFloorVoltage(
-                            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1)))
-                .withName("operator-dPadDown-true"))
-        .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadDown-false"));
+operator
+    .getHID()
+    .povDown()
+    .whileTrue(
+        Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1)))
+            .andThen(rollerFloor.setState(RollerFloorState.OVERRIDE))
+            .withName("operator-dPadDown-true"))
+    .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadDown-false"));
 
     operator.getHID().povLeft().onTrue(shooter.resetHoodZero().withName("operator-dPadLeft-true"));
 
