@@ -31,6 +31,7 @@ import first.robot.RobotConfig;
 import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
@@ -115,6 +116,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
                       List.of()));
+
+
           break;
         case V3_Horse_CV2_TR_SIM:
           drive =
@@ -195,7 +198,17 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
     autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");
     configureButtonBindings();
+    configureAutos();
   }
+
+  private void configureAutos() {
+    autoChooser.add(
+        "Back up and shoot",
+        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(
+            drive, shooter, rollerFloor));
+
+    autoChooser.addDefault("Do Nothing", Commands.none());
+}
 
   private void configureButtonBindings() {
     drive.setDefaultCommand(
@@ -341,6 +354,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   @Override
   public Command getAutonomousCommand() {
-    return Commands.none();
+    return autoChooser.get();
   }
 }

@@ -1,7 +1,11 @@
 // Copyright 2021-2024 FRC 6328
 package edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOInputsAutoLogged;
@@ -14,10 +18,14 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
+
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.filter.LinearFilter;
 import org.wpilib.math.geometry.Pose2d;
@@ -149,47 +157,47 @@ public class SwerveDrive extends SubsystemBase {
 
     measuredChassisVelocities = new ChassisVelocities();
 
-    // try {
-    //   config = RobotConfig.fromGUISettings();
-    //   AutoBuilder.configure(
-    //       this.robotPoseSupplier,
-    //       resetPoseConsumer, // resetPose
-    //       () -> getChassisVelocities(), // get robotRelativeSpeeds
-    //       (speeds, feedforwards) -> {
-    //         // Retained from Choreo; switch to runVelocityTorque(speeds, forces) if needed.
-    //         @SuppressWarnings("unused")
-    //         List<Vector<N2>> forces =
-    //             IntStream.range(0, 4)
-    //                 .mapToObj(
-    //                     i ->
-    //                         VecBuilder.fill(
-    //                             feedforwards.robotRelativeForcesXNewtons()[i],
-    //                             feedforwards.robotRelativeForcesYNewtons()[i]))
-    //                 .toList();
+    try {
+      config = RobotConfig.fromGUISettings();
+      AutoBuilder.configure(
+          this.robotPoseSupplier,
+          resetPoseConsumer, // resetPose
+          () -> getChassisVelocities(), // get robotRelativeSpeeds
+          (speeds, feedforwards) -> {
+            // Retained from Choreo; switch to runVelocityTorque(speeds, forces) if needed.
+            @SuppressWarnings("unused")
+            List<Vector<N2>> forces =
+                IntStream.range(0, 4)
+                    .mapToObj(
+                        i ->
+                            VecBuilder.fill(
+                                feedforwards.robotRelativeForcesXNewtons()[i],
+                                feedforwards.robotRelativeForcesYNewtons()[i]))
+                    .toList();
 
-    //         runVelocity(speeds);
-    //       },
-    //       new PPHolonomicDriveController(
-    //           new PIDConstants(
-    //               driveConstants.autoTranslationGains.kP().getAsDouble(),
-    //               driveConstants.autoTranslationGains.kI().getAsDouble(),
-    //               driveConstants.autoTranslationGains.kD().getAsDouble()),
-    //           new PIDConstants(
-    //               driveConstants.autoRotationGains.kP().getAsDouble(),
-    //               driveConstants.autoRotationGains.kI().getAsDouble(),
-    //               driveConstants.autoRotationGains.kD().getAsDouble())),
-    //       config,
-    //       () -> {
-    //         var alliance = DriverStationBackend.getAlliance();
-    //         if (alliance.isPresent()) {
-    //           return alliance.get() == Alliance.RED;
-    //         }
-    //         return false;
-    //       },
-    //       this);
-    // } catch (Exception e) {
-    //   throw new RuntimeException("Failed to load PathPlanner robot config", e);
-    // }
+            runVelocity(speeds);
+          },
+          new PPHolonomicDriveController(
+              new PIDConstants(
+                  driveConstants.autoTranslationGains.kP().getAsDouble(),
+                  driveConstants.autoTranslationGains.kI().getAsDouble(),
+                  driveConstants.autoTranslationGains.kD().getAsDouble()),
+              new PIDConstants(
+                  driveConstants.autoRotationGains.kP().getAsDouble(),
+                  driveConstants.autoRotationGains.kI().getAsDouble(),
+                  driveConstants.autoRotationGains.kD().getAsDouble())),
+          config,
+          () -> {
+            var alliance = DriverStationBackend.getAlliance();
+            if (alliance.isPresent()) {
+              return alliance.get() == Alliance.RED;
+            }
+            return false;
+          },
+          this);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to load PathPlanner robot config", e);
+    }
   }
 
   @Trace
