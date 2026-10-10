@@ -324,25 +324,21 @@ public class V3_Horse_CV2_TRRobotState {
     return towerZonePose;
   }
 
-  public record FixedShotParameters(
-      Rotation2d robotAngle, Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
+  public record FixedShotParameters(Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
 
   /** Robot angles are blue-alliance field headings; they are alliance-flipped at use time. */
   @RequiredArgsConstructor
   public enum FixedShots {
     BUMP(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(10.0), // TODO: Use Real Value
             RadiansPerSecond.of(160.0))), // TODO: Use Real Value
     TRENCH(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
             RadiansPerSecond.of(165.0))), // TODO: Use Real Value
     FAR(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(180.0), // TODO: Use Real Value
             Rotation2d.fromDegrees(21.3), // TODO: Use Real Value
             RadiansPerSecond.of(190.0))); // TODO: Use Real Value
 
