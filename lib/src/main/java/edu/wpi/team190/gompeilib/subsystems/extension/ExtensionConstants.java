@@ -1,5 +1,7 @@
 package edu.wpi.team190.gompeilib.subsystems.extension;
 
+import static org.wpilib.units.Units.*;
+
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
@@ -9,6 +11,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Voltage;
 
@@ -22,6 +25,10 @@ public class ExtensionConstants {
 
   @NonNull public final Double extensionSupplyCurrentLimit;
   @NonNull public final Double extensionStatorCurrentLimit;
+
+  @Builder.Default public final Voltage zeroVoltage = Volts.of(1.0);
+  @Builder.Default public final Current zeroCurrentThreshold = Amps.of(-20.0);
+  @Builder.Default public final Current zeroCurrentEpsilon = Amps.of(5.0);
 
   @NonNull public final ExtensionParameters extensionParameters;
   @NonNull public final Gains slot0Gains;

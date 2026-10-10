@@ -117,7 +117,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
                       List.of()));
 
-
           break;
         case V3_Horse_CV2_TR_SIM:
           drive =
@@ -204,11 +203,10 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private void configureAutos() {
     autoChooser.add(
         "Back up and shoot",
-        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(
-            drive, shooter, rollerFloor));
+        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor));
 
     autoChooser.addDefault("Do Nothing", Commands.none());
-}
+  }
 
   private void configureButtonBindings() {
     drive.setDefaultCommand(

@@ -233,6 +233,21 @@ public class Extension {
     return false;
   }
 
+  public Command resetExtensionZero() {
+    return Commands.sequence(
+        Commands.runOnce(() -> currentState = ExtensionState.IDLE),
+        Commands.run(() -> io.setVoltageGoal(constants.zeroVoltage.times(-1)))
+            .until(
+                () ->
+                    getTorqueCurrent()
+                        .isNear(constants.zeroCurrentThreshold, constants.zeroCurrentEpsilon)),
+        Commands.runOnce(
+            () -> {
+              io.setVoltageGoal(Volts.zero());
+              io.setPosition(constants.extensionParameters.MIN_LENGTH());
+            }));
+  }
+
   private static Command runSysIdRoutine(SysIdRoutine routine, Extension... extensions) {
     return Commands.sequence(
         Commands.runOnce(
