@@ -1,6 +1,7 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 
 import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.utility.ExtensionMethods;
@@ -21,6 +22,7 @@ import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.measure.Distance;
+import org.wpilib.units.measure.Voltage;
 
 @ExtensionMethod(ExtensionMethods.class)
 public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
@@ -272,6 +274,44 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         Commands.parallel(leftExtension.resetExtensionZero(), rightExtension.resetExtensionZero()),
         Commands.runOnce(() -> extensionState = ExtensionState.STOW));
   }
+
+  public Command resetIntakeZeroPosition() {
+  return Commands.runOnce(
+          () -> {
+            extensionState = ExtensionState.OVERRIDE;
+            leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+            rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+            extensionState = ExtensionState.STOW;
+          })
+      .ignoringDisable(true);
+}
+
+public Command slowMoveIn() {
+  return Commands.runOnce(
+      () -> {
+        extensionState = ExtensionState.OVERRIDE;
+        leftExtension.setVoltageGoal(Volts.of(-1));
+        rightExtension.setVoltageGoal(Volts.of(-1));
+      });
+}
+
+public Command slowMoveOut() {
+  return Commands.runOnce(
+      () -> {
+        extensionState = ExtensionState.OVERRIDE;
+        leftExtension.setVoltageGoal(Volts.of(1));
+        rightExtension.setVoltageGoal(Volts.of(1));
+      });
+}
+
+public Command stopExtensions() {
+  return Commands.runOnce(
+      () -> {
+        extensionState = ExtensionState.OVERRIDE;
+        leftExtension.setVoltageGoal(Volts.zero());
+        rightExtension.setVoltageGoal(Volts.zero());
+      });
+}
 
   private boolean isNearStow(double tolerance) {
     double threshold = V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION + tolerance;
