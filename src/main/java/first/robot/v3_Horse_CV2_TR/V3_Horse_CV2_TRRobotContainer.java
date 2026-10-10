@@ -1,7 +1,5 @@
 package first.robot.v3_Horse_CV2_TR;
 
-import static org.wpilib.units.Units.RadiansPerSecond;
-
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
@@ -31,6 +29,7 @@ import first.robot.RobotConfig;
 import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
@@ -40,6 +39,7 @@ import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerF
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
+import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
@@ -115,6 +115,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
                       List.of()));
+
           break;
         case V3_Horse_CV2_TR_SIM:
           drive =
@@ -195,6 +196,15 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
     autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");
     configureButtonBindings();
+    configureAutos();
+  }
+
+  private void configureAutos() {
+    autoChooser.add(
+        "Back up and shoot",
+        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor));
+
+    autoChooser.addDefault("Do Nothing", Commands.none());
   }
 
   private void configureButtonBindings() {
@@ -297,32 +307,53 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .rightTrigger()
         .whileTrue(intake.extakeRollers().withName("operator-rightTrigger-true"))
         .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+operator
+    .getHID()
+    .povUp()
+    .whileTrue(
+        Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE))
+            .andThen(rollerFloor.setState(RollerFloorState.OVERRIDE))
+            .withName("operator-dPadUp-true"))
+    .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadUp-false"));
+
+operator
+    .getHID()
+    .povDown()
+    .whileTrue(
+        Commands.runOnce(
+                () ->
+                    rollerFloor.setOverrideRollerFloorVoltage(
+                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1)))
+            .andThen(rollerFloor.setState(RollerFloorState.OVERRIDE))
+            .withName("operator-dPadDown-true"))
+    .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadDown-false"));
+
+    operator.getHID().povLeft().onTrue(shooter.resetHoodZero().withName("operator-dPadLeft-true"));
 
     operator
         .getHID()
-        .povUp()
-        .whileTrue(
-            Commands.runOnce(
-                () ->
-                    rollerFloor.setOverrideRollerFloorVoltage(
-                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE)))
-        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
+        .povRight()
+        .onTrue(intake.zeroExtensions().withName("operator-dPadRight-true"));
+
+    operator.y().onTrue(shooter.incrementFlywheelVelocity().withName("operator-Y-true"));
+    operator.x().onTrue(shooter.decrementFlywheelVelocity().withName("operator-X-true"));
+    operator.b().onTrue(shooter.incrementHoodAngle().withName("operator-B-true"));
+    operator.a().onTrue(shooter.decrementHoodAngle().withName("operator-A-true"));
+
+    operator.back().onTrue(shooter.setGoal(ShooterGoal.STOW).withName("operator-back-true"));
+    operator.start().onTrue(intake.resetIntakeZeroPosition().withName("operator-start-true"));
 
     operator
-        .getHID()
-        .povDown()
-        .whileTrue(
-            Commands.runOnce(
-                () ->
-                    rollerFloor.setOverrideRollerFloorVoltage(
-                        V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))))
-        .onFalse(rollerFloor.setState(RollerFloorState.STOP));
-    operator.getHID().povLeft().whileTrue(shooter.setFlywheelVelocity(RadiansPerSecond.of(190)));
-
-    operator.y().onTrue(shooter.incrementFlywheelVelocity());
-    operator.x().onTrue(shooter.decrementFlywheelVelocity());
-    operator.b().onTrue(shooter.incrementHoodAngle());
-    operator.a().onTrue(shooter.decrementHoodAngle());
+        .leftStick()
+        .whileTrue(intake.slowMoveIn().withName("operator-leftStick-true"))
+        .onFalse(intake.stopExtensions().withName("operator-leftStick-false"));
+    operator
+        .rightStick()
+        .whileTrue(intake.slowMoveOut().withName("operator-rightStick-true"))
+        .onFalse(intake.stopExtensions().withName("operator-rightStick-false"));
   }
 
   private Command stopShooter(String name) {
@@ -341,6 +372,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   @Override
   public Command getAutonomousCommand() {
-    return Commands.none();
+    return autoChooser.get();
   }
 }
