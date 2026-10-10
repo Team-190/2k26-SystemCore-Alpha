@@ -22,7 +22,6 @@ import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.measure.Distance;
-import org.wpilib.units.measure.Voltage;
 
 @ExtensionMethod(ExtensionMethods.class)
 public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
@@ -276,42 +275,42 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   public Command resetIntakeZeroPosition() {
-  return Commands.runOnce(
-          () -> {
-            extensionState = ExtensionState.OVERRIDE;
-            leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
-            rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
-            extensionState = ExtensionState.STOW;
-          })
-      .ignoringDisable(true);
-}
+    return Commands.runOnce(
+            () -> {
+              extensionState = ExtensionState.OVERRIDE;
+              leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              extensionState = ExtensionState.STOW;
+            })
+        .ignoringDisable(true);
+  }
 
-public Command slowMoveIn() {
-  return Commands.runOnce(
-      () -> {
-        extensionState = ExtensionState.OVERRIDE;
-        leftExtension.setVoltageGoal(Volts.of(-1));
-        rightExtension.setVoltageGoal(Volts.of(-1));
-      });
-}
+  public Command slowMoveIn() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.OVERRIDE;
+          leftExtension.setVoltageGoal(Volts.of(-1));
+          rightExtension.setVoltageGoal(Volts.of(-1));
+        });
+  }
 
-public Command slowMoveOut() {
-  return Commands.runOnce(
-      () -> {
-        extensionState = ExtensionState.OVERRIDE;
-        leftExtension.setVoltageGoal(Volts.of(1));
-        rightExtension.setVoltageGoal(Volts.of(1));
-      });
-}
+  public Command slowMoveOut() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.OVERRIDE;
+          leftExtension.setVoltageGoal(Volts.of(1));
+          rightExtension.setVoltageGoal(Volts.of(1));
+        });
+  }
 
-public Command stopExtensions() {
-  return Commands.runOnce(
-      () -> {
-        extensionState = ExtensionState.OVERRIDE;
-        leftExtension.setVoltageGoal(Volts.zero());
-        rightExtension.setVoltageGoal(Volts.zero());
-      });
-}
+  public Command stopExtensions() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.OVERRIDE;
+          leftExtension.setVoltageGoal(Volts.zero());
+          rightExtension.setVoltageGoal(Volts.zero());
+        });
+  }
 
   private boolean isNearStow(double tolerance) {
     double threshold = V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION + tolerance;
