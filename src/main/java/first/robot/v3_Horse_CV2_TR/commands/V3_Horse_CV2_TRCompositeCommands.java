@@ -2,7 +2,6 @@ package first.robot.v3_Horse_CV2_TR.commands;
 
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import first.robot.util.AllianceFlipUtil;
-import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRConstants;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
@@ -15,7 +14,6 @@ import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.math.geometry.Pose2d;
@@ -58,6 +56,7 @@ public class V3_Horse_CV2_TRCompositeCommands {
     return Commands.parallel(
         intake.setExtensionState(ExtensionState.INTAKE),
         intake.setRollerState(RollerState.EXTAKE),
+        rollerfloor.setState(RollerFloorState.OVERRIDE),
         Commands.runOnce(
             () ->
                 rollerfloor.setOverrideRollerFloorVoltage(
@@ -100,29 +99,10 @@ public class V3_Horse_CV2_TRCompositeCommands {
       V3_Horse_CV2_TRRollerFloor rollerFloor,
       V3_Horse_CV2_TRShooter shooter,
       FixedShots fixedShot) {
-    Supplier<Rotation2d> targetAngle =
-        () -> AllianceFlipUtil.apply(fixedShot.getParameters().robotAngle());
     return Commands.parallel(
-        // Keep holding the heading for the whole shot; the feed gate below needs it on
-        // target
-        V3_Horse_CV2_TRDriveCommands.rotateToAngle(
-            drive,
-            V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-            V3_Horse_CV2_TRRobotState::getHeading,
-            targetAngle),
         Commands.sequence(
             shooter.runFixedShot(fixedShot),
-            Commands.waitUntil(
-                () -> {
-                  Rotation2d heading = V3_Horse_CV2_TRRobotState.getHeading();
-                  boolean aimed = V3_Horse_CV2_TRDriveCommands.atAngle(heading, targetAngle.get());
-                  Logger.recordOutput("FixedShot/Target Heading", targetAngle.get());
-                  Logger.recordOutput(
-                      "FixedShot/Heading Error Degrees",
-                      heading.minus(targetAngle.get()).getDegrees());
-                  Logger.recordOutput("FixedShot/Aimed", aimed);
-                  return shooter.atGoal() && aimed;
-                }),
+            Commands.waitUntil(() -> shooter.atGoal()),
             rollerFloor.setState(RollerFloorState.RUN)));
   }
 }

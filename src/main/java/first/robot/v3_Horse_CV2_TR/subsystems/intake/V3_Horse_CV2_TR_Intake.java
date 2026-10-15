@@ -1,6 +1,7 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 
 import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.utility.ExtensionMethods;
@@ -125,8 +126,10 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             <= V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
                 + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD
         && isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD)) {
-      // Pulled in to stow: latch so releasing the trigger doesn't drive it back out. The goal
-      // check keeps a light press from an already-stowed intake from latching immediately.
+      // Pulled in to stow: latch so releasing the trigger doesn't drive it back out.
+      // The goal
+      // check keeps a light press from an already-stowed intake from latching
+      // immediately.
       extensionState = ExtensionState.STOW;
     }
 
@@ -147,7 +150,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         break;
     }
     // if (extensionState != ExtensionState.OVERRIDE) {
-    //   updateGainSlots();
+    // updateGainSlots();
     // }
     leftIntakeRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
@@ -169,7 +172,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   private Distance linearExtensionMap() {
-    // Blend linear with smoothstep so the ends of the trigger are finer than the middle.
+    // Blend linear with smoothstep so the ends of the trigger are finer than the
+    // middle.
     // Slope is (1 - k) at the ends and (1 + k/2) in the middle.
     double t = Math.clamp(triggerSupplier.getAsDouble(), 0.0, 1.0);
     double k = V3_Horse_CV2_TR_IntakeConstants.TRIGGER_CURVE;
@@ -259,6 +263,52 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
           if (extensionState == ExtensionState.MANUAL_EXTEND) {
             extensionState = ExtensionState.MANUAL_RELEASE;
           }
+        });
+  }
+
+  public Command zeroExtensions() {
+    return Commands.sequence(
+        Commands.runOnce(() -> rollerState = RollerState.STOP),
+        Commands.runOnce(() -> extensionState = ExtensionState.OVERRIDE),
+        Commands.parallel(leftExtension.resetExtensionZero(), rightExtension.resetExtensionZero()),
+        Commands.runOnce(() -> extensionState = ExtensionState.STOW));
+  }
+
+  public Command resetIntakeZeroPosition() {
+    return Commands.runOnce(
+            () -> {
+              extensionState = ExtensionState.OVERRIDE;
+              leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              extensionState = ExtensionState.STOW;
+            })
+        .ignoringDisable(true);
+  }
+
+  public Command slowMoveIn() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.OVERRIDE;
+          leftExtension.setVoltageGoal(Volts.of(-1));
+          rightExtension.setVoltageGoal(Volts.of(-1));
+        });
+  }
+
+  public Command slowMoveOut() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.OVERRIDE;
+          leftExtension.setVoltageGoal(Volts.of(1));
+          rightExtension.setVoltageGoal(Volts.of(1));
+        });
+  }
+
+  public Command stopExtensions() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.OVERRIDE;
+          leftExtension.setVoltageGoal(Volts.zero());
+          rightExtension.setVoltageGoal(Volts.zero());
         });
   }
 
