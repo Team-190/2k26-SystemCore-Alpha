@@ -17,7 +17,7 @@ public class Planner {
     driveCommand = newDriveCommand;
   }
 
-  public static Command followPath(Plans plan, Supplier<Pose2d> robotPose) {
+  public static Command followPath(Plan plan, Supplier<Pose2d> robotPose) {
     if (driveCommand == null) {
       System.out.println("DriveCommand is set to null in planner class");
       return null;
