@@ -11,51 +11,36 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Planner {
 
-  public static PlannerControllerConfig config;
   public static Consumer<ChassisVelocities> driveCommand;
 
   public static void setDriveCommand(Consumer<ChassisVelocities> newDriveCommand) {
     driveCommand = newDriveCommand;
   }
 
-  public static void setConfig(PlannerControllerConfig newConfig) {
-    config = newConfig;
-  }
-
-  public static Command followPath(ArrayList<PathNode> path, Supplier<Pose2d> robotPose) {
-    if (config == null) {
-      System.out.println("Config is set to null in planner class");
-      return null;
-    }
+  public static Command followPath(Plans plan, Supplier<Pose2d> robotPose) {
     if (driveCommand == null) {
       System.out.println("DriveCommand is set to null in planner class");
       return null;
     }
-    PlannerDriveController driveController = new PlannerDriveController();
+    Solver solver = new Solver();
 
     Command command = Commands.none();
 
-    for (PathNode node : path) {
+    for (State state : plan) {
       Pose2d pose = robotPose.get();
-      Pose2d targetPose =
-          new Pose2d(
-              node.translation.orElse(pose.getTranslation()),
-              node.rotation.orElse(pose.getRotation()));
       command =
           command
               .andThen(
                   Commands.run(
                           () -> {
-                            Logger.recordOutput("pose passed", robotPose.get());
                             driveCommand.accept(
-                                driveController.calculate(
-                                    robotPose.get(), targetPose, node.desiredLinearVelocity));
+                                solver.calculate(
+                                    robotPose.get(), state));
                           })
                       .until(
                           () -> {
                             boolean atReference =
-                                driveController.atReference(robotPose.get(), targetPose);
-                            Logger.recordOutput("atref", atReference);
+                                solver.atReference(robotPose.get(), path, time);
                             return atReference;
                           }))
               .finallyDo(
