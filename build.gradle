@@ -79,8 +79,65 @@ deploy {
                     directory = '/home/systemcore/deploy'
                     deleteOldFiles = true // Change to true to delete files on systemcore that no
                     // longer exist in deploy directory of this project
+    
+                }
+
+                // robot type check
+                checkRobotType(getArtifactTypeClass('ActionArtifact')) {
+                    dependsOn compileJava
+                    deployAction = { ctx ->
+                        // check machine-info for the name of the systemcore
+                        def machineInfoFile = '/etc/machine-info'
+                        def result = ctx.execute("cat ${machineInfoFile}")
+
+                        if (result == null || result.exitCode != 0) {
+                            throw new GradleException("Could not read '${machineInfoFile}' on the SystemCore.\nTo Fix: SSH in and run: sudo hostnamectl set-hostname --pretty <RobotType>")
+                        }
+
+                        // get the hostname
+                        def matcher = (result.result ?: '') =~ /(?m)^PRETTY_HOSTNAME=([^"\r\n]+)/
+                        if (!matcher.find()) {
+                            throw new GradleException("SystemCore comment is empty in '${machineInfoFile}'\nTo Fix: SSH in and run: sudo hostnamectl set-hostname --pretty <RobotType>")
+                        }
+                        def systemCoreComment = matcher.group(1).trim()
+                        ctx.logger.log("SystemCore comment: ${systemCoreComment}")
+
+
+                        // load robot config
+                        def classesDir = project.file('build/classes/java/main')
+                        def loader = new URLClassLoader([classesDir.toURI().toURL()] as URL[], this.class.classLoader)
+
+                        def robotTypeClass
+                        def robotConfigClass
+                        try {
+                            robotTypeClass = loader.loadClass('first.robot.RobotConfig$RobotType')
+                            robotConfigClass = loader.loadClass('first.robot.RobotConfig')
+                        } catch (ClassNotFoundException e) {
+                            throw new GradleException("Could not load RobotConfig from '${classesDir}': ${e.message}\nTo Fix: Make sure first.robot.RobotConfig exists and the code compiles")
+                        }
+
+                        // check if the pretty hostname is ANY robot type
+                        def validNames = robotTypeClass.enumConstants*.name()
+                        if (!validNames.any { it.equalsIgnoreCase(systemCoreComment) }) {
+                            throw new GradleException("'${systemCoreComment}' is not a valid RobotType. Valid types: ${validNames}\nTo Fix: Set the SystemCore comment to a valid RobotType")
+                        }
+
+                        // check if the pretty hostname matches the robot in robotconfig
+                        def robotField = robotConfigClass.getDeclaredField('ROBOT')
+                        robotField.setAccessible(true)
+                        def robot = robotField.get(null)
+                        ctx.logger.log("ROBOT in RobotConfig.java: ${robot.name()}")
+
+                        if (!systemCoreComment.equalsIgnoreCase(robot.name())) {
+                            throw new GradleException("Mismatch! SystemCore comment '${systemCoreComment}' does not match ROBOT '${robot.name()}'\nTo Fix: Change ROBOT in first.robot.RobotConfig to match the SystemCore comment")
+                        }
+                        ctx.logger.log("SystemCore comment matches ROBOT. Deploying.")
+                    }
                 }
             }
+
+            setDeployStage(artifacts.checkRobotType, DeployStage.BeforeProgramKill)
+            
         }
     }
 }
@@ -104,6 +161,7 @@ task(replayWatch, type: JavaExec) {
 }
 
 import groovy.json.JsonSlurper
+import org.wpilib.gradlerio.deploy.DeployStage
 
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
