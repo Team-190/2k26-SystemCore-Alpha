@@ -58,8 +58,9 @@ public class Planner {
                       }
 
                       driveCommand.accept(calculate(solver, robotPose.get(), target));
+
                       Command command = plan.getCommandMap().get(timer.get());
-                      if(command != null){
+                      if (command != null) {
                         CommandScheduler.getInstance().schedule(command);
                       }
                     })
