@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.Commands;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
@@ -57,6 +58,10 @@ public class Planner {
                       }
 
                       driveCommand.accept(calculate(solver, robotPose.get(), target));
+                      Command command = plan.getCommandMap().get(timer.get());
+                      if(command != null){
+                        CommandScheduler.getInstance().schedule(command);
+                      }
                     })
                 .until(
                     () -> {
