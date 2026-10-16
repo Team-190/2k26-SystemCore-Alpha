@@ -5,13 +5,22 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 
 // solves ACTUAL chassis velocities based on current state and goal state
 public class Solver {
+  private static final double DEFAULT_TRANSLATION_GAIN = 1.0;
+  private static final double DEFAULT_ROTATION_GAIN = 4.0;
+  private static final double DEFAULT_TRANSLATION_TOLERANCE = 0.05; // meters
+  private static final double DEFAULT_ROTATION_TOLERANCE = Math.toRadians(2);
+
   private final double translationGain;
   private final double rotationGain;
   private final double translationTolerance;
   private final double rotationTolerance;
 
   public Solver() {
-    this(1.0, 4.0, 0.05, Math.toRadians(2));
+    this(
+        DEFAULT_TRANSLATION_GAIN,
+        DEFAULT_ROTATION_GAIN,
+        DEFAULT_TRANSLATION_TOLERANCE,
+        DEFAULT_ROTATION_TOLERANCE);
   }
 
   public Solver(
@@ -115,6 +124,7 @@ public class Solver {
   private static double headingError(double robotHeading, double goalHeading) {
     double error = goalHeading - robotHeading;
 
+    // keeps the angle between -pi and pi so it turns the short way and doesnt spin around
     while (error > Math.PI) {
       error -= 2 * Math.PI;
     }

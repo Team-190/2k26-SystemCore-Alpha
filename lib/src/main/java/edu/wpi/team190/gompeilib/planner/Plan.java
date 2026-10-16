@@ -9,12 +9,17 @@ public class Plan {
   public Plan(Path... paths) {
     for (Path path : paths) {
       ArrayList<State> pathStates = path.getStates();
+
       // make sure no stopping when connecting, but it just like goes through
-      if (!states.isEmpty()
-          && !pathStates.isEmpty()
-          && states.get(states.size() - 1).pose().equals(pathStates.get(0).pose())) {
-        states.remove(states.size() - 1);
+
+      if (!states.isEmpty() && !pathStates.isEmpty()) {
+        State previousEnd = states.get(states.size() - 1);
+        State currentStart = pathStates.get(0);
+        if (previousEnd.pose().equals(currentStart.pose())) {
+          states.remove(states.size() - 1);
+        }
       }
+
       states.addAll(pathStates);
     }
   }

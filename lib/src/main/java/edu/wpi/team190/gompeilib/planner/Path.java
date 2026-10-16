@@ -6,23 +6,32 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Path {
 
-  private double rate = 10; // talk abt ts later
+  public static final double RATE = 10; // states per second
   private ArrayList<State> states = new ArrayList<State>();
 
   public Path(Pose2d startPose, Pose2d endPose, double time) {
+    // makes a state every 1 / RATE seconds from start to end (including the end) basically just
+    // creates small states along the entire thing
+    int numSteps = (int) Math.ceil(time * RATE);
+    // time gets rounded up to fit the steps baisically (0.73s -> 0.8s) so the velocity matches the states
+    double actualTime = numSteps / RATE;
+
     double deltaX = endPose.getX() - startPose.getX();
     double deltaY = endPose.getY() - startPose.getY();
-    double angVel = endPose.getRotation().minus(startPose.getRotation()).getRadians() / time;
-    ChassisVelocities vel = new ChassisVelocities(deltaX / time, deltaY / time, angVel);
+    double deltaAngle = endPose.getRotation().minus(startPose.getRotation()).getRadians();
 
-    int stamps = (int) Math.ceil(time * rate);
-    for (int i = 0; i <= stamps; i++) {
-      double t = (double) i / stamps;
+    double velocityX = deltaX / actualTime;
+    double velocityY = deltaY / actualTime;
+    double turnSpeed = deltaAngle / actualTime;
+    ChassisVelocities velocity = new ChassisVelocities(velocityX, velocityY, turnSpeed);
+
+    for (int step = 0; step <= numSteps; step++) {
+      double fraction = (double) step / numSteps; // 0 at start, 1 at end
       Pose2d pose =
           new Pose2d(
-              startPose.getTranslation().interpolate(endPose.getTranslation(), t),
-              startPose.getRotation().interpolate(endPose.getRotation(), t));
-      states.add(new State(pose, vel));
+              startPose.getTranslation().interpolate(endPose.getTranslation(), fraction),
+              startPose.getRotation().interpolate(endPose.getRotation(), fraction));
+      states.add(new State(pose, velocity));
     }
   }
 
