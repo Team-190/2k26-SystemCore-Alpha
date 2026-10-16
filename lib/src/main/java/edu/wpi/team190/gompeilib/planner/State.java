@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.planner.Containers;
+package edu.wpi.team190.gompeilib.planner;
 
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;

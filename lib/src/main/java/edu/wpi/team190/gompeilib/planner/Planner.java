@@ -1,6 +1,5 @@
 package edu.wpi.team190.gompeilib.planner;
 
-import edu.wpi.team190.gompeilib.planner.Containers.State;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.wpilib.command2.Command;
@@ -24,7 +23,8 @@ public class Planner {
     Solver solver = new Solver();
 
     Command command = Commands.none();
-    // i think i need to redo ts cuz at refrence amkes not sense jsut make 1 command that runs each state at time interval ts might be a bit harder then we initallyt thought 
+    // i think i need to redo ts cuz at refrence amkes not sense jsut make 1 command that runs each
+    // state at time interval ts might be a bit harder then we initallyt thought
     for (State state : plan.getPlan()) {
       command =
           command

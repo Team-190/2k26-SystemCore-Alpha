@@ -1,6 +1,5 @@
 package edu.wpi.team190.gompeilib.planner;
 
-import edu.wpi.team190.gompeilib.planner.Containers.State;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
@@ -25,7 +24,10 @@ public class Solver {
     this.translationTolerance = translationTolerance;
     this.rotationTolerance = rotationTolerance;
   }
-  //needs to be chnaged as it uses wpilib stuff idk how co processor works but maybe we submit it to network tables or smth like that or just have it return a few values then  onstruct a chasis velocity using it 
+
+  // needs to be chnaged as it uses wpilib stuff idk how co processor works but maybe we submit it
+  // to network tables or smth like that or just have it return a few values then  onstruct a chasis
+  // velocity using it
   public ChassisVelocities calculate(Pose2d robotPose, State goal) {
     double[] solved =
         calculate(

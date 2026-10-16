@@ -5,20 +5,15 @@
 package first.robot.v3_Horse_CV2_TR.subsystems;
 
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
-import edu.wpi.team190.gompeilib.planner.AutoPath;
+import edu.wpi.team190.gompeilib.planner.Path;
 import edu.wpi.team190.gompeilib.planner.Plan;
 import edu.wpi.team190.gompeilib.planner.Planner;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOSim;
-import java.util.ArrayList;
-import java.util.List;
 import org.wpilib.command2.Command;
-import org.wpilib.math.controller.PIDController;
-import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
-import org.wpilib.math.trajectory.TrapezoidProfile;
 
 public class V3_Horse_CV2_TRRobotContainer {
 
@@ -26,7 +21,6 @@ public class V3_Horse_CV2_TRRobotContainer {
   private Plan autoPlan;
 
   public V3_Horse_CV2_TRRobotContainer() {
-
 
     drive =
         new SwerveDrive(
@@ -47,11 +41,13 @@ public class V3_Horse_CV2_TRRobotContainer {
             V3_Horse_CV2_TRRobotState::getGlobalPose,
             (Pose2d pose) -> {});
     Planner.setDriveCommand(drive::runVelocity);
-    autoPlan = new Plan(new AutoPath(
-                    new Pose2d(new Translation2d(0,0), new Rotation2d()), new Pose2d(new Translation2d(10,10), new Rotation2d()), 2)
-                    .getPosePath());
+    autoPlan =
+        new Plan(
+            new Path(
+                new Pose2d(new Translation2d(0, 0), new Rotation2d()),
+                new Pose2d(new Translation2d(10, 10), new Rotation2d()),
+                2));
     configureBindings();
-
   }
 
   private void configureBindings() {}
