@@ -161,6 +161,17 @@
           "name": "INTAKE"
         }
       }
+    },
+    {
+      "name": "STOP_INTAKE",
+      "waypointRelativePos": 5.03,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "STOP_INTAKE"
+        }
+      }
     }
   ],
   "globalConstraints": {

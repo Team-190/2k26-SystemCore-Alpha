@@ -15,7 +15,10 @@ import org.wpilib.command2.Commands;
 
 public class V3_Horse_CV2_TRAutoBackUpShoot {
   public static Command getAutoRoutine(
-      SwerveDrive drive, V3_Horse_CV2_TRShooter shooter, V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TR_Intake intake) {
+      SwerveDrive drive,
+      V3_Horse_CV2_TRShooter shooter,
+      V3_Horse_CV2_TRRollerFloor rollerFloor,
+      V3_Horse_CV2_TR_Intake intake) {
 
     PathPlannerPath BACK_UP_SHOOT;
     try {
@@ -28,7 +31,8 @@ public class V3_Horse_CV2_TRAutoBackUpShoot {
                       AllianceFlipUtil.apply(BACK_UP_SHOOT.getStartingHolonomicPose().get()))),
           AutoBuilder.followPath(BACK_UP_SHOOT),
           drive.runOnce(drive::stop),
-          V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter, intake));
+          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 10),
+          V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter));
     } catch (Exception e) {
       e.printStackTrace();
       return Commands.runOnce(

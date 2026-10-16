@@ -141,6 +141,17 @@
           "name": "INTAKE"
         }
       }
+    },
+    {
+      "name": "STOP_INTAKE",
+      "waypointRelativePos": 2.91,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "STOP_INTAKE"
+        }
+      }
     }
   ],
   "globalConstraints": {
@@ -152,7 +163,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
+    "velocity": 0.0,
     "rotation": 136.671
   },
   "reversed": false,

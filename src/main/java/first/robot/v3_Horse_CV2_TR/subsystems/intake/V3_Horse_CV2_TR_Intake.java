@@ -26,10 +26,8 @@ import org.wpilib.units.measure.Distance;
 @ExtensionMethod(ExtensionMethods.class)
 public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
-  @Getter
-  private ExtensionState extensionState;
-  @Getter
-  private RollerState rollerState;
+  @Getter private ExtensionState extensionState;
+  @Getter private RollerState rollerState;
 
   private final GenericRoller leftIntakeRoller;
   private final GenericRoller rightIntakeRoller;
@@ -46,8 +44,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   private final Setpoint<DistanceUnit> rightManualPositionGoal;
 
-  @Getter
-  private Distance extensionPosition;
+  @Getter private Distance extensionPosition;
 
   public V3_Horse_CV2_TR_Intake(
       GenericRollerIO leftIntakeRollerIO,
@@ -62,49 +59,56 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     rollerState = RollerState.STOP;
     this.triggerSupplier = triggerSupplier;
 
-    leftIntakeRoller = new GenericRoller(
-        leftIntakeRollerIO,
-        this,
-        V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS,
-        "Left Intake Roller",
-        V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
-    rightIntakeRoller = new GenericRoller(
-        rightIntakeRollerIO,
-        this,
-        V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS,
-        "Right Intake Roller",
-        V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
+    leftIntakeRoller =
+        new GenericRoller(
+            leftIntakeRollerIO,
+            this,
+            V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS,
+            "Left Intake Roller",
+            V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
+    rightIntakeRoller =
+        new GenericRoller(
+            rightIntakeRollerIO,
+            this,
+            V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS,
+            "Right Intake Roller",
+            V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
 
-    kickerRoller = new GenericRoller(
-        kickerRollerIO,
-        this,
-        V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS,
-        "Kicker Roller",
-        V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
+    kickerRoller =
+        new GenericRoller(
+            kickerRollerIO,
+            this,
+            V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS,
+            "Kicker Roller",
+            V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
 
-    leftExtension = new Extension(
-        V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS,
-        this,
-        0,
-        leftExtensionIO,
-        V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(extensionState));
-    rightExtension = new Extension(
-        V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS,
-        this,
-        1,
-        rightExtensionIO,
-        V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
+    leftExtension =
+        new Extension(
+            V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS,
+            this,
+            0,
+            leftExtensionIO,
+            V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(extensionState));
+    rightExtension =
+        new Extension(
+            V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS,
+            this,
+            1,
+            rightExtensionIO,
+            V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
 
-    leftManualPositionGoal = new Setpoint<>(
-        Meters.of(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION),
-        Meters.of(0.01),
-        Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
-        Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
-    rightManualPositionGoal = new Setpoint<>(
-        Meters.of(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION),
-        Meters.of(0.01),
-        Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
-        Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
+    leftManualPositionGoal =
+        new Setpoint<>(
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION),
+            Meters.of(0.01),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
+    rightManualPositionGoal =
+        new Setpoint<>(
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION),
+            Meters.of(0.01),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
+            Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
 
     extensionPosition = Meters.zero();
   }
@@ -113,12 +117,14 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   @Override
   public void periodic() {
     if (extensionState == ExtensionState.MANUAL_RELEASE) {
-      extensionState = isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD)
-          ? ExtensionState.STOW
-          : ExtensionState.INTAKE;
+      extensionState =
+          isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD)
+              ? ExtensionState.STOW
+              : ExtensionState.INTAKE;
     } else if (extensionState == ExtensionState.MANUAL_EXTEND
-        && linearExtensionMap().in(Meters) <= V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
-            + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD
+        && linearExtensionMap().in(Meters)
+            <= V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
+                + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD
         && isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD)) {
       // Pulled in to stow: latch so releasing the trigger doesn't drive it back out.
       // The goal
@@ -172,11 +178,12 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     double t = Math.clamp(triggerSupplier.getAsDouble(), 0.0, 1.0);
     double k = V3_Horse_CV2_TR_IntakeConstants.TRIGGER_CURVE;
     double shaped = (1 - k) * t + k * t * t * (3 - 2 * t);
-    Distance position = Meters.of(
-        (1 - shaped)
-            * (V3_Horse_CV2_TR_IntakeConstants.EXTENSION_INTAKE_POSITION
-                - V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION)
-            + V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION);
+    Distance position =
+        Meters.of(
+            (1 - shaped)
+                    * (V3_Horse_CV2_TR_IntakeConstants.EXTENSION_INTAKE_POSITION
+                        - V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION)
+                + V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION);
     return position;
   }
 
@@ -269,12 +276,12 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   public Command resetIntakeZeroPosition() {
     return Commands.runOnce(
-        () -> {
-          extensionState = ExtensionState.OVERRIDE;
-          leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
-          rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
-          extensionState = ExtensionState.STOW;
-        })
+            () -> {
+              extensionState = ExtensionState.OVERRIDE;
+              leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              extensionState = ExtensionState.STOW;
+            })
         .ignoringDisable(true);
   }
 
@@ -308,24 +315,23 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command squishIntake() {
 
     return Commands.run(
-        () -> {
-
-          if (extensionState == ExtensionState.MANUAL_EXTEND
-              || extensionState == ExtensionState.MANUAL_RELEASE) {
-            return;
-          }
-          extensionState = ExtensionState.OVERRIDE;
-          leftExtension.setVoltageGoal(Volts.of(-2.5));
-          rightExtension.setVoltageGoal(Volts.of(-2.5));
-        })
+            () -> {
+              if (extensionState == ExtensionState.MANUAL_EXTEND
+                  || extensionState == ExtensionState.MANUAL_RELEASE) {
+                return;
+              }
+              extensionState = ExtensionState.OVERRIDE;
+              leftExtension.setVoltageGoal(Volts.of(-2.5));
+              rightExtension.setVoltageGoal(Volts.of(-2.5));
+            })
         .until(() -> isNearStow(0.01))
         .withTimeout(5)
         .finallyDo(
-          () -> {
-            if (extensionState == ExtensionState.OVERRIDE) {
-              extensionState = ExtensionState.STOW;
-            }
-          });
+            () -> {
+              if (extensionState == ExtensionState.OVERRIDE) {
+                extensionState = ExtensionState.STOW;
+              }
+            });
   }
 
   private boolean isNearStow(double tolerance) {

@@ -1,5 +1,6 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
@@ -30,6 +31,10 @@ import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
 import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoLeftCheesy;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoLeftOutliers;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoRightCheesy;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoRightOutliers;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
@@ -200,9 +205,29 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   }
 
   private void configureAutos() {
+
+    NamedCommands.registerCommand("INTAKE", V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake));
+    NamedCommands.registerCommand("STOP_INTAKE", intake.setRollerState(RollerState.IDLE));
+
     autoChooser.add(
         "Back up and shoot",
         V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor, intake));
+
+    autoChooser.add(
+        "Left Cheesy",
+        V3_Horse_CV2_TRAutoLeftCheesy.getAutoRoutine(drive, shooter, rollerFloor, intake));
+
+    autoChooser.add(
+        "Right Cheesy",
+        V3_Horse_CV2_TRAutoRightCheesy.getAutoRoutine(drive, shooter, rollerFloor, intake));
+
+    autoChooser.add(
+        "Left Outliers",
+        V3_Horse_CV2_TRAutoLeftOutliers.getAutoRoutine(drive, shooter, rollerFloor, intake));
+
+    autoChooser.add(
+        "Right Outliers",
+        V3_Horse_CV2_TRAutoRightOutliers.getAutoRoutine(drive, shooter, rollerFloor, intake));
 
     autoChooser.addDefault("Do Nothing", Commands.none());
   }
@@ -277,7 +302,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .x()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    drive, rollerFloor, shooter, intake, V3_Horse_CV2_TRRobotState.FixedShots.TRENCH)
+                    drive,
+                    rollerFloor,
+                    shooter,
+                    intake,
+                    V3_Horse_CV2_TRRobotState.FixedShots.TRENCH)
                 .withName("driver-X-true"))
         .onFalse(stopShooter("driver-X-false"));
 
