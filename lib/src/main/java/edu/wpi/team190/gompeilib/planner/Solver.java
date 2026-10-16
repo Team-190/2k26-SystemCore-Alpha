@@ -1,8 +1,5 @@
 package edu.wpi.team190.gompeilib.planner;
 
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.kinematics.ChassisVelocities;
-
 // solves ACTUAL chassis velocities based on current state and goal state
 public class Solver {
   private static final double DEFAULT_TRANSLATION_GAIN = 1.0;
@@ -34,34 +31,8 @@ public class Solver {
     this.rotationTolerance = rotationTolerance;
   }
 
-  // needs to be chnaged as it uses wpilib stuff idk how co processor works but maybe we submit it
-  // to network tables or smth like that or just have it return a few values then  onstruct a chasis
-  // velocity using it
-  public ChassisVelocities calculate(Pose2d robotPose, State goal) {
-    double[] solved =
-        calculate(
-            robotPose.getX(),
-            robotPose.getY(),
-            robotPose.getRotation().getRadians(),
-            goal.pose().getX(),
-            goal.pose().getY(),
-            goal.pose().getRotation().getRadians(),
-            goal.velocity().vx,
-            goal.velocity().vy,
-            goal.velocity().omega);
-    return new ChassisVelocities(solved[0], solved[1], solved[2]);
-  }
-
-  public boolean atReference(Pose2d robotPose, State goal) {
-    return atReference(
-        robotPose.getX(),
-        robotPose.getY(),
-        robotPose.getRotation().getRadians(),
-        goal.pose().getX(),
-        goal.pose().getY(),
-        goal.pose().getRotation().getRadians());
-  }
-
+  // returns FIELD relative {vx, vy, omega}, the robot turns it into robot relative with its own
+  // gyro right before driving so it isnt using an old heading if this ran somewhere else
   public double[] calculate(
       double robotX,
       double robotY,
@@ -84,10 +55,7 @@ public class Solver {
     double fieldVelocityY = plannedVelocityY + correctionY;
     double turnSpeed = plannedTurnSpeed + turnCorrection;
 
-    double robotVelocityX = fieldToRobotX(fieldVelocityX, fieldVelocityY, robotHeading);
-    double robotVelocityY = fieldToRobotY(fieldVelocityX, fieldVelocityY, robotHeading);
-
-    return new double[] {robotVelocityX, robotVelocityY, turnSpeed};
+    return new double[] {fieldVelocityX, fieldVelocityY, turnSpeed};
   }
 
   public boolean atReference(
@@ -122,33 +90,8 @@ public class Solver {
   }
 
   private static double headingError(double robotHeading, double goalHeading) {
-    double error = goalHeading - robotHeading;
-
     // keeps the angle between -pi and pi so it turns the short way and doesnt spin around
-    while (error > Math.PI) {
-      error -= 2 * Math.PI;
-    }
-
-    while (error < -Math.PI) {
-      error += 2 * Math.PI;
-    }
-
-    return error;
-  }
-
-  private static double fieldToRobotX(
-      double fieldVelocityX, double fieldVelocityY, double robotHeading) {
-    double cos = Math.cos(robotHeading);
-    double sin = Math.sin(robotHeading);
-
-    return fieldVelocityX * cos + fieldVelocityY * sin;
-  }
-
-  private static double fieldToRobotY(
-      double fieldVelocityX, double fieldVelocityY, double robotHeading) {
-    double cos = Math.cos(robotHeading);
-    double sin = Math.sin(robotHeading);
-
-    return -fieldVelocityX * sin + fieldVelocityY * cos;
+    // (a while loop here would never end if a heading came in as infinity)
+    return Math.IEEEremainder(goalHeading - robotHeading, 2 * Math.PI);
   }
 }

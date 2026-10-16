@@ -56,18 +56,44 @@ public class Planner {
                         target = holdAtEnd;
                       }
 
-                      driveCommand.accept(solver.calculate(robotPose.get(), target));
+                      driveCommand.accept(calculate(solver, robotPose.get(), target));
                     })
                 .until(
                     () -> {
                       // only done once the plan time is over AAND we actually got to the end
                       boolean planTimeOver = timer.get() * Path.RATE >= lastIndex;
-                      boolean atEnd = solver.atReference(robotPose.get(), finalState);
+                      boolean atEnd = atReference(solver, robotPose.get(), finalState);
                       return planTimeOver && atEnd;
                     }))
         .finallyDo(
             () -> {
               driveCommand.accept(new ChassisVelocities(0, 0, 0));
             });
+  }
+
+  private static ChassisVelocities calculate(Solver solver, Pose2d robotPose, State goal) {
+    double[] solved =
+        solver.calculate(
+            robotPose.getX(),
+            robotPose.getY(),
+            robotPose.getRotation().getRadians(),
+            goal.pose().getX(),
+            goal.pose().getY(),
+            goal.pose().getRotation().getRadians(),
+            goal.velocity().vx,
+            goal.velocity().vy,
+            goal.velocity().omega);
+    return new ChassisVelocities(solved[0], solved[1], solved[2])
+        .toRobotRelative(robotPose.getRotation());
+  }
+
+  private static boolean atReference(Solver solver, Pose2d robotPose, State goal) {
+    return solver.atReference(
+        robotPose.getX(),
+        robotPose.getY(),
+        robotPose.getRotation().getRadians(),
+        goal.pose().getX(),
+        goal.pose().getY(),
+        goal.pose().getRotation().getRadians());
   }
 }
