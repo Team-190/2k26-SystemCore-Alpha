@@ -3,7 +3,6 @@ package edu.wpi.team190.gompeilib.planner;
 import java.util.ArrayList;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
-import org.wpilib.math.trajectory.TrapezoidProfile;
 
 public class Path {
 
@@ -44,7 +43,7 @@ public class Path {
     return states;
   }
 
-  public double getDistance(){
+  public double getDistance() {
     return distance;
   }
 }

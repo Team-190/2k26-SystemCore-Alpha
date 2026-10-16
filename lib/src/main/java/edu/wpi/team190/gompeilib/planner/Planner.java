@@ -36,7 +36,7 @@ public class Planner {
     int lastIndex = states.size() - 1;
     State finalState = states.get(lastIndex);
     // when we run out of states just sit at the last pose w no velocity so it dont fly past it
-    State holdAtEnd = new State(finalState.pose(), new ChassisVelocities(0, 0, 0),0);
+    State holdAtEnd = new State(finalState.pose(), new ChassisVelocities(0, 0, 0), 0);
 
     return Commands.runOnce(timer::restart)
         .andThen(
@@ -55,7 +55,8 @@ public class Planner {
                         target =
                             new State(
                                 before.pose().interpolate(after.pose(), fraction),
-                                before.velocity().interpolate(after.velocity(), fraction),0);
+                                before.velocity().interpolate(after.velocity(), fraction),
+                                0);
                       } else {
                         target = holdAtEnd;
                       }
