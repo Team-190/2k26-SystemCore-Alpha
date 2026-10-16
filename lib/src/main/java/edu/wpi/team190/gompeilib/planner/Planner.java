@@ -38,12 +38,20 @@ public class Planner {
         .andThen(
             Commands.run(
                     () -> {
-                      // each state is 1 / RATE seconds after the last, so pick the one for now
-                      int currentIndex = (int) (timer.get() * Path.RATE);
+                      // each state is 1 / RATE seconds after the last, so find where we are
+                      double exactIndex = timer.get() * Path.RATE;
+                      int currentIndex = (int) exactIndex;
 
                       State target;
                       if (currentIndex < lastIndex) {
-                        target = states.get(currentIndex);
+                        // blend between states
+                        State before = states.get(currentIndex);
+                        State after = states.get(currentIndex + 1);
+                        double fraction = exactIndex - currentIndex;
+                        target =
+                            new State(
+                                before.pose().interpolate(after.pose(), fraction),
+                                before.velocity().interpolate(after.velocity(), fraction));
                       } else {
                         target = holdAtEnd;
                       }
