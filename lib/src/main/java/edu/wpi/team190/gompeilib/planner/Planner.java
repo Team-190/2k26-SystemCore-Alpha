@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.planner;
 
+import edu.wpi.team190.gompeilib.planner.Containers.State;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.wpilib.command2.Command;
@@ -30,14 +31,11 @@ public class Planner {
               .andThen(
                   Commands.run(
                           () -> {
-                            driveCommand.accept(
-                                solver.calculate(
-                                    robotPose.get(), state));
+                            driveCommand.accept(solver.calculate(robotPose.get(), state));
                           })
                       .until(
                           () -> {
-                            boolean atReference =
-                                solver.atReference(robotPose.get(), path, time);
+                            boolean atReference = solver.atReference(robotPose.get(), state);
                             return atReference;
                           }))
               .finallyDo(
