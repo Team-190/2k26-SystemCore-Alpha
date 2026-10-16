@@ -13,7 +13,8 @@ public class Path {
     // makes a state every 1 / RATE seconds from start to end (including the end) basically just
     // creates small states along the entire thing
     int numSteps = (int) Math.ceil(time * RATE);
-    // time gets rounded up to fit the steps baisically (0.73s -> 0.8s) so the velocity matches the states
+    // time gets rounded up to fit the steps baisically (0.73s -> 0.8s) so the velocity matches the
+    // states
     double actualTime = numSteps / RATE;
 
     double deltaX = endPose.getX() - startPose.getX();
