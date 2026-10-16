@@ -3,13 +3,16 @@ package edu.wpi.team190.gompeilib.planner;
 import java.util.ArrayList;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.trajectory.TrapezoidProfile;
 
 public class Path {
 
   public static final double RATE = 10; // states per second
   private ArrayList<State> states = new ArrayList<State>();
+  private double distance;
 
   public Path(Pose2d startPose, Pose2d endPose, double time) {
+    distance = startPose.getTranslation().getDistance(endPose.getTranslation());
     // makes a state every 1 / RATE seconds from start to end (including the end) basically just
     // creates small states along the entire thing
     // at least 1 step, otherwise a time of 0 divides by zero and fills the path with NaN
@@ -33,12 +36,16 @@ public class Path {
           new Pose2d(
               startPose.getTranslation().interpolate(endPose.getTranslation(), fraction),
               startPose.getRotation().interpolate(endPose.getRotation(), fraction));
-      states.add(new State(pose, velocity));
+      states.add(new State(pose, velocity, fraction));
     }
   }
 
   public ArrayList<State> getStates() {
     return states;
+  }
+
+  public double getDistance(){
+    return distance;
   }
 }
 
