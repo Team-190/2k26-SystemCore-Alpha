@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.Commands;
+import org.wpilib.driverstation.DriverStationErrors;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.system.Timer;
@@ -20,11 +21,13 @@ public class Planner {
 
   public static Command followPath(Plan plan, Supplier<Pose2d> robotPose) {
     if (driveCommand == null) {
-      System.out.println("DriveCommand is set to null in planner class");
+      DriverStationErrors.reportError(
+          "Planner drive command not set, call Planner.setDriveCommand()", false);
       return Commands.none();
     }
     ArrayList<State> states = plan.getPlan();
     if (states.isEmpty()) {
+      DriverStationErrors.reportError("Planner was given an empty plan, nothing to follow", false);
       return Commands.none();
     }
     Solver solver = new Solver();

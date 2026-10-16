@@ -43,6 +43,15 @@ public class Solver {
       double plannedVelocityX,
       double plannedVelocityY,
       double plannedTurnSpeed) {
+    // bad plan, nothing safe to follow so stop
+    if (!isFinite(plannedVelocityX, plannedVelocityY, plannedTurnSpeed)) {
+      return new double[] {0, 0, 0};
+    }
+    // bad pose (vision glitch, gyro issue), just follow the plan with no correction
+    if (!isFinite(robotX, robotY, robotHeading, goalX, goalY, goalHeading)) {
+      return new double[] {plannedVelocityX, plannedVelocityY, plannedTurnSpeed};
+    }
+
     double errorX = goalX - robotX;
     double errorY = goalY - robotY;
     double headingError = headingError(robotHeading, goalHeading);
@@ -87,6 +96,15 @@ public class Solver {
     double deltaY = toY - fromY;
 
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  }
+
+  private static boolean isFinite(double... values) {
+    for (double value : values) {
+      if (!Double.isFinite(value)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static double headingError(double robotHeading, double goalHeading) {

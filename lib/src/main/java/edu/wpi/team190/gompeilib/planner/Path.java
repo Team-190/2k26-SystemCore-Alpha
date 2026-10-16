@@ -12,7 +12,8 @@ public class Path {
   public Path(Pose2d startPose, Pose2d endPose, double time) {
     // makes a state every 1 / RATE seconds from start to end (including the end) basically just
     // creates small states along the entire thing
-    int numSteps = (int) Math.ceil(time * RATE);
+    // at least 1 step, otherwise a time of 0 divides by zero and fills the path with NaN
+    int numSteps = Math.max(1, (int) Math.ceil(time * RATE));
     // time gets rounded up to fit the steps baisically (0.73s -> 0.8s) so the velocity matches the
     // states
     double actualTime = numSteps / RATE;
@@ -39,11 +40,6 @@ public class Path {
   public ArrayList<State> getStates() {
     return states;
   }
-}
-
-enum PathType {
-  LINEAR,
-  BEZIER
 }
 
 // this is how the different paths are defined
