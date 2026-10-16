@@ -312,6 +312,28 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
+  public Command squishIntake() {
+
+    return Commands.run(
+            () -> {
+              if (extensionState == ExtensionState.MANUAL_EXTEND
+                  || extensionState == ExtensionState.MANUAL_RELEASE) {
+                return;
+              }
+              extensionState = ExtensionState.OVERRIDE;
+              leftExtension.setVoltageGoal(Volts.of(-2.5));
+              rightExtension.setVoltageGoal(Volts.of(-2.5));
+            })
+        .until(() -> isNearStow(0.01))
+        .withTimeout(5)
+        .finallyDo(
+            () -> {
+              if (extensionState == ExtensionState.OVERRIDE) {
+                extensionState = ExtensionState.STOW;
+              }
+            });
+  }
+
   private boolean isNearStow(double tolerance) {
     double threshold = V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION + tolerance;
     return leftExtension.getExtensionPosition().in(Meters) <= threshold
