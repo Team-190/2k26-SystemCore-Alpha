@@ -67,7 +67,7 @@ public class V3_Horse_CV2_TRCompositeCommands {
    * Spins up for score or feed, then runs the roller floor once the shooter and heading are ready.
    */
   public static Command scoreOrFeedCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter, V3_Horse_CV2_TR_Intake intake) {
     return Commands.parallel(
         shooter.setGoal(
             () ->
@@ -76,7 +76,8 @@ public class V3_Horse_CV2_TRCompositeCommands {
                     : ShooterGoal.FEED)),
         Commands.sequence(
             Commands.waitUntil(() -> shooter.atGoal() && isAimedForShot()),
-            rollerFloor.setState(RollerFloorState.RUN)));
+            rollerFloor.setState(RollerFloorState.RUN)),
+            intake.squishIntake());
   }
 
   private static boolean isAimedForShot() {
@@ -98,11 +99,13 @@ public class V3_Horse_CV2_TRCompositeCommands {
       SwerveDrive drive,
       V3_Horse_CV2_TRRollerFloor rollerFloor,
       V3_Horse_CV2_TRShooter shooter,
+      V3_Horse_CV2_TR_Intake intake,
       FixedShots fixedShot) {
     return Commands.parallel(
         Commands.sequence(
             shooter.runFixedShot(fixedShot),
             Commands.waitUntil(() -> shooter.atGoal()),
-            rollerFloor.setState(RollerFloorState.RUN)));
+            rollerFloor.setState(RollerFloorState.RUN),
+            intake.squishIntake()));
   }
 }

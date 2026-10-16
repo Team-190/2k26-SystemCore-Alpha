@@ -202,7 +202,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private void configureAutos() {
     autoChooser.add(
         "Back up and shoot",
-        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor));
+        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor, intake));
 
     autoChooser.addDefault("Do Nothing", Commands.none());
   }
@@ -235,7 +235,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     driver
         .rightBumper()
         .whileTrue(
-            V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter)
+            V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter, intake)
                 .withName("driver-rightBumper-true"))
         .onFalse(stopShooter("driver-rightBumper-false"));
 
@@ -261,7 +261,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .y()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.FAR)
+                    drive, rollerFloor, shooter, intake, V3_Horse_CV2_TRRobotState.FixedShots.FAR)
                 .withName("driver-Y-true"))
         .onFalse(stopShooter("driver-Y-false"));
 
@@ -269,7 +269,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .a()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.BUMP)
+                    drive, rollerFloor, shooter, intake, V3_Horse_CV2_TRRobotState.FixedShots.BUMP)
                 .withName("driver-A-true"))
         .onFalse(stopShooter("driver-A-false"));
 
@@ -277,7 +277,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .x()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.TRENCH)
+                    drive, rollerFloor, shooter, intake, V3_Horse_CV2_TRRobotState.FixedShots.TRENCH)
                 .withName("driver-X-true"))
         .onFalse(stopShooter("driver-X-false"));
 
