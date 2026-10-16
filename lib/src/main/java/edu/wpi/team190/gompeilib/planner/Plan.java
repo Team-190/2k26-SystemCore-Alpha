@@ -1,7 +1,6 @@
 package edu.wpi.team190.gompeilib.planner;
 
 import java.util.ArrayList;
-import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Plan {
 
@@ -9,11 +8,14 @@ public class Plan {
 
   public Plan(Path... paths) {
     for (Path path : paths) {
-      states.addAll(path.getStates());
-    }
-    if (!states.isEmpty()) {
-      State last = states.remove(states.size() - 1);
-      states.add(new State(last.pose(), new ChassisVelocities()));
+      ArrayList<State> pathStates = path.getStates();
+      // make sure no stopping when connecting, but it just like goes through
+      if (!states.isEmpty()
+          && !pathStates.isEmpty()
+          && states.get(states.size() - 1).pose().equals(pathStates.get(0).pose())) {
+        states.remove(states.size() - 1);
+      }
+      states.addAll(pathStates);
     }
   }
 
