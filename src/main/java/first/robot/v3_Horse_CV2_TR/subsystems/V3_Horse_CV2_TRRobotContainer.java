@@ -5,9 +5,9 @@
 package first.robot.v3_Horse_CV2_TR.subsystems;
 
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
-import edu.wpi.team190.gompeilib.planner.PathNode;
+import edu.wpi.team190.gompeilib.planner.AutoPath;
+import edu.wpi.team190.gompeilib.planner.Plan;
 import edu.wpi.team190.gompeilib.planner.Planner;
-import edu.wpi.team190.gompeilib.planner.PlannerControllerConfig;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOSim;
 import java.util.ArrayList;
@@ -23,23 +23,11 @@ import org.wpilib.math.trajectory.TrapezoidProfile;
 public class V3_Horse_CV2_TRRobotContainer {
 
   private SwerveDrive drive;
-  private ArrayList<PathNode> path =
-      new ArrayList<PathNode>(
-          List.of(
-              new PathNode(new Pose2d(new Translation2d(3, 3), new Rotation2d(45)), 2),
-              new PathNode(new Pose2d(new Translation2d(5, 5), new Rotation2d(123)), 2),
-              new PathNode(new Pose2d(new Translation2d(8, 3), new Rotation2d(4)), 2),
-              new PathNode(new Pose2d(new Translation2d(3, 3), new Rotation2d(240)), 2)));
+  private Plan autoPlan;
 
   public V3_Horse_CV2_TRRobotContainer() {
 
-    PlannerControllerConfig plannerConfig =
-        new PlannerControllerConfig(
-            new PIDController(1, 1, 1),
-            new PIDController(1, 1, 1),
-            new ProfiledPIDController(1, 1, 1, new TrapezoidProfile.Constraints(1, 1)));
 
-    Planner.setConfig(plannerConfig);
     drive =
         new SwerveDrive(
             V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
@@ -59,13 +47,17 @@ public class V3_Horse_CV2_TRRobotContainer {
             V3_Horse_CV2_TRRobotState::getGlobalPose,
             (Pose2d pose) -> {});
     Planner.setDriveCommand(drive::runVelocity);
+    autoPlan = new Plan(new AutoPath(
+                    new Pose2d(new Translation2d(0,0), new Rotation2d()), new Pose2d(new Translation2d(10,10), new Rotation2d()), 2)
+                    .getPosePath());
     configureBindings();
+
   }
 
   private void configureBindings() {}
 
   public Command getAutonomousCommand() {
-    return Planner.followPath(path, V3_Horse_CV2_TRRobotState::getGlobalPose);
+    return Planner.followPath(autoPlan, V3_Horse_CV2_TRRobotState::getGlobalPose);
   }
 
   public void robotPeriodic() {
