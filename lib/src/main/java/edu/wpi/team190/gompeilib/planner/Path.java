@@ -6,7 +6,7 @@ public class Path {
 
 enum PathType{
     LINEAR,
-    BEIZER
+    BEZIER
 }
 
 // this is how the different paths are defined
