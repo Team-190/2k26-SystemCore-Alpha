@@ -19,12 +19,16 @@ public class Plan{
 
     public ArrayList<State> getPlan(){
 
+        double desiredVel = 4;
+
         for (int i = 0; i < combinedPath.size()-1; i++) {
             Pose2d currentPose = combinedPath.get(i);
             Pose2d nextPose = combinedPath.get(i+1);
             double deltaX = currentPose.getTranslation().getX()-nextPose.getTranslation().getX();
             double deltaY = currentPose.getTranslation().getY()-nextPose.getTranslation().getY();
-            double rads = currentPose.getRotation().getRadians()-nextPose.getRotation().getRadians();
+            double theta = Math.atan2(deltaY, deltaX);
+            double velX = desiredVel * Math.cos(theta);
+            double velY = desiredVel * Math.sin(theta);
             ChassisVelocities vel = new ChassisVelocities(deltaX,deltaY,rads);
             
         }
