@@ -10,7 +10,7 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Planner {
 
-  public static Consumer<ChassisVelocities> driveCommand;
+  private static Consumer<ChassisVelocities> driveCommand;
 
   public static void setDriveCommand(Consumer<ChassisVelocities> newDriveCommand) {
     driveCommand = newDriveCommand;

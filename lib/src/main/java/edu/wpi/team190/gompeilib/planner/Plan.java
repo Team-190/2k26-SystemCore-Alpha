@@ -13,7 +13,7 @@ import edu.wpi.team190.gompeilib.planner.Containers.State;
 
 public class Plan{
 
-    public final ArrayList<PosePlus> combinedPath = new ArrayList<PosePlus>();
+    private final ArrayList<PosePlus> combinedPath = new ArrayList<PosePlus>();
 
     public Plan(ArrayList<PosePlus>... paths){
 
