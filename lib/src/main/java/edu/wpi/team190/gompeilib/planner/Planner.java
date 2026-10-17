@@ -32,13 +32,18 @@ public class Planner {
     }
     Solver solver = new Solver();
     Timer timer = new Timer();
+    double[] lastTime = {-1};
 
     int lastIndex = states.size() - 1;
     State finalState = states.get(lastIndex);
     // when we run out of states just sit at the last pose w no velocity so it dont fly past it
     State holdAtEnd = new State(finalState.pose(), new ChassisVelocities(0, 0, 0), 0);
 
-    return Commands.runOnce(timer::restart)
+    return Commands.runOnce(
+            () -> {
+              timer.restart();
+              lastTime[0] = -1;
+            })
         .andThen(
             Commands.run(
                     () -> {
@@ -63,10 +68,14 @@ public class Planner {
 
                       driveCommand.accept(calculate(solver, robotPose.get(), target));
 
-                      Command command = plan.getCommandMap().get(timer.get());
-                      if (command != null) {
-                        CommandScheduler.getInstance().schedule(command);
+                      // run any command whose time we passed since the last loop
+                      double now = timer.get();
+                      for (var entry : plan.getCommandMap().entrySet()) {
+                        if (entry.getKey() > lastTime[0] && entry.getKey() <= now) {
+                          CommandScheduler.getInstance().schedule(entry.getValue());
+                        }
                       }
+                      lastTime[0] = now;
                     })
                 .until(
                     () -> {

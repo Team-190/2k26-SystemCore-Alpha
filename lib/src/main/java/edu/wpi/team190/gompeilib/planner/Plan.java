@@ -9,82 +9,72 @@ import org.wpilib.math.trajectory.TrapezoidProfile;
 
 public class Plan {
 
+  private static final double MIN_DISTANCE = 1e-9;
+
   private final ArrayList<State> states = new ArrayList<State>();
   private final HashMap<Double, Command> commands = new HashMap<Double, Command>();
 
   public Plan(Path... paths) {
-    ArrayList<ArrayList<State>> combinedStatePaths = new ArrayList<>();
-    double distanceTotal = 0;
-    double vzero = 0;
+    // one trapezoid over the whole plan, so it only speeds up at the start and slows down at the
+    // end, uses the slowest limits out of all the paths
+    double totalDistance = 0;
+    double maxVel = Double.POSITIVE_INFINITY;
+    double maxAccel = Double.POSITIVE_INFINITY;
+    for (Path path : paths) {
+      totalDistance += length(path);
+      maxVel = Math.min(maxVel, path.getMaxVel());
+      maxAccel = Math.min(maxAccel, path.getMaxAccel());
+    }
+    if (paths.length == 0) {
+      return;
+    }
+
+    TrapezoidProfile profile =
+        new TrapezoidProfile(new TrapezoidProfile.Constraints(maxVel, maxAccel));
+    TrapezoidProfile.State start = new TrapezoidProfile.State(0, 0);
+    TrapezoidProfile.State end = new TrapezoidProfile.State(totalDistance, 0);
+    profile.calculate(0, start, end);
+    double totalTime = profile.totalTime();
+
+    int numSteps = Math.max(1, (int) Math.ceil(totalTime * Path.RATE));
+    for (int step = 0; step <= numSteps; step++) {
+      TrapezoidProfile.State now =
+          profile.calculate(Math.min(step / Path.RATE, totalTime), start, end);
+      states.add(stateAt(paths, now.position, now.velocity));
+    }
+  }
+
+  // finds which path the distance lands on and makes the state there
+  private static State stateAt(Path[] paths, double distance, double speed) {
+    double pathStart = 0;
     for (int i = 0; i < paths.length; i++) {
-      ArrayList<State> pathStates = new ArrayList<>();
       Path path = paths[i];
-      Pose2d startPose = path.getStartPose();
-      Pose2d endPose = path.getStartPose();
-      double maxAccel = path.getMaxAccel();
-      double maxVel = path.getMaxVel();
-      double distance = startPose.getTranslation().getDistance(endPose.getTranslation());
-      double time = distance / maxVel;
-      if (vzero < maxVel) {
-        double timePos =
-            ((vzero * -1) + Math.sqrt(vzero * vzero - 4 * maxAccel * distance)) / maxAccel;
-        double timeNeg =
-            ((vzero * -1) - Math.sqrt(vzero * vzero - 4 * maxAccel * distance)) / maxAccel;
-        time = timePos > timeNeg ? timeNeg : timePos;
-        vzero = vzero + maxAccel * time;
-        double cappedTime = (maxVel - vzero) / maxAccel;
-        if (cappedTime > time) {
-          double acelDistance = vzero * cappedTime + 0.5 * maxAccel * time * time;
-          time = (distance - acelDistance) / maxVel;
-        }
-      }
-      // makes a state every 1 / RATE seconds from start to end (including the end) basically just
-      // creates small states along the entire thing
-      // at least 1 step, otherwise a time of 0 divides by zero and fills the path with NaN
-      int numSteps = Math.max(1, (int) Math.ceil(time * Path.RATE));
-      // time gets rounded up to fit the steps baisically (0.73s -> 0.8s) so the velocity matches
-      // the
-      // states
-      double actualTime = numSteps / Path.RATE;
+      double length = length(path);
+      if (distance <= pathStart + length || i == paths.length - 1) {
+        Pose2d startPose = path.getStartPose();
+        Pose2d endPose = path.getEndPose();
+        double fraction =
+            length > MIN_DISTANCE ? Math.min(Math.max((distance - pathStart) / length, 0), 1) : 1;
+        double speedPerMeter = length > MIN_DISTANCE ? speed / length : 0;
 
-      double deltaX = endPose.getX() - startPose.getX();
-      double deltaY = endPose.getY() - startPose.getY();
-      double deltaAngle = endPose.getRotation().minus(startPose.getRotation()).getRadians();
-
-      double velocityX = deltaX / actualTime;
-      double velocityY = deltaY / actualTime;
-      double turnSpeed = deltaAngle / actualTime;
-      ChassisVelocities velocity = new ChassisVelocities(velocityX, velocityY, turnSpeed);
-
-      for (int step = 0; step <= numSteps; step++) {
-        double fraction = (double) step / numSteps; // 0 at start, 1 at end
         Pose2d pose =
             new Pose2d(
                 startPose.getTranslation().interpolate(endPose.getTranslation(), fraction),
                 startPose.getRotation().interpolate(endPose.getRotation(), fraction));
-        pathStates.add(new State(pose, velocity, distanceTotal + (fraction * distance)));
+        ChassisVelocities velocity =
+            new ChassisVelocities(
+                (endPose.getX() - startPose.getX()) * speedPerMeter,
+                (endPose.getY() - startPose.getY()) * speedPerMeter,
+                endPose.getRotation().minus(startPose.getRotation()).getRadians() * speedPerMeter);
+        return new State(pose, velocity, distance);
       }
-      combinedStatePaths.add(pathStates);
+      pathStart += length;
     }
-    for (ArrayList<State> pathStates : combinedStatePaths) {
-      // make sure no stopping when connecting, but it just like goes through
+    return null;
+  }
 
-      if (!states.isEmpty() && !pathStates.isEmpty()) {
-        State previousEnd = states.get(states.size() - 1);
-        State currentStart = pathStates.get(0);
-        if (previousEnd.pose().equals(currentStart.pose())) {
-          states.remove(states.size() - 1);
-        }
-      }
-      states.addAll(pathStates);
-    }
-    TrapezoidProfile profile = new TrapezoidProfile(new TrapezoidProfile.Constraints(4, 1));
-    TrapezoidProfile.State start = new TrapezoidProfile.State(0, 0);
-    TrapezoidProfile.State end = new TrapezoidProfile.State(distanceTotal, 0);
-    states.forEach(
-        (State state) -> {
-          state.velocity().times(profile.calculate(state.distance(), start, end).position);
-        });
+  private static double length(Path path) {
+    return path.getStartPose().getTranslation().getDistance(path.getEndPose().getTranslation());
   }
 
   public Plan addCommand(double time, Command command) {
