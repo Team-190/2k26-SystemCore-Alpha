@@ -11,8 +11,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
@@ -31,17 +30,11 @@ import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
-public class ArmIOTalonFXTest {
+public class ArmIOTalonFXTest extends GompeiLibTestBase {
   private ArmConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     DCMotor motor = DCMotor.getNeo550(1);
     ArmConstants.ArmParameters params =

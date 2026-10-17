@@ -9,7 +9,7 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.*;
 
-public class CustomSysidRoutineTest {
+public class CustomSysIdRoutineTest {
   @Test
   public void testCustomSysIdRoutine() {
     Subsystem mockSubsystem =

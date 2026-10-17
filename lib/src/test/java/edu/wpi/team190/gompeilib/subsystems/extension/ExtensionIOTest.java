@@ -2,13 +2,14 @@ package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.Units;
 
-public class ExtensionIOTest {
+public class ExtensionIOTest extends GompeiLibTestBase {
   @Test
   public void testExtensionIODefaults() {
     ExtensionIO io = new ExtensionIO() {};

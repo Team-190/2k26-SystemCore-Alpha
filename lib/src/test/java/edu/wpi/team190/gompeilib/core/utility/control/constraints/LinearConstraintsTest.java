@@ -2,8 +2,7 @@ package edu.wpi.team190.gompeilib.core.utility.control.constraints;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,16 +11,16 @@ import org.wpilib.tunable.MockTunableBackend;
 import org.wpilib.tunable.TunableRegistry;
 import org.wpilib.units.*;
 
-public class LinearConstraintsTest {
+public class LinearConstraintsTest extends GompeiLibTestBase {
   private MockTunableBackend backend;
+
+  @Override
+  protected boolean isTuningMode() {
+    return true;
+  }
 
   @BeforeEach
   public void setUp() {
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, true, 0.02);
     TunableRegistry.reset();
     backend = new MockTunableBackend();
     TunableRegistry.registerBackend("", backend);

@@ -2,7 +2,7 @@ package edu.wpi.team190.gompeilib.core.utility.control;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.team190.gompeilib.core.GompeiLib;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
@@ -10,15 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.tunable.MockTunableBackend;
 import org.wpilib.tunable.TunableRegistry;
 
-public class GainsTest {
+public class GainsTest extends GompeiLibTestBase {
   private MockTunableBackend backend;
 
-  private void setUp(boolean isTuning) {
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
+  private void configureTuning(boolean isTuning) {
+    if (isTuning) {
+      reinitGompeiLib(RobotMode.SIM, true, 0.02);
     }
-    GompeiLib.init(RobotMode.SIM, isTuning, 0.02);
     TunableRegistry.reset();
     backend = new MockTunableBackend();
     TunableRegistry.registerBackend("", backend);
@@ -31,7 +29,7 @@ public class GainsTest {
 
   @Test
   public void testGains() {
-    setUp(true);
+    configureTuning(true);
     Gains gains1 =
         Gains.builder()
             .withPrefix("Test")
@@ -65,7 +63,7 @@ public class GainsTest {
 
   @Test
   public void testRemoteEditNotifiesOncePerBatch() {
-    setUp(true);
+    configureTuning(true);
     Gains gains = Gains.builder().withPrefix("Tuned").withKP(1.0).withKD(0.1).build();
     AtomicInteger counter = new AtomicInteger(0);
     gains.onChange(g -> counter.incrementAndGet());
@@ -90,7 +88,7 @@ public class GainsTest {
 
   @Test
   public void testImmutableWhenNotTuning() {
-    setUp(false);
+    configureTuning(false);
     Gains gains = Gains.builder().withPrefix("Locked").withKP(1.0).build();
     AtomicInteger counter = new AtomicInteger(0);
     gains.onChange(g -> counter.incrementAndGet());

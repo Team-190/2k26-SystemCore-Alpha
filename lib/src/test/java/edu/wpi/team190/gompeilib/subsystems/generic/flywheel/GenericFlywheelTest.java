@@ -5,8 +5,7 @@ import static org.mockito.Mockito.*;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
@@ -23,19 +22,13 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
-public class GenericFlywheelTest {
+public class GenericFlywheelTest extends GompeiLibTestBase {
   private GenericFlywheelIO io;
   private Subsystem subsystem;
   private GenericFlywheelConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     io = mock(GenericFlywheelIO.class);
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);

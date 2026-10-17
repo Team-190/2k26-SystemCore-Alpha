@@ -1,8 +1,7 @@
-package edu.wpi.team190.gompeilib.core.io.inertial;
+package edu.wpi.team190.gompeilib.core.io.components.inertial;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import org.junit.jupiter.api.Test;
 
 public class GyroIOTest {

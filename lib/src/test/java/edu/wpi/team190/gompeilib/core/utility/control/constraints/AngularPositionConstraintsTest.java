@@ -2,20 +2,14 @@ package edu.wpi.team190.gompeilib.core.utility.control.constraints;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
-import org.junit.jupiter.api.BeforeEach;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.*;
 
-public class AngularPositionConstraintsTest {
-  @BeforeEach
-  public void setUp() {
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, true, 0.02);
+public class AngularPositionConstraintsTest extends GompeiLibTestBase {
+  @Override
+  protected boolean isTuningMode() {
+    return true;
   }
 
   @Test

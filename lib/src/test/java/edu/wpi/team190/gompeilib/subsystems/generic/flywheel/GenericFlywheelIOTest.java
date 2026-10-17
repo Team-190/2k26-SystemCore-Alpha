@@ -2,13 +2,14 @@ package edu.wpi.team190.gompeilib.subsystems.generic.flywheel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.Units;
 
-public class GenericFlywheelIOTest {
+public class GenericFlywheelIOTest extends GompeiLibTestBase {
   @Test
   public void testGenericFlywheelIODefaults() {
     GenericFlywheelIO io = new GenericFlywheelIO() {};
