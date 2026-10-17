@@ -17,8 +17,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
@@ -33,7 +32,7 @@ import org.wpilib.tunable.Tunable;
 import org.wpilib.units.measure.*;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
-public class SwerveModuleIOTalonFXTest {
+public class SwerveModuleIOTalonFXTest extends GompeiLibTestBase {
 
   private SwerveDriveConstants driveConstants;
   private SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
@@ -41,12 +40,6 @@ public class SwerveModuleIOTalonFXTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     // Reset PhoenixOdometryThread instance via reflection to ensure clean state
     try {

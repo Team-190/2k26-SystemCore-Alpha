@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.subsystems.arm;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
@@ -9,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.units.Units;
 
-public class ArmIOTest {
+public class ArmIOTest extends GompeiLibTestBase {
   @Test
   public void testArmIODefaults() {
     ArmIO io = new ArmIO() {};

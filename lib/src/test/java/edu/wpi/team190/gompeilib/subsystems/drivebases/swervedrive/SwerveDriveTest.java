@@ -13,10 +13,9 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.util.DriveFeedforwards;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
@@ -51,7 +50,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
-public class SwerveDriveTest {
+public class SwerveDriveTest extends GompeiLibTestBase {
 
   private SwerveDriveConstants driveConstants;
   private SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
@@ -70,12 +69,6 @@ public class SwerveDriveTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     try {
       java.lang.reflect.Field instanceField =

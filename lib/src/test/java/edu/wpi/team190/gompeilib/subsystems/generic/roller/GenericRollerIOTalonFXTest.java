@@ -12,8 +12,7 @@ import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,17 +23,11 @@ import org.wpilib.units.Units;
 import org.wpilib.units.measure.*;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
-public class GenericRollerIOTalonFXTest {
+public class GenericRollerIOTalonFXTest extends GompeiLibTestBase {
   private GenericRollerConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     constants =
         GenericRollerConstants.builder()

@@ -5,8 +5,7 @@ import static org.mockito.Mockito.*;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
@@ -22,19 +21,13 @@ import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.Distance;
 
-public class ExtensionTest {
+public class ExtensionTest extends GompeiLibTestBase {
   private ExtensionIO io;
   private Subsystem subsystem;
   private ExtensionConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     io = mock(ExtensionIO.class);
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);

@@ -6,8 +6,7 @@ import static org.mockito.Mockito.*;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,19 +17,13 @@ import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 
-public class GenericRollerTest {
+public class GenericRollerTest extends GompeiLibTestBase {
   private GenericRollerIO io;
   private Subsystem subsystem;
   private GenericRollerConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     io = mock(GenericRollerIO.class);
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);

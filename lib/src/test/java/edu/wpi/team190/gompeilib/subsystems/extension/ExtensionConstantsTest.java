@@ -4,17 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 
-public class ExtensionConstantsTest {
+public class ExtensionConstantsTest extends GompeiLibTestBase {
   @Test
   public void testConstantsAndBuilder() {
-    GompeiLib.init(null, false, 0.02);
     DCMotor motor = DCMotor.getNeo550(1);
     ExtensionConstants.ExtensionParameters params =
         ExtensionConstants.ExtensionParameters.builder()

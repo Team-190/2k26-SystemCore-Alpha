@@ -17,8 +17,7 @@ import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
@@ -32,7 +31,7 @@ import org.wpilib.tunable.Tunable;
 import org.wpilib.units.measure.*;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
-public class SwerveModuleIOTalonFXSimTest {
+public class SwerveModuleIOTalonFXSimTest extends GompeiLibTestBase {
 
   private SwerveDriveConstants driveConstants;
   private SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
@@ -40,12 +39,6 @@ public class SwerveModuleIOTalonFXSimTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     try {
       java.lang.reflect.Field instanceField =

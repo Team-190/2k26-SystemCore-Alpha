@@ -6,8 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.ctre.phoenix6.CANBus;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
@@ -22,19 +21,13 @@ import org.wpilib.command2.Subsystem;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.units.Units;
 
-public class ArmTest {
+public class ArmTest extends GompeiLibTestBase {
   private ArmIO io;
   private Subsystem subsystem;
   private ArmConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize();
-    try {
-      GompeiLib.deinit();
-    } catch (Exception e) {
-    }
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
 
     io = mock(ArmIO.class);
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);

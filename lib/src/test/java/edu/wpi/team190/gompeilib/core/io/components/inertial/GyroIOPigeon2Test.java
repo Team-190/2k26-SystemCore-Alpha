@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.core.io.inertial;
+package edu.wpi.team190.gompeilib.core.io.components.inertial;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -9,15 +9,11 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configurator;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
-import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicLong;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -27,12 +23,7 @@ import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 
 @SuppressWarnings({"unchecked", "rawtypes", "unused"}) // Mockito mocks of generic Phoenix types
-public class GyroIOPigeon2Test {
-  @BeforeEach
-  public void setUp() {
-    GompeiLib.deinit();
-    GompeiLib.init(RobotMode.SIM, false, 0.02);
-  }
+public class GyroIOPigeon2Test extends GompeiLibTestBase {
 
   @Test
   public void testGyroIOPigeon2() {
