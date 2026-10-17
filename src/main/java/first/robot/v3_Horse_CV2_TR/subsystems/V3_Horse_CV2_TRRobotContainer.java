@@ -13,7 +13,6 @@ import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleI
 import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.geometry.Translation2d;
 
 public class V3_Horse_CV2_TRRobotContainer {
 
@@ -41,13 +40,27 @@ public class V3_Horse_CV2_TRRobotContainer {
             V3_Horse_CV2_TRRobotState::getGlobalPose,
             (Pose2d pose) -> {});
     Planner.setDriveCommand(drive::runVelocity);
+    Pose2d start = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
+    Pose2d endOfStraight = new Pose2d(4, 0, Rotation2d.fromDegrees(0));
+    Pose2d gentleTurn = new Pose2d(7, 1, Rotation2d.fromDegrees(0));
+    Pose2d rotatedWhileDriving = new Pose2d(10, 1, Rotation2d.fromDegrees(90));
+    Pose2d mediumTurn = new Pose2d(12, 3.5, Rotation2d.fromDegrees(90));
+    Pose2d turnedInPlace = new Pose2d(12, 3.5, Rotation2d.fromDegrees(-90));
+    Pose2d sharpTurn = new Pose2d(8, 5.5, Rotation2d.fromDegrees(-90));
+    Pose2d shortSegment = new Pose2d(7.5, 5.5, Rotation2d.fromDegrees(-90));
+    Pose2d endOfSlowZone = new Pose2d(1.5, 5.5, Rotation2d.fromDegrees(180));
+    Pose2d end = new Pose2d(0, 3, Rotation2d.fromDegrees(180));
     autoPlan =
         new Plan(
-            new Path(
-                new Pose2d(new Translation2d(0, 0), new Rotation2d()),
-                new Pose2d(new Translation2d(6, 7), new Rotation2d()),
-                4,
-                1));
+            new Path(start, endOfStraight, 4, 3),
+            new Path(endOfStraight, gentleTurn, 4, 3),
+            new Path(gentleTurn, rotatedWhileDriving, 4, 3),
+            new Path(rotatedWhileDriving, mediumTurn, 4, 3),
+            new Path(mediumTurn, turnedInPlace, 4, 3),
+            new Path(turnedInPlace, sharpTurn, 4, 3),
+            new Path(sharpTurn, shortSegment, 4, 3),
+            new Path(shortSegment, endOfSlowZone, 1.5, 3),
+            new Path(endOfSlowZone, end, 4, 3));
     configureBindings();
   }
 
