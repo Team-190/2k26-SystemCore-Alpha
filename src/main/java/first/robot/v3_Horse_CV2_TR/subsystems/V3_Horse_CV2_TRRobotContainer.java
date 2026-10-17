@@ -46,7 +46,8 @@ public class V3_Horse_CV2_TRRobotContainer {
             new Path(
                 new Pose2d(new Translation2d(0, 0), new Rotation2d()),
                 new Pose2d(new Translation2d(6, 7), new Rotation2d()),
-                2));
+                4,
+                1));
     configureBindings();
   }
 

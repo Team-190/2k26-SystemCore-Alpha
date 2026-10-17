@@ -1,8 +1,6 @@
 package edu.wpi.team190.gompeilib.planner;
 
-import java.util.ArrayList;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Path {
 
@@ -12,6 +10,7 @@ public class Path {
   private Pose2d endPose;
   private double maxVel;
   private double maxAccel;
+
   public Path(Pose2d startPose, Pose2d endPose, double maxVel, double maxAccel) {
     this.startPose = startPose;
     this.endPose = endPose;
@@ -22,16 +21,16 @@ public class Path {
   public Pose2d getStartPose() {
     return startPose;
   }
-  
+
   public Pose2d getEndPose() {
     return endPose;
   }
 
-  public double getMaxVel(){
+  public double getMaxVel() {
     return maxVel;
   }
-  
-  public double getMaxAccel(){
+
+  public double getMaxAccel() {
     return maxAccel;
   }
 }

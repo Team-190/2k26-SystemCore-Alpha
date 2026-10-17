@@ -16,7 +16,7 @@ public class Plan {
     ArrayList<ArrayList<State>> combinedStatePaths = new ArrayList<>();
     double distanceTotal = 0;
     double vzero = 0;
-    for(int i = 0; i < paths.length; i++){
+    for (int i = 0; i < paths.length; i++) {
       ArrayList<State> pathStates = new ArrayList<>();
       Path path = paths[i];
       Pose2d startPose = path.getStartPose();
@@ -24,23 +24,26 @@ public class Plan {
       double maxAccel = path.getMaxAccel();
       double maxVel = path.getMaxVel();
       double distance = startPose.getTranslation().getDistance(endPose.getTranslation());
-      double time = distance/maxVel;
-      if(vzero < maxVel){
-        double timePos = ((vzero *-1) + Math.sqrt(vzero*vzero - 4*maxAccel*distance))/maxAccel;
-        double timeNeg = ((vzero *-1) - Math.sqrt(vzero*vzero - 4*maxAccel*distance))/maxAccel;
+      double time = distance / maxVel;
+      if (vzero < maxVel) {
+        double timePos =
+            ((vzero * -1) + Math.sqrt(vzero * vzero - 4 * maxAccel * distance)) / maxAccel;
+        double timeNeg =
+            ((vzero * -1) - Math.sqrt(vzero * vzero - 4 * maxAccel * distance)) / maxAccel;
         time = timePos > timeNeg ? timeNeg : timePos;
-        vzero = vzero + maxAccel*time;
-        double cappedTime = (maxVel - vzero)/maxAccel; 
-        if(cappedTime > time){
-          double acelDistance = vzero*cappedTime + 0.5*maxAccel*time*time;
-          time = (distance-acelDistance)/maxVel;
+        vzero = vzero + maxAccel * time;
+        double cappedTime = (maxVel - vzero) / maxAccel;
+        if (cappedTime > time) {
+          double acelDistance = vzero * cappedTime + 0.5 * maxAccel * time * time;
+          time = (distance - acelDistance) / maxVel;
         }
       }
       // makes a state every 1 / RATE seconds from start to end (including the end) basically just
       // creates small states along the entire thing
       // at least 1 step, otherwise a time of 0 divides by zero and fills the path with NaN
       int numSteps = Math.max(1, (int) Math.ceil(time * Path.RATE));
-      // time gets rounded up to fit the steps baisically (0.73s -> 0.8s) so the velocity matches the
+      // time gets rounded up to fit the steps baisically (0.73s -> 0.8s) so the velocity matches
+      // the
       // states
       double actualTime = numSteps / Path.RATE;
 
@@ -59,10 +62,10 @@ public class Plan {
             new Pose2d(
                 startPose.getTranslation().interpolate(endPose.getTranslation(), fraction),
                 startPose.getRotation().interpolate(endPose.getRotation(), fraction));
-        pathStates.add(new State(pose, velocity, distanceTotal+(fraction * distance)));
+        pathStates.add(new State(pose, velocity, distanceTotal + (fraction * distance)));
       }
       combinedStatePaths.add(pathStates);
-  }
+    }
     for (ArrayList<State> pathStates : combinedStatePaths) {
       // make sure no stopping when connecting, but it just like goes through
 
