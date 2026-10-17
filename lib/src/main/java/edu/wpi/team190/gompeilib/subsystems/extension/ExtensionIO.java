@@ -26,6 +26,7 @@ public interface ExtensionIO {
     public Distance positionErrorMeters = Meters.of(0.0);
 
     public GainSlot gainSlot;
+    public LinearVelocity linearVelocitySetpoint = MetersPerSecond.of(0);
   }
 
   /**

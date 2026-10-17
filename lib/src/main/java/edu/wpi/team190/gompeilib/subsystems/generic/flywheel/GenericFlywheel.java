@@ -68,8 +68,8 @@ public class GenericFlywheel {
     torqueCharacterizationRoutine =
         new CustomSysIdRoutine<>(
             new CustomSysIdRoutine.Config<CurrentUnit>(
-                CustomUnits.ampsPerSecond.ofNative(0.5),
-                Amps.of(3.5),
+                CustomUnits.ampsPerSecond.ofNative(5.0),
+                Amps.of(40),
                 Seconds.of(10),
                 (state) ->
                     Logger.recordOutput(
@@ -77,6 +77,10 @@ public class GenericFlywheel {
                 Amp),
             new CustomSysIdRoutine.Mechanism<>(
                 (amps) -> io.setCurrentGoal(Amps.of(amps.in(Amps))), subsystem));
+
+    constants.voltageGains.onChange(gains -> io.updateGains(gains, GainSlot.ZERO));
+    constants.torqueGains.onChange(gains -> io.updateGains(gains, GainSlot.ONE));
+    constants.constraints.onChange(io::updateConstraints);
   }
 
   public GenericFlywheel(
@@ -253,11 +257,11 @@ public class GenericFlywheel {
     return Commands.sequence(
         Commands.runOnce(() -> currentState = GenericFlywheelState.IDLE),
         torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(5.0),
+        Commands.waitSeconds(20.0),
         torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kReverse),
-        Commands.waitSeconds(5.0),
+        Commands.waitSeconds(20.0),
         torqueCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(5.0),
+        Commands.waitSeconds(20.0),
         torqueCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kReverse));
   }
 }

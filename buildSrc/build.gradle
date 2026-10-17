@@ -1,0 +1,21 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.ow2.asm:asm:9.10.1'
+    implementation 'org.ow2.asm:asm-tree:9.10.1'
+}
+
+gradlePlugin {
+    plugins {
+        pathplannerAlertPatch {
+            id = 'frc190.pathplanner-alert-patch'
+            implementationClass = 'frc190.gradle.PathPlannerAlertPatchPlugin'
+        }
+    }
+}

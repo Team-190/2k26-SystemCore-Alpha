@@ -22,9 +22,9 @@ public class ExtensionIOTest {
     assertFalse(io.atPositionGoal(Units.Meters.of(1.0)));
     io.setPosition(Units.Meters.of(0.5));
     io.setGainSlot(GainSlot.ZERO);
-    io.updateGains(Gains.fromDoubles().withPrefix("test").build(), GainSlot.ZERO);
+    io.updateGains(Gains.builder().withPrefix("test").build(), GainSlot.ZERO);
     io.updateConstraints(
-        LinearConstraints.fromMeasures()
+        LinearConstraints.builder()
             .withPrefix("test")
             .withGoalTolerance(Units.Meters.of(0.01))
             .withMaxVelocity(Units.MetersPerSecond.of(1.0))

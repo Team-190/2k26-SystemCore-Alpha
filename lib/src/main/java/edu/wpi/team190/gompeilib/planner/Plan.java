@@ -34,7 +34,7 @@ public class Plan {
     TrapezoidProfile.State start = new TrapezoidProfile.State(0, 0);
     TrapezoidProfile.State end = new TrapezoidProfile.State(totalDistance, 0);
     profile.calculate(0, start, end);
-    double totalTime = profile.totalTime();
+    double totalTime = profile.duration();
 
     int numSteps = Math.max(1, (int) Math.ceil(totalTime * Path.RATE));
     for (int step = 0; step <= numSteps; step++) {

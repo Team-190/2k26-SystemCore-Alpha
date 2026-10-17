@@ -7,12 +7,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.wpilib.fields.FieldTag;
 import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
 import org.wpilib.math.geometry.*;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.linalg.VecBuilder;
-import org.wpilib.vision.apriltag.AprilTag;
 
 /**
  * Represents an independent localization context that estimates the robot's field-relative pose
@@ -43,10 +43,10 @@ public class EstimationRegion {
   @Getter private final Map<Integer, Pose3d> aprilTags;
   private final SwerveDrivePoseEstimator poseEstimator;
 
-  public EstimationRegion(Set<AprilTag> aprilTags, SwerveDriveKinematics kinematics) {
+  public EstimationRegion(Set<FieldTag> aprilTags, SwerveDriveKinematics kinematics) {
     this.aprilTags =
         aprilTags.stream()
-            .map(aprilTag -> Map.entry(aprilTag.ID, aprilTag.pose))
+            .map(aprilTag -> Map.entry(aprilTag.getID(), aprilTag.getPose()))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     SwerveModulePosition[] swerveModulePositions = new SwerveModulePosition[4];
@@ -56,7 +56,7 @@ public class EstimationRegion {
 
     this.poseEstimator =
         new SwerveDrivePoseEstimator(
-            kinematics, Rotation2d.kZero, swerveModulePositions, Pose2d.kZero);
+            kinematics, Rotation2d.ZERO, swerveModulePositions, Pose2d.ZERO);
   }
 
   public void addOdometryObservation(
@@ -108,7 +108,7 @@ public class EstimationRegion {
     Pose2d tagPose2d = tagPose3d.toPose2d();
 
     // Compute camera position in field frame
-    Rotation2d tagToCameraRotation = camToTagRotation2d.plus(Rotation2d.kPi);
+    Rotation2d tagToCameraRotation = camToTagRotation2d.plus(Rotation2d.PI);
 
     Translation2d fieldToCameraTranslation =
         new Pose2d(tagPose2d.getTranslation(), tagToCameraRotation)
@@ -120,7 +120,7 @@ public class EstimationRegion {
         new Pose2d(
                 fieldToCameraTranslation,
                 sample.get().getRotation().plus(cameraPose.toPose2d().getRotation()))
-            .transformBy(new Transform2d(cameraPose.toPose2d(), Pose2d.kZero));
+            .transformBy(new Transform2d(cameraPose.toPose2d(), Pose2d.ZERO));
 
     // Use odometry rotation only
     robotPose = new Pose2d(robotPose.getTranslation(), sample.get().getRotation());

@@ -30,7 +30,7 @@ public class CameraIOTest {
   public void testPoseEstimateRecord() {
     // Default constructor
     CameraIO.PoseEstimate defaultEst = new CameraIO.PoseEstimate();
-    assertEquals(Pose2d.kZero, defaultEst.pose());
+    assertEquals(Pose2d.ZERO, defaultEst.pose());
     assertEquals(0.0, defaultEst.timestampSeconds());
     assertEquals(0.0, defaultEst.latency());
     assertEquals(0, defaultEst.tagCount());

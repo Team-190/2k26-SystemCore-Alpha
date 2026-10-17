@@ -37,7 +37,7 @@ public class ExtensionIOSim implements ExtensionIO {
             constants.extensionParameters.EXTENSION_MOTOR_CONFIG(),
             constants.extensionParameters.MIN_LENGTH().in(Meters),
             constants.extensionParameters.MAX_LENGTH().in(Meters),
-            true,
+            constants.verticalGravity,
             constants.extensionParameters.MIN_LENGTH().in(Meters));
 
     appliedVolts = Volts.of(0.0);
@@ -79,6 +79,7 @@ public class ExtensionIOSim implements ExtensionIO {
 
     inputs.position = Meters.of(sim.getPosition());
     inputs.velocity = MetersPerSecond.of(sim.getVelocity());
+    inputs.linearVelocitySetpoint = MetersPerSecond.of(feedback.getSetpoint().velocity);
     inputs.acceleration =
         MetersPerSecondPerSecond.of(-1.0); // TODO: Replace with calculation based on velocity
 

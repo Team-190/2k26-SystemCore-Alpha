@@ -15,9 +15,9 @@ public class GenericFlywheelConstantsTest {
   @Test
   public void testConstantsAndBuilder() {
     DCMotor motor = DCMotor.getNeo550(1);
-    Gains gains = Gains.fromDoubles().withPrefix("test").withKP(1.0).build();
+    Gains gains = Gains.builder().withPrefix("test").withKP(1.0).build();
     AngularVelocityConstraints constraints =
-        AngularVelocityConstraints.fromMeasures()
+        AngularVelocityConstraints.builder()
             .withPrefix("test")
             .withMaxVelocity(Units.RadiansPerSecond.of(100.0))
             .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(200.0))

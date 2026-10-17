@@ -42,12 +42,14 @@ public class ExtensionIOTalonFX implements ExtensionIO {
 
   private StatusSignal<Double> positionSetpointRotations;
   private StatusSignal<Double> positionErrorRotations;
+  private StatusSignal<Double> velocitySetpoint;
 
   private StatusSignal<?>[] statusSignals;
 
   private MotionMagicVoltage positionVoltageRequest;
   private VoltageOut voltageRequest;
 
+  @SuppressWarnings("resource") // Followers are retained in followerTalonFX
   public ExtensionIOTalonFX(ExtensionConstants constants) {
 
     this.constants = constants;
@@ -59,6 +61,8 @@ public class ExtensionIOTalonFX implements ExtensionIO {
     followTalonFX = new TalonFX[constants.extensionParameters.NUM_MOTORS() - 1];
 
     config = new TalonFXConfiguration();
+
+    config.MotorOutput.withInverted(constants.leaderInvertedValue);
 
     config.Slot0.withKP(constants.slot0Gains.kP().get())
         .withKD(constants.slot0Gains.kD().get())
@@ -145,6 +149,7 @@ public class ExtensionIOTalonFX implements ExtensionIO {
     positionGoalMeters = Meters.of(0.0);
     positionSetpointRotations = talonFX.getClosedLoopReference();
     positionErrorRotations = talonFX.getClosedLoopError();
+    velocitySetpoint = talonFX.getClosedLoopReferenceSlope();
 
     for (TalonFX follower : followTalonFX) {
       appliedVolts.add(follower.getMotorVoltage());
@@ -164,6 +169,7 @@ public class ExtensionIOTalonFX implements ExtensionIO {
     signalsList.addAll(supplyCurrentAmps);
     signalsList.addAll(torqueCurrentAmps);
     signalsList.addAll(temperatureCelsius);
+    signalsList.add(velocitySetpoint);
 
     statusSignals = new StatusSignal[signalsList.size()];
 
@@ -181,7 +187,7 @@ public class ExtensionIOTalonFX implements ExtensionIO {
     positionVoltageRequest = new MotionMagicVoltage(0.0);
     voltageRequest = new VoltageOut(0.0);
 
-    PhoenixUtil.registerSignals(constants.canBus.isNetworkFD(), statusSignals);
+    PhoenixUtil.registerSignals(constants.canBus, statusSignals);
   }
 
   @Override
@@ -192,6 +198,7 @@ public class ExtensionIOTalonFX implements ExtensionIO {
     // status signal object
     inputs.position = Meters.of(positionRotations.getValueAsDouble());
     inputs.velocity = MetersPerSecond.of(velocityRotationsPerSecond.getValueAsDouble());
+    inputs.linearVelocitySetpoint = MetersPerSecond.of(velocitySetpoint.getValueAsDouble());
     inputs.acceleration =
         MetersPerSecondPerSecond.of(accelerationRotationsPerSecondPerSecond.getValueAsDouble());
 
@@ -232,7 +239,7 @@ public class ExtensionIOTalonFX implements ExtensionIO {
   @Override
   public boolean atPositionGoal(Distance positionReference) {
     return Math.abs(positionRotations.getValueAsDouble() - positionReference.in(Meters))
-        <= constants.constraints.goalTolerance().get(Meters);
+        <= constants.constraints.goalTolerance().get().in(Meters);
   }
 
   @Override

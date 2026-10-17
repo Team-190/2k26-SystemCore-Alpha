@@ -33,6 +33,9 @@ dependencies {
     nativeDeps "org.wpilib.wpimath:wpimath-cpp:${wpilibVer}:${osClassifier}@zip"
     nativeDeps "org.wpilib.wpinet:wpinet-cpp:${wpilibVer}:${osClassifier}@zip"
     nativeDeps "org.wpilib.datalog:datalog-cpp:${wpilibVer}:${osClassifier}@zip"
+    // As of 2027 alpha-7, wpimath links against the new telemetry and tunables libraries.
+    nativeDeps "org.wpilib.telemetry:telemetry-cpp:${wpilibVer}:${osClassifier}@zip"
+    nativeDeps "org.wpilib.tunables:tunables-cpp:${wpilibVer}:${osClassifier}@zip"
 
     def phoenix6Ver = libs.versions.phoenix6.get()
 

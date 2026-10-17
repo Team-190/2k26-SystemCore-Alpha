@@ -138,6 +138,20 @@ public class SwerveDrive extends SubsystemBase {
     autoHeadingController.enableContinuousInput(-Math.PI, Math.PI);
     autoHeadingController.setTolerance(Units.degreesToRadians(1.0));
 
+    Gains driveGains = driveConstants.driveGains;
+    Gains turnGains = driveConstants.turnGains;
+    Runnable applyModuleGains =
+        () -> {
+          setPIDGains(driveGains.getKP(), driveGains.getKD(), turnGains.getKP(), turnGains.getKD());
+          setFFGains(driveGains.getKS(), driveGains.getKV());
+        };
+    driveGains.onChange(gains -> applyModuleGains.run());
+    turnGains.onChange(gains -> applyModuleGains.run());
+    driveConstants.autoTranslationGains.onChange(
+        gains -> setAutoControllers(gains, driveConstants.autoRotationGains));
+    driveConstants.autoRotationGains.onChange(
+        gains -> setAutoControllers(driveConstants.autoTranslationGains, gains));
+
     measuredChassisVelocities = new ChassisVelocities();
 
     try {
@@ -159,6 +173,8 @@ public class SwerveDrive extends SubsystemBase {
           resetPoseConsumer, // resetPose
           () -> getChassisVelocities(), // get robotRelativeSpeeds
           (speeds, feedforwards) -> {
+            // Retained from Choreo; switch to runVelocityTorque(speeds, forces) if needed.
+            @SuppressWarnings("unused")
             List<Vector<N2>> forces =
                 IntStream.range(0, 4)
                     .mapToObj(
@@ -353,7 +369,8 @@ public class SwerveDrive extends SubsystemBase {
   public void stopWithX() {
     Rotation2d[] headings = new Rotation2d[4];
     for (int i = 0; i < 4; i++) {
-      headings[i] = driveConstants.driveConfig.getModuleTranslations()[i].getAngle();
+      headings[i] =
+          driveConstants.driveConfig.getModuleTranslations()[i].getAngle().orElse(Rotation2d.ZERO);
     }
     kinematics.resetHeadings(headings);
     stop();
