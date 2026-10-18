@@ -24,8 +24,11 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.ArmMechanismSim;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
+import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +38,6 @@ import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
-import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngleUnit;
 
@@ -112,6 +114,13 @@ public class ArmTest extends GompeiLibTestBase {
                 .build())
         .withVoltageOffsetStep(Volts.of(0.5))
         .withPositionOffsetStep(Degrees.of(5))
+        .withSysId(
+            SysIdConfig.voltage()
+                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withStepOutput(Volts.of(9))
+                .withQuasistaticTimeout(Seconds.of(12))
+                .withDynamicTimeout(Seconds.of(12))
+                .build())
         .withHoming(homing)
         .build();
   }
@@ -256,22 +265,32 @@ public class ArmTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testSysIdIdlesAndDrivesTheArm() throws Exception {
+  public void testSysIdIdlesAndRampsTheArm() {
     Arm arm = new Arm(factory, subsystem, "Arm", constants);
     arm.setPositionGoal(Degrees.of(10));
     Command sysId = arm.sysIdRoutine();
     sysId.initialize();
     sysId.execute();
-    sysId.end(true);
+    sysId.execute();
     assertEquals(MechanismCore.IDLE, arm.getMode());
-
-    var routineField = Arm.class.getDeclaredField("characterizationRoutine");
-    routineField.setAccessible(true);
-    Command quasistatic =
-        ((SysIdRoutine) routineField.get(arm)).quasistatic(SysIdRoutine.Direction.FORWARD);
-    quasistatic.initialize();
-    quasistatic.execute();
-    quasistatic.end(true);
     verify(motor, atLeastOnce()).setControl(isA(OpenLoopRequest.VoltageOutput.class));
+    sysId.end(true);
+    verify(motor, atLeastOnce())
+        .setControl(new OpenLoopRequest.VoltageOutput(Volts.of(0), true, RequestOptions.DEFAULT));
+  }
+
+  @Test
+  public void testSysIdIsConstrainedToTheTravel() {
+    Arm arm = new Arm(factory, subsystem, "Arm", constants);
+    SysIdConstraint<?> constraint = arm.sysIdConstraint().orElseThrow();
+    assertSame(constants.armParameters.minAngle(), constraint.lowerLimit());
+    assertSame(constants.armParameters.maxAngle(), constraint.upperLimit());
+    assertSame(constants.constraints.sysIdMargin(), constraint.margin());
+
+    reading = t -> t.position = Rotations.of(0.25);
+    arm.periodic();
+    assertEquals(Math.PI / 2, constraint.position().get().baseUnitMagnitude(), 1e-9);
+    assertTrue(constraint.atLimit(true));
+    assertFalse(constraint.atLimit(false));
   }
 }

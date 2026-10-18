@@ -8,11 +8,10 @@ import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
-import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
-import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.ArmMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
+import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.EncoderSeed;
@@ -26,12 +25,11 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.TuningBindings;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
+import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
-import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
-import org.wpilib.command2.Commands;
 import org.wpilib.command2.Subsystem;
-import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularAccelerationUnit;
 import org.wpilib.units.AngularVelocityUnit;
@@ -48,7 +46,8 @@ public class Arm
         MotionReadable<AngleUnit, AngularVelocityUnit>,
         ConstraintConfigurable<AngularPositionConstraints>,
         Homeable,
-        EncoderSeedable {
+        EncoderSeedable,
+        Characterizable {
   private static final MechanismConversion<AngleUnit, AngularVelocityUnit, AngularAccelerationUnit>
       CONVERSION = MechanismConversion.angular();
 
@@ -58,7 +57,8 @@ public class Arm
   private final EncoderSeed encoderSeed;
   private final Optional<CurrentHoming<AngleUnit>> homing;
 
-  private final SysIdRoutine characterizationRoutine;
+  private final SysIdConfig<VoltageUnit> sysIdConfig;
+  private final SysIdConstraint<AngleUnit> sysIdConstraint;
 
   /**
    * Creates an arm.
@@ -93,19 +93,13 @@ public class Arm
     homing =
         constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
 
-    characterizationRoutine =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(1).per(Second),
-                Volts.of(9),
-                Seconds.of(12),
-                (state) -> Logger.recordOutput(core.getTopic() + "/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(
-                voltage ->
-                    core.setControl(
-                        new OpenLoopRequest.VoltageOutput(voltage, foc, RequestOptions.DEFAULT)),
-                null,
-                subsystem));
+    sysIdConfig = constants.sysId;
+    sysIdConstraint =
+        new SysIdConstraint<>(
+            this::getPosition,
+            constants.armParameters.minAngle(),
+            constants.armParameters.maxAngle(),
+            constants.constraints.sysIdMargin());
 
     TuningBindings.bindGains(motors, constants.motor);
     TuningBindings.bindConstraints(motors, constants.constraints, Arm::profile);
@@ -225,15 +219,18 @@ public class Arm
     core.periodic();
   }
 
+  @Override
+  public Optional<SysIdConstraint<?>> sysIdConstraint() {
+    return Optional.of(sysIdConstraint);
+  }
+
+  /**
+   * Returns a command that characterizes the arm in voltage, stopping each leg short of its travel
+   * limits.
+   *
+   * @return the command
+   */
   public Command sysIdRoutine() {
-    return Commands.sequence(
-        Commands.runOnce(core::idle),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.FORWARD),
-        Commands.waitSeconds(1.0),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.REVERSE),
-        Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.FORWARD),
-        Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.REVERSE));
+    return characterize(sysIdConfig, voltageControl::request);
   }
 }

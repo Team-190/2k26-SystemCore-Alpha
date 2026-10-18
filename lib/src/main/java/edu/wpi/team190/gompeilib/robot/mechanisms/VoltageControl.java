@@ -9,6 +9,7 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import java.util.Objects;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.units.Measure;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Voltage;
 
@@ -84,6 +85,17 @@ public final class VoltageControl implements MechanismCore.Control {
   public MotorRequest request() {
     return new OpenLoopRequest.VoltageOutput(
         (Voltage) goal.getNewSetpoint(), foc, RequestOptions.DEFAULT);
+  }
+
+  /**
+   * Returns the request that drives the motors at a voltage, the way this control does.
+   *
+   * @param voltage the voltage
+   * @return the request
+   */
+  public MotorRequest request(Measure<VoltageUnit> voltage) {
+    return new OpenLoopRequest.VoltageOutput(
+        Volts.of(voltage.in(Volts)), foc, RequestOptions.DEFAULT);
   }
 
   @Override

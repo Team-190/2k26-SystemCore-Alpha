@@ -8,8 +8,12 @@ import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.CurrentUnit;
+import org.wpilib.units.VoltageUnit;
 
 public class GenericFlywheelConstantsTest extends GompeiLibTestBase {
   @Test
@@ -26,6 +30,20 @@ public class GenericFlywheelConstantsTest extends GompeiLibTestBase {
             .build();
     DCMotor gearbox = DCMotor.getKrakenX60Foc(2);
     AngularVelocityConstraints constraints = AngularVelocityConstraints.builder().build();
+    SysIdConfig<VoltageUnit> voltageSysId =
+        SysIdConfig.voltage()
+            .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+            .withStepOutput(Volts.of(3))
+            .withQuasistaticTimeout(Seconds.of(3))
+            .withDynamicTimeout(Seconds.of(3))
+            .build();
+    SysIdConfig<CurrentUnit> currentSysId =
+        SysIdConfig.current()
+            .withRampRate(CustomUnits.ampsPerSecond.ofNative(1))
+            .withStepOutput(Amps.of(10))
+            .withQuasistaticTimeout(Seconds.of(5))
+            .withDynamicTimeout(Seconds.of(5))
+            .build();
 
     GenericFlywheelConstants constants =
         GenericFlywheelConstants.builder()
@@ -35,6 +53,8 @@ public class GenericFlywheelConstantsTest extends GompeiLibTestBase {
             .withConstraints(constraints)
             .withVelocityOffsetStep(RadiansPerSecond.of(5))
             .withVoltageOffsetStep(Volts.of(1))
+            .withVoltageSysId(voltageSysId)
+            .withCurrentSysId(currentSysId)
             .build();
 
     assertSame(motor, constants.motor);
@@ -44,6 +64,8 @@ public class GenericFlywheelConstantsTest extends GompeiLibTestBase {
     assertEquals(RadiansPerSecond.of(5), constants.velocityOffsetStep);
     assertEquals(Volts.of(1), constants.voltageOffsetStep);
     assertEquals(Amps.of(1.0), constants.currentOffsetStep);
+    assertSame(voltageSysId, constants.voltageSysId);
+    assertSame(currentSysId, constants.currentSysId);
   }
 
   @Test

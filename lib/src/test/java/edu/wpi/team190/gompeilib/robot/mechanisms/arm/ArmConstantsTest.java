@@ -8,13 +8,25 @@ import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngleUnit;
+import org.wpilib.units.VoltageUnit;
 
 public class ArmConstantsTest extends GompeiLibTestBase {
+  private static SysIdConfig<VoltageUnit> sysId() {
+    return SysIdConfig.voltage()
+        .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+        .withStepOutput(Volts.of(3))
+        .withQuasistaticTimeout(Seconds.of(3))
+        .withDynamicTimeout(Seconds.of(3))
+        .build();
+  }
+
   @Test
   public void testConstantsAndBuilder() {
     MotorConfig motor =
@@ -37,6 +49,7 @@ public class ArmConstantsTest extends GompeiLibTestBase {
             .withSimulateGravity(true)
             .build();
     AngularPositionConstraints constraints = AngularPositionConstraints.builder().build();
+    SysIdConfig<VoltageUnit> sysId = sysId();
 
     ArmConstants constants =
         ArmConstants.builder()
@@ -44,6 +57,7 @@ public class ArmConstantsTest extends GompeiLibTestBase {
             .withArmParameters(parameters)
             .withConstraints(constraints)
             .withVoltageOffsetStep(Volts.of(0.5))
+            .withSysId(sysId)
             .withPositionOffsetStep(Degrees.of(5))
             .build();
 
@@ -52,6 +66,7 @@ public class ArmConstantsTest extends GompeiLibTestBase {
     assertSame(constraints, constants.constraints);
     assertEquals(Volts.of(0.5), constants.voltageOffsetStep);
     assertEquals(Degrees.of(5), constants.positionOffsetStep);
+    assertSame(sysId, constants.sysId);
     assertEquals(Meters.of(0.5), parameters.length());
     assertEquals(Degrees.of(-90), parameters.minAngle());
     assertEquals(Degrees.of(90), parameters.maxAngle());
@@ -83,6 +98,7 @@ public class ArmConstantsTest extends GompeiLibTestBase {
                     .build())
             .withConstraints(AngularPositionConstraints.builder().build())
             .withVoltageOffsetStep(Volts.of(0.5))
+            .withSysId(sysId())
             .withPositionOffsetStep(Degrees.of(1))
             .withHoming(Optional.of(homing))
             .build();

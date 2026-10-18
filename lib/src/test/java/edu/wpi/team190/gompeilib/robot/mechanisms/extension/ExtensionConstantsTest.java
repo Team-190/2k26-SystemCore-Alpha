@@ -8,10 +8,22 @@ import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.VoltageUnit;
 
 public class ExtensionConstantsTest extends GompeiLibTestBase {
+  private static SysIdConfig<VoltageUnit> sysId() {
+    return SysIdConfig.voltage()
+        .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+        .withStepOutput(Volts.of(3))
+        .withQuasistaticTimeout(Seconds.of(3))
+        .withDynamicTimeout(Seconds.of(3))
+        .build();
+  }
+
   private static MotorConfig motor() {
     return MotorConfig.builder()
         .withCanId(1)
@@ -39,6 +51,7 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     MotorConfig motor = motor();
     ExtensionConstants.ExtensionParameters parameters = parameters();
     LinearConstraints constraints = LinearConstraints.builder().build();
+    SysIdConfig<VoltageUnit> sysId = sysId();
 
     ExtensionConstants constants =
         ExtensionConstants.builder()
@@ -47,6 +60,7 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
             .withExtensionParameters(parameters)
             .withConstraints(constraints)
             .withVoltageOffsetStep(Volts.of(0.5))
+            .withSysId(sysId)
             .withHeightOffsetStep(Meters.of(0.01))
             .build();
 
@@ -56,6 +70,7 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     assertSame(constraints, constants.constraints);
     assertEquals(Volts.of(0.5), constants.voltageOffsetStep);
     assertEquals(Meters.of(0.01), constants.heightOffsetStep);
+    assertSame(sysId, constants.sysId);
     assertTrue(constants.homing.isEmpty());
 
     assertEquals(Kilograms.of(5.0), parameters.carriageMass());

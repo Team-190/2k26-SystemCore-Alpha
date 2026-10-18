@@ -22,12 +22,13 @@ import org.wpilib.units.measure.LinearVelocity;
 /**
  * Tunable linear motion constraints, published under {@code prefix} (for example {@code
  * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Unset
- * values default to zero.
+ * values default to zero, except the SysId margin, which defaults to the goal tolerance.
  */
 public final class LinearConstraints implements Constraints.PositionConstraints<LinearConstraints> {
   private final Tunable<Distance> goalTolerance;
   private final Tunable<LinearVelocity> maxVelocity;
   private final Tunable<LinearAcceleration> maxAcceleration;
+  private final Tunable<Distance> sysIdMargin;
 
   private final List<Consumer<LinearConstraints>> listeners = new ArrayList<>();
   private List<Double> lastNotifiedValues;
@@ -37,15 +38,16 @@ public final class LinearConstraints implements Constraints.PositionConstraints<
       String prefix,
       Distance goalTolerance,
       LinearVelocity maxVelocity,
-      LinearAcceleration maxAcceleration) {
+      LinearAcceleration maxAcceleration,
+      Distance sysIdMargin) {
     TunableTable table = GompeiTunables.table(prefix);
     Runnable onTune = this::notifyListeners;
-    this.goalTolerance =
+    Distance tolerance = Objects.requireNonNullElse(goalTolerance, Meters.of(0));
+    this.goalTolerance = GompeiTunables.value(table, "Goal Tolerance", tolerance, onTune);
+    // Only SysId reads the margin, so editing it doesn't notify the profile listeners.
+    this.sysIdMargin =
         GompeiTunables.value(
-            table,
-            "Goal Tolerance",
-            Objects.requireNonNullElse(goalTolerance, Meters.of(0)),
-            onTune);
+            table, "SysId Margin", Objects.requireNonNullElse(sysIdMargin, tolerance), null);
     this.maxVelocity =
         GompeiTunables.value(
             table,
@@ -71,6 +73,15 @@ public final class LinearConstraints implements Constraints.PositionConstraints<
 
   public Tunable<LinearAcceleration> maxAcceleration() {
     return maxAcceleration;
+  }
+
+  /**
+   * Returns how far short of a travel limit a SysId leg stops.
+   *
+   * @return the margin
+   */
+  public Tunable<Distance> sysIdMargin() {
+    return sysIdMargin;
   }
 
   public double getGoalToleranceMeters(DistanceUnit unit) {

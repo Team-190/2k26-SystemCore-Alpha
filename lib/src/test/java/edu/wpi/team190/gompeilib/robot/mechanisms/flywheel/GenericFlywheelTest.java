@@ -25,8 +25,9 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.io.physics.FlywheelMechanismSim;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -39,7 +40,6 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngularVelocityUnit;
-import org.wpilib.units.CurrentUnit;
 import org.wpilib.units.VoltageUnit;
 
 public class GenericFlywheelTest extends GompeiLibTestBase {
@@ -107,6 +107,20 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
                     .build())
             .withVelocityOffsetStep(RadiansPerSecond.of(5))
             .withVoltageOffsetStep(Volts.of(1))
+            .withVoltageSysId(
+                SysIdConfig.voltage()
+                    .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.5))
+                    .withStepOutput(Volts.of(8))
+                    .withQuasistaticTimeout(Seconds.of(24))
+                    .withDynamicTimeout(Seconds.of(10))
+                    .build())
+            .withCurrentSysId(
+                SysIdConfig.current()
+                    .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
+                    .withStepOutput(Amps.of(40))
+                    .withQuasistaticTimeout(Seconds.of(10))
+                    .withDynamicTimeout(Seconds.of(10))
+                    .build())
             .build();
   }
 
@@ -283,36 +297,26 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Reading the generic routine fields back by reflection
-  public void testSysIdRoutinesDriveTheMotors() throws Exception {
+  public void testSysIdRoutinesDriveTheMotors() {
     try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       GenericFlywheel flywheel = new GenericFlywheel(factory, subsystem, constants, "Test");
       MotorIO leader = motors.get(0);
+      assertTrue(flywheel.sysIdConstraint().isEmpty());
 
       Command voltage = flywheel.sysIdRoutineVoltage();
       voltage.initialize();
+      voltage.execute();
+      voltage.execute();
       assertEquals(MechanismCore.IDLE, flywheel.getMode());
-      flywheel.sysIdRoutineTorque().initialize();
-
-      var voltageField = GenericFlywheel.class.getDeclaredField("voltageCharacterizationRoutine");
-      voltageField.setAccessible(true);
-      Command voltageQuasistatic =
-          ((CustomSysIdRoutine<VoltageUnit>) voltageField.get(flywheel))
-              .quasistatic(CustomSysIdRoutine.Direction.kForward);
-      voltageQuasistatic.initialize();
-      voltageQuasistatic.execute();
-      voltageQuasistatic.end(true);
       verify(leader, atLeastOnce()).setControl(isA(OpenLoopRequest.VoltageOutput.class));
+      voltage.end(true);
 
-      var torqueField = GenericFlywheel.class.getDeclaredField("torqueCharacterizationRoutine");
-      torqueField.setAccessible(true);
-      Command torqueQuasistatic =
-          ((CustomSysIdRoutine<CurrentUnit>) torqueField.get(flywheel))
-              .quasistatic(CustomSysIdRoutine.Direction.kForward);
-      torqueQuasistatic.initialize();
-      torqueQuasistatic.execute();
-      torqueQuasistatic.end(true);
+      Command torque = flywheel.sysIdRoutineTorque();
+      torque.initialize();
+      torque.execute();
+      torque.execute();
       verify(leader, atLeastOnce()).setControl(isA(OpenLoopRequest.CurrentOutput.class));
+      torque.end(true);
     }
   }
 }

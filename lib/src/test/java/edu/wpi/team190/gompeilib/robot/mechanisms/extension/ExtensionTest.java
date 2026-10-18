@@ -22,8 +22,12 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.ElevatorMechanismSim;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
+import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
+import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
@@ -33,9 +37,9 @@ import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
-import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.VoltageUnit;
 
 public class ExtensionTest extends GompeiLibTestBase {
   private static final double DRUM_RADIUS = 0.02;
@@ -116,6 +120,13 @@ public class ExtensionTest extends GompeiLibTestBase {
                 .build())
         .withVoltageOffsetStep(Volts.of(0.5))
         .withHeightOffsetStep(Meters.of(0.05))
+        .withSysId(
+            SysIdConfig.voltage()
+                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withStepOutput(Volts.of(3))
+                .withQuasistaticTimeout(Seconds.of(3))
+                .withDynamicTimeout(Seconds.of(3))
+                .build())
         .build();
   }
 
@@ -265,46 +276,39 @@ public class ExtensionTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testSysIdDrivesEveryExtension() throws Exception {
+  public void testSysIdIdlesAndRampsTheExtension() {
     Extension extension = new Extension(factory, subsystem, "Extension", constants);
-    assertNotNull(extension.runSysIdRoutine());
-    assertNotNull(Extension.runSysIdRoutine(subsystem, extension));
-
-    var routineField = Extension.class.getDeclaredField("characterizationRoutine");
-    routineField.setAccessible(true);
-    Command quasistatic =
-        ((SysIdRoutine) routineField.get(extension)).quasistatic(SysIdRoutine.Direction.FORWARD);
-    quasistatic.initialize();
-    quasistatic.execute();
-    quasistatic.end(true);
+    extension.setPositionGoal(Meters.of(0.5));
+    readAt(0.5, 0.0);
+    extension.periodic();
+    Command sysId = extension.runSysIdRoutine();
+    sysId.initialize();
+    sysId.execute();
+    sysId.execute();
+    assertEquals(MechanismCore.IDLE, extension.getMode());
     verify(motor, atLeastOnce()).setControl(isA(OpenLoopRequest.VoltageOutput.class));
+    sysId.end(true);
+    verify(motor, atLeastOnce())
+        .setControl(new OpenLoopRequest.VoltageOutput(Volts.of(0), true, RequestOptions.DEFAULT));
+  }
 
-    var anyAtEndStop =
-        Extension.class.getDeclaredMethod(
-            "anyAtEndStop", SysIdRoutine.Direction.class, Extension[].class);
-    anyAtEndStop.setAccessible(true);
+  @Test
+  public void testSysIdIsConstrainedToTheTravel() {
+    Extension extension = new Extension(factory, subsystem, "Extension", constants);
+    SysIdConstraint<?> constraint = extension.sysIdConstraint().orElseThrow();
+    assertSame(constants.extensionParameters.minLength(), constraint.lowerLimit());
+    assertSame(constants.extensionParameters.maxLength(), constraint.upperLimit());
+    assertSame(constants.constraints.sysIdMargin(), constraint.margin());
+
     readAt(1.5, 0.0);
     extension.periodic();
-    assertTrue(
-        (boolean)
-            anyAtEndStop.invoke(null, SysIdRoutine.Direction.FORWARD, new Extension[] {extension}));
-    assertFalse(
-        (boolean)
-            anyAtEndStop.invoke(null, SysIdRoutine.Direction.REVERSE, new Extension[] {extension}));
-    readAt(0.0, 0.0);
-    extension.periodic();
-    assertTrue(
-        (boolean)
-            anyAtEndStop.invoke(null, SysIdRoutine.Direction.REVERSE, new Extension[] {extension}));
+    assertEquals(1.5, constraint.position().get().baseUnitMagnitude(), 1e-9);
 
-    // The sequence's idle step and end-stop checks are lambdas only a running scheduler calls.
-    extension.setPositionGoal(Meters.of(0.5));
-    for (var method : Extension.class.getDeclaredMethods()) {
-      if (method.getName().startsWith("lambda$runSysIdRoutine$")) {
-        method.setAccessible(true);
-        method.invoke(null, (Object) new Extension[] {extension});
-      }
-    }
-    assertEquals(MechanismCore.IDLE, extension.getMode());
+    CustomSysIdRoutine.Target<VoltageUnit> target = extension.voltageSysIdTarget();
+    assertSame(extension.core(), target.core());
+    assertSame(constraint, target.constraint().orElseThrow());
+    assertEquals(
+        new OpenLoopRequest.VoltageOutput(Volts.of(2), true, RequestOptions.DEFAULT),
+        target.request().apply(Volts.of(2)));
   }
 }

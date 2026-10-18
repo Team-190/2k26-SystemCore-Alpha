@@ -33,6 +33,14 @@ public class CurrentControlTest extends GompeiLibTestBase {
   }
 
   @Test
+  public void testRequestForAnyCurrent() {
+    CurrentControl control = new CurrentControl(core, new Setpoint<>(Amps.of(0), Amps.of(1)));
+    assertEquals(
+        new OpenLoopRequest.CurrentOutput(Amps.of(3)), control.request(Milliamps.of(3000)));
+    assertEquals(MechanismCore.IDLE, core.getMode());
+  }
+
+  @Test
   public void testSettingAGoalActivatesItAndSendsTheCurrent() {
     CurrentControl control = new CurrentControl(core, new Setpoint<>(Amps.of(0), Amps.of(1)));
     assertTrue(core.components().contains(control));

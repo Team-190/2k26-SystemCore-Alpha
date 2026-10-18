@@ -62,6 +62,7 @@ public class MechanismCoreTest extends GompeiLibTestBase {
   public void testTopicIsTheSubsystemAndName() {
     assertEquals("Test/Mechanism", core.getTopic());
     assertSame(motors.group, core.getMotors());
+    assertSame(motors.subsystem, core.getSubsystem());
   }
 
   @Test
@@ -126,5 +127,7 @@ public class MechanismCoreTest extends GompeiLibTestBase {
         NullPointerException.class, () -> new MechanismCore(null, motors.subsystem, "Mechanism"));
     assertThrows(
         NullPointerException.class, () -> new MechanismCore(motors.group, motors.subsystem, null));
+    assertThrows(
+        NullPointerException.class, () -> new MechanismCore(motors.group, null, "Mechanism"));
   }
 }

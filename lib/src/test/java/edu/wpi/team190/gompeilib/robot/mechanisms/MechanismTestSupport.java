@@ -73,6 +73,7 @@ public final class MechanismTestSupport {
           MotionReadable<AngleUnit, AngularVelocityUnit>,
           ConstraintConfigurable<AngularPositionConstraints>,
           Homeable,
+          Characterizable,
           EncoderSeedable {
     public final MechanismCore core;
     public final VoltageControl voltage;
