@@ -22,13 +22,14 @@ import org.wpilib.units.measure.AngularVelocity;
 /**
  * Tunable angular position constraints, published under {@code prefix} (for example {@code
  * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Unset
- * values default to zero.
+ * values default to zero, except the SysId margin, which defaults to the goal tolerance.
  */
 public final class AngularPositionConstraints
     implements Constraints.PositionConstraints<AngularPositionConstraints> {
   private final Tunable<Angle> goalTolerance;
   private final Tunable<AngularVelocity> maxVelocity;
   private final Tunable<AngularAcceleration> maxAcceleration;
+  private final Tunable<Angle> sysIdMargin;
 
   private final List<Consumer<AngularPositionConstraints>> listeners = new ArrayList<>();
   private List<Double> lastNotifiedValues;
@@ -38,15 +39,16 @@ public final class AngularPositionConstraints
       String prefix,
       Angle goalTolerance,
       AngularVelocity maxVelocity,
-      AngularAcceleration maxAcceleration) {
+      AngularAcceleration maxAcceleration,
+      Angle sysIdMargin) {
     TunableTable table = GompeiTunables.table(prefix);
     Runnable onTune = this::notifyListeners;
-    this.goalTolerance =
+    Angle tolerance = Objects.requireNonNullElse(goalTolerance, Radians.of(0));
+    this.goalTolerance = GompeiTunables.value(table, "Goal Tolerance", tolerance, onTune);
+    // Only SysId reads the margin, so editing it doesn't notify the profile listeners.
+    this.sysIdMargin =
         GompeiTunables.value(
-            table,
-            "Goal Tolerance",
-            Objects.requireNonNullElse(goalTolerance, Radians.of(0)),
-            onTune);
+            table, "SysId Margin", Objects.requireNonNullElse(sysIdMargin, tolerance), null);
     this.maxVelocity =
         GompeiTunables.value(
             table,
@@ -72,6 +74,15 @@ public final class AngularPositionConstraints
 
   public Tunable<AngularAcceleration> maxAcceleration() {
     return maxAcceleration;
+  }
+
+  /**
+   * Returns how far short of a travel limit a SysId leg stops.
+   *
+   * @return the margin
+   */
+  public Tunable<Angle> sysIdMargin() {
+    return sysIdMargin;
   }
 
   public double getGoalTolerance(AngleUnit unit) {

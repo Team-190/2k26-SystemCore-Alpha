@@ -8,11 +8,10 @@ import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
-import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
-import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.ElevatorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
+import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Homeable;
@@ -24,18 +23,16 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.TuningBindings;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
+import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
+import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
 import lombok.Getter;
-import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
-import org.wpilib.command2.Commands;
 import org.wpilib.command2.Subsystem;
-import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.LinearAccelerationUnit;
 import org.wpilib.units.LinearVelocityUnit;
 import org.wpilib.units.VoltageUnit;
-import org.wpilib.units.measure.Voltage;
 
 /**
  * A linear extension driven through a drum: one leader motor and any number of followers. The
@@ -47,7 +44,8 @@ public class Extension
         VoltageControllable,
         MotionReadable<DistanceUnit, LinearVelocityUnit>,
         ConstraintConfigurable<LinearConstraints>,
-        Homeable {
+        Homeable,
+        Characterizable {
   @Getter private final ExtensionConstants constants;
   private final MechanismConversion<DistanceUnit, LinearVelocityUnit, LinearAccelerationUnit>
       conversion;
@@ -56,7 +54,7 @@ public class Extension
   private final VoltageControl voltageControl;
   private final Optional<CurrentHoming<DistanceUnit>> homing;
 
-  private final SysIdRoutine characterizationRoutine;
+  private final SysIdConstraint<DistanceUnit> sysIdConstraint;
 
   /**
    * Creates an extension.
@@ -97,7 +95,12 @@ public class Extension
     homing =
         constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
 
-    characterizationRoutine = createCharacterizationRoutine(subsystem, this);
+    sysIdConstraint =
+        new SysIdConstraint<>(
+            this::getPosition,
+            parameters.minLength(),
+            parameters.maxLength(),
+            constants.constraints.sysIdMargin());
 
     TuningBindings.bindGains(motors, constants.motor);
     TuningBindings.bindConstraints(motors, constants.constraints, this::motionProfile);
@@ -207,83 +210,28 @@ public class Extension
     core.periodic();
   }
 
-  private void setVoltage(Voltage voltage) {
-    core.setControl(
-        new OpenLoopRequest.VoltageOutput(
-            voltage, constants.motor.enableFOC, RequestOptions.DEFAULT));
-  }
-
-  public Command runSysIdRoutine() {
-    return runSysIdRoutine(characterizationRoutine, this);
-  }
-
-  /** Characterizes several extensions owned by the same subsystem in one pass. */
-  public static Command runSysIdRoutine(Subsystem subsystem, Extension... extensions) {
-    return runSysIdRoutine(createCharacterizationRoutine(subsystem, extensions), extensions);
-  }
-
-  private static SysIdRoutine createCharacterizationRoutine(
-      Subsystem subsystem, Extension... extensions) {
-    return new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.of(1).per(Second),
-            Volts.of(3),
-            Seconds.of(3),
-            (state) -> {
-              for (Extension extension : extensions) {
-                Logger.recordOutput(extension.core.getTopic() + "/SysIdState", state.toString());
-              }
-            }),
-        new SysIdRoutine.Mechanism(
-            (voltage) -> {
-              for (Extension extension : extensions) {
-                extension.setVoltage(voltage);
-              }
-            },
-            null,
-            subsystem));
+  @Override
+  public Optional<SysIdConstraint<?>> sysIdConstraint() {
+    return Optional.of(sysIdConstraint);
   }
 
   /**
-   * Returns true once any extension has reached the end stop in the direction of travel. The check
-   * is one-sided so a fast dynamic test can't overshoot the tolerance band and keep driving.
+   * Returns this extension as a voltage SysId target, for characterizing several extensions
+   * together.
+   *
+   * @return the target
    */
-  private static boolean anyAtEndStop(SysIdRoutine.Direction direction, Extension... extensions) {
-    for (Extension extension : extensions) {
-      double position = extension.getPosition().in(Meters);
-      double tolerance = extension.constants.constraints.goalTolerance().get().in(Meters);
-      ExtensionConstants.ExtensionParameters parameters = extension.constants.extensionParameters;
-      if (direction == SysIdRoutine.Direction.FORWARD
-          ? position >= parameters.maxLength().in(Meters) - tolerance
-          : position <= parameters.minLength().in(Meters) + tolerance) {
-        return true;
-      }
-    }
-    return false;
+  public CustomSysIdRoutine.Target<VoltageUnit> voltageSysIdTarget() {
+    return sysIdTarget(voltageControl::request);
   }
 
-  private static Command runSysIdRoutine(SysIdRoutine routine, Extension... extensions) {
-    return Commands.sequence(
-        Commands.runOnce(
-            () -> {
-              for (Extension extension : extensions) {
-                extension.idle();
-              }
-            }),
-        routine
-            .quasistatic(SysIdRoutine.Direction.FORWARD)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD, extensions)),
-        Commands.waitSeconds(1.0),
-        routine
-            .quasistatic(SysIdRoutine.Direction.REVERSE)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE, extensions)),
-        Commands.waitSeconds(1.0),
-        routine
-            .dynamic(SysIdRoutine.Direction.FORWARD)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD, extensions)),
-        Commands.waitSeconds(1.0),
-        routine
-            .dynamic(SysIdRoutine.Direction.REVERSE)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE, extensions)));
+  /**
+   * Returns a command that characterizes the extension in voltage, stopping each leg short of its
+   * travel limits.
+   *
+   * @return the command
+   */
+  public Command runSysIdRoutine() {
+    return characterize(constants.sysId, voltageControl::request);
   }
 }

@@ -12,17 +12,29 @@ import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.Arm;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngleUnit;
+import org.wpilib.units.VoltageUnit;
 
 public class GenericHoodTest extends GompeiLibTestBase {
+  private static SysIdConfig<VoltageUnit> sysId() {
+    return SysIdConfig.voltage()
+        .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+        .withStepOutput(Volts.of(3))
+        .withQuasistaticTimeout(Seconds.of(3))
+        .withDynamicTimeout(Seconds.of(3))
+        .build();
+  }
+
   private MotorIOFactory factory;
   private Subsystem subsystem;
 
@@ -54,6 +66,7 @@ public class GenericHoodTest extends GompeiLibTestBase {
                 .build())
         .withConstraints(AngularPositionConstraints.builder().build())
         .withVoltageOffsetStep(Volts.of(0.5))
+        .withSysId(sysId())
         .withPositionOffsetStep(Degrees.of(1))
         .withHoming(homing)
         .build();

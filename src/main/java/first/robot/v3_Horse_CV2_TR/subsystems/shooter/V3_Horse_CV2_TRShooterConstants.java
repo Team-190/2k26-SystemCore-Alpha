@@ -7,6 +7,7 @@ import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.Milliamps;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
+import static org.wpilib.units.Units.Seconds;
 import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.control.Gains;
@@ -23,9 +24,11 @@ import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
@@ -90,6 +93,24 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .build())
           .withVelocityOffsetStep(RadiansPerSecond.of(5))
           .withVoltageOffsetStep(Volts.of(1))
+          .withVoltageSysId(
+              SysIdConfig.voltage()
+                  .withPrefix("Shooter/Flywheel/SysId/Voltage")
+                  .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.5))
+                  .withStepOutput(Volts.of(8))
+                  .withQuasistaticTimeout(Seconds.of(24))
+                  .withDynamicTimeout(Seconds.of(10))
+                  .withSettleTime(Seconds.of(6))
+                  .build())
+          .withCurrentSysId(
+              SysIdConfig.current()
+                  .withPrefix("Shooter/Flywheel/SysId/Torque")
+                  .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
+                  .withStepOutput(Amps.of(40))
+                  .withQuasistaticTimeout(Seconds.of(10))
+                  .withDynamicTimeout(Seconds.of(10))
+                  .withSettleTime(Seconds.of(20))
+                  .build())
           .build();
 
   private static final Angle HOOD_MIN_ANGLE = Degrees.of(0.5);
@@ -134,6 +155,15 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxVelocity(RadiansPerSecond.of(37.5))
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
                   .withGoalTolerance(Degrees.of(1))
+                  .build())
+          .withSysId(
+              SysIdConfig.voltage()
+                  .withPrefix("Shooter/Hood/SysId")
+                  .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.75))
+                  .withStepOutput(Volts.of(4.5))
+                  .withQuasistaticTimeout(Seconds.of(4))
+                  .withDynamicTimeout(Seconds.of(4))
+                  .withSettleTime(Seconds.of(1))
                   .build())
           .withPositionOffsetStep(Degrees.of(1))
           .withVoltageOffsetStep(Volts.of(0.5))

@@ -8,8 +8,10 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.Extension;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRoller;
+import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
+import java.util.List;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
@@ -303,6 +305,12 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   public Command sysID() {
     return setExtensionState(ExtensionState.OVERRIDE)
-        .andThen(Extension.runSysIdRoutine(this, leftExtension, rightExtension));
+        .andThen(
+            new CustomSysIdRoutine<>(
+                    leftExtension.getConstants().sysId,
+                    this,
+                    List.of(
+                        leftExtension.voltageSysIdTarget(), rightExtension.voltageSysIdTarget()))
+                .command());
   }
 }

@@ -8,12 +8,10 @@ import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
-import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
-import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.FlywheelMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
+import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
@@ -25,10 +23,8 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.VelocityControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VelocityControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
-import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import org.wpilib.command2.Command;
-import org.wpilib.command2.Commands;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularAccelerationUnit;
@@ -45,7 +41,8 @@ public class GenericFlywheel
         VoltageControllable,
         CurrentControllable,
         MotionReadable<AngleUnit, AngularVelocityUnit>,
-        ConstraintConfigurable<AngularVelocityConstraints> {
+        ConstraintConfigurable<AngularVelocityConstraints>,
+        Characterizable {
   private static final MechanismConversion<AngleUnit, AngularVelocityUnit, AngularAccelerationUnit>
       CONVERSION = MechanismConversion.angular();
 
@@ -54,8 +51,8 @@ public class GenericFlywheel
   private final VoltageControl voltageControl;
   private final CurrentControl currentControl;
 
-  private final CustomSysIdRoutine<VoltageUnit> voltageCharacterizationRoutine;
-  private final CustomSysIdRoutine<CurrentUnit> torqueCharacterizationRoutine;
+  private final SysIdConfig<VoltageUnit> voltageSysIdConfig;
+  private final SysIdConfig<CurrentUnit> currentSysIdConfig;
 
   /**
    * Creates a flywheel. It starts idle.
@@ -93,34 +90,8 @@ public class GenericFlywheel
     currentControl =
         new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
 
-    String topic = core.getTopic();
-    voltageCharacterizationRoutine =
-        new CustomSysIdRoutine<>(
-            new CustomSysIdRoutine.Config<VoltageUnit>(
-                CustomUnits.voltsPerSecond.ofNative(0.5),
-                Volts.of(8),
-                Seconds.of(24),
-                (state) -> Logger.recordOutput(topic + "/Voltage SysID State", state.toString()),
-                Volts),
-            new CustomSysIdRoutine.Mechanism<>(
-                (volts) ->
-                    core.setControl(
-                        new OpenLoopRequest.VoltageOutput(
-                            Volts.of(volts.in(Volts)), foc, RequestOptions.DEFAULT)),
-                subsystem));
-    torqueCharacterizationRoutine =
-        new CustomSysIdRoutine<>(
-            new CustomSysIdRoutine.Config<CurrentUnit>(
-                CustomUnits.ampsPerSecond.ofNative(5.0),
-                Amps.of(40),
-                Seconds.of(10),
-                (state) ->
-                    Logger.recordOutput(topic + "/Torque Current SysID State", state.toString()),
-                Amp),
-            new CustomSysIdRoutine.Mechanism<>(
-                (amps) ->
-                    core.setControl(new OpenLoopRequest.CurrentOutput(Amps.of(amps.in(Amps)))),
-                subsystem));
+    voltageSysIdConfig = constants.voltageSysId;
+    currentSysIdConfig = constants.currentSysId;
 
     TuningBindings.bindGains(motors, constants.motor);
     TuningBindings.bindConstraints(motors, constants.constraints, GenericFlywheel::profile);
@@ -228,31 +199,21 @@ public class GenericFlywheel
     core.periodic();
   }
 
+  /**
+   * Returns a command that characterizes the flywheel in voltage.
+   *
+   * @return the command
+   */
   public Command sysIdRoutineVoltage() {
-    return Commands.sequence(
-        Commands.runOnce(core::idle),
-        voltageCharacterizationRoutine
-            .dynamic(CustomSysIdRoutine.Direction.kForward)
-            .withTimeout(10),
-        Commands.waitSeconds(6.0),
-        voltageCharacterizationRoutine
-            .dynamic(CustomSysIdRoutine.Direction.kReverse)
-            .withTimeout(10),
-        Commands.waitSeconds(6.0),
-        voltageCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(6.0),
-        voltageCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kReverse));
+    return characterize(voltageSysIdConfig, voltageControl::request);
   }
 
+  /**
+   * Returns a command that characterizes the flywheel in torque current.
+   *
+   * @return the command
+   */
   public Command sysIdRoutineTorque() {
-    return Commands.sequence(
-        Commands.runOnce(core::idle),
-        torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(20.0),
-        torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kReverse),
-        Commands.waitSeconds(20.0),
-        torqueCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(20.0),
-        torqueCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kReverse));
+    return characterize(currentSysIdConfig, currentControl::request);
   }
 }

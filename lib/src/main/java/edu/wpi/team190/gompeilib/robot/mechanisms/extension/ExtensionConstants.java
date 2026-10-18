@@ -3,11 +3,13 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.extension;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.Voltage;
@@ -31,8 +33,13 @@ public class ExtensionConstants {
   /** The travel range and physical properties. */
   @NonNull public final ExtensionParameters extensionParameters;
 
-  /** The goal tolerance and profile limits. */
+  /**
+   * The goal tolerance, profile limits, and how far short of the travel limits a SysId leg stops.
+   */
   @NonNull public final LinearConstraints constraints;
+
+  /** How the extension is characterized in voltage. */
+  @NonNull public final SysIdConfig<VoltageUnit> sysId;
 
   /** How far one increment or decrement moves the voltage goal. */
   @NonNull public final Voltage voltageOffsetStep;

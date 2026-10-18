@@ -55,6 +55,7 @@ public final class MechanismCore {
   }
 
   @Getter private final MotorControllerGroup motors;
+  @Getter private final Subsystem subsystem;
   @Getter private final String topic;
   private final List<Component> components = new ArrayList<>();
 
@@ -70,6 +71,7 @@ public final class MechanismCore {
    */
   public MechanismCore(MotorControllerGroup motors, Subsystem subsystem, String name) {
     this.motors = Objects.requireNonNull(motors, "motors");
+    this.subsystem = Objects.requireNonNull(subsystem, "subsystem");
     this.topic = subsystem.getName() + "/" + Objects.requireNonNull(name, "name");
   }
 

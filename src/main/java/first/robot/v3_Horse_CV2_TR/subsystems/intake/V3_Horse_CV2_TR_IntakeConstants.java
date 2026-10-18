@@ -15,10 +15,12 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants.ExtensionParameters;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRollerConstants;
+import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Map;
 import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
@@ -295,6 +297,15 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 .withGoalTolerance(Meters.of(0.01))
                 .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
                 .withMaxVelocity(MetersPerSecond.of(20))
+                .build())
+        .withSysId(
+            SysIdConfig.voltage()
+                .withPrefix("Intake/" + name + "/SysId")
+                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withStepOutput(Volts.of(3))
+                .withQuasistaticTimeout(Seconds.of(3))
+                .withDynamicTimeout(Seconds.of(3))
+                .withSettleTime(Seconds.of(1))
                 .build())
         .build();
   }

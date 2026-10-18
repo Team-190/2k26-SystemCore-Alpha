@@ -77,4 +77,27 @@ public class LinearConstraintsTest extends GompeiLibTestBase {
 
     assertNotNull(LinearConstraints.builder().toString());
   }
+
+  @Test
+  public void testSysIdMarginDefaultsToTheGoalTolerance() {
+    LinearConstraints defaults =
+        LinearConstraints.builder().withGoalTolerance(Units.Meters.of(0.05)).build();
+    assertEquals(0.05, defaults.sysIdMargin().get().in(Units.Meters), 1e-9);
+
+    LinearConstraints c =
+        LinearConstraints.builder()
+            .withPrefix("Margin")
+            .withGoalTolerance(Units.Meters.of(0.05))
+            .withSysIdMargin(Units.Meters.of(0.2))
+            .build();
+    assertEquals(0.2, c.sysIdMargin().get().in(Units.Meters), 1e-9);
+
+    // Only SysId reads the margin, so editing it leaves the profile listeners alone.
+    AtomicInteger counter = new AtomicInteger(0);
+    c.onChange(x -> counter.incrementAndGet());
+    backend.setValue("/Margin/SysId Margin", Units.Meters.of(0.3));
+    TunableRegistry.update();
+    assertEquals(0.3, c.sysIdMargin().get().in(Units.Meters), 1e-9);
+    assertEquals(0, counter.get());
+  }
 }

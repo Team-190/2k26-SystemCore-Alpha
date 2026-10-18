@@ -3,7 +3,10 @@ package edu.wpi.team190.gompeilib.control.constraints;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
+import org.wpilib.tunable.MockTunableBackend;
+import org.wpilib.tunable.TunableRegistry;
 import org.wpilib.units.*;
 
 public class AngularPositionConstraintsTest extends GompeiLibTestBase {
@@ -46,5 +49,32 @@ public class AngularPositionConstraintsTest extends GompeiLibTestBase {
     assertEquals(0.0, defaults.goalTolerance().get().baseUnitMagnitude());
     assertEquals(0.0, defaults.maxVelocity().get().baseUnitMagnitude());
     assertEquals(0.0, defaults.maxAcceleration().get().baseUnitMagnitude());
+  }
+
+  @Test
+  public void testSysIdMarginDefaultsToTheGoalTolerance() {
+    TunableRegistry.reset();
+    MockTunableBackend backend = new MockTunableBackend();
+    TunableRegistry.registerBackend("", backend);
+    AngularPositionConstraints defaults =
+        AngularPositionConstraints.builder().withGoalTolerance(Units.Radians.of(0.05)).build();
+    assertEquals(0.05, defaults.sysIdMargin().get().in(Units.Radians), 1e-9);
+
+    AngularPositionConstraints c =
+        AngularPositionConstraints.builder()
+            .withPrefix("Margin")
+            .withGoalTolerance(Units.Radians.of(0.05))
+            .withSysIdMargin(Units.Radians.of(0.2))
+            .build();
+    assertEquals(0.2, c.sysIdMargin().get().in(Units.Radians), 1e-9);
+
+    // Only SysId reads the margin, so editing it leaves the profile listeners alone.
+    AtomicInteger counter = new AtomicInteger(0);
+    c.onChange(x -> counter.incrementAndGet());
+    backend.setValue("/Margin/SysId Margin", Units.Radians.of(0.3));
+    TunableRegistry.update();
+    assertEquals(0.3, c.sysIdMargin().get().in(Units.Radians), 1e-9);
+    assertEquals(0, counter.get());
+    TunableRegistry.reset();
   }
 }

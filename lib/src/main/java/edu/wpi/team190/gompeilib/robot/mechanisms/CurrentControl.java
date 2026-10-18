@@ -9,6 +9,7 @@ import java.util.Objects;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.units.CurrentUnit;
+import org.wpilib.units.Measure;
 import org.wpilib.units.measure.Current;
 
 /** Open-loop torque-current control: drives the motors at a torque-current goal. */
@@ -68,6 +69,16 @@ public final class CurrentControl implements MechanismCore.Control {
   @Override
   public MotorRequest request() {
     return new OpenLoopRequest.CurrentOutput((Current) goal.getNewSetpoint());
+  }
+
+  /**
+   * Returns the request that drives the motors at a torque current, the way this control does.
+   *
+   * @param current the torque current
+   * @return the request
+   */
+  public MotorRequest request(Measure<CurrentUnit> current) {
+    return new OpenLoopRequest.CurrentOutput(Amps.of(current.in(Amps)));
   }
 
   @Override

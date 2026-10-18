@@ -46,6 +46,15 @@ public class VoltageControlTest extends GompeiLibTestBase {
   }
 
   @Test
+  public void testRequestForAnyVoltageUsesTheControlsFoc() {
+    VoltageControl control = new VoltageControl(core, Volts.of(0.5), true);
+    assertEquals(
+        new OpenLoopRequest.VoltageOutput(Volts.of(2.5), true, RequestOptions.DEFAULT),
+        control.request(Millivolts.of(2500)));
+    assertEquals(MechanismCore.IDLE, core.getMode());
+  }
+
+  @Test
   public void testSettingAGoalActivatesItAndSendsTheVoltage() {
     VoltageControl control = new VoltageControl(core, Volts.of(0.5), false);
 
