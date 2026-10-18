@@ -24,6 +24,12 @@ public class CANBusIdTest {
   }
 
   @Test
+  public void testLabel() {
+    assertEquals("CAN_S2", CANBusId.port(CANPort.CAN_S2).label());
+    assertEquals("Drive", CANBusId.named("Drive").label());
+  }
+
+  @Test
   public void testBusesCompareByValue() {
     assertEquals(CANBusId.port(CANPort.CAN_S1), CANBusId.port(CANPort.CAN_S1));
     assertNotEquals(CANBusId.port(CANPort.CAN_S1), CANBusId.port(CANPort.CAN_S2));

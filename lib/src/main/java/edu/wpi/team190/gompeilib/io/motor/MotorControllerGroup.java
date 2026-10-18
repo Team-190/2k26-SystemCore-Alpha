@@ -3,6 +3,7 @@ package edu.wpi.team190.gompeilib.io.motor;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.FeedbackSensor;
 import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
@@ -19,6 +20,7 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.NeutralRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
@@ -54,6 +56,8 @@ public class MotorControllerGroup {
     MIRROR;
   }
 
+  private record DeviceAddress(CANBusId bus, int canId) {}
+
   private record Member(
       String key, int canId, MotorIO io, MotorTelemetryAutoLogged telemetry, FollowMode mode) {}
 
@@ -66,8 +70,20 @@ public class MotorControllerGroup {
    *
    * @param config the leader's config, including its followers
    * @param factory how to build the leader, and any follower without its own factory
+   * @throws IllegalArgumentException if two motors share a CAN ID on the same bus
    */
   public MotorControllerGroup(MotorConfig config, MotorIOFactory factory) {
+    Set<DeviceAddress> addresses = new HashSet<>();
+    addresses.add(new DeviceAddress(config.bus, config.canId));
+    for (FollowerMotor follower : config.followers) {
+      DeviceAddress address =
+          new DeviceAddress(follower.bus().orElse(config.bus), follower.canId());
+      if (!addresses.add(address)) {
+        throw new IllegalArgumentException(
+            "Follower " + follower.canId() + " shares its CAN ID and bus with another motor");
+      }
+    }
+
     leader = new Member("Leader", config.canId, factory.create(config), newTelemetry(), null);
 
     boolean mirrored = false;
@@ -82,11 +98,16 @@ public class MotorControllerGroup {
           hardware || follower.alignment() == MotorAlignment.ALIGNED
               ? config.direction
               : config.direction.opposite();
+      // A mirrored follower never closes a loop, and the leader's remote encoder may be on another
+      // bus or unreadable by another vendor, so it reads its own rotor. The encoder is on the
+      // gearbox output, so the gear ratio still maps the rotor to the output.
+      FeedbackSensor feedbackSensor = hardware ? config.feedbackSensor : FeedbackSensor.INTERNAL;
       MotorConfig followerConfig =
           config.toBuilder()
               .withCanId(follower.canId())
               .withBus(bus)
               .withDirection(direction)
+              .withFeedbackSensor(feedbackSensor)
               .clearFollowers()
               .build();
 
@@ -95,9 +116,15 @@ public class MotorControllerGroup {
         io.setControl(new FollowerRequest.Follow(config.canId, follower.alignment()));
       }
       mirrored |= !hardware;
+      // CAN IDs are only unique per bus, so a follower off the leader's bus is keyed by its bus
+      // too.
+      String key =
+          bus.equals(config.bus)
+              ? "Follower" + follower.canId()
+              : "Follower" + follower.canId() + "@" + bus.label();
       followers.add(
           new Member(
-              "Follower" + follower.canId(),
+              key,
               follower.canId(),
               io,
               newTelemetry(),
@@ -136,7 +163,9 @@ public class MotorControllerGroup {
   }
 
   /**
-   * Reads every motor and logs each one under {@code prefix}.
+   * Reads every motor and logs each one under {@code prefix}: the leader as {@code Leader}, each
+   * follower on the leader's bus as {@code Follower<id>}, and each follower on another bus as
+   * {@code Follower<id>@<bus>}.
    *
    * @param prefix the log prefix, e.g. {@code "Intake/Roller"}
    */

@@ -7,6 +7,18 @@ import org.wpilib.hardware.bus.CANPort;
 public sealed interface CANBusId {
 
   /**
+   * Returns a short, human-readable name for the bus, e.g. for log keys.
+   *
+   * @return the port's name, or the bus name
+   */
+  default String label() {
+    return switch (this) {
+      case Port port -> port.port().name();
+      case Named named -> named.name();
+    };
+  }
+
+  /**
    * A bus on one of SystemCore's built-in CAN ports.
    *
    * @param port the port

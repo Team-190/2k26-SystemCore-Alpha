@@ -7,7 +7,9 @@ import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
@@ -27,8 +29,7 @@ import org.wpilib.units.measure.Voltage;
 
 public class V3_Horse_CV2_TR_IntakeConstants {
 
-  public static final GenericRollerConstants LEFT_INTAKE_ROLLER_CONSTANTS;
-  public static final GenericRollerConstants RIGHT_INTAKE_ROLLER_CONSTANTS;
+  public static final GenericRollerConstants INTAKE_ROLLER_CONSTANTS;
   public static final GenericRollerConstants KICKER_ROLLER_CONSTANTS;
   public static final ExtensionConstants LEFT_EXTENSION_CONSTANTS;
   public static final ExtensionConstants RIGHT_EXTENSION_CONSTANTS;
@@ -87,21 +88,54 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     KICKER_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
     IDLE_ROLLER_VOLTAGE = Volts.of(4.0); // TODO: tune
 
-    LEFT_INTAKE_ROLLER_CONSTANTS =
-        rollerConstants(
-            23,
-            CANBusId.port(CANPort.CAN_S2),
-            MotorDirection.COUNTER_CLOCKWISE_POSITIVE,
-            36.0 / 12);
-    RIGHT_INTAKE_ROLLER_CONSTANTS =
-        rollerConstants(
-            24, CANBusId.port(CANPort.CAN_S1), MotorDirection.CLOCKWISE_POSITIVE, 36.0 / 12);
+    // The right roller is on another bus, so it mirrors the left roller instead of following it.
+    INTAKE_ROLLER_CONSTANTS =
+        GenericRollerConstants.builder()
+            .withMotor(
+                MotorConfig.builder()
+                    .withCanId(23)
+                    .withBus(CANBusId.port(CANPort.CAN_S2))
+                    .withDirection(MotorDirection.COUNTER_CLOCKWISE_POSITIVE)
+                    .withNeutralMode(NeutralMode.COAST)
+                    .withCurrentLimits(
+                        CurrentLimits.builder()
+                            .withSupplyCurrentLimit(Amps.of(40.0))
+                            .withStatorCurrentLimit(Amps.of(40.0))
+                            .build())
+                    .withGearRatio(36.0 / 12)
+                    .withOpenLoopRamps(
+                        new OpenLoopRamps(Seconds.of(0.0), Seconds.of(0.25), Seconds.of(0.0)))
+                    .withEnableFOC(false)
+                    .withFollower(
+                        new FollowerMotor(24, MotorAlignment.OPPOSED)
+                            .onBus(CANBusId.port(CANPort.CAN_S1)))
+                    .build())
+            .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
+            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+            .withVoltageOffsetStep(Volts.of(1))
+            .build();
     KICKER_ROLLER_CONSTANTS =
-        rollerConstants(
-            25,
-            CANBusId.named("Extension"),
-            MotorDirection.COUNTER_CLOCKWISE_POSITIVE,
-            (58.0 / 26) * (24.0 / 18));
+        GenericRollerConstants.builder()
+            .withMotor(
+                MotorConfig.builder()
+                    .withCanId(25)
+                    .withBus(CANBusId.named("Extension"))
+                    .withDirection(MotorDirection.COUNTER_CLOCKWISE_POSITIVE)
+                    .withNeutralMode(NeutralMode.COAST)
+                    .withCurrentLimits(
+                        CurrentLimits.builder()
+                            .withSupplyCurrentLimit(Amps.of(40.0))
+                            .withStatorCurrentLimit(Amps.of(40.0))
+                            .build())
+                    .withGearRatio((58.0 / 26) * (24.0 / 18))
+                    .withOpenLoopRamps(
+                        new OpenLoopRamps(Seconds.of(0.0), Seconds.of(0.25), Seconds.of(0.0)))
+                    .withEnableFOC(false)
+                    .build())
+            .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
+            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+            .withVoltageOffsetStep(Volts.of(1))
+            .build();
 
     LEFT_EXTENSION_CONSTANTS =
         extensionConstants(21, MotorDirection.COUNTER_CLOCKWISE_POSITIVE, "Left Extension");
@@ -143,25 +177,25 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             RollerState.INTAKE,
             new Setpoint<>(
                 INTAKE_IN_ROLLER_VOLTAGE,
-                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
             RollerState.EXTAKE,
             new Setpoint<>(
                 INTAKE_OUT_ROLLER_VOLTAGE,
-                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
             RollerState.IDLE,
             new Setpoint<>(
                 IDLE_ROLLER_VOLTAGE,
-                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
             RollerState.STOP,
             new Setpoint<>(
                 Volts.of(0),
-                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)));
 
@@ -255,32 +289,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
                 .withMaxVelocity(MetersPerSecond.of(20))
                 .build())
-        .build();
-  }
-
-  /** The intake and kicker rollers share everything but their ID, bus, direction, and ratio. */
-  private static GenericRollerConstants rollerConstants(
-      int canId, CANBusId bus, MotorDirection direction, double gearRatio) {
-    return GenericRollerConstants.builder()
-        .withMotor(
-            MotorConfig.builder()
-                .withCanId(canId)
-                .withBus(bus)
-                .withDirection(direction)
-                .withNeutralMode(NeutralMode.COAST)
-                .withCurrentLimits(
-                    CurrentLimits.builder()
-                        .withSupplyCurrentLimit(Amps.of(40.0))
-                        .withStatorCurrentLimit(Amps.of(40.0))
-                        .build())
-                .withGearRatio(gearRatio)
-                .withOpenLoopRamps(
-                    new OpenLoopRamps(Seconds.of(0.0), Seconds.of(0.25), Seconds.of(0.0)))
-                .withEnableFOC(false)
-                .build())
-        .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-        .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
-        .withVoltageOffsetStep(Volts.of(1))
         .build();
   }
 

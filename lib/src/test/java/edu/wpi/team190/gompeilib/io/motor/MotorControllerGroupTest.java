@@ -10,11 +10,13 @@ import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup.FollowMode;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.FeedbackSensor;
 import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.RemoteSensorMode;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
@@ -30,6 +32,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
+import org.wpilib.hardware.bus.CANPort;
 
 public class MotorControllerGroupTest extends GompeiLibTestBase {
   private static final CANBusId BUS = CANBusId.named("rio");
@@ -138,6 +141,65 @@ public class MotorControllerGroupTest extends GompeiLibTestBase {
     verify(factory.motors.get(1)).setControl(VOLTAGE);
     verify(factory.motors.get(2)).setControl(VOLTAGE);
     verify(factory.motors.get(3)).setControl(VOLTAGE);
+  }
+
+  @Test
+  public void testOnlyHardwareFollowersKeepTheLeadersRemoteEncoder() {
+    RecordingFactory factory = new RecordingFactory("Vendor", true);
+    FeedbackSensor encoder = new FeedbackSensor.RemoteEncoder(9, RemoteSensorMode.FUSED);
+    new MotorControllerGroup(
+        leader()
+            .withFeedbackSensor(encoder)
+            .withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED))
+            .withFollower(new FollowerMotor(3, MotorAlignment.ALIGNED).onBus(OTHER_BUS))
+            .build(),
+        factory);
+
+    assertEquals(encoder, factory.configs.get(1).feedbackSensor);
+    assertEquals(encoder, factory.configs.get(2).feedbackSensor);
+    assertEquals(FeedbackSensor.INTERNAL, factory.configs.get(3).feedbackSensor);
+    assertEquals(3.0, factory.configs.get(3).gearRatio);
+  }
+
+  @Test
+  public void testSameCanIdOnAnotherBusIsAllowed() {
+    RecordingFactory leaderFactory = new RecordingFactory("Vendor", true);
+    RecordingFactory followerFactory = new RecordingFactory("Vendor", true);
+    MotorControllerGroup group =
+        new MotorControllerGroup(
+            leader()
+                .withFollower(
+                    new FollowerMotor(1, MotorAlignment.OPPOSED)
+                        .onBus(OTHER_BUS)
+                        .builtBy(followerFactory))
+                .build(),
+            leaderFactory);
+
+    assertEquals(List.of(FollowMode.MIRROR), group.followModes());
+    assertEquals(OTHER_BUS, followerFactory.configs.get(1).bus);
+  }
+
+  @Test
+  public void shouldRejectFollowerWithTheLeadersAddress() {
+    RecordingFactory factory = new RecordingFactory("Vendor", true);
+    MotorConfig config =
+        leader().withFollower(new FollowerMotor(1, MotorAlignment.ALIGNED)).build();
+
+    assertThrows(IllegalArgumentException.class, () -> new MotorControllerGroup(config, factory));
+    assertTrue(factory.motors.isEmpty());
+  }
+
+  @Test
+  public void shouldRejectFollowersSharingAnAddress() {
+    RecordingFactory factory = new RecordingFactory("Vendor", true);
+    MotorConfig config =
+        leader()
+            .withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED).onBus(OTHER_BUS))
+            .withFollower(new FollowerMotor(2, MotorAlignment.OPPOSED).onBus(OTHER_BUS))
+            .build();
+
+    assertThrows(IllegalArgumentException.class, () -> new MotorControllerGroup(config, factory));
+    assertTrue(factory.motors.isEmpty());
   }
 
   @Test
@@ -286,5 +348,42 @@ public class MotorControllerGroupTest extends GompeiLibTestBase {
 
     group.telemetry().get(1).connected = true;
     assertTrue(group.isConnected());
+  }
+
+  @Test
+  public void testFollowersOffTheLeadersBusAreKeyedByBus() {
+    RecordingFactory factory = new RecordingFactory("Vendor", true);
+    RecordingFactory otherBusFactory = new RecordingFactory("Vendor", true);
+    MotorControllerGroup group =
+        new MotorControllerGroup(
+            leader()
+                .withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED))
+                .withFollower(
+                    new FollowerMotor(2, MotorAlignment.ALIGNED)
+                        .onBus(CANBusId.port(CANPort.CAN_S1))
+                        .builtBy(otherBusFactory))
+                .withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED).onBus(OTHER_BUS))
+                .build(),
+            factory);
+
+    List<String> keys = new ArrayList<>();
+    try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+      logger
+          .when(() -> Logger.processInputs(anyString(), any()))
+          .thenAnswer(
+              invocation -> {
+                keys.add(invocation.getArgument(0));
+                return null;
+              });
+      group.periodic("Intake/Roller");
+    }
+
+    assertEquals(
+        List.of(
+            "Intake/Roller/Leader",
+            "Intake/Roller/Follower2",
+            "Intake/Roller/Follower2@CAN_S1",
+            "Intake/Roller/Follower2@canivore"),
+        keys);
   }
 }

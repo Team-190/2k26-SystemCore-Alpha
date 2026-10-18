@@ -85,7 +85,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   MotorIOTalonFX.FACTORY,
                   MotorIOTalonFX.FACTORY,
                   MotorIOTalonFX.FACTORY,
-                  MotorIOTalonFX.FACTORY,
                   () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
@@ -132,10 +131,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new V3_Horse_CV2_TR_Intake(
                   MotorIOSim.factory(
                       GenericRoller.simMechanism(
-                          V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS)),
-                  MotorIOSim.factory(
-                      GenericRoller.simMechanism(
-                          V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS)),
+                          V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_CONSTANTS)),
                   MotorIOSim.factory(
                       GenericRoller.simMechanism(
                           V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS)),
@@ -177,7 +173,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     if (intake == null) {
       intake =
           new V3_Horse_CV2_TR_Intake(
-              MotorIO.REPLAY_FACTORY,
               MotorIO.REPLAY_FACTORY,
               MotorIO.REPLAY_FACTORY,
               MotorIO.REPLAY_FACTORY,
