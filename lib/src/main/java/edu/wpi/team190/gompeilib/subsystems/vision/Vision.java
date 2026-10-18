@@ -1,6 +1,6 @@
 package edu.wpi.team190.gompeilib.subsystems.vision;
 
-import edu.wpi.team190.gompeilib.core.utility.VirtualSubsystem;
+import edu.wpi.team190.gompeilib.robot.VirtualSubsystem;
 import edu.wpi.team190.gompeilib.subsystems.vision.camera.Camera;
 import java.util.function.Supplier;
 import lombok.Getter;

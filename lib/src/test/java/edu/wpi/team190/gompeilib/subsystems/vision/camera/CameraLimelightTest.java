@@ -3,13 +3,13 @@ package edu.wpi.team190.gompeilib.subsystems.vision.camera;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.utility.LimelightHelpers;
+import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionSingleTxTyObservation;
 import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIO;
 import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
+import edu.wpi.team190.gompeilib.subsystems.vision.io.limelight.LimelightHelpers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;

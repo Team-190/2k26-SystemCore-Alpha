@@ -1,6 +1,6 @@
 package edu.wpi.team190.gompeilib.subsystems.vision.camera;
 
-import edu.wpi.team190.gompeilib.core.logging.Trace;
+import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionMultiTxTyObservation;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionSingleTxTyObservation;

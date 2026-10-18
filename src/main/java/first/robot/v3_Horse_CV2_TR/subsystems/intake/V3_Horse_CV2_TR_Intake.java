@@ -3,19 +3,15 @@ package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.Volts;
 
-import edu.wpi.team190.gompeilib.core.logging.Trace;
-import edu.wpi.team190.gompeilib.core.utility.ExtensionMethods;
-import edu.wpi.team190.gompeilib.core.utility.Setpoint;
-import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRoller;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
+import edu.wpi.team190.gompeilib.subsystems.roller.GenericRoller;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
-import lombok.experimental.ExtensionMethod;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
@@ -23,7 +19,6 @@ import org.wpilib.command2.SubsystemBase;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.measure.Distance;
 
-@ExtensionMethod(ExtensionMethods.class)
 public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   @Getter private ExtensionState extensionState;
@@ -47,11 +42,11 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   @Getter private Distance extensionPosition;
 
   public V3_Horse_CV2_TR_Intake(
-      GenericRollerIO leftIntakeRollerIO,
-      GenericRollerIO rightIntakeRollerIO,
-      GenericRollerIO kickerRollerIO,
-      ExtensionIO leftExtensionIO,
-      ExtensionIO rightExtensionIO,
+      MotorIOFactory leftIntakeRollerMotors,
+      MotorIOFactory rightIntakeRollerMotors,
+      MotorIOFactory kickerRollerMotors,
+      MotorIOFactory leftExtensionMotors,
+      MotorIOFactory rightExtensionMotors,
       DoubleSupplier triggerSupplier) {
     setName("Intake");
 
@@ -61,14 +56,14 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
     leftIntakeRoller =
         new GenericRoller(
-            leftIntakeRollerIO,
+            leftIntakeRollerMotors,
             this,
             V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS,
             "Left Intake Roller",
             V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
     rightIntakeRoller =
         new GenericRoller(
-            rightIntakeRollerIO,
+            rightIntakeRollerMotors,
             this,
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS,
             "Right Intake Roller",
@@ -76,7 +71,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
     kickerRoller =
         new GenericRoller(
-            kickerRollerIO,
+            kickerRollerMotors,
             this,
             V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS,
             "Kicker Roller",
@@ -87,14 +82,14 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS,
             this,
             0,
-            leftExtensionIO,
+            leftExtensionMotors,
             V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(extensionState));
     rightExtension =
         new Extension(
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS,
             this,
             1,
-            rightExtensionIO,
+            rightExtensionMotors,
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
 
     leftManualPositionGoal =
@@ -188,10 +183,10 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   // Compliant (ZERO) at rest, firmer (ONE) while driving to a new goal.
-  private void updateGainSlots() {
-    leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
-    rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
-  }
+  // private void updateGainSlots() {
+  //   leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
+  //   rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
+  // }
 
   public Command stopRollers() {
     return Commands.runOnce(

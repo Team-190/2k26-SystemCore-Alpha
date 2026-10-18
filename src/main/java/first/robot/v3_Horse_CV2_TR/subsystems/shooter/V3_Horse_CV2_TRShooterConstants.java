@@ -2,6 +2,7 @@ package first.robot.v3_Horse_CV2_TR.subsystems.shooter;
 
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 import static org.wpilib.units.Units.Milliamps;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
@@ -9,12 +10,21 @@ import static org.wpilib.units.Units.Volts;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocityConstraints;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelConstants;
-import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodConstants;
+import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor;
+import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
+import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheelConstants;
+import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodConstants;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.DCMotor;
@@ -23,37 +33,52 @@ public class V3_Horse_CV2_TRShooterConstants {
 
   public static final GenericFlywheelConstants SHOOT_CONSTANTS =
       GenericFlywheelConstants.builder()
-          .withLeaderCANID(41)
-          .withLeaderInversion(InvertedValue.Clockwise_Positive)
-          .withCanBus(new CANBus(CANPort.CAN_S4))
-          .withEnableFOC(true)
-          .withCurrentLimit(
-              CurrentLimits.builder()
-                  .withSupplyCurrentLimit(Amps.of(40.0))
-                  .withStatorCurrentLimit(Amps.of(60.0))
+          .withMotor(
+              MotorConfig.builder()
+                  .withCanId(41)
+                  .withBus(CANBusId.port(CANPort.CAN_S4))
+                  .withDirection(MotorDirection.CLOCKWISE_POSITIVE)
+                  .withNeutralMode(NeutralMode.COAST)
+                  .withCurrentLimits(
+                      CurrentLimits.builder()
+                          .withSupplyCurrentLimit(Amps.of(40.0))
+                          .withStatorCurrentLimit(Amps.of(60.0))
+                          .build())
+                  // Never brake the flywheel with reverse torque current
+                  .withTorqueCurrentLimits(
+                      new TorqueCurrentLimits(TorqueCurrentLimits.NONE.peakForward(), Amps.of(0.0)))
+                  .withGearRatio(30.0 / 18.0)
+                  .withEnableFOC(true)
+                  .withSlot(
+                      GainSlot.ZERO,
+                      new SlotConfig(
+                          Gains.builder() // TODO: Use Real Value
+                              .withPrefix("Shooter/Flywheel/Voltage")
+                              .withKP(0.0)
+                              .withKD(0.0)
+                              .withKS(0.0)
+                              .withKV(0.0)
+                              .withKA(0.0)
+                              .build()))
+                  .withSlot(
+                      GainSlot.ONE,
+                      new SlotConfig(
+                          Gains.builder() // TODO: Use Real Value
+                              .withPrefix("Shooter/Flywheel/Torque")
+                              .withKP(12)
+                              .withKD(0)
+                              .withKS(6.5)
+                              .withKV(0.25)
+                              .withKA(
+                                  0.92854 * 2
+                                      * Math.PI) // measured in A/(rad/s^2), Talon uses rotations
+                              .build()))
+                  .withFollower(new FollowerMotor(42, MotorAlignment.OPPOSED))
+                  .withFollower(new FollowerMotor(43, MotorAlignment.ALIGNED))
+                  .withFollower(new FollowerMotor(44, MotorAlignment.OPPOSED))
                   .build())
-          .withPeakReverseTorqueCurrent(Amps.of(0.0))
-          .withMomentOfInertia(0.09473883059)
-          .withGearRatio(30.0 / 18.0)
-          .withMotorConfig(DCMotor.getKrakenX60Foc(4))
-          .withVoltageGains(
-              Gains.builder() // TODO: Use Real Value
-                  .withPrefix("Shooter/Flywheel/Voltage")
-                  .withKP(0.0)
-                  .withKD(0.0)
-                  .withKS(0.0)
-                  .withKV(0.0)
-                  .withKA(0.0)
-                  .build())
-          .withTorqueGains(
-              Gains.builder() // TODO: Use Real Value
-                  .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(12)
-                  .withKD(0)
-                  .withKS(6.5)
-                  .withKV(0.25)
-                  .withKA(0.92854 * 2 * Math.PI) // measured in A/(rad/s^2), Talon uses rotations
-                  .build())
+          .withFlywheelGearbox(DCMotor.getKrakenX60Foc(4))
+          .withMomentOfInertia(KilogramSquareMeters.of(0.09473883059))
           .withConstraints(
               AngularVelocityConstraints.builder()
                   .withPrefix("Shooter/Flywheel")
@@ -61,9 +86,6 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
                   .withGoalTolerance(RadiansPerSecond.of(10))
                   .build())
-          .withOpposedFollowerCANID(42)
-          .withOpposedFollowerCANID(44)
-          .withAlignedFollowerCANID(43)
           .withVelocityOffsetStep(RadiansPerSecond.of(5))
           .withVoltageOffsetStep(Volts.of(1))
           .build();

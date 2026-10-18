@@ -1,6 +1,6 @@
 package edu.wpi.team190.gompeilib.subsystems.vision.camera;
 
-import edu.wpi.team190.gompeilib.core.utility.GeometryUtil;
+import edu.wpi.team190.gompeilib.math.GeometryUtil;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants.GompeiVisionConfig;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionMultiTxTyObservation;

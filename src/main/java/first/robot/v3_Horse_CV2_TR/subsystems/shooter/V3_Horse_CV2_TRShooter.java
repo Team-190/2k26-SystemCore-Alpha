@@ -2,16 +2,16 @@ package first.robot.v3_Horse_CV2_TR.subsystems.shooter;
 
 import static org.wpilib.units.Units.*;
 
-import edu.wpi.team190.gompeilib.core.logging.Trace;
-import edu.wpi.team190.gompeilib.core.utility.Setpoint;
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocityConstraints;
-import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheel;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIO;
-import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHood;
-import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
+import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
+import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.logging.Trace;
+import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheel;
+import edu.wpi.team190.gompeilib.subsystems.hood.GenericHood;
+import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIO;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShotParameters;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
@@ -45,7 +45,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private FixedShotParameters fixedShotParameters;
 
-  public V3_Horse_CV2_TRShooter(GenericFlywheelIO flywheelIO, GenericHoodIO hoodIO) {
+  public V3_Horse_CV2_TRShooter(MotorIOFactory flywheelMotors, GenericHoodIO hoodIO) {
 
     Setpoint<AngularVelocityUnit> flywheelVelocitySetpoint =
         new Setpoint<AngularVelocityUnit>(
@@ -64,7 +64,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     this.flywheel =
         new GenericFlywheel(
-            flywheelIO,
+            flywheelMotors,
             this,
             V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS,
             "",

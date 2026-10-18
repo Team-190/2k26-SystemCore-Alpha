@@ -188,13 +188,11 @@ jacocoTestReport {
                 '**/*AutoLogged.class',
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
-                '**/Elevator*.class',
-                '**/PoseEstimator*.class',
                 '**/LimelightHelpers*.class',
-                '**/*TalonFX.class',
-                '**/*Pigeon2.class',
                 '**/*SysId*.class',
-                '**/Phoenix*.class',
+                // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
+                '**/PhoenixOdometryThread*.class',
+                '**/PhoenixUtil*.class',
                 // GenericHood is being retired/replaced in #41
                 '**/GenericHood*.class'
             ])
@@ -243,13 +241,11 @@ jacocoTestCoverageVerification {
                 '**/*AutoLogged.class',
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
-                '**/Elevator*.class',
-                '**/PoseEstimator*.class',
                 '**/LimelightHelpers*.class',
-                '**/*TalonFX.class',
-                '**/*Pigeon2.class',
                 '**/*SysId*.class',
-                '**/Phoenix*.class',
+                // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
+                '**/PhoenixOdometryThread*.class',
+                '**/PhoenixUtil*.class',
                 // GenericHood is being retired/replaced in #41
                 '**/GenericHood*.class'
             ])

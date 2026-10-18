@@ -4,8 +4,8 @@ import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.Seconds;
 
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import edu.wpi.team190.gompeilib.core.utility.GeometryUtil;
+import edu.wpi.team190.gompeilib.GompeiLib;
+import edu.wpi.team190.gompeilib.math.GeometryUtil;
 import java.util.function.Function;
 import lombok.experimental.ExtensionMethod;
 import org.wpilib.math.filter.LinearFilter;

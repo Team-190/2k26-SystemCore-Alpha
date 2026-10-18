@@ -2,7 +2,6 @@ package edu.wpi.team190.gompeilib.subsystems.vision.camera;
 
 import static org.wpilib.units.Units.Degrees;
 
-import edu.wpi.team190.gompeilib.core.utility.LimelightHelpers;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants.MovingLimelightConfig;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
@@ -10,6 +9,7 @@ import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionSingleTxTyObservat
 import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIO;
 import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
 import edu.wpi.team190.gompeilib.subsystems.vision.io.LimelightIOInputsAutoLogged;
+import edu.wpi.team190.gompeilib.subsystems.vision.io.limelight.LimelightHelpers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

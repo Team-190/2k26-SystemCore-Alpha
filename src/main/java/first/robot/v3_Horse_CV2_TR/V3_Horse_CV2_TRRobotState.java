@@ -2,10 +2,10 @@ package first.robot.v3_Horse_CV2_TR;
 
 import static org.wpilib.units.Units.*;
 
-import edu.wpi.team190.gompeilib.core.logging.Trace;
-import edu.wpi.team190.gompeilib.core.state.localization.FieldZone;
-import edu.wpi.team190.gompeilib.core.state.localization.Localization;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
+import edu.wpi.team190.gompeilib.localization.FieldZone;
+import edu.wpi.team190.gompeilib.localization.Localization;
+import edu.wpi.team190.gompeilib.logging.Trace;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import first.robot.FieldConstants;
 import first.robot.util.AllianceFlipUtil;

@@ -1,7 +1,7 @@
 package edu.wpi.team190.gompeilib.subsystems.vision.io;
 
-import edu.wpi.team190.gompeilib.core.utility.LimelightHelpers;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
+import edu.wpi.team190.gompeilib.subsystems.vision.io.limelight.LimelightHelpers;
 import java.util.Arrays;
 import lombok.Getter;
 
