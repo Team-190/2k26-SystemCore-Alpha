@@ -328,17 +328,14 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       // getFFCharacterizationVelocity
       assertEquals(5.0 / (2 * Math.PI), drive.getFFCharacterizationVelocity(), 1e-6);
 
-      // setPIDGains
-      drive.setPIDGains(2.0, 0.2, 3.0, 0.3);
-      verify(flMotors.get(0))
-          .updateGains(argThat(g -> g.getKP() == 2.0 && g.getKD() == 0.2), eq(GainSlot.ZERO));
-      verify(flMotors.get(1))
-          .updateGains(argThat(g -> g.getKP() == 3.0 && g.getKD() == 0.3), eq(GainSlot.ZERO));
+      // updateDriveGains / updateTurnGains
+      Gains newDriveGains = Gains.builder().withKP(2.0).withKD(0.2).withKS(0.1).build();
+      drive.updateDriveGains(newDriveGains, GainSlot.ZERO);
+      verify(flMotors.get(0)).updateGains(newDriveGains, GainSlot.ZERO);
 
-      // setFFGains
-      drive.setFFGains(0.1, 0.15);
-      verify(flMotors.get(0))
-          .updateGains(argThat(g -> g.getKS() == 0.1 && g.getKV() == 0.15), eq(GainSlot.ZERO));
+      Gains newTurnGains = Gains.builder().withKP(3.0).withKD(0.3).build();
+      drive.updateTurnGains(newTurnGains, GainSlot.ZERO);
+      verify(flMotors.get(1)).updateGains(newTurnGains, GainSlot.ZERO);
 
       // updateCurrentLimits
       drive.updateCurrentLimits(40.0, 30.0);
@@ -360,6 +357,8 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       notifyGains.invoke(driveConstants.turnGains);
       notifyGains.invoke(driveConstants.autoTranslationGains);
       notifyGains.invoke(driveConstants.autoRotationGains);
+      verify(flMotors.get(0), atLeastOnce()).updateGains(driveConstants.driveGains, GainSlot.ZERO);
+      verify(flMotors.get(1), atLeastOnce()).updateGains(driveConstants.turnGains, GainSlot.ZERO);
 
       // TODO: restore choreoDrive test once ChoreoLib ships a WPILib 2027 alpha build.
 
