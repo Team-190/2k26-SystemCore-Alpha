@@ -69,5 +69,12 @@ public class LinearConstraintsTest extends GompeiLibTestBase {
 
     assertEquals(1, counter.get());
     assertEquals(0.1, c.goalTolerance().get().in(Units.Meters), 1e-9);
+
+    // Update with same value to test deduplication
+    backend.setValue("/Tuned/Goal Tolerance", Units.Meters.of(0.1));
+    TunableRegistry.update();
+    assertEquals(1, counter.get());
+
+    assertNotNull(LinearConstraints.builder().toString());
   }
 }

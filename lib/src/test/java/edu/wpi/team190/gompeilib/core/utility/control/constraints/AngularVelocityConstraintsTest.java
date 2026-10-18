@@ -25,6 +25,24 @@ public class AngularVelocityConstraintsTest extends GompeiLibTestBase {
     assertNotNull(c.goalTolerance());
     assertNotNull(c.maxVelocity());
     assertNotNull(c.maxAcceleration());
+    assertEquals(1.0, c.getGoalTolerance(Units.DegreesPerSecond), 1e-6);
+    assertEquals(180.0, c.getMaxVelocity(Units.DegreesPerSecond), 1e-6);
+    assertEquals(360.0, c.getMaxAcceleration(Units.DegreesPerSecond.per(Units.Second)), 1e-6);
+
+    c.onChange(listener -> {});
+    assertNotNull(AngularVelocityConstraints.builder().toString());
+
+    try {
+      var f = AngularVelocityConstraints.class.getDeclaredField("lastNotifiedValues");
+      f.setAccessible(true);
+      f.set(c, null);
+      var notify = AngularVelocityConstraints.class.getDeclaredMethod("notifyListeners");
+      notify.setAccessible(true);
+      notify.invoke(c);
+      notify.invoke(c);
+    } catch (Exception e) {
+      fail(e);
+    }
 
     // No prefix means unpublished; unset values default to zero
     AngularVelocityConstraints defaults = AngularVelocityConstraints.builder().build();

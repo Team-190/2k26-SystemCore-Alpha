@@ -69,7 +69,7 @@ public class ArmTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testArm() {
+  public void testArm() throws Exception {
     try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       Arm arm = new Arm(io, subsystem, 0, constants);
 
@@ -149,6 +149,17 @@ public class ArmTest extends GompeiLibTestBase {
       sysIdCmd.initialize();
       sysIdCmd.execute();
       sysIdCmd.end(true);
+
+      var f = Gains.class.getDeclaredField("lastNotifiedValues");
+      f.setAccessible(true);
+      f.set(constants.slot0Gains, null);
+      f.set(constants.slot1Gains, null);
+      f.set(constants.slot2Gains, null);
+      var notifyGains = Gains.class.getDeclaredMethod("notifyListeners");
+      notifyGains.setAccessible(true);
+      notifyGains.invoke(constants.slot0Gains);
+      notifyGains.invoke(constants.slot1Gains);
+      notifyGains.invoke(constants.slot2Gains);
     }
   }
 }

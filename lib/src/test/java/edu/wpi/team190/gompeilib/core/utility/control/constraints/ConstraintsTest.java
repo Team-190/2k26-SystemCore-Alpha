@@ -30,5 +30,6 @@ public class ConstraintsTest {
     dummy.trigger();
 
     assertTrue(called[0]);
+    assertNotNull(Constraints.PositionConstraints.class);
   }
 }

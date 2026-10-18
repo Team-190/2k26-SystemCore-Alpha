@@ -14,8 +14,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
-import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
+import edu.wpi.team190.gompeilib.core.io.gyro.GyroIO;
+import edu.wpi.team190.gompeilib.core.io.gyro.phoenix.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
@@ -30,7 +30,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
 import org.mockito.MockedStatic;
@@ -221,7 +220,7 @@ public class SwerveDriveTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testSwerveDriveLowFrequencyGyro() {
+  public void testSwerveDriveLowFrequencyGyro() throws Exception {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
         MockedStatic<Logger> _ = mockStatic(Logger.class);
@@ -343,6 +342,19 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       // setAutoControllers
       drive.setAutoControllers(driveConstants.driveGains, driveConstants.turnGains);
 
+      var f = Gains.class.getDeclaredField("lastNotifiedValues");
+      f.setAccessible(true);
+      f.set(driveConstants.driveGains, null);
+      f.set(driveConstants.turnGains, null);
+      f.set(driveConstants.autoTranslationGains, null);
+      f.set(driveConstants.autoRotationGains, null);
+      var notifyGains = Gains.class.getDeclaredMethod("notifyListeners");
+      notifyGains.setAccessible(true);
+      notifyGains.invoke(driveConstants.driveGains);
+      notifyGains.invoke(driveConstants.turnGains);
+      notifyGains.invoke(driveConstants.autoTranslationGains);
+      notifyGains.invoke(driveConstants.autoRotationGains);
+
       // TODO: restore choreoDrive test once ChoreoLib ships a WPILib 2027 alpha build.
 
       // getFieldRelativeVelocity
@@ -457,15 +469,12 @@ public class SwerveDriveTest extends GompeiLibTestBase {
   }
 
   @Test
-  @Disabled("PathPlanner AutoBuilder setup is commented out in SwerveDrive; re-enable with it")
   public void testSwerveDriveRobotConfigLoadFailure() {
     try (MockedStatic<AutoBuilder> _ = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
         MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class)) {
 
-      // Every call to RobotConfig.fromGUISettings() fails, exercising both the constructor's
-      // initial config-load catch block and the catch wrapping AutoBuilder.configure.
       mockRobotConfig.when(RobotConfig::fromGUISettings).thenThrow(new RuntimeException("boom"));
       mockRobotState.when(RobotState::isDisabled).thenReturn(false);
 

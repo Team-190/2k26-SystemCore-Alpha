@@ -217,6 +217,15 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
       torqueQuasistatic.initialize();
       torqueQuasistatic.execute();
       torqueQuasistatic.end(true);
+
+      var f = Gains.class.getDeclaredField("lastNotifiedValues");
+      f.setAccessible(true);
+      f.set(constants.voltageGains, null);
+      f.set(constants.torqueGains, null);
+      var notifyGains = Gains.class.getDeclaredMethod("notifyListeners");
+      notifyGains.setAccessible(true);
+      notifyGains.invoke(constants.voltageGains);
+      notifyGains.invoke(constants.torqueGains);
     }
   }
 }

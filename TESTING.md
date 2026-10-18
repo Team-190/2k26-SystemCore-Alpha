@@ -5,7 +5,7 @@ This document defines the testing contract and standards for GompeiLib. All new 
 ## 1. Package Mirroring
 
 Every class in `lib/src/main/java/.../Foo.java` must have its unit test located at the mirrored path in `lib/src/test/java/.../FooTest.java`.
-- Example: `edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO` -> `edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOTest`
+- Example: `edu.wpi.team190.gompeilib.core.io.gyro.GyroIO` -> `edu.wpi.team190.gompeilib.core.io.gyro.GyroIOTest`
 - Test classes must end in `Test` and match the class name under test exactly (including casing).
 - This is automatically verified and enforced in CI by `TestContractEnforcerTest`.
 
