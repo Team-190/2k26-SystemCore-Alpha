@@ -1,7 +1,7 @@
 package edu.wpi.team190.gompeilib.subsystems.drive.swerve;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
@@ -28,6 +28,19 @@ public class SwerveModuleHardwareTest extends GompeiLibTestBase {
 
     assertInstanceOf(MotorIOSim.class, hardware.driveMotor().create(config.driveMotor()));
     assertInstanceOf(MotorIOSim.class, hardware.turnMotor().create(config.turnMotor()));
+    assertInstanceOf(AbsoluteEncoderIOSim.class, hardware.encoder());
+  }
+
+  @Test
+  public void testSimTakesTheMotorModelsFromTheDriveConfig() {
+    SwerveModuleConfig config = SwerveDriveConstantsTest.createModuleConfig(1, 2, 3, 0.5, 0.5);
+    SwerveDriveConstants.DriveConfig driveConfig = mock(SwerveDriveConstants.DriveConfig.class);
+    when(driveConfig.driveModel()).thenReturn(DCMotor.getKrakenX60(1));
+    when(driveConfig.turnModel()).thenReturn(DCMotor.getKrakenX44(1));
+
+    SwerveModuleHardware hardware = SwerveModuleHardware.sim(config, driveConfig);
+
+    assertInstanceOf(MotorIOSim.class, hardware.driveMotor().create(config.driveMotor()));
     assertInstanceOf(AbsoluteEncoderIOSim.class, hardware.encoder());
   }
 

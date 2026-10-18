@@ -1,6 +1,5 @@
 package first.robot.v3_Horse_CV2_TR;
 
-import edu.wpi.team190.gompeilib.io.encoder.phoenix.AbsoluteEncoderIOCANcoder;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
 import edu.wpi.team190.gompeilib.io.gyro.phoenix.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
@@ -10,9 +9,8 @@ import edu.wpi.team190.gompeilib.io.phoenix.PhoenixOdometryThread;
 import edu.wpi.team190.gompeilib.robot.RobotContainer;
 import edu.wpi.team190.gompeilib.robot.RobotMode;
 import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDrive;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants.DriveConfig;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveModuleConfig;
 import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveModuleHardware;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.phoenix.SwerveModuleHardwareTalonFX;
 import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
 import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheel;
 import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIO;
@@ -61,17 +59,23 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     if (Constants.getMode() != RobotMode.REPLAY) {
       switch (RobotConfig.ROBOT) {
         case V3_Horse_CV2_TR:
+          PhoenixOdometryThread odometryThread =
+              PhoenixOdometryThread.getInstance(V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS);
           drive =
               new SwerveDrive(
                   V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
                   new GyroIOPigeon2(
                       V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.gyroConfig(),
-                      PhoenixOdometryThread.getInstance(V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS),
+                      odometryThread,
                       V3_Horse_CV2_TRRobotState::setHeadingUpdateTimestamp),
-                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontLeft()),
-                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontRight()),
-                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backLeft()),
-                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backRight()),
+                  SwerveModuleHardwareTalonFX.create(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontLeft(), odometryThread),
+                  SwerveModuleHardwareTalonFX.create(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontRight(), odometryThread),
+                  SwerveModuleHardwareTalonFX.create(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backLeft(), odometryThread),
+                  SwerveModuleHardwareTalonFX.create(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backRight(), odometryThread),
                   V3_Horse_CV2_TRRobotState::getGlobalPose,
                   V3_Horse_CV2_TRRobotState::resetPose);
           rollerFloor = new V3_Horse_CV2_TRRollerFloor(MotorIOTalonFX.FACTORY);
@@ -105,10 +109,18 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new SwerveDrive(
                   V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
                   new GyroIO() {},
-                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontLeft()),
-                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontRight()),
-                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backLeft()),
-                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backRight()),
+                  SwerveModuleHardware.sim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontLeft(),
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG),
+                  SwerveModuleHardware.sim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontRight(),
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG),
+                  SwerveModuleHardware.sim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backLeft(),
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG),
+                  SwerveModuleHardware.sim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backRight(),
+                      V3_Horse_CV2_TRConstants.DRIVE_CONFIG),
                   V3_Horse_CV2_TRRobotState::getGlobalPose,
                   V3_Horse_CV2_TRRobotState::resetPose);
           rollerFloor =
@@ -183,22 +195,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");
     configureButtonBindings();
     configureAutos();
-  }
-
-  /** Builds a module's TalonFXs and CANcoder, their positions sampled by the odometry thread. */
-  private static SwerveModuleHardware talonFXModule(SwerveModuleConfig config) {
-    PhoenixOdometryThread odometryThread =
-        PhoenixOdometryThread.getInstance(V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS);
-    return new SwerveModuleHardware(
-        MotorIOTalonFX.factory(odometryThread),
-        MotorIOTalonFX.factory(odometryThread),
-        new AbsoluteEncoderIOCANcoder(config.encoder()));
-  }
-
-  /** Builds a module's simulated motors and encoder. */
-  private static SwerveModuleHardware simModule(SwerveModuleConfig config) {
-    DriveConfig driveConfig = V3_Horse_CV2_TRConstants.DRIVE_CONFIG;
-    return SwerveModuleHardware.sim(config, driveConfig.driveModel(), driveConfig.turnModel());
   }
 
   private void configureAutos() {

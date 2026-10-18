@@ -31,6 +31,18 @@ public record SwerveModuleHardware(
   }
 
   /**
+   * Returns vendor-neutral simulated hardware for a module, using the drive's motor models.
+   *
+   * @param config the module's config
+   * @param driveConfig the drive's config, for its drive and turn motor models
+   * @return the hardware
+   */
+  public static SwerveModuleHardware sim(
+      SwerveModuleConfig config, SwerveDriveConstants.DriveConfig driveConfig) {
+    return sim(config, driveConfig.driveModel(), driveConfig.turnModel());
+  }
+
+  /**
    * Returns vendor-neutral simulated hardware for a module.
    *
    * @param config the module's config
