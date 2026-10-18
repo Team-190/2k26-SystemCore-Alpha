@@ -14,6 +14,9 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.hood.GenericHood;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRoller;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleHardware;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands.DriveBehaviors;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands.DriveSticks;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands.SwerveDriveCommands;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.phoenix.SwerveModuleHardwareTalonFX;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.Vision;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.camera.CameraStaticLimelight;
@@ -21,8 +24,8 @@ import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
+import first.robot.util.AllianceFlipUtil;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
-import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
 import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
@@ -40,6 +43,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandNiDsXboxController;
+import org.wpilib.math.geometry.Rotation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -198,18 +202,25 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   private void configureButtonBindings() {
     drive.setDefaultCommand(
-        V3_Horse_CV2_TRDriveCommands.joystickDriveRotationLock(
+        SwerveDriveCommands.joystickDrive(
                 drive,
                 V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> -driver.getRightX(),
-                V3_Horse_CV2_TRRobotState::getHeading,
-                () -> driver.rightBumper().getAsBoolean(), // Aim at hub or feed point
-                () -> V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
-                () -> 0.0,
+                new DriveSticks(
+                    () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()),
+                V3_Horse_CV2_TRRobotState::getHeading)
+            .withDriverPerspective(() -> AllianceFlipUtil.apply(Rotation2d.ZERO))
+            // Aim at hub or feed point
+            .with(
+                driver.rightBumper(),
+                DriveBehaviors.faceHeading(
+                    V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                    V3_Horse_CV2_TRRobotState::getAimAngle))
+            .with(
                 driver.leftTrigger(),
-                () -> V3_Horse_CV2_TRRobotState.getCardinalDirection())
+                DriveBehaviors.faceHeading(
+                    V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                    V3_Horse_CV2_TRRobotState::getCardinalDirection))
+            .build()
             .withName("joystickDriveRotationLock"));
 
     driver.leftTrigger().onTrue(Commands.runOnce(() -> {}).withName("cardinal-direction-set"));
@@ -355,8 +366,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         drive.getRawGyroRotation(), drive.getYawVelocity(), drive.getModulePositions(), drive);
     Logger.recordOutput(
         "Mechanism3D",
-        V3_Horse_CV2_TRMechanism3D.getPoses(
-            intake.getExtensionPosition(), shooter.getHoodAngle().getMeasure()));
+        V3_Horse_CV2_TRMechanism3D.getPoses(intake.getExtensionPosition(), shooter.getHoodAngle()));
   }
 
   @Override

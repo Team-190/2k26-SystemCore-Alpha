@@ -316,7 +316,7 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       drive.runVelocityTorque(targetSpeeds, forces);
 
       // runCharacterization
-      drive.runCharacterization(6.0);
+      drive.runCharacterization(new OpenLoopRequest.CurrentOutput(Amps.of(6.0)));
       verify(flMotors.get(0), atLeastOnce())
           .setControl(new OpenLoopRequest.CurrentOutput(Amps.of(6.0)));
 
@@ -441,6 +441,42 @@ public class SwerveDriveTest extends GompeiLibTestBase {
 
       drive.periodic();
       assertEquals(42.0, drive.getRawGyroRotation().getDegrees(), 1e-9);
+    }
+  }
+
+  @Test
+  public void testSwerveDriveWrapsAMultiTurnYawIntoTheHeading() {
+    try (MockedStatic<AutoBuilder> _ = mockStatic(AutoBuilder.class);
+        MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
+        MockedStatic<RobotState> _ = mockStatic(RobotState.class)) {
+
+      mockRobotConfig.when(RobotConfig::fromGUISettings).thenReturn(mock(RobotConfig.class));
+      doAnswer(
+              invocation -> {
+                GyroTelemetry in = invocation.getArgument(0);
+                in.connected = true;
+                in.yawPosition = Degrees.of(400.0);
+                in.odometryTimestamps = new double[] {};
+                in.odometryYawPositions = new Angle[] {};
+                return null;
+              })
+          .when(lowFreqGyroIO)
+          .updateInputs(any());
+
+      SwerveDrive drive =
+          new SwerveDrive(
+              driveConstants,
+              lowFreqGyroIO,
+              flModuleIO,
+              frModuleIO,
+              blModuleIO,
+              brModuleIO,
+              robotPoseSupplier,
+              resetPoseConsumer);
+
+      drive.periodic();
+      assertEquals(40.0, drive.getRawGyroRotation().getDegrees(), 1e-9);
     }
   }
 

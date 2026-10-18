@@ -13,6 +13,7 @@ import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixOdometryThread;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import java.util.List;
@@ -311,11 +312,11 @@ public class SwerveDrive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/TorquesOptimized", setpointTorques);
   }
 
-  /** Runs the drive in a straight line with the specified drive current. */
+  /** Runs the drive in a straight line with an open-loop request to every drive motor. */
   @Trace
-  public void runCharacterization(double amps) {
+  public void runCharacterization(OpenLoopRequest request) {
     for (int i = 0; i < 4; i++) {
-      modules[i].runCharacterization(amps);
+      modules[i].runCharacterization(request);
     }
   }
 
