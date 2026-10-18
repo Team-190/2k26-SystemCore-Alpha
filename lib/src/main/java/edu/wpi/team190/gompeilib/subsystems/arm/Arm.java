@@ -29,14 +29,21 @@ import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Voltage;
 
 /**
  * A position-controlled arm: one leader motor, any number of followers, and an optional absolute
- * encoder on the arm's output that can seed the motors' position.
+ * encoder on the arm's output that can seed the motors' position. An arm with {@link
+ * ArmConstants#homing} can instead find its position by driving into a hard stop.
  */
 public class Arm {
   private static final Voltage VOLTAGE_TOLERANCE = Millivolts.of(500);
+  // Homing drives past the soft limits to reach the hard stop
+  private static final RequestOptions HOMING_OPTIONS =
+      new RequestOptions(
+          false, false, false, false, true, false, RequestOptions.DEFAULT_UPDATE_FREQUENCY);
 
   private final ArmConstants constants;
   private final MotorControllerGroup motors;
@@ -178,9 +185,12 @@ public class Arm {
   }
 
   private void setVoltage(Voltage voltage) {
+    setVoltage(voltage, RequestOptions.DEFAULT);
+  }
+
+  private void setVoltage(Voltage voltage, RequestOptions options) {
     motors.setControl(
-        new OpenLoopRequest.VoltageOutput(
-            voltage, constants.motor.enableFOC, RequestOptions.DEFAULT));
+        new OpenLoopRequest.VoltageOutput(voltage, constants.motor.enableFOC, options));
   }
 
   @Trace
@@ -217,6 +227,14 @@ public class Arm {
 
   public Rotation2d getArmPosition() {
     return new Rotation2d(motors.leader().position);
+  }
+
+  public AngularVelocity getVelocity() {
+    return motors.leader().velocity;
+  }
+
+  public Current getTorqueCurrent() {
+    return motors.leader().torqueCurrent;
   }
 
   public void setVoltageGoal(Voltage voltageGoal) {
@@ -287,6 +305,30 @@ public class Arm {
 
   public void updateConstraints(AngularPositionConstraints constraints) {
     motors.updateMotionProfile(motionProfile(constraints));
+  }
+
+  /**
+   * Homes the arm: drives it into its hard stop, ignoring soft limits, until the leader's torque
+   * current reaches the homing threshold, then stops it and sets its position to the stop's angle.
+   *
+   * @return the homing command
+   * @throws IllegalStateException if the arm has no {@link ArmConstants#homing} config
+   */
+  public Command home() {
+    ArmConstants.Homing homing =
+        constants.homing.orElseThrow(
+            () -> new IllegalStateException(aKitTopic + " has no homing config"));
+    return Commands.sequence(
+        Commands.runOnce(() -> currentState = ArmState.IDLE),
+        Commands.run(() -> setVoltage(homing.voltage(), HOMING_OPTIONS))
+            .until(
+                () ->
+                    getTorqueCurrent().isNear(homing.currentThreshold(), homing.currentEpsilon())),
+        Commands.runOnce(
+            () -> {
+              setVoltage(Volts.zero());
+              setPosition(homing.position());
+            }));
   }
 
   public Command sysIdRoutine() {

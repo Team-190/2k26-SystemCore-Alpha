@@ -258,6 +258,78 @@ public class ArmTest extends GompeiLibTestBase {
     assertInstanceOf(ArmMechanismSim.class, Arm.simMechanism(constants));
   }
 
+  private ArmConstants withHoming() {
+    return ArmConstants.builder()
+        .withMotor(constants.motor)
+        .withArmParameters(constants.armParameters)
+        .withConstraints(constants.constraints)
+        .withVoltageOffsetStep(constants.voltageOffsetStep)
+        .withPositionOffsetStep(constants.positionOffsetStep)
+        .withHoming(
+            Optional.of(
+                ArmConstants.Homing.builder()
+                    .withVoltage(Volts.of(-1.0))
+                    .withCurrentThreshold(Amps.of(-20.0))
+                    .withCurrentEpsilon(Amps.of(1.0))
+                    .withPosition(Rotation2d.fromDegrees(-90))
+                    .build()))
+        .build();
+  }
+
+  @Test
+  public void testHomesAgainstTheHardStop() {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      Arm arm = new Arm(factory, subsystem, 0, withHoming());
+      arm.setVoltageGoal(Volts.of(3.0));
+
+      Command home = arm.home();
+      home.initialize();
+      home.execute();
+      home.execute();
+      assertEquals(ArmState.IDLE, arm.getCurrentState());
+      verify(motor, atLeastOnce())
+          .setControl(
+              new OpenLoopRequest.VoltageOutput(
+                  Volts.of(-1.0),
+                  true,
+                  new RequestOptions(
+                      false,
+                      false,
+                      false,
+                      false,
+                      true,
+                      false,
+                      RequestOptions.DEFAULT_UPDATE_FREQUENCY)));
+      assertFalse(home.isFinished());
+
+      reading = t -> t.torqueCurrent = Amps.of(-20.5);
+      arm.periodic();
+      assertEquals(Amps.of(-20.5), arm.getTorqueCurrent());
+      for (int i = 0; i < 5 && !home.isFinished(); i++) {
+        home.execute();
+      }
+      assertTrue(home.isFinished());
+      verify(motor).setControl(voltage(0.0));
+      verify(motor).setPosition(Rotation2d.fromDegrees(-90).getMeasure());
+    }
+  }
+
+  @Test
+  public void testHomingWithoutAConfigThrows() {
+    Arm arm = new Arm(factory, subsystem, 0, constants);
+    assertThrows(IllegalStateException.class, arm::home);
+  }
+
+  @Test
+  public void testReportsTheLeadersVelocity() {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      Arm arm = new Arm(factory, subsystem, 0, constants);
+      reading = t -> t.velocity = RotationsPerSecond.of(0.25);
+      arm.periodic();
+      assertEquals(0.25, arm.getVelocity().in(RotationsPerSecond), 1e-9);
+    }
+  }
+
   @Test
   public void testSysIdDrivesTheArm() throws Exception {
     try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {

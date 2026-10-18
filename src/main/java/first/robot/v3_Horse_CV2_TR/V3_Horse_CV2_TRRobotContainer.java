@@ -13,9 +13,7 @@ import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveModuleHardware;
 import edu.wpi.team190.gompeilib.subsystems.drive.swerve.phoenix.SwerveModuleHardwareTalonFX;
 import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
 import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheel;
-import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIO;
-import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIOSim;
-import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.hood.GenericHood;
 import edu.wpi.team190.gompeilib.subsystems.roller.GenericRoller;
 import edu.wpi.team190.gompeilib.subsystems.vision.Vision;
 import edu.wpi.team190.gompeilib.subsystems.vision.camera.CameraStaticLimelight;
@@ -86,10 +84,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   MotorIOTalonFX.FACTORY,
                   MotorIOTalonFX.FACTORY,
                   () -> driver.getRightTriggerAxis());
-          shooter =
-              new V3_Horse_CV2_TRShooter(
-                  MotorIOTalonFX.FACTORY,
-                  new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
+          shooter = new V3_Horse_CV2_TRShooter(MotorIOTalonFX.FACTORY, MotorIOTalonFX.FACTORY);
           vision =
               new Vision(
                   () -> FieldConstants.tagLayoutType.getLayout(),
@@ -147,7 +142,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   MotorIOSim.factory(
                       GenericFlywheel.simMechanism(
                           V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS)),
-                  new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
+                  MotorIOSim.factory(
+                      GenericHood.simMechanism(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS)));
           vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
           break;
         default:
@@ -180,7 +176,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               () -> driver.getRightTriggerAxis());
     }
     if (shooter == null) {
-      shooter = new V3_Horse_CV2_TRShooter(MotorIO.REPLAY_FACTORY, new GenericHoodIO() {});
+      shooter = new V3_Horse_CV2_TRShooter(MotorIO.REPLAY_FACTORY, MotorIO.REPLAY_FACTORY);
     }
 
     if (vision == null) {

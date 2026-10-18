@@ -172,7 +172,7 @@ public class V3_Horse_CV2_TRRobotState {
     feedAngleTree.put(
         Meters.of(0.0),
         Rotation2d.fromDegrees(
-            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.maxAngle.getDegrees()));
+            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.maxAngle().getDegrees()));
 
     feedSpeedTree.put(
         Meters.of(0.0), RadiansPerSecond.of(Units.rotationsPerMinuteToRadiansPerSecond(4500)));

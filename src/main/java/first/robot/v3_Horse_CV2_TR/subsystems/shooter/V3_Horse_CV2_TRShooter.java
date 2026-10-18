@@ -11,7 +11,6 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheel;
 import edu.wpi.team190.gompeilib.subsystems.hood.GenericHood;
-import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIO;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShotParameters;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
@@ -45,7 +44,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private FixedShotParameters fixedShotParameters;
 
-  public V3_Horse_CV2_TRShooter(MotorIOFactory flywheelMotors, GenericHoodIO hoodIO) {
+  public V3_Horse_CV2_TRShooter(MotorIOFactory flywheelMotors, MotorIOFactory hoodMotors) {
 
     Setpoint<AngularVelocityUnit> flywheelVelocitySetpoint =
         new Setpoint<AngularVelocityUnit>(
@@ -57,10 +56,11 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     Setpoint<AngleUnit> hoodAngleSetpoint =
         new Setpoint<AngleUnit>(
-            Radians.of(0.0), V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.offsetStep);
+            Radians.of(0.0),
+            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.positionOffsetStep.getMeasure());
     Setpoint<VoltageUnit> hoodVoltageSetpoint =
         new Setpoint<VoltageUnit>(
-            Volts.of(0.0), V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.voltageStep);
+            Volts.of(0.0), V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.voltageOffsetStep);
 
     this.flywheel =
         new GenericFlywheel(
@@ -72,10 +72,10 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             flywheelVoltageSetpoint);
     this.hood =
         new GenericHood(
-            hoodIO,
+            hoodMotors,
             this,
+            0,
             V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS,
-            "",
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
     this.shooterGoal = ShooterGoal.STOW;
@@ -129,7 +129,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   public void periodic() {
     switch (shooterGoal) {
       case STOW:
-        hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.minAngle);
+        hood.setPositionGoal(
+            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.minAngle());
         flywheel.stop();
         break;
       case SCORE:
