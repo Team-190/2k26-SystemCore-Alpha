@@ -6,270 +6,192 @@ import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import lombok.Getter;
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.team190.gompeilib.subsystems.arm.Arm;
+import edu.wpi.team190.gompeilib.subsystems.arm.ArmConstants;
+import java.util.Optional;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.Subsystem;
-import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.VoltageUnit;
-import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Voltage;
 
+/**
+ * A hood: a short-range {@link Arm} that homes against a hard stop. Its constants must include
+ * {@link ArmConstants#homing}.
+ */
 public class GenericHood {
-  private final GenericHoodIO io;
-  private final String aKitTopic;
-  private final GenericHoodIOInputsAutoLogged inputs;
-
-  private final SysIdRoutine characterizationRoutine;
-
-  private GenericHoodState currentState;
-
-  @Getter private Setpoint<AngleUnit> positionGoal;
-  @Getter private Setpoint<VoltageUnit> voltageGoal;
-
-  private final GenericHoodConstants constants;
+  private final Arm arm;
 
   /**
-   * Constructor for the Funky GenericHood subsystem. Makes a routine that sets the voltage passed
-   * into the GenericHood and adds a default GenericHood goal.
+   * Creates a hood.
    *
-   * @param io the IO implementation
-   * @param subsystem the parent subsystem
-   * @param name the name of the GenericHood (for logging purposes)
+   * @param motorFactory how to build the hood's motors
+   * @param subsystem the subsystem that owns the hood, for its log prefix
+   * @param index the hood's index, appended to the log prefix
+   * @param constants the hood's constants
+   * @param positionGoal the initial position goal
+   * @param voltageGoal the initial voltage goal
+   * @throws IllegalArgumentException if the constants have no homing config
    */
   public GenericHood(
-      GenericHoodIO io,
+      MotorIOFactory motorFactory,
       Subsystem subsystem,
-      GenericHoodConstants constants,
-      String name,
+      int index,
+      ArmConstants constants,
       Setpoint<AngleUnit> positionGoal,
       Setpoint<VoltageUnit> voltageGoal) {
-    inputs = new GenericHoodIOInputsAutoLogged();
-    this.io = io;
-
-    this.currentState = GenericHoodState.IDLE;
-
-    aKitTopic = subsystem.getName() + "/Hood" + name;
-
-    characterizationRoutine =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(0.75).per(Seconds),
-                Volts.of(4.5),
-                Seconds.of(4),
-                (state) -> Logger.recordOutput(aKitTopic + "/sysIDState", state.toString())),
-            new SysIdRoutine.Mechanism(io::setVoltage, null, subsystem));
-
-    this.positionGoal = positionGoal;
-    this.voltageGoal = voltageGoal;
-
-    this.constants = constants;
-
-    constants.gains.onChange(io::setGains);
-    constants.constraints.onChange(io::setProfile);
-  }
-
-  public GenericHood(
-      GenericHoodIO io,
-      Subsystem subsystem,
-      GenericHoodConstants constants,
-      String name,
-      Setpoint<AngleUnit> positionGoal) {
-    this(
-        io,
-        subsystem,
-        constants,
-        name,
-        positionGoal,
-        new Setpoint<>(Volts.of(0), constants.voltageStep, Volts.of(-12), Volts.of(12)));
-  }
-
-  public GenericHood(
-      GenericHoodIO io, Subsystem subsystem, GenericHoodConstants constants, String name) {
-    this(
-        io,
-        subsystem,
-        constants,
-        name,
-        new Setpoint<>(
-            Radians.zero(),
-            constants.offsetStep,
-            constants.minAngle.getMeasure(),
-            constants.maxAngle.getMeasure()));
-  }
-
-  /** Periodic method for the hood subsystem. Updates inputs and sets position if in closed loop. */
-  @Trace
-  public void periodic() {
-
-    io.updateInputs(inputs);
-    Logger.processInputs(aKitTopic, inputs);
-
-    switch (currentState) {
-      case CLOSED_LOOP_POSITION_CONTROL:
-        io.setPositionGoal(new Rotation2d(positionGoal.getNewSetpoint().baseUnitMagnitude()));
-        break;
-      case OPEN_LOOP_VOLTAGE_CONTROL:
-        io.setVoltage((Voltage) voltageGoal.getNewSetpoint());
-        break;
-      case IDLE:
-        break;
+    if (constants.homing.isEmpty()) {
+      throw new IllegalArgumentException("A hood needs a homing config");
     }
-
-    Logger.recordOutput(aKitTopic + "/At Position Goal", atPositionGoal());
-    Logger.recordOutput(aKitTopic + "/At Voltage Goal", atVoltageGoal());
-    Logger.recordOutput(aKitTopic + "/State", currentState);
-    Logger.recordOutputMeasure(aKitTopic + "/Voltage Goal", voltageGoal.getSetpoint());
-    Logger.recordOutputMeasure(aKitTopic + "/Voltage Offset", voltageGoal.getOffset());
-    Logger.recordOutput(
-        aKitTopic + "/Position Goal", new Rotation2d((Angle) positionGoal.getSetpoint()));
-    Logger.recordOutputMeasure(aKitTopic + "/Position Offset", positionGoal.getOffset());
+    arm =
+        new Arm(
+            motorFactory, Optional.empty(), subsystem, index, constants, positionGoal, voltageGoal);
   }
 
   /**
-   * Sets the voltage being passed into the hood subsystem.
+   * Creates a hood with a 0 V goal.
    *
-   * @param voltageGoal the voltage passed into the hood.
-   * @return A command that sets the specified voltage.
+   * @param motorFactory how to build the hood's motors
+   * @param subsystem the subsystem that owns the hood, for its log prefix
+   * @param index the hood's index, appended to the log prefix
+   * @param constants the hood's constants
+   * @param positionGoal the initial position goal
    */
+  public GenericHood(
+      MotorIOFactory motorFactory,
+      Subsystem subsystem,
+      int index,
+      ArmConstants constants,
+      Setpoint<AngleUnit> positionGoal) {
+    this(
+        motorFactory,
+        subsystem,
+        index,
+        constants,
+        positionGoal,
+        new Setpoint<>(Volts.of(0), constants.voltageOffsetStep, Volts.of(-12), Volts.of(12)));
+  }
+
+  /**
+   * Creates a hood with a position goal at zero, limited to its travel, and a 0 V goal.
+   *
+   * @param motorFactory how to build the hood's motors
+   * @param subsystem the subsystem that owns the hood, for its log prefix
+   * @param index the hood's index, appended to the log prefix
+   * @param constants the hood's constants
+   */
+  public GenericHood(
+      MotorIOFactory motorFactory, Subsystem subsystem, int index, ArmConstants constants) {
+    this(
+        motorFactory,
+        subsystem,
+        index,
+        constants,
+        new Setpoint<>(
+            Radians.zero(),
+            constants.positionOffsetStep.getMeasure(),
+            constants.armParameters.minAngle().getMeasure(),
+            constants.armParameters.maxAngle().getMeasure()));
+  }
+
+  /**
+   * Builds the physics model for simulating a hood. It starts at its lowest angle.
+   *
+   * @param constants the hood's constants
+   * @return the physics model
+   */
+  public static MechanismSim simMechanism(ArmConstants constants) {
+    return Arm.simMechanism(constants);
+  }
+
+  @Trace
+  public void periodic() {
+    arm.periodic();
+  }
+
+  public Setpoint<AngleUnit> getPositionGoal() {
+    return arm.getPositionGoal();
+  }
+
+  public Setpoint<VoltageUnit> getVoltageGoal() {
+    return arm.getVoltageGoal();
+  }
+
   public void setVoltageGoal(Voltage voltageGoal) {
-    currentState = GenericHoodState.OPEN_LOOP_VOLTAGE_CONTROL;
-    this.voltageGoal.setSetpoint(voltageGoal);
+    arm.setVoltageGoal(voltageGoal);
   }
 
   public void setVoltageGoal(Setpoint<VoltageUnit> voltageGoal) {
-    currentState = GenericHoodState.OPEN_LOOP_VOLTAGE_CONTROL;
-    this.voltageGoal = voltageGoal;
+    arm.setVoltageGoal(voltageGoal);
   }
 
   public void setPositionGoal(Rotation2d positionGoal) {
-    currentState = GenericHoodState.CLOSED_LOOP_POSITION_CONTROL;
-    this.positionGoal.setSetpoint(positionGoal.getMeasure());
+    arm.setPositionGoal(positionGoal);
   }
 
   public void setPositionGoal(Setpoint<AngleUnit> positionGoal) {
-    currentState = GenericHoodState.CLOSED_LOOP_POSITION_CONTROL;
-    this.positionGoal = positionGoal;
+    arm.setPositionGoal(positionGoal);
   }
 
-  /**
-   * Checks if the hood is at the goal position.
-   *
-   * @return If the hood is within tolerance of the goal (true) or not (false).
-   */
   public boolean atPositionGoal() {
-    return io.atPositionGoal(new Rotation2d(positionGoal.getNewSetpoint().baseUnitMagnitude()));
+    return arm.atPositionGoal();
   }
 
   public boolean atPositionGoal(Rotation2d position) {
-    return io.atPositionGoal(position);
+    return arm.atPositionGoal(position);
   }
 
   public boolean atVoltageGoal() {
-    return io.atVoltageGoal((Voltage) voltageGoal.getNewSetpoint());
+    return arm.atVoltageGoal();
   }
 
   public boolean atVoltageGoal(Voltage voltage) {
-    return io.atVoltageGoal(voltage);
+    return arm.atVoltageGoal(voltage);
   }
 
   /**
-   * Waits until hood at goal/in tolerance.
+   * Waits a loop, so periodic applies the latest goal, then until the hood is at its goal.
    *
-   * @return A command that waits until the hood is at the goal.
+   * @return the command
    */
   public Command waitUntilAtGoal() {
-    return Commands.waitSeconds(GompeiLib.getLoopPeriod())
-        .andThen(Commands.waitUntil(this::atPositionGoal));
+    return Commands.waitSeconds(GompeiLib.getLoopPeriod()).andThen(arm.waitUntilAtGoal());
   }
 
-  /**
-   * Updates the PID values for the hood.
-   *
-   * @param gains The proportional gain, derivative gain, and feedforward gains.
-   */
   public void setGains(Gains gains) {
-    io.setGains(gains);
+    arm.updateGains(gains, GainSlot.ZERO);
+  }
+
+  public void setProfile(AngularPositionConstraints constraints) {
+    arm.updateConstraints(constraints);
   }
 
   /**
-   * Resets the hood to the zero position, while ensuring that the motor is not producing any
-   * torque.
+   * Drives the hood into its hard stop until the torque current reaches the homing threshold, then
+   * sets its position to the stop's angle.
    *
-   * <p>This command sequence is as follows:
-   *
-   * <ol>
-   *   <li>Move the hood to its maximum angle.
-   *   <li>Set the hood state to idle.
-   *   <li>Apply a negative voltage to the hood motor until the torque current is near zero.
-   *   <li>Set the hood position to zero.
-   * </ol>
-   *
-   * @return A command sequence that resets the hood to the zero position
+   * @return the homing command
    */
   public Command resetHoodZero() {
-    return Commands.sequence(
-        Commands.runOnce(() -> currentState = GenericHoodState.IDLE),
-        Commands.run(() -> io.setVoltage(constants.zeroVoltage.times(-1)))
-            .until(
-                () ->
-                    inputs.torqueCurrent.isNear(
-                        constants.zeroCurrentThreshold, constants.zeroCurrentEpsilon)),
-        Commands.runOnce(() -> io.setPosition(Rotation2d.ZERO)));
+    return arm.home();
   }
 
-  /**
-   * Updates the profile constraints.
-   *
-   * @param constraints The profile constraints.
-   */
-  public void setProfile(AngularPositionConstraints constraints) {
-    io.setProfile(constraints);
-  }
-
-  private boolean anyAtEndStop(SysIdRoutine.Direction direction) {
-    double position = getAngle().getMeasure().in(Radians);
-    double tolerance = constants.constraints.goalTolerance().get().in(Radians);
-    if (direction == SysIdRoutine.Direction.FORWARD
-        ? position >= constants.maxAngle.getMeasure().in(Radians) - tolerance
-        : position <= constants.minAngle.getMeasure().in(Radians) + tolerance) {
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Runs the system ID
-   *
-   * @return runs a sysID charecterization routine command
-   */
   public Command runSysIdRoutine() {
-    return Commands.sequence(
-        Commands.runOnce(() -> currentState = GenericHoodState.OPEN_LOOP_VOLTAGE_CONTROL),
-        characterizationRoutine
-            .quasistatic(SysIdRoutine.Direction.FORWARD)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD)),
-        characterizationRoutine
-            .quasistatic(SysIdRoutine.Direction.REVERSE)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE)),
-        characterizationRoutine
-            .dynamic(SysIdRoutine.Direction.FORWARD)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD)),
-        characterizationRoutine
-            .dynamic(SysIdRoutine.Direction.REVERSE)
-            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE)));
+    return arm.sysIdRoutine();
   }
 
   public Rotation2d getAngle() {
-    return inputs.position;
+    return arm.getArmPosition();
   }
 
   public AngularVelocity getVelocity() {
-    return inputs.velocity;
+    return arm.getVelocity();
   }
 }

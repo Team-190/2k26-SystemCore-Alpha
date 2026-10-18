@@ -53,11 +53,28 @@ public class ArmConstantsTest extends GompeiLibTestBase {
     assertEquals(Meters.of(0.5), parameters.length());
     assertEquals(Rotation2d.fromDegrees(90), parameters.maxAngle());
     assertTrue(parameters.simulateGravity());
+    assertTrue(constants.homing.isEmpty());
+  }
+
+  @Test
+  public void testHoming() {
+    ArmConstants.Homing homing =
+        ArmConstants.Homing.builder()
+            .withVoltage(Volts.of(-1.0))
+            .withCurrentThreshold(Amps.of(40.0))
+            .withCurrentEpsilon(Milliamps.of(500))
+            .withPosition(Rotation2d.ZERO)
+            .build();
+    assertEquals(Volts.of(-1.0), homing.voltage());
+    assertEquals(Amps.of(40.0), homing.currentThreshold());
+    assertEquals(Milliamps.of(500), homing.currentEpsilon());
+    assertEquals(Rotation2d.ZERO, homing.position());
   }
 
   @Test
   public void shouldRequireEveryField() {
     assertThrows(NullPointerException.class, () -> ArmConstants.builder().build());
     assertThrows(NullPointerException.class, () -> ArmConstants.ArmParameters.builder().build());
+    assertThrows(NullPointerException.class, () -> ArmConstants.Homing.builder().build());
   }
 }

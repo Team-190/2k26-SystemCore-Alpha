@@ -3,13 +3,12 @@ package first.robot.v3_Horse_CV2_TR.subsystems.shooter;
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Degrees;
 import static org.wpilib.units.Units.KilogramSquareMeters;
+import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.Milliamps;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 import static org.wpilib.units.Units.Volts;
 
-import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
@@ -22,9 +21,11 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
+import edu.wpi.team190.gompeilib.subsystems.arm.ArmConstants;
 import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheelConstants;
-import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodConstants;
+import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.DCMotor;
@@ -90,29 +91,42 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withVoltageOffsetStep(Volts.of(1))
           .build();
 
-  public static final GenericHoodConstants HOOD_CONSTANTS =
-      GenericHoodConstants.builder()
-          .withMotorCanId(45)
-          .withCanBus(new CANBus(CANPort.CAN_S4))
-          .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
-          .withCurrentLimits(new CurrentLimits(40, 30))
-          .withMomentOfInertia(0.0001)
-          .withInvertedValue(InvertedValue.Clockwise_Positive)
-          .withMotorConfig(DCMotor.getKrakenX44Foc(1))
-          .withLengthMeters(0.211582)
-          .withMinAngle(Rotation2d.fromDegrees(0.5))
-          .withMaxAngle(Rotation2d.fromDegrees(35.0))
-          .withZeroVoltage(Volts.of(1.0))
-          .withZeroCurrentThreshold(Amps.of(40.0))
-          .withZeroCurrentEpsilon(Milliamps.of(500))
-          .withGains(
-              Gains.builder()
-                  .withPrefix("Shooter/Hood")
-                  .withKP(1152)
-                  .withKD(20)
-                  .withKS(0.60085)
-                  .withKV(0.15846)
-                  .withKA(0.13428)
+  private static final Rotation2d HOOD_MIN_ANGLE = Rotation2d.fromDegrees(0.5);
+  private static final Rotation2d HOOD_MAX_ANGLE = Rotation2d.fromDegrees(35.0);
+
+  public static final ArmConstants HOOD_CONSTANTS =
+      ArmConstants.builder()
+          .withMotor(
+              MotorConfig.builder()
+                  .withCanId(45)
+                  .withBus(CANBusId.port(CANPort.CAN_S4))
+                  .withDirection(MotorDirection.CLOCKWISE_POSITIVE)
+                  .withCurrentLimits(new CurrentLimits(40, 30))
+                  .withSoftLimits(
+                      SoftLimits.between(HOOD_MIN_ANGLE.getMeasure(), HOOD_MAX_ANGLE.getMeasure()))
+                  .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
+                  .withSlot(
+                      GainSlot.ZERO,
+                      new SlotConfig(
+                          Gains.builder()
+                              .withPrefix("Shooter/Hood")
+                              .withKP(1152)
+                              .withKD(20)
+                              .withKS(0.60085)
+                              .withKV(0.15846)
+                              .withKA(0.13428)
+                              .build()))
+                  .build())
+          .withArmParameters(
+              ArmConstants.ArmParameters.builder()
+                  .withArmGearbox(DCMotor.getKrakenX44Foc(1))
+                  .withMinAngle(HOOD_MIN_ANGLE)
+                  .withMaxAngle(HOOD_MAX_ANGLE)
+                  .withLength(Meters.of(0.211582))
+                  .withMomentOfInertia(KilogramSquareMeters.of(0.0001))
+                  // Gravity off: the sim infers mass from MOI, which overstates load on a geared
+                  // hood
+                  .withSimulateGravity(false)
                   .build())
           .withConstraints(
               AngularPositionConstraints.builder()
@@ -121,8 +135,16 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
                   .withGoalTolerance(Degrees.of(1))
                   .build())
-          .withOffsetStep(Degrees.of(1))
-          .withVoltageStep(Volts.of(0.5))
+          .withPositionOffsetStep(Rotation2d.fromDegrees(1))
+          .withVoltageOffsetStep(Volts.of(0.5))
+          .withHoming(
+              Optional.of(
+                  ArmConstants.Homing.builder()
+                      .withVoltage(Volts.of(-1.0))
+                      .withCurrentThreshold(Amps.of(40.0))
+                      .withCurrentEpsilon(Milliamps.of(500))
+                      .withPosition(Rotation2d.ZERO)
+                      .build()))
           .build();
 
   public enum ShooterGoal {

@@ -192,9 +192,7 @@ jacocoTestReport {
                 '**/*SysId*.class',
                 // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
                 '**/PhoenixOdometryThread*.class',
-                '**/PhoenixUtil*.class',
-                // GenericHood is being retired/replaced in #41
-                '**/GenericHood*.class'
+                '**/PhoenixUtil*.class'
             ])
         }))
     }
@@ -245,9 +243,7 @@ jacocoTestCoverageVerification {
                 '**/*SysId*.class',
                 // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
                 '**/PhoenixOdometryThread*.class',
-                '**/PhoenixUtil*.class',
-                // GenericHood is being retired/replaced in #41
-                '**/GenericHood*.class'
+                '**/PhoenixUtil*.class'
             ])
         }))
     }

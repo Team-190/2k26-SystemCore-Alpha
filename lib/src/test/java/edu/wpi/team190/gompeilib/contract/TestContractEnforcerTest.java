@@ -22,14 +22,6 @@ public class TestContractEnforcerTest {
   private static final Set<String> MIRROR_EXCLUDED_MAIN =
       Set.of(
           "edu/wpi/team190/gompeilib/logging/TracerAspect.java",
-          // GenericHood is being retired/replaced in #41
-          "edu/wpi/team190/gompeilib/subsystems/hood/GenericHood.java",
-          "edu/wpi/team190/gompeilib/subsystems/hood/GenericHoodConstants.java",
-          "edu/wpi/team190/gompeilib/subsystems/hood/GenericHoodIO.java",
-          "edu/wpi/team190/gompeilib/subsystems/hood/GenericHoodIOSim.java",
-          "edu/wpi/team190/gompeilib/subsystems/hood/GenericHoodIOTalonFX.java",
-          "edu/wpi/team190/gompeilib/subsystems/hood/GenericHoodIOTalonFXSim.java",
-          "edu/wpi/team190/gompeilib/subsystems/hood/GenericHoodState.java",
           // CameraStaticLimelight and CameraMovingLimelight are tested in CameraLimelightTest until
           // refactored in #39
           "edu/wpi/team190/gompeilib/subsystems/vision/camera/CameraStaticLimelight.java",
