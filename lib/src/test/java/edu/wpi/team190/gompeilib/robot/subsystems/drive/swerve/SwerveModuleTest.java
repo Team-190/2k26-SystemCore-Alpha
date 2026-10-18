@@ -6,6 +6,7 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
@@ -13,6 +14,8 @@ import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry;
 import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
@@ -40,7 +43,6 @@ public class SwerveModuleTest extends GompeiLibTestBase {
   private final List<MotorIO> motors = new ArrayList<>();
   private MotorIOFactory factory;
   private AbsoluteEncoderIO encoder;
-  private SwerveModuleConfig config;
   private boolean encoderConnected;
 
   @BeforeEach
@@ -64,11 +66,11 @@ public class SwerveModuleTest extends GompeiLibTestBase {
             })
         .when(encoder)
         .updateInputs(any());
-    config = SwerveDriveConstantsTest.createModuleConfig(1, 2, 3, 0.5, 0.5);
   }
 
   private static SwerveDriveConstants driveConstants(OutputType drive, OutputType steer) {
-    Gains gains = Gains.builder().build();
+    var translation = SwerveDriveConstantsTest.translationGains(0, 0);
+    var rotation = SwerveDriveConstantsTest.rotationGains(0, 0);
     SwerveModuleConfig module = SwerveDriveConstantsTest.createModuleConfig(1, 2, 3, 0.5, 0.5);
     LinearConstraints linear = LinearConstraints.builder().build();
     return SwerveDriveConstants.builder()
@@ -94,17 +96,23 @@ public class SwerveModuleTest extends GompeiLibTestBase {
                 .withModuleCurrentLimit(40.0)
                 .withWheelCOF(1.2)
                 .build())
-        .withDriveGains(gains)
-        .withTurnGains(gains)
-        .withAutoTranslationGains(gains)
-        .withAutoRotationGains(gains)
+        .withDriveGains(
+            drive == OutputType.CURRENT
+                ? Gains.angularVelocity(Amps).build()
+                : Gains.angularVelocity(Volts).build())
+        .withTurnGains(
+            steer == OutputType.CURRENT
+                ? Gains.angularPosition(Amps).build()
+                : Gains.angularPosition(Volts).build())
+        .withAutoTranslationGains(translation)
+        .withAutoRotationGains(rotation)
         .withAutoAlignConstants(
             SwerveDriveConstants.AutoAlignConstants.builder()
-                .withXGains(gains)
+                .withXGains(translation)
                 .withXConstraints(linear)
-                .withYGains(gains)
+                .withYGains(translation)
                 .withYConstraints(linear)
-                .withRotationGains(gains)
+                .withRotationGains(rotation)
                 .withRotationConstraints(AngularPositionConstraints.builder().build())
                 .withLinearThreshold(Tunable.create(Meters.of(0.01)))
                 .withAngularThreshold(Tunable.create(Radians.of(0.01)))
@@ -137,7 +145,7 @@ public class SwerveModuleTest extends GompeiLibTestBase {
   private SwerveModule module(OutputType drive, OutputType steer) {
     return new SwerveModule(
         driveConstants(drive, steer),
-        config,
+        SwerveDriveConstantsTest.createModuleConfig(1, 2, 3, 0.5, 0.5, drive),
         new SwerveModuleHardware(factory, factory, encoder),
         0);
   }
@@ -290,17 +298,35 @@ public class SwerveModuleTest extends GompeiLibTestBase {
     MotorIO drive = motors.get(0);
     MotorIO turn = motors.get(1);
 
-    Gains driveGains = Gains.builder().withKP(1.0).withKD(0.1).withKS(0.3).withKV(0.4).build();
+    var driveGains = TestGains.velocity(1.0, 0, 0.1, 0.3, 0.4, 0, 0);
     module.updateDriveGains(driveGains, GainSlot.ZERO);
-    verify(drive).updateGains(driveGains, GainSlot.ZERO);
+    verify(drive).updateGains(SlotConfig.velocity(driveGains), GainSlot.ZERO);
     verify(turn, never()).updateGains(any(), any());
 
-    Gains turnGains = Gains.builder().withKP(2.0).withKD(0.2).build();
+    var turnGains = TestGains.position(2.0, 0, 0.2, 0, 0, 0, 0);
     module.updateTurnGains(turnGains, GainSlot.ONE);
-    verify(turn).updateGains(turnGains, GainSlot.ONE);
+    verify(turn).updateGains(SlotConfig.position(turnGains), GainSlot.ONE);
 
     module.updateCurrentLimits(50.0, 20.0);
     verify(drive).updateCurrentLimits(new CurrentLimits(Amps.of(60.0), Amps.of(50.0)));
     verify(turn).updateCurrentLimits(new CurrentLimits(Amps.of(60.0), Amps.of(20.0)));
+  }
+
+  @Test
+  public void shouldRejectSlotsThatDontMatchTheModulesRequests() {
+    MotorConfig voltageDrive =
+        SwerveDriveConstantsTest.createModuleConfig(1, 2, 3, 0.5, 0.5).driveMotor();
+    // A velocity slot where the module runs position, and voltage gains where it runs current
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            SwerveModule.requireSlot(
+                voltageDrive, SlotConfig.Position.class, OutputType.VOLTAGE, "Turn"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            SwerveModule.requireSlot(
+                voltageDrive, SlotConfig.Velocity.class, OutputType.CURRENT, "Drive"));
+    SwerveModule.requireSlot(voltageDrive, SlotConfig.Velocity.class, OutputType.VOLTAGE, "Drive");
   }
 }

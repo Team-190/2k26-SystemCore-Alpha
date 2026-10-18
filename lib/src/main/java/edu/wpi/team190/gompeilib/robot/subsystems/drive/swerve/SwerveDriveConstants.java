@@ -17,6 +17,10 @@ import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.LinearVelocityUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Distance;
 
@@ -26,11 +30,23 @@ public class SwerveDriveConstants {
 
   @NonNull public final DriveConfig driveConfig;
 
-  @NonNull public final Gains driveGains;
-  @NonNull public final Gains turnGains;
+  /**
+   * The drive motors' velocity gains, per wheel rotation; output must match the drive output type.
+   */
+  @NonNull public final Gains<?, AngularVelocityUnit, AngularVelocityUnit> driveGains;
 
-  @NonNull public final Gains autoTranslationGains;
-  @NonNull public final Gains autoRotationGains;
+  /**
+   * The turn motors' position gains, per module rotation; output must match the steer output type.
+   */
+  @NonNull public final Gains<?, AngleUnit, AngularVelocityUnit> turnGains;
+
+  /** PathPlanner's translation gains, from position error to chassis velocity. */
+  @NonNull
+  public final Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> autoTranslationGains;
+
+  /** PathPlanner's rotation gains, from heading error to chassis angular velocity. */
+  @NonNull
+  public final Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit> autoRotationGains;
 
   @NonNull public final AutoAlignConstants autoAlignConstants;
 
@@ -100,11 +116,11 @@ public class SwerveDriveConstants {
 
   @Builder(setterPrefix = "with")
   public record AutoAlignConstants(
-      @NonNull Gains xGains,
+      @NonNull Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> xGains,
       @NonNull LinearConstraints xConstraints,
-      @NonNull Gains yGains,
+      @NonNull Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> yGains,
       @NonNull LinearConstraints yConstraints,
-      @NonNull Gains rotationGains,
+      @NonNull Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit> rotationGains,
       @NonNull AngularPositionConstraints rotationConstraints,
       @NonNull Tunable<Distance> linearThreshold,
       @NonNull Tunable<Angle> angularThreshold) {}

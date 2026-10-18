@@ -33,6 +33,8 @@ public class TestContractEnforcerTest {
           "edu/wpi/team190/gompeilib/GompeiLibTestBase.java",
           "edu/wpi/team190/gompeilib/contract/TestContractEnforcerTest.java",
           // Shared reflection helpers for the core/io contract and Phoenix6 coverage tests
+          // Shared typed gains in Phoenix slot units for the motor and mechanism tests
+          "edu/wpi/team190/gompeilib/control/TestGains.java",
           "edu/wpi/team190/gompeilib/io/IOTestSupport.java",
           // Shared motor fixture and all-capability test mechanism for the mechanism-layer tests
           "edu/wpi/team190/gompeilib/robot/mechanisms/MechanismTestSupport.java",

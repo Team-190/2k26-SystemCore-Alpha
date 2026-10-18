@@ -7,14 +7,28 @@ import org.wpilib.tunable.TunableDouble;
 import org.wpilib.tunable.TunableOption;
 import org.wpilib.tunable.TunableTable;
 import org.wpilib.tunable.Tunables;
+import org.wpilib.units.Measure;
+import org.wpilib.units.Unit;
 
 /**
  * Helpers for creating WPILib tunables with GompeiLib conventions.
  *
  * <p>Tunables are always published so their values are visible, but are only editable from a
  * dashboard when {@link GompeiLib#isTuning()} is true.
+ *
+ * <p>A measure is published as a number in the unit it was declared in, and its unit is published
+ * two ways: as the {@value #UNIT_PROPERTY} property of the value's topic (WPILib's convention), and
+ * as a read-only string at {@code <name>}{@value #UNIT_SUFFIX} next to it, for dashboards that
+ * don't show topic properties. Unit symbols like {@code V/rot} contain {@code /}, so they are only
+ * ever published as values, never as part of a key.
  */
 public final class GompeiTunables {
+  /** The topic property that holds a measure's unit symbol. */
+  public static final String UNIT_PROPERTY = "unit";
+
+  /** Appended to a measure's name for the entry holding its unit symbol. */
+  public static final String UNIT_SUFFIX = " Unit";
+
   private GompeiTunables() {}
 
   /**
@@ -40,8 +54,9 @@ public final class GompeiTunables {
   }
 
   /**
-   * Creates and publishes a tunable value. Measures keep their static type, so passing a {@code
-   * Distance} returns a {@code Tunable<Distance>}.
+   * Creates and publishes a tunable value. A measure is published through {@link #measure}, in the
+   * unit it was declared in, and keeps its static type, so passing a {@code Distance} returns a
+   * {@code Tunable<Distance>}.
    *
    * @param table table to publish in, or null to leave unpublished
    * @param name name within the table
@@ -49,7 +64,11 @@ public final class GompeiTunables {
    * @param onTune callback run when the value is edited remotely, or null for none
    * @return tunable
    */
+  @SuppressWarnings("unchecked")
   public static <T> Tunable<T> value(TunableTable table, String name, T initial, Runnable onTune) {
+    if (initial instanceof Measure<?> measure) {
+      return (Tunable<T>) measure(table, name, measure, onTune);
+    }
     Tunable<T> tunable = Tunable.createConfig(initial, config(onTune));
     if (table != null) {
       table.publish(name, tunable);
@@ -69,6 +88,30 @@ public final class GompeiTunables {
   }
 
   /**
+   * Creates and publishes a tunable measure in the unit it was declared in, with its unit published
+   * next to it.
+   *
+   * @param table table to publish in, or null to leave unpublished
+   * @param name name within the table
+   * @param initial initial value, in the unit it is published and edited in
+   * @param onTune callback run when the value is edited remotely, or null for none
+   * @return tunable
+   */
+  public static <M extends Measure<?>> TunableMeasure<M> measure(
+      TunableTable table, String name, M initial, Runnable onTune) {
+    Unit unit = initial.unit();
+    TunableMeasure<M> tunable =
+        new TunableMeasure<>(initial, config(onTune).withProperty(UNIT_PROPERTY, json(unit)));
+    if (table != null) {
+      table.publish(name, tunable);
+      table.publish(
+          name + UNIT_SUFFIX,
+          Tunable.createConfig(unit.symbol(), TunableConfig.of(TunableOption.IMMUTABLE)));
+    }
+    return tunable;
+  }
+
+  /**
    * Creates and publishes a tunable double.
    *
    * @param table table to publish in, or null to leave unpublished
@@ -84,5 +127,10 @@ public final class GompeiTunables {
       table.publish(name, tunable);
     }
     return tunable;
+  }
+
+  /** Encodes a unit's symbol as the JSON string a topic property holds. */
+  private static String json(Unit unit) {
+    return '"' + unit.symbol().replace("\\", "\\\\").replace("\"", "\\\"") + '"';
   }
 }

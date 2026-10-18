@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.measure.Angle;
@@ -88,5 +89,37 @@ public class MechanismConversionTest extends GompeiLibTestBase {
     assertThrows(IllegalArgumentException.class, () -> MechanismConversion.drum(Meters.of(-1)));
     assertThrows(
         IllegalArgumentException.class, () -> MechanismConversion.drum(Meters.of(Double.NaN)));
+  }
+
+  @Test
+  public void shouldConvertGainsThroughTheDrum() {
+    var conversion = MechanismConversion.drum(Meters.of(0.05));
+    var position =
+        Gains.linearPosition(Volts)
+            .withKP(Volts.per(Meters).ofNative(10.0))
+            .withKV(Volts.per(MetersPerSecond).ofNative(4.0))
+            .withKS(Volts.of(0.3))
+            .build();
+    var velocity =
+        Gains.linearVelocity(Volts)
+            .withKP(Volts.per(MetersPerSecond).ofNative(2.0))
+            .withKD(Volts.per(MetersPerSecondPerSecond).ofNative(1.0))
+            .build();
+
+    var motorPosition = conversion.toMotorPositionGains(position);
+    assertEquals(0.5, motorPosition.getKP(Volts.per(Radians)), 1e-9);
+    assertEquals(0.2, motorPosition.getKV(Volts.per(RadiansPerSecond)), 1e-9);
+    assertEquals(0.3, motorPosition.getKS(Volts), 1e-9);
+
+    var motorVelocity = conversion.toMotorVelocityGains(velocity);
+    assertEquals(0.1, motorVelocity.getKP(Volts.per(RadiansPerSecond)), 1e-9);
+    assertEquals(0.05, motorVelocity.getKD(Volts.per(RadiansPerSecondPerSecond)), 1e-9);
+  }
+
+  @Test
+  public void shouldLeaveAngularGainsUnscaled() {
+    var gains = Gains.angularVelocity(Volts).withKP(Volts.per(RotationsPerSecond).ofNative(3.0));
+    var motor = MechanismConversion.angular().toMotorVelocityGains(gains.build());
+    assertEquals(3.0, motor.getKP(Volts.per(RotationsPerSecond)), 1e-9);
   }
 }

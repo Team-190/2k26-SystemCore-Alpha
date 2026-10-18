@@ -19,7 +19,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
@@ -57,7 +57,8 @@ public class MotorIOTalonFXTest extends GompeiLibTestBase {
                 .withStatorCurrentLimit(80.0)
                 .build())
         .withSlot(
-            GainSlot.ONE, new SlotConfig(Gains.builder().withKG(1.0).build(), GravityType.COSINE))
+            GainSlot.ONE,
+            SlotConfig.position(TestGains.position(0, 0, 0, 0, 0, 0, 1.0), GravityType.COSINE))
         .build();
   }
 
@@ -217,12 +218,15 @@ public class MotorIOTalonFXTest extends GompeiLibTestBase {
           verify(talon).clearStickyFaults();
 
           ArgumentCaptor<SlotConfigs> slots = ArgumentCaptor.forClass(SlotConfigs.class);
-          io.updateGains(Gains.builder().withKP(2.0).build(), GainSlot.ONE);
-          io.updateGains(Gains.builder().withKP(3.0).build(), GainSlot.TWO);
+          io.updateGains(
+              SlotConfig.position(TestGains.positionKP(2.0), GravityType.COSINE), GainSlot.ONE);
+          io.updateGains(SlotConfig.position(TestGains.positionKP(3.0)), GainSlot.TWO);
           verify(configurator, times(2)).apply(slots.capture());
           assertEquals(GravityTypeValue.Arm_Cosine, slots.getAllValues().get(0).GravityType);
           assertEquals(1, slots.getAllValues().get(0).SlotNumber);
+          assertEquals(2.0, slots.getAllValues().get(0).kP, 1e-9);
           assertEquals(GravityTypeValue.Elevator_Static, slots.getAllValues().get(1).GravityType);
+          assertEquals(3.0, slots.getAllValues().get(1).kP, 1e-9);
 
           io.updateMotionProfile(
               MotionProfileConfig.trapezoidal(

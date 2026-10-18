@@ -3,6 +3,7 @@ package edu.wpi.team190.gompeilib.control.constraints;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.wpilib.tunable.MockTunableBackend;
@@ -71,10 +72,44 @@ public class AngularPositionConstraintsTest extends GompeiLibTestBase {
     // Only SysId reads the margin, so editing it leaves the profile listeners alone.
     AtomicInteger counter = new AtomicInteger(0);
     c.onChange(x -> counter.incrementAndGet());
-    backend.setValue("/Margin/SysId Margin", Units.Radians.of(0.3));
+    backend.setDouble("/Margin/SysId Margin", 0.3);
     TunableRegistry.update();
     assertEquals(0.3, c.sysIdMargin().get().in(Units.Radians), 1e-9);
     assertEquals(0, counter.get());
+    TunableRegistry.reset();
+  }
+
+  @Test
+  public void shouldPublishAndEditInTheDeclaredUnit() {
+    TunableRegistry.reset();
+    MockTunableBackend backend = new MockTunableBackend();
+    TunableRegistry.registerBackend("", backend);
+    AngularPositionConstraints c =
+        AngularPositionConstraints.builder()
+            .withPrefix("Hood")
+            .withGoalTolerance(Units.Degrees.of(1.0))
+            .withMaxVelocity(Units.RotationsPerSecond.of(2.0))
+            .build();
+
+    // Shown as the Motion Magic number from Phoenix Tuner, not its radians-per-second base value
+    assertEquals(2.0, backend.getDouble("/Hood/Max Velocity"));
+    assertEquals(1.0, backend.getDouble("/Hood/Goal Tolerance"));
+    assertEquals(
+        Units.RotationsPerSecond.symbol(),
+        backend.getValue("/Hood/Max Velocity" + GompeiTunables.UNIT_SUFFIX, String.class));
+    assertEquals(
+        Units.Degrees.symbol(),
+        backend.getValue("/Hood/Goal Tolerance" + GompeiTunables.UNIT_SUFFIX, String.class));
+    // Unset constraints publish zero in rotations
+    assertEquals(0.0, backend.getDouble("/Hood/Max Acceleration"));
+    assertEquals(
+        Units.RotationsPerSecondPerSecond.symbol(),
+        backend.getValue("/Hood/Max Acceleration" + GompeiTunables.UNIT_SUFFIX, String.class));
+
+    backend.setDouble("/Hood/Max Velocity", 3.0);
+    TunableRegistry.update();
+    assertEquals(3.0, c.getMaxVelocity(Units.RotationsPerSecond), 1e-9);
+    assertEquals(6.0 * Math.PI, c.getMaxVelocity(Units.RadiansPerSecond), 1e-9);
     TunableRegistry.reset();
   }
 }

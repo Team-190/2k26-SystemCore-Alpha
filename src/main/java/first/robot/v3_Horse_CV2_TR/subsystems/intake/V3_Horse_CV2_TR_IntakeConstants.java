@@ -14,7 +14,6 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
-import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants;
@@ -231,11 +230,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 Volts.of(12.0)));
   }
 
-  /** Converts a per-meter extension gain to per drum rotation, the unit the motor works in. */
-  private static double perDrumRotation(double perMeter) {
-    return perMeter * 2.0 * Math.PI * EXTENSION_DRUM_RADIUS.in(Meters);
-  }
-
   /** The two extensions share everything but their ID, direction, and tunable prefix. */
   private static ExtensionConstants extensionConstants(
       int canId, MotorDirection direction, String name) {
@@ -252,28 +246,20 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                         .withStatorCurrentLimit(Amps.of(40.0))
                         .build())
                 .withGearRatio((52.0 / 30) * (52.0 / 16))
-                .withSlot(
-                    GainSlot.ZERO,
-                    new SlotConfig(
-                        Gains.builder()
-                            .withPrefix("Intake/" + name + "/Slot0")
-                            .withKP(perDrumRotation(10))
-                            .withKD(0.0)
-                            .withKS(0.42002)
-                            .withKV(perDrumRotation(6.3697))
-                            .withKA(0.0)
-                            .build()))
-                .withSlot(
-                    GainSlot.ONE,
-                    new SlotConfig(
-                        Gains.builder()
-                            .withPrefix("Intake/" + name + "/Slot1")
-                            .withKP(perDrumRotation(1.0))
-                            .withKD(0.0)
-                            .withKS(0.0)
-                            .withKV(0.0)
-                            .withKA(0.0)
-                            .build()))
+                .build())
+        .withSlot(
+            GainSlot.ZERO,
+            Gains.linearPosition(Volts)
+                .withPrefix("Intake/" + name + "/Slot0")
+                .withKP(Volts.per(Meters).ofNative(10))
+                .withKS(Volts.of(0.42002))
+                .withKV(Volts.per(MetersPerSecond).ofNative(6.3697))
+                .build())
+        .withSlot(
+            GainSlot.ONE,
+            Gains.linearPosition(Volts)
+                .withPrefix("Intake/" + name + "/Slot1")
+                .withKP(Volts.per(Meters).ofNative(1.0))
                 .build())
         .withDrumRadius(EXTENSION_DRUM_RADIUS)
         // Drive back into the hard stop at 1 V until the torque current reaches -20 A

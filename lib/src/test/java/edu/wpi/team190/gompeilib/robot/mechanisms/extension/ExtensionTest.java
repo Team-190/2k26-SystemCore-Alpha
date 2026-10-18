@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
+import com.ctre.phoenix6.configs.SlotConfigs;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
@@ -21,6 +23,7 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.motor.phoenix.TalonFXConversions;
 import edu.wpi.team190.gompeilib.io.physics.ElevatorMechanismSim;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
@@ -39,6 +42,7 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.LinearVelocityUnit;
 import org.wpilib.units.VoltageUnit;
 
 public class ExtensionTest extends GompeiLibTestBase {
@@ -51,8 +55,8 @@ public class ExtensionTest extends GompeiLibTestBase {
   private Consumer<MotorTelemetry> reading = t -> {};
   private Subsystem subsystem;
   private ExtensionConstants constants;
-  private Gains slot0;
-  private Gains slot1;
+  private Gains<VoltageUnit, DistanceUnit, LinearVelocityUnit> slot0;
+  private Gains<VoltageUnit, DistanceUnit, LinearVelocityUnit> slot1;
 
   @BeforeEach
   public void setUp() {
@@ -76,8 +80,14 @@ public class ExtensionTest extends GompeiLibTestBase {
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
     when(subsystem.getName()).thenReturn("TestExtensionSubsystem");
 
-    slot0 = Gains.builder().withPrefix("slot0").build();
-    slot1 = Gains.builder().withPrefix("slot1").build();
+    slot0 =
+        Gains.linearPosition(Volts)
+            .withPrefix("slot0")
+            .withKP(Volts.per(Meters).ofNative(10.0))
+            .withKS(Volts.of(0.4))
+            .withKV(Volts.per(MetersPerSecond).ofNative(6.0))
+            .build();
+    slot1 = Gains.linearPosition(Volts).withPrefix("slot1").build();
     constants = constants(Optional.empty());
   }
 
@@ -86,21 +96,28 @@ public class ExtensionTest extends GompeiLibTestBase {
     logger.close();
   }
 
-  private ExtensionConstants constants(Optional<CurrentHoming.Config<DistanceUnit>> homing) {
-    return ExtensionConstants.builder()
-        .withMotor(
-            MotorConfig.builder()
-                .withCanId(5)
-                .withBus(CANBusId.named("rio"))
-                .withCurrentLimits(
-                    CurrentLimits.fromDoubles()
-                        .withSupplyCurrentLimit(40.0)
-                        .withStatorCurrentLimit(40.0)
-                        .build())
-                .withGearRatio(10.0)
-                .withSlot(GainSlot.ZERO, new SlotConfig(slot0))
-                .withSlot(GainSlot.ONE, new SlotConfig(slot1))
+  private static MotorConfig.MotorConfigBuilder motor() {
+    return MotorConfig.builder()
+        .withCanId(5)
+        .withBus(CANBusId.named("rio"))
+        .withCurrentLimits(
+            CurrentLimits.fromDoubles()
+                .withSupplyCurrentLimit(40.0)
+                .withStatorCurrentLimit(40.0)
                 .build())
+        .withGearRatio(10.0);
+  }
+
+  private ExtensionConstants constants(Optional<CurrentHoming.Config<DistanceUnit>> homing) {
+    return constants(homing, motor().build());
+  }
+
+  private ExtensionConstants constants(
+      Optional<CurrentHoming.Config<DistanceUnit>> homing, MotorConfig motor) {
+    return ExtensionConstants.builder()
+        .withMotor(motor)
+        .withSlot(GainSlot.ZERO, slot0)
+        .withSlot(GainSlot.ONE, slot1)
         .withDrumRadius(Meters.of(DRUM_RADIUS))
         .withHoming(homing)
         .withExtensionParameters(
@@ -236,7 +253,33 @@ public class ExtensionTest extends GompeiLibTestBase {
     var notify = Gains.class.getDeclaredMethod("notifyListeners");
     notify.setAccessible(true);
     notify.invoke(slot1);
-    verify(motor).updateGains(slot1, GainSlot.ONE);
+    verify(motor).updateGains(builtConfig.slots.get(GainSlot.ONE), GainSlot.ONE);
+  }
+
+  @Test
+  public void shouldConvertGainsPerMeterThroughTheDrum() {
+    new Extension(factory, subsystem, "Extension", constants);
+
+    SlotConfig slot = builtConfig.slots.get(GainSlot.ZERO);
+    assertInstanceOf(SlotConfig.Position.class, slot);
+    SlotConfigs phoenix = TalonFXConversions.toSlotConfigs(slot, GainSlot.ZERO);
+    double metersPerRotation = 2 * Math.PI * DRUM_RADIUS;
+    assertEquals(10.0 * metersPerRotation, phoenix.kP, 1e-9);
+    assertEquals(0.4, phoenix.kS, 1e-9);
+    assertEquals(6.0 * metersPerRotation, phoenix.kV, 1e-9);
+  }
+
+  @Test
+  public void shouldRejectGainsInTheMotorConfig() {
+    ExtensionConstants withMotorSlots =
+        constants(
+            Optional.empty(),
+            motor()
+                .withSlot(GainSlot.ZERO, SlotConfig.position(TestGains.positionKP(1.0)))
+                .build());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new Extension(factory, subsystem, "Extension", withMotorSlots));
   }
 
   @Test

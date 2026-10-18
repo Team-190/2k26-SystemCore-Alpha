@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
@@ -43,7 +43,7 @@ public class MotorConfigTest extends GompeiLibTestBase {
 
   @Test
   public void testEveryField() {
-    SlotConfig slot = new SlotConfig(Gains.builder().withKP(1.0).build(), GravityType.COSINE);
+    SlotConfig slot = SlotConfig.position(TestGains.positionKP(1.0), GravityType.COSINE);
     MotionProfileConfig profile =
         new MotionProfileConfig(
             RotationsPerSecond.of(1.0),

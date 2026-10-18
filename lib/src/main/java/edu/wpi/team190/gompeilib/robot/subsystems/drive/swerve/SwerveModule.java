@@ -8,6 +8,8 @@ import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
@@ -15,6 +17,7 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.logging.Trace;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants.DriveConfig;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
@@ -23,6 +26,8 @@ import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.util.Alert;
 
@@ -62,6 +67,17 @@ public class SwerveModule {
       int index) {
     this.driveConstants = driveConstants;
     this.config = config;
+    DriveConfig driveConfig = driveConstants.driveConfig;
+    requireSlot(
+        config.driveMotor(),
+        SlotConfig.Velocity.class,
+        driveConfig.driveClosedLoopOutputType(),
+        "Module " + index + " drive");
+    requireSlot(
+        config.turnMotor(),
+        SlotConfig.Position.class,
+        driveConfig.steerClosedLoopOutputType(),
+        "Module " + index + " turn");
     drive = new MotorControllerGroup(config.driveMotor(), hardware.driveMotor());
     turn = new MotorControllerGroup(config.turnMotor(), hardware.turnMotor());
     encoder = hardware.encoder();
@@ -79,6 +95,29 @@ public class SwerveModule {
         getAlert(
             "SwerveModule" + index + "TurnEncoderDisconnected",
             "Disconnected turn encoder on module " + index + ".");
+  }
+
+  /**
+   * Checks a motor's slot {@code ZERO}, if set, against the loop and output type the module runs it
+   * with.
+   *
+   * @param motor the motor
+   * @param kind the slot kind the module's requests use
+   * @param outputType the output type the module's requests use
+   * @param name the motor, for the error message
+   * @throws IllegalArgumentException if the slot doesn't match
+   */
+  static void requireSlot(
+      MotorConfig motor, Class<? extends SlotConfig> kind, OutputType outputType, String name) {
+    SlotConfig slot = motor.slots.get(GainSlot.ZERO);
+    if (slot == null) {
+      return;
+    }
+    if (!kind.isInstance(slot)) {
+      throw new IllegalArgumentException(
+          name + " slot ZERO must be a " + kind.getSimpleName() + " slot, was " + slot);
+    }
+    SlotConfig.requireOutputType(slot, outputType, name);
   }
 
   private static Alert getAlert(String id, String text) {
@@ -242,8 +281,9 @@ public class SwerveModule {
    * @param slot the target gain slot
    */
   @Trace
-  public void updateDriveGains(Gains gains, GainSlot slot) {
-    drive.updateGains(gains, slot);
+  public void updateDriveGains(
+      Gains<?, AngularVelocityUnit, AngularVelocityUnit> gains, GainSlot slot) {
+    drive.updateGains(SlotConfig.velocity(gains), slot);
   }
 
   /**
@@ -253,8 +293,8 @@ public class SwerveModule {
    * @param slot the target gain slot
    */
   @Trace
-  public void updateTurnGains(Gains gains, GainSlot slot) {
-    turn.updateGains(gains, slot);
+  public void updateTurnGains(Gains<?, AngleUnit, AngularVelocityUnit> gains, GainSlot slot) {
+    turn.updateGains(SlotConfig.position(gains), slot);
   }
 
   /**

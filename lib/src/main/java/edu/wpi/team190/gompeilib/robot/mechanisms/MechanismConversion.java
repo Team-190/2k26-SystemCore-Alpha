@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.robot.mechanisms;
 
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import java.util.Objects;
 import org.wpilib.units.AngleUnit;
@@ -20,7 +21,8 @@ import org.wpilib.units.measure.Distance;
 /**
  * A linear map between a mechanism's units and the motor side's gearbox-output rotation. Position,
  * velocity, and acceleration share one scale, so the same conversion turns goals into requests,
- * telemetry into readings, and constraints into motion profiles.
+ * telemetry into readings, constraints into motion profiles, and gains into gains at the gearbox
+ * output.
  *
  * @param <P> the mechanism's position unit
  * @param <V> the mechanism's velocity unit
@@ -97,6 +99,32 @@ public final class MechanismConversion<P extends Unit, V extends Unit, A extends
     return (Measure<A>)
         accelerationUnit.ofBaseUnits(
             acceleration.in(RadiansPerSecondPerSecond) * baseUnitsPerRadian);
+  }
+
+  /**
+   * Returns position gains declared in the mechanism's units as gains per gearbox-output radian.
+   * The result is a live view: it follows dashboard edits to the declared gains.
+   *
+   * @param gains the gains, per mechanism position
+   * @param <O> the output unit
+   * @return the gains at the gearbox output
+   */
+  public <O extends Unit> Gains<O, AngleUnit, AngularVelocityUnit> toMotorPositionGains(
+      Gains<O, P, V> gains) {
+    return gains.view(Radians, RadiansPerSecond, baseUnitsPerRadian);
+  }
+
+  /**
+   * Returns velocity gains declared in the mechanism's units as gains per gearbox-output radian per
+   * second. The result is a live view: it follows dashboard edits to the declared gains.
+   *
+   * @param gains the gains, per mechanism velocity
+   * @param <O> the output unit
+   * @return the gains at the gearbox output
+   */
+  public <O extends Unit> Gains<O, AngularVelocityUnit, AngularVelocityUnit> toMotorVelocityGains(
+      Gains<O, V, V> gains) {
+    return gains.view(RadiansPerSecond, RadiansPerSecond, baseUnitsPerRadian);
   }
 
   /**

@@ -16,10 +16,8 @@ import com.ctre.phoenix6.signals.ForwardLimitValue;
 import com.ctre.phoenix6.signals.MotorOutputStatusValue;
 import com.ctre.phoenix6.signals.ReverseLimitValue;
 import com.ctre.phoenix6.signals.RobotEnableValue;
-import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
-import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
@@ -399,10 +397,8 @@ public class MotorIOTalonFX implements MotorIO {
   }
 
   @Override
-  public void updateGains(Gains gains, GainSlot gainSlot) {
-    SlotConfig slot = config.slots.get(gainSlot);
-    GravityType gravity = slot == null ? GravityType.CONSTANT : slot.gravityType();
-    talonFX.getConfigurator().apply(TalonFXConversions.toSlotConfigs(gains, gravity, gainSlot));
+  public void updateGains(SlotConfig gains, GainSlot gainSlot) {
+    talonFX.getConfigurator().apply(TalonFXConversions.toSlotConfigs(gains, gainSlot));
   }
 
   @Override

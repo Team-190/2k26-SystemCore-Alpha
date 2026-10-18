@@ -7,6 +7,7 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
@@ -40,6 +41,7 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.CurrentUnit;
 import org.wpilib.units.VoltageUnit;
 
 public class GenericFlywheelTest extends GompeiLibTestBase {
@@ -49,8 +51,8 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
   private Consumer<MotorTelemetry> reading = t -> {};
   private Subsystem subsystem;
   private GenericFlywheelConstants constants;
-  private Gains voltageGains;
-  private Gains torqueGains;
+  private Gains<VoltageUnit, AngularVelocityUnit, AngularVelocityUnit> voltageGains;
+  private Gains<CurrentUnit, AngularVelocityUnit, AngularVelocityUnit> torqueGains;
 
   @BeforeEach
   public void setUp() {
@@ -78,8 +80,8 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
     when(subsystem.getName()).thenReturn("TestFlywheelSubsystem");
 
-    voltageGains = Gains.builder().withPrefix("flywheel/voltage").build();
-    torqueGains = Gains.builder().withPrefix("flywheel/torque").build();
+    voltageGains = Gains.angularVelocity(Volts).withPrefix("flywheel/voltage").build();
+    torqueGains = Gains.angularVelocity(Amps).withPrefix("flywheel/torque").build();
     constants =
         GenericFlywheelConstants.builder()
             .withMotor(
@@ -92,10 +94,10 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
                             .withStatorCurrentLimit(60.0)
                             .build())
                     .withGearRatio(2.0)
-                    .withSlot(GainSlot.ZERO, new SlotConfig(voltageGains))
-                    .withSlot(GainSlot.ONE, new SlotConfig(torqueGains))
                     .withFollower(new FollowerMotor(2, MotorAlignment.OPPOSED))
                     .build())
+            .withVoltageGains(voltageGains)
+            .withCurrentGains(torqueGains)
             .withFlywheelGearbox(DCMotor.getKrakenX60Foc(2))
             .withMomentOfInertia(KilogramSquareMeters.of(0.01))
             .withConstraints(
@@ -268,9 +270,18 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
     GenericFlywheel flywheel = new GenericFlywheel(factory, subsystem, constants, "Test");
     MotorIO leader = motors.get(0);
 
-    Gains gains = Gains.builder().withKP(3.0).build();
-    flywheel.updateGains(gains, GainSlot.ZERO);
-    verify(leader).updateGains(gains, GainSlot.ZERO);
+    var voltage = TestGains.velocity(3.0, 0, 0, 0, 0, 0, 0);
+    flywheel.updateVoltageGains(voltage);
+    verify(leader).updateGains(SlotConfig.velocity(voltage), GenericFlywheel.VOLTAGE_SLOT);
+    var current = Gains.angularVelocity(Amps).build();
+    flywheel.updateCurrentGains(current);
+    verify(leader).updateGains(SlotConfig.velocity(current), GenericFlywheel.CURRENT_SLOT);
+    SlotConfig generic = SlotConfig.velocity(TestGains.velocity(4.0, 0, 0, 0, 0, 0, 0));
+    flywheel.updateGains(generic, GainSlot.ZERO);
+    verify(leader).updateGains(generic, GainSlot.ZERO);
+    SlotConfig other = SlotConfig.position(TestGains.positionKP(1.0));
+    flywheel.updateGains(other, GainSlot.TWO);
+    verify(leader).updateGains(other, GainSlot.TWO);
 
     flywheel.updateConstraints(
         AngularVelocityConstraints.builder()
@@ -288,7 +299,54 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
     var notify = Gains.class.getDeclaredMethod("notifyListeners");
     notify.setAccessible(true);
     notify.invoke(torqueGains);
-    verify(leader).updateGains(torqueGains, GainSlot.ONE);
+    verify(leader).updateGains(SlotConfig.velocity(torqueGains), GainSlot.ONE);
+  }
+
+  @Test
+  public void shouldFillTheSlotsFromTheTypedGains() {
+    new GenericFlywheel(factory, subsystem, constants, "Test");
+
+    assertEquals(SlotConfig.velocity(voltageGains), builtConfig.slots.get(GainSlot.ZERO));
+    assertEquals(SlotConfig.velocity(torqueGains), builtConfig.slots.get(GainSlot.ONE));
+  }
+
+  @Test
+  public void shouldRejectGainsInTheWrongOutputSlot() {
+    GenericFlywheel flywheel = new GenericFlywheel(factory, subsystem, constants, "Test");
+
+    SlotConfig current = SlotConfig.velocity(Gains.angularVelocity(Amps).build());
+    SlotConfig voltage = SlotConfig.velocity(TestGains.velocity(1.0, 0, 0, 0, 0, 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> flywheel.updateGains(current, GenericFlywheel.VOLTAGE_SLOT));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> flywheel.updateGains(voltage, GenericFlywheel.CURRENT_SLOT));
+    flywheel.updateGains(current, GenericFlywheel.CURRENT_SLOT);
+    flywheel.updateGains(voltage, GenericFlywheel.VOLTAGE_SLOT);
+    verify(motors.get(0)).updateGains(current, GenericFlywheel.CURRENT_SLOT);
+    verify(motors.get(0)).updateGains(voltage, GenericFlywheel.VOLTAGE_SLOT);
+  }
+
+  @Test
+  public void shouldRejectGainsInTheMotorConfig() {
+    GenericFlywheelConstants withMotorSlots =
+        GenericFlywheelConstants.builder()
+            .withMotor(
+                constants.motor.toBuilder()
+                    .withSlot(GainSlot.ZERO, SlotConfig.velocity(voltageGains))
+                    .build())
+            .withFlywheelGearbox(constants.flywheelGearbox)
+            .withMomentOfInertia(constants.momentOfInertia)
+            .withConstraints(constants.constraints)
+            .withVelocityOffsetStep(constants.velocityOffsetStep)
+            .withVoltageOffsetStep(constants.voltageOffsetStep)
+            .withVoltageSysId(constants.voltageSysId)
+            .withCurrentSysId(constants.currentSysId)
+            .build();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GenericFlywheel(factory, subsystem, withMotorSlots, "Test"));
   }
 
   @Test

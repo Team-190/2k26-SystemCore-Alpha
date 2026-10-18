@@ -1,8 +1,8 @@
 package edu.wpi.team190.gompeilib.control.constraints;
 
-import static org.wpilib.units.Units.Radians;
-import static org.wpilib.units.Units.RadiansPerSecond;
-import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
+import static org.wpilib.units.Units.Rotations;
+import static org.wpilib.units.Units.RotationsPerSecond;
+import static org.wpilib.units.Units.RotationsPerSecondPerSecond;
 
 import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.ArrayList;
@@ -21,8 +21,10 @@ import org.wpilib.units.measure.AngularVelocity;
 
 /**
  * Tunable angular position constraints, published under {@code prefix} (for example {@code
- * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Unset
- * values default to zero, except the SysId margin, which defaults to the goal tolerance.
+ * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Each
+ * value is published and edited in the unit it was declared in, with its unit next to it. Unset
+ * values default to zero, published in rotations, except the SysId margin, which defaults to the
+ * goal tolerance.
  */
 public final class AngularPositionConstraints
     implements Constraints.PositionConstraints<AngularPositionConstraints> {
@@ -43,7 +45,7 @@ public final class AngularPositionConstraints
       Angle sysIdMargin) {
     TunableTable table = GompeiTunables.table(prefix);
     Runnable onTune = this::notifyListeners;
-    Angle tolerance = Objects.requireNonNullElse(goalTolerance, Radians.of(0));
+    Angle tolerance = Objects.requireNonNullElse(goalTolerance, Rotations.of(0));
     this.goalTolerance = GompeiTunables.value(table, "Goal Tolerance", tolerance, onTune);
     // Only SysId reads the margin, so editing it doesn't notify the profile listeners.
     this.sysIdMargin =
@@ -53,13 +55,13 @@ public final class AngularPositionConstraints
         GompeiTunables.value(
             table,
             "Max Velocity",
-            Objects.requireNonNullElse(maxVelocity, RadiansPerSecond.of(0)),
+            Objects.requireNonNullElse(maxVelocity, RotationsPerSecond.of(0)),
             onTune);
     this.maxAcceleration =
         GompeiTunables.value(
             table,
             "Max Acceleration",
-            Objects.requireNonNullElse(maxAcceleration, RadiansPerSecondPerSecond.of(0)),
+            Objects.requireNonNullElse(maxAcceleration, RotationsPerSecondPerSecond.of(0)),
             onTune);
     lastNotifiedValues = values();
   }

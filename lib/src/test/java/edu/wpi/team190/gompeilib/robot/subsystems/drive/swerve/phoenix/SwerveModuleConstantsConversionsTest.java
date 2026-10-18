@@ -5,12 +5,12 @@ import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.SlotConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.encoder.config.AbsoluteEncoderConfig;
 import edu.wpi.team190.gompeilib.io.encoder.config.SensorDirection;
@@ -20,8 +20,10 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.RemoteSensorMode;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
+import edu.wpi.team190.gompeilib.io.motor.phoenix.TalonFXConversions;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.geometry.Translation2d;
@@ -70,8 +72,11 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     assertEquals(Amps.of(90.0), drive.currentLimits.statorCurrentLimit());
     assertEquals(TorqueCurrentLimits.symmetric(Amps.of(90.0)), drive.torqueCurrentLimits);
     assertEquals(6.0, drive.gearRatio);
-    assertEquals(1.0, drive.slots.get(GainSlot.ZERO).gains().getKP());
-    assertEquals(0.5, drive.slots.get(GainSlot.ZERO).gains().getKV());
+    SlotConfig driveSlot = drive.slots.get(GainSlot.ZERO);
+    assertInstanceOf(SlotConfig.Velocity.class, driveSlot);
+    assertEquals(OutputType.VOLTAGE, driveSlot.outputType());
+    assertEquals(1.0, TalonFXConversions.toSlotConfigs(driveSlot, GainSlot.ZERO).kP, 1e-9);
+    assertEquals(0.5, TalonFXConversions.toSlotConfigs(driveSlot, GainSlot.ZERO).kV, 1e-9);
     assertEquals(Seconds.of(0.02), drive.closedLoopRamps.current());
     assertEquals(
         Hertz.of(250.0), drive.signalRates.rateFor("position", MotorConfig.CONTROL_FIELDS));
@@ -90,7 +95,10 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     assertEquals(20.0, turn.gearRatio);
     assertEquals(new FeedbackSensor.RemoteEncoder(3, RemoteSensorMode.FUSED), turn.feedbackSensor);
     assertTrue(turn.continuousWrap);
-    assertEquals(50.0, turn.slots.get(GainSlot.ZERO).gains().getKP());
+    SlotConfig turnSlot = turn.slots.get(GainSlot.ZERO);
+    assertInstanceOf(SlotConfig.Position.class, turnSlot);
+    assertEquals(50.0, TalonFXConversions.toSlotConfigs(turnSlot, GainSlot.ZERO).kP, 1e-9);
+    assertEquals(0.5, TalonFXConversions.toSlotConfigs(turnSlot, GainSlot.ZERO).kD, 1e-9);
     assertEquals(5.0, turn.motionProfile.cruiseVelocity().in(RotationsPerSecond), 1e-9);
     assertEquals(50.0, turn.motionProfile.acceleration().in(RotationsPerSecondPerSecond), 1e-9);
     assertEquals(2.4, turn.motionProfile.exponentialKV().in(Volts.per(RotationsPerSecond)), 1e-9);
@@ -156,24 +164,63 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
             SwerveModuleConstantsConversions.toRemoteSensorMode(SteerFeedbackType.FusedCANdiPWM1));
   }
 
+  private static final Slot0Configs SLOT =
+      new Slot0Configs().withKP(1).withKI(2).withKD(3).withKS(4).withKV(5).withKA(6).withKG(7);
+
+  private static void assertRoundTrips(SlotConfig slot) {
+    SlotConfigs back = TalonFXConversions.toSlotConfigs(slot, GainSlot.ZERO);
+    assertEquals(1, back.kP, 1e-9);
+    assertEquals(2, back.kI, 1e-9);
+    assertEquals(3, back.kD, 1e-9);
+    assertEquals(4, back.kS, 1e-9);
+    assertEquals(5, back.kV, 1e-9);
+    assertEquals(6, back.kA, 1e-9);
+    assertEquals(7, back.kG, 1e-9);
+  }
+
   @Test
-  public void testConvertsGains() {
-    Gains gains =
-        SwerveModuleConstantsConversions.toGains(
-            new Slot0Configs()
-                .withKP(1)
-                .withKI(2)
-                .withKD(3)
-                .withKS(4)
-                .withKV(5)
-                .withKA(6)
-                .withKG(7));
-    assertEquals(1, gains.getKP());
-    assertEquals(2, gains.getKI());
-    assertEquals(3, gains.getKD());
-    assertEquals(4, gains.getKS());
-    assertEquals(5, gains.getKV());
-    assertEquals(6, gains.getKA());
-    assertEquals(7, gains.getKG());
+  public void testConvertsVelocityGains() {
+    SlotConfig voltage =
+        SlotConfig.velocity(
+            SwerveModuleConstantsConversions.toVelocityGains(
+                null, SLOT, ClosedLoopOutputType.Voltage));
+    assertEquals(OutputType.VOLTAGE, voltage.outputType());
+    assertRoundTrips(voltage);
+
+    SlotConfig current =
+        SlotConfig.velocity(
+            SwerveModuleConstantsConversions.toVelocityGains(
+                null, SLOT, ClosedLoopOutputType.TorqueCurrentFOC));
+    assertEquals(OutputType.CURRENT, current.outputType());
+    assertRoundTrips(current);
+  }
+
+  @Test
+  public void testConvertsPositionGains() {
+    SlotConfig voltage =
+        SlotConfig.position(
+            SwerveModuleConstantsConversions.toPositionGains(
+                null, SLOT, ClosedLoopOutputType.Voltage));
+    assertEquals(OutputType.VOLTAGE, voltage.outputType());
+    assertRoundTrips(voltage);
+
+    SlotConfig current =
+        SlotConfig.position(
+            SwerveModuleConstantsConversions.toPositionGains(
+                null, SLOT, ClosedLoopOutputType.TorqueCurrentFOC));
+    assertEquals(OutputType.CURRENT, current.outputType());
+    assertRoundTrips(current);
+  }
+
+  @Test
+  public void testConvertsTorqueCurrentModules() {
+    var c = constants(false);
+    c.DriveMotorClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
+    c.SteerMotorClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
+    SwerveModuleConfig config =
+        SwerveModuleConstantsConversions.toModuleConfig(c, BUS, Hertz.of(250.0), Seconds.of(0.02));
+
+    assertEquals(OutputType.CURRENT, config.driveMotor().slots.get(GainSlot.ZERO).outputType());
+    assertEquals(OutputType.CURRENT, config.turnMotor().slots.get(GainSlot.ZERO).outputType());
   }
 }

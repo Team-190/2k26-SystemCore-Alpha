@@ -6,7 +6,7 @@ import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.ConnectedIO;
 import edu.wpi.team190.gompeilib.io.base.CurrentLimitConfigurableIO;
@@ -24,6 +24,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.RemoteSensorMode;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
@@ -331,7 +332,7 @@ public class MotorControllerGroupTest extends GompeiLibTestBase {
             leader().withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED)).build(), factory);
     MotorIO leaderMotor = factory.motors.get(1);
     MotorIO followerMotor = factory.motors.get(2);
-    Gains gains = Gains.builder().withKP(1.0).build();
+    SlotConfig gains = SlotConfig.position(TestGains.positionKP(1.0));
 
     group.setPosition(Rotations.of(4.0));
     group.updateGains(gains, GainSlot.ONE);

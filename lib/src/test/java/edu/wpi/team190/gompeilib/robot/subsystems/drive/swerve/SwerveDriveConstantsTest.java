@@ -5,6 +5,7 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
@@ -21,12 +22,44 @@ import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.LinearVelocityUnit;
 
 public class SwerveDriveConstantsTest extends GompeiLibTestBase {
 
+  /** Chassis translation gains, in meters per second per meter of error. */
+  public static Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> translationGains(
+      double kP, double kD) {
+    return Gains.linearPosition(MetersPerSecond)
+        .withKP(MetersPerSecond.per(Meters).ofNative(kP))
+        .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(kD))
+        .build();
+  }
+
+  /** Chassis rotation gains, in radians per second per radian of error. */
+  public static Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit> rotationGains(
+      double kP, double kD) {
+    return Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
+        .withKP(RadiansPerSecond.per(Radians).ofNative(kP))
+        .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(kD))
+        .build();
+  }
+
   public static SwerveModuleConfig createModuleConfig(
       int driveId, int steerId, int encoderId, double x, double y) {
+    return createModuleConfig(driveId, steerId, encoderId, x, y, OutputType.VOLTAGE);
+  }
+
+  /** A module whose drive slot holds a 0.2 kS in the given output. */
+  public static SwerveModuleConfig createModuleConfig(
+      int driveId, int steerId, int encoderId, double x, double y, OutputType driveOutput) {
     CANBusId bus = CANBusId.named("rio");
+    SlotConfig driveSlot =
+        driveOutput == OutputType.CURRENT
+            ? SlotConfig.velocity(Gains.angularVelocity(Amps).withKS(Amps.of(0.2)).build())
+            : SlotConfig.velocity(TestGains.velocity(0, 0, 0, 0.2, 0, 0, 0));
     CurrentLimits limits = new CurrentLimits(Amps.of(60.0), Amps.of(80.0));
     return SwerveModuleConfig.builder()
         .withDriveMotor(
@@ -35,7 +68,7 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
                 .withBus(bus)
                 .withCurrentLimits(limits)
                 .withGearRatio(6.0)
-                .withSlot(GainSlot.ZERO, new SlotConfig(Gains.builder().withKS(0.2).build()))
+                .withSlot(GainSlot.ZERO, driveSlot)
                 .build())
         .withTurnMotor(
             MotorConfig.builder()
@@ -85,27 +118,28 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
             .withWheelCOF(1.2)
             .build();
 
-    Gains driveGains = Gains.builder().withKP(1.0).withKD(0.1).build();
-
-    Gains turnGains = Gains.builder().withKP(2.0).withKD(0.2).build();
+    var driveGains = TestGains.velocity(1.0, 0, 0.1, 0, 0, 0, 0);
+    var turnGains = TestGains.position(2.0, 0, 0.2, 0, 0, 0, 0);
+    var translationGains = translationGains(1.0, 0.1);
+    var rotationGains = rotationGains(2.0, 0.2);
 
     SwerveDriveConstants.AutoAlignConstants autoAlignConstants =
         SwerveDriveConstants.AutoAlignConstants.builder()
-            .withXGains(driveGains)
+            .withXGains(translationGains)
             .withXConstraints(
                 LinearConstraints.builder()
                     .withMaxVelocity(MetersPerSecond.of(1.0))
                     .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
                     .withGoalTolerance(Meters.of(0.05))
                     .build())
-            .withYGains(driveGains)
+            .withYGains(translationGains)
             .withYConstraints(
                 LinearConstraints.builder()
                     .withMaxVelocity(MetersPerSecond.of(1.0))
                     .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
                     .withGoalTolerance(Meters.of(0.05))
                     .build())
-            .withRotationGains(turnGains)
+            .withRotationGains(rotationGains)
             .withRotationConstraints(
                 AngularPositionConstraints.builder()
                     .withMaxVelocity(RadiansPerSecond.of(1.0))
@@ -121,8 +155,8 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
             .withDriveConfig(driveConfig)
             .withDriveGains(driveGains)
             .withTurnGains(turnGains)
-            .withAutoTranslationGains(driveGains)
-            .withAutoRotationGains(turnGains)
+            .withAutoTranslationGains(translationGains)
+            .withAutoRotationGains(rotationGains)
             .withAutoAlignConstants(autoAlignConstants)
             .withOdometryFrequency(250.0)
             .withDriverDeadband(0.1)

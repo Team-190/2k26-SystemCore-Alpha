@@ -5,6 +5,7 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
@@ -231,7 +232,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
         motor(
             config()
                 .withSlot(
-                    GainSlot.ZERO, new SlotConfig(Gains.builder().withKP(8.0).withKD(0.5).build()))
+                    GainSlot.ZERO, SlotConfig.position(TestGains.position(8.0, 0, 0.5, 0, 0, 0, 0)))
                 .build());
     motor.setControl(new PositionRequest.PositionVoltage(Rotations.of(1.0)));
 
@@ -249,9 +250,34 @@ public class MotorIOSimTest extends GompeiLibTestBase {
   }
 
   @Test
+  public void shouldReadGainsDeclaredPerRadianPerRotation() {
+    // 8 V per rotation, declared per radian
+    var perRadian =
+        Gains.angularPosition(Volts)
+            .withKP(Volts.per(Radians).ofNative(8.0 / (2 * Math.PI)))
+            .withKV(Volts.per(RadiansPerSecond).ofNative(2.0 / (2 * Math.PI)))
+            .build();
+    MotorIOSim motor =
+        motor(config().withSlot(GainSlot.ZERO, SlotConfig.position(perRadian)).build());
+    motor.setControl(
+        new PositionRequest.PositionVoltage(
+            Rotations.of(1.0),
+            RotationsPerSecond.of(1.5),
+            Volts.of(0.0),
+            false,
+            GainSlot.ZERO,
+            RequestOptions.DEFAULT));
+
+    run(motor, 1);
+
+    assertEquals(8.0, telemetry.closedLoopProportionalOutput, 1e-9);
+    assertEquals(2.0 * 1.5, telemetry.closedLoopFeedforward, 1e-9);
+  }
+
+  @Test
   public void testPositionFeedforwardTerms() {
-    Gains gains = Gains.builder().withKS(0.1).withKV(2.0).withKA(0.5).withKG(0.3).build();
-    MotorIOSim motor = motor(config().withSlot(GainSlot.ONE, new SlotConfig(gains)).build());
+    var gains = TestGains.position(0, 0, 0, 0.1, 2.0, 0.5, 0.3);
+    MotorIOSim motor = motor(config().withSlot(GainSlot.ONE, SlotConfig.position(gains)).build());
     motor.setControl(
         new PositionRequest.PositionVoltage(
             Rotations.of(0.0),
@@ -270,9 +296,12 @@ public class MotorIOSimTest extends GompeiLibTestBase {
 
   @Test
   public void testCosineGravity() {
-    Gains gains = Gains.builder().withKG(1.0).build();
+    var gains = TestGains.position(0, 0, 0, 0, 0, 0, 1.0);
     MotorIOSim motor =
-        motor(config().withSlot(GainSlot.ZERO, new SlotConfig(gains, GravityType.COSINE)).build());
+        motor(
+            config()
+                .withSlot(GainSlot.ZERO, SlotConfig.position(gains, GravityType.COSINE))
+                .build());
     motor.setPosition(Rotations.of(0.25));
     motor.setControl(new PositionRequest.PositionVoltage(Rotations.of(0.25)));
 
@@ -286,7 +315,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     MotorIOSim motor =
         motor(
             config()
-                .withSlot(GainSlot.ZERO, new SlotConfig(Gains.builder().withKP(10.0).build()))
+                .withSlot(GainSlot.ZERO, SlotConfig.position(TestGains.positionKP(10.0)))
                 .withMotionProfile(
                     new MotionProfileConfig(
                         RotationsPerSecond.of(2.0),
@@ -382,7 +411,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
         motor(
             config()
                 .withSlot(
-                    GainSlot.ZERO, new SlotConfig(Gains.builder().withKP(0.5).withKV(kV).build()))
+                    GainSlot.ZERO, SlotConfig.velocity(TestGains.velocity(0.5, 0, 0, 0, kV, 0, 0)))
                 .build());
     motor.setControl(new VelocityRequest.VelocityVoltage(RotationsPerSecond.of(5.0)));
 
@@ -455,8 +484,10 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     MotorIOSim motor =
         motor(
             config()
-                .withSlot(GainSlot.ZERO, new SlotConfig(Gains.builder().withKI(1.0).build()))
-                .withSlot(GainSlot.ONE, new SlotConfig(Gains.builder().withKI(1.0).build()))
+                .withSlot(
+                    GainSlot.ZERO, SlotConfig.position(TestGains.position(0, 1.0, 0, 0, 0, 0, 0)))
+                .withSlot(
+                    GainSlot.ONE, SlotConfig.position(TestGains.position(0, 1.0, 0, 0, 0, 0, 0)))
                 .build());
     MotorRequest slotZero = new PositionRequest.PositionVoltage(Rotations.of(100.0));
     motor.setControl(slotZero);
@@ -484,7 +515,8 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     MotorIOSim motor =
         motor(
             config()
-                .withSlot(GainSlot.ZERO, new SlotConfig(Gains.builder().withKI(1.0).build()))
+                .withSlot(
+                    GainSlot.ZERO, SlotConfig.velocity(TestGains.velocity(0, 1.0, 0, 0, 0, 0, 0)))
                 .build());
     MotorRequest plain = new VelocityRequest.VelocityVoltage(RotationsPerSecond.of(100.0));
     motor.setControl(plain);
@@ -537,17 +569,20 @@ public class MotorIOSimTest extends GompeiLibTestBase {
             config()
                 .withSlot(
                     GainSlot.ZERO,
-                    new SlotConfig(Gains.builder().withKG(1.0).build(), GravityType.COSINE))
+                    SlotConfig.position(
+                        TestGains.position(0, 0, 0, 0, 0, 0, 1.0), GravityType.COSINE))
                 .build());
     motor.setControl(new PositionRequest.PositionVoltage(Rotations.of(1.0)));
 
-    motor.updateGains(Gains.builder().withKP(3.0).withKG(1.0).build(), GainSlot.ZERO);
+    motor.updateGains(
+        SlotConfig.position(TestGains.position(3.0, 0, 0, 0, 0, 0, 1.0), GravityType.COSINE),
+        GainSlot.ZERO);
     run(motor, 1);
     assertEquals(3.0, telemetry.closedLoopProportionalOutput, 1e-9);
-    // The slot keeps its configured gravity type.
+    // The gravity type travels with the slot's gains.
     assertEquals(1.0, telemetry.closedLoopFeedforward, 1e-3);
 
-    motor.updateGains(Gains.builder().withKP(2.0).build(), GainSlot.TWO);
+    motor.updateGains(SlotConfig.position(TestGains.positionKP(2.0)), GainSlot.TWO);
     motor.setControl(
         new PositionRequest.PositionVoltage(
             Rotations.of(1.0),
@@ -687,7 +722,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
         motor(
             config()
                 .withContinuousWrap(true)
-                .withSlot(GainSlot.ZERO, new SlotConfig(Gains.builder().withKP(10.0).build()))
+                .withSlot(GainSlot.ZERO, SlotConfig.position(TestGains.positionKP(10.0)))
                 .build());
 
     motor.setControl(new PositionRequest.PositionVoltage(Rotations.of(0.9)));

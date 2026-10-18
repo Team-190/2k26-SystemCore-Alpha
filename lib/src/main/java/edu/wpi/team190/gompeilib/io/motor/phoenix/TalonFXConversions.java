@@ -46,6 +46,11 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import java.util.Map;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.MultUnit;
+import org.wpilib.units.PerUnit;
+import org.wpilib.units.Unit;
 
 /**
  * Pure conversions between GompeiLib's vendor-neutral motor types and Phoenix6's TalonFX types.
@@ -122,8 +127,7 @@ public final class TalonFXConversions {
     talon.MotionMagic = toMotionMagicConfigs(config.motionProfile);
 
     for (Map.Entry<GainSlot, SlotConfig> slot : config.slots.entrySet()) {
-      SlotConfigs gains =
-          toSlotConfigs(slot.getValue().gains(), slot.getValue().gravityType(), slot.getKey());
+      SlotConfigs gains = toSlotConfigs(slot.getValue(), slot.getKey());
       if (slot.getKey() == GainSlot.ZERO) {
         talon.Slot0 = Slot0Configs.from(gains);
       } else if (slot.getKey() == GainSlot.ONE) {
@@ -171,28 +175,57 @@ public final class TalonFXConversions {
   }
 
   /**
-   * Converts gains for one slot.
+   * Converts one slot's gains into Phoenix6's native slot units: the output's base unit (duty
+   * cycle, volts, or amps) per gearbox-output rotation for a position slot, or per rotation per
+   * second for a velocity slot. Every TalonFX slot goes through this.
    *
-   * @param gains the gains
-   * @param gravityType how {@code kG} is applied
+   * @param slotConfig the slot's gains
    * @param slot the slot
    * @return the Phoenix6 slot configs
    */
-  public static SlotConfigs toSlotConfigs(Gains gains, GravityType gravityType, GainSlot slot) {
-    SlotConfigs configs = new SlotConfigs();
+  public static SlotConfigs toSlotConfigs(SlotConfig slotConfig, GainSlot slot) {
+    SlotConfigs configs =
+        switch (slotConfig) {
+          case SlotConfig.Position position -> toPositionSlot(position.gains());
+          case SlotConfig.Velocity velocity -> toVelocitySlot(velocity.gains());
+        };
     configs.SlotNumber = slot.ordinal();
-    configs.kP = gains.getKP();
-    configs.kI = gains.getKI();
-    configs.kD = gains.getKD();
-    configs.kS = gains.getKS();
-    configs.kV = gains.getKV();
-    configs.kA = gains.getKA();
-    configs.kG = gains.getKG();
     configs.GravityType =
-        gravityType == GravityType.COSINE
+        slotConfig.gravityType() == GravityType.COSINE
             ? GravityTypeValue.Arm_Cosine
             : GravityTypeValue.Elevator_Static;
     return configs;
+  }
+
+  private static <O extends Unit> SlotConfigs toPositionSlot(
+      Gains<O, AngleUnit, AngularVelocityUnit> gains) {
+    O output = gains.baseOutputUnit();
+    SlotConfigs configs = new SlotConfigs();
+    configs.kP = gains.getKP(PerUnit.combine(output, Rotations));
+    configs.kI = gains.getKI(PerUnit.combine(output, MultUnit.combine(Rotations, Seconds)));
+    configs.kD = gains.getKD(PerUnit.combine(output, RotationsPerSecond));
+    feedforward(configs, gains, output);
+    return configs;
+  }
+
+  private static <O extends Unit> SlotConfigs toVelocitySlot(
+      Gains<O, AngularVelocityUnit, AngularVelocityUnit> gains) {
+    O output = gains.baseOutputUnit();
+    SlotConfigs configs = new SlotConfigs();
+    configs.kP = gains.getKP(PerUnit.combine(output, RotationsPerSecond));
+    configs.kI =
+        gains.getKI(PerUnit.combine(output, MultUnit.combine(RotationsPerSecond, Seconds)));
+    configs.kD = gains.getKD(PerUnit.combine(output, RotationsPerSecondPerSecond));
+    feedforward(configs, gains, output);
+    return configs;
+  }
+
+  private static <O extends Unit> void feedforward(
+      SlotConfigs configs, Gains<O, ?, AngularVelocityUnit> gains, O output) {
+    configs.kS = gains.getKS(output);
+    configs.kV = gains.getKV(PerUnit.combine(output, RotationsPerSecond));
+    configs.kA = gains.getKA(PerUnit.combine(output, RotationsPerSecondPerSecond));
+    configs.kG = gains.getKG(output);
   }
 
   /**

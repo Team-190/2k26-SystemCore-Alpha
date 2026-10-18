@@ -22,6 +22,7 @@ import com.ctre.phoenix6.signals.MotorOutputStatusValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.ClosedLoopRamps;
@@ -50,29 +51,22 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.FollowerRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequestTest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.wpilib.units.MultUnit;
 import org.wpilib.units.measure.Current;
 
 public class TalonFXConversionsTest extends GompeiLibTestBase {
 
   @Test
   public void testToConfiguration() {
-    Gains slot0 =
-        Gains.builder()
-            .withKP(1)
-            .withKI(2)
-            .withKD(3)
-            .withKS(4)
-            .withKV(5)
-            .withKA(6)
-            .withKG(7)
-            .build();
-    Gains slot1 = Gains.builder().withKP(11).build();
-    Gains slot2 = Gains.builder().withKP(21).build();
+    var slot0 = TestGains.position(1, 2, 3, 4, 5, 6, 7);
+    var slot1 = TestGains.positionKP(11);
+    var slot2 = TestGains.positionKP(21);
     MotorConfig config =
         MotorConfig.builder()
             .withCanId(1)
@@ -93,9 +87,9 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
                     RotationsPerSecondPerSecond.per(Second).of(3.0),
                     Volts.per(RotationsPerSecond).ofNative(0.12),
                     Volts.per(RotationsPerSecondPerSecond).ofNative(0.01)))
-            .withSlot(GainSlot.ZERO, new SlotConfig(slot0, GravityType.COSINE))
-            .withSlot(GainSlot.ONE, new SlotConfig(slot1))
-            .withSlot(GainSlot.TWO, new SlotConfig(slot2))
+            .withSlot(GainSlot.ZERO, SlotConfig.position(slot0, GravityType.COSINE))
+            .withSlot(GainSlot.ONE, SlotConfig.position(slot1))
+            .withSlot(GainSlot.TWO, SlotConfig.position(slot2))
             .build();
 
     TalonFXConfiguration talon = TalonFXConversions.toConfiguration(config);
@@ -216,12 +210,101 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
   public void testToSlotConfigs() {
     SlotConfigs slot =
         TalonFXConversions.toSlotConfigs(
-            Gains.builder().withKP(1).withKG(2).build(), GravityType.CONSTANT, GainSlot.TWO);
+            SlotConfig.position(TestGains.position(1, 0, 0, 0, 0, 0, 2)), GainSlot.TWO);
 
     assertEquals(2, slot.SlotNumber);
     assertEquals(1.0, slot.kP);
     assertEquals(2.0, slot.kG);
     assertEquals(GravityTypeValue.Elevator_Static, slot.GravityType);
+  }
+
+  @Test
+  public void shouldWritePositionGainsPerRotation() {
+    // Declared per radian, as a simulation would tune them
+    SlotConfigs slot =
+        TalonFXConversions.toSlotConfigs(
+            SlotConfig.position(
+                Gains.angularPosition(Volts)
+                    .withKP(Volts.per(Radians).ofNative(1))
+                    .withKI(Volts.per(MultUnit.combine(Radians, Seconds)).ofNative(2))
+                    .withKD(Volts.per(RadiansPerSecond).ofNative(3))
+                    .withKS(Millivolts.of(400))
+                    .withKV(Volts.per(RadiansPerSecond).ofNative(5))
+                    .withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(6))
+                    .withKG(Volts.of(7))
+                    .build(),
+                GravityType.COSINE),
+            GainSlot.ZERO);
+
+    double radiansPerRotation = 2 * Math.PI;
+    assertEquals(1 * radiansPerRotation, slot.kP, 1e-9);
+    assertEquals(2 * radiansPerRotation, slot.kI, 1e-9);
+    assertEquals(3 * radiansPerRotation, slot.kD, 1e-9);
+    assertEquals(0.4, slot.kS, 1e-9);
+    assertEquals(5 * radiansPerRotation, slot.kV, 1e-9);
+    assertEquals(6 * radiansPerRotation, slot.kA, 1e-9);
+    assertEquals(7, slot.kG, 1e-9);
+    assertEquals(GravityTypeValue.Arm_Cosine, slot.GravityType);
+  }
+
+  @Test
+  public void shouldWriteVelocityGainsPerRotationPerSecond() {
+    SlotConfigs slot =
+        TalonFXConversions.toSlotConfigs(
+            SlotConfig.velocity(
+                Gains.angularVelocity(Amps)
+                    .withKP(Amps.per(RadiansPerSecond).ofNative(1))
+                    .withKI(Amps.per(MultUnit.combine(RadiansPerSecond, Seconds)).ofNative(2))
+                    .withKD(Amps.per(RadiansPerSecondPerSecond).ofNative(3))
+                    .withKS(Amps.of(4))
+                    .withKV(Amps.per(RadiansPerSecond).ofNative(5))
+                    .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(6))
+                    .build()),
+            GainSlot.ONE);
+
+    double radiansPerRotation = 2 * Math.PI;
+    assertEquals(1, slot.SlotNumber);
+    assertEquals(1 * radiansPerRotation, slot.kP, 1e-9);
+    assertEquals(2 * radiansPerRotation, slot.kI, 1e-9);
+    assertEquals(3 * radiansPerRotation, slot.kD, 1e-9);
+    assertEquals(4, slot.kS, 1e-9);
+    assertEquals(5 * radiansPerRotation, slot.kV, 1e-9);
+    assertEquals(6 * radiansPerRotation, slot.kA, 1e-9);
+    assertEquals(0, slot.kG, 1e-9);
+  }
+
+  @Test
+  public void shouldWriteDutyCycleGainsAsFractions() {
+    SlotConfigs slot =
+        TalonFXConversions.toSlotConfigs(
+            SlotConfig.position(
+                Gains.angularPosition(Percent)
+                    .withKP(Percent.per(Rotations).ofNative(50))
+                    .withKS(Percent.of(5))
+                    .build()),
+            GainSlot.ZERO);
+
+    assertEquals(0.5, slot.kP, 1e-9);
+    assertEquals(0.05, slot.kS, 1e-9);
+  }
+
+  @Test
+  public void shouldWriteLinearGainsPerDrumRotation() {
+    // 10 V/m through a drum of radius 0.05 m: one rotation moves 2 pi 0.05 m
+    var perMeter =
+        Gains.linearPosition(Volts)
+            .withKP(Volts.per(Meters).ofNative(10))
+            .withKV(Volts.per(MetersPerSecond).ofNative(4))
+            .build();
+    SlotConfigs slot =
+        TalonFXConversions.toSlotConfigs(
+            SlotConfig.position(
+                MechanismConversion.drum(Meters.of(0.05)).toMotorPositionGains(perMeter)),
+            GainSlot.ZERO);
+
+    double metersPerRotation = 2 * Math.PI * 0.05;
+    assertEquals(10 * metersPerRotation, slot.kP, 1e-9);
+    assertEquals(4 * metersPerRotation, slot.kV, 1e-9);
   }
 
   @Test

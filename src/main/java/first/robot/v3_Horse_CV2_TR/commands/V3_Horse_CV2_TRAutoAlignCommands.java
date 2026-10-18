@@ -55,25 +55,25 @@ public class V3_Horse_CV2_TRAutoAlignCommands extends Command {
 
     alignXController =
         new ProfiledPIDController(
-            constants.xGains().kP().get(),
+            SwerveDrive.translationConstants(constants.xGains()).kP,
             0.0,
-            constants.xGains().kD().get(),
+            SwerveDrive.translationConstants(constants.xGains()).kD,
             new TrapezoidProfile.Constraints(
                 constants.xConstraints().maxVelocity().get().in(MetersPerSecond),
                 maxAccelerationMetersPerSecond));
     alignYController =
         new ProfiledPIDController(
-            constants.yGains().kP().get(),
+            SwerveDrive.translationConstants(constants.yGains()).kP,
             0.0,
-            constants.yGains().kD().get(),
+            SwerveDrive.translationConstants(constants.yGains()).kD,
             new TrapezoidProfile.Constraints(
                 constants.yConstraints().maxVelocity().get().in(MetersPerSecond),
                 maxAccelerationMetersPerSecond));
     alignHeadingController =
         new ProfiledPIDController(
-            constants.rotationGains().kP().get(),
+            SwerveDrive.rotationConstants(constants.rotationGains()).kP,
             0.0,
-            constants.rotationGains().kD().get(),
+            SwerveDrive.rotationConstants(constants.rotationGains()).kD,
             new TrapezoidProfile.Constraints(
                 constants.rotationConstraints().maxVelocity().get().in(RadiansPerSecond),
                 // Must be finite: alpha-7 TrapezoidProfile computes inf * 0 = NaN otherwise

@@ -5,9 +5,10 @@ import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.NeutralRequest;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMechanism;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMotors;
@@ -61,7 +62,7 @@ public class MechanismTest extends GompeiLibTestBase {
     mechanism.updateCurrentLimits(limits);
     verify(motors.motor).updateCurrentLimits(limits);
 
-    Gains gains = Gains.builder().withKP(2.0).build();
+    SlotConfig gains = SlotConfig.position(TestGains.positionKP(2.0));
     mechanism.updateGains(gains, GainSlot.ONE);
     verify(motors.motor).updateGains(gains, GainSlot.ONE);
   }

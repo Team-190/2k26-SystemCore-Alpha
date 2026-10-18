@@ -7,6 +7,7 @@ import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheel;
@@ -244,16 +245,17 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         .andThen(Commands.runOnce(() -> hood.setPositionGoal(angle.getMeasure())));
   }
 
-  public void setHoodGains(Gains hoodGains) {
-    hood.updateGains(hoodGains, GainSlot.ZERO);
+  public void setHoodGains(Gains<?, AngleUnit, AngularVelocityUnit> hoodGains) {
+    hood.updateGains(SlotConfig.position(hoodGains), GainSlot.ZERO);
   }
 
   public void setHoodConstraints(AngularPositionConstraints constraints) {
     hood.updateConstraints(constraints);
   }
 
-  public void setFlywheelGains(Gains flywheelGains) {
-    flywheel.updateGains(flywheelGains, GainSlot.ZERO);
+  public void setFlywheelGains(
+      Gains<VoltageUnit, AngularVelocityUnit, AngularVelocityUnit> flywheelGains) {
+    flywheel.updateVoltageGains(flywheelGains);
   }
 
   public void setFlywheelConstraints(AngularVelocityConstraints constraints) {
