@@ -2,250 +2,313 @@ package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.wpilib.units.Units.*;
 
-import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.core.utility.Setpoint;
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
-import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
+import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.physics.ElevatorMechanismSim;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
+import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
-import org.wpilib.units.Units;
-import org.wpilib.units.measure.Distance;
 
 public class ExtensionTest extends GompeiLibTestBase {
-  private ExtensionIO io;
+  private static final double DRUM_RADIUS = 0.02;
+
+  private MotorIO motor;
+  private MotorIOFactory factory;
+  private MotorConfig builtConfig;
+  private Consumer<MotorTelemetry> reading = t -> {};
   private Subsystem subsystem;
   private ExtensionConstants constants;
+  private Gains slot0;
+  private Gains slot1;
 
   @BeforeEach
   public void setUp() {
-
-    io = mock(ExtensionIO.class);
+    motor = mock(MotorIO.class);
     doAnswer(
             invocation -> {
-              ExtensionIO.ExtensionIOInputs in = invocation.getArgument(0);
-              in.torqueCurrentAmps = new double[] {10.0};
+              reading.accept(invocation.getArgument(0));
               return null;
             })
-        .when(io)
+        .when(motor)
         .updateInputs(any());
+    factory = mock(MotorIOFactory.class);
+    when(factory.family()).thenReturn("Mock");
+    when(factory.create(any()))
+        .thenAnswer(
+            invocation -> {
+              builtConfig = invocation.getArgument(0);
+              return motor;
+            });
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
     when(subsystem.getName()).thenReturn("TestExtensionSubsystem");
 
-    DCMotor motor = DCMotor.getNeo550(1);
-    ExtensionConstants.ExtensionParameters params =
-        ExtensionConstants.ExtensionParameters.builder()
-            .withEXTENSION_MOTOR_CONFIG(motor)
-            .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_LENGTH(Units.Meters.of(0.0))
-            .withMAX_LENGTH(Units.Meters.of(1.5))
-            .withNUM_MOTORS(1)
-            .build();
-
+    slot0 = Gains.builder().withPrefix("slot0").build();
+    slot1 = Gains.builder().withPrefix("slot1").build();
     constants =
         ExtensionConstants.builder()
-            .withLeaderCANID(5)
-            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withCanBus(new CANBus("rio"))
-            .withExtensionGearRatio(10.0)
-            .withDrumRadius(0.02)
-            .withExtensionSupplyCurrentLimit(40.0)
-            .withExtensionStatorCurrentLimit(40.0)
-            .withExtensionParameters(params)
-            .withSlot0Gains(Gains.builder().withPrefix("slot0").build())
+            .withMotor(
+                MotorConfig.builder()
+                    .withCanId(5)
+                    .withBus(CANBusId.named("rio"))
+                    .withCurrentLimits(
+                        CurrentLimits.fromDoubles()
+                            .withSupplyCurrentLimit(40.0)
+                            .withStatorCurrentLimit(40.0)
+                            .build())
+                    .withGearRatio(10.0)
+                    .withSlot(GainSlot.ZERO, new SlotConfig(slot0))
+                    .withSlot(GainSlot.ONE, new SlotConfig(slot1))
+                    .build())
+            .withDrumRadius(Meters.of(DRUM_RADIUS))
+            .withExtensionParameters(
+                ExtensionConstants.ExtensionParameters.builder()
+                    .withCarriageGearbox(DCMotor.getNeo550(1))
+                    .withCarriageMass(Kilograms.of(15.0))
+                    .withMinLength(Meters.of(0.0))
+                    .withMaxLength(Meters.of(1.5))
+                    .withSimulateGravity(false)
+                    .build())
             .withConstraints(
                 LinearConstraints.builder()
                     .withPrefix("constraints")
-                    .withMaxVelocity(Units.MetersPerSecond.of(2.0))
-                    .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
-                    .withGoalTolerance(Units.Meters.of(0.05))
+                    .withMaxVelocity(MetersPerSecond.of(2.0))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(4.0))
+                    .withGoalTolerance(Meters.of(0.05))
                     .build())
-            .withVerticalGravity(false)
-            .withVoltageOffsetStep(Units.Volts.of(0.5))
-            .withHeightOffsetStep(Units.Meters.of(0.05))
+            .withVoltageOffsetStep(Volts.of(0.5))
+            .withHeightOffsetStep(Meters.of(0.05))
             .build();
   }
 
-  @Test
-  public void testExtension() throws Exception {
-    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
-      Extension extension = new Extension(constants, subsystem, 0, io);
+  /** Reports the leader at {@code meters} of travel, moving at {@code metersPerSecond}. */
+  private void readAt(double meters, double metersPerSecond) {
+    reading =
+        t -> {
+          t.position = Radians.of(meters / DRUM_RADIUS);
+          t.velocity = RadiansPerSecond.of(metersPerSecond / DRUM_RADIUS);
+        };
+  }
 
-      Extension _ =
+  private static OpenLoopRequest.VoltageOutput voltage(double volts) {
+    return new OpenLoopRequest.VoltageOutput(Volts.of(volts), true, RequestOptions.DEFAULT);
+  }
+
+  @Test
+  public void testAddsSoftLimitsAndProfileInDrumRotations() {
+    new Extension(constants, subsystem, 0, factory);
+
+    assertEquals(
+        SoftLimits.between(Radians.of(0.0), Radians.of(1.5 / DRUM_RADIUS)), builtConfig.softLimits);
+    assertEquals(
+        2.0 / DRUM_RADIUS, builtConfig.motionProfile.cruiseVelocity().in(RadiansPerSecond), 1e-9);
+    assertEquals(
+        4.0 / DRUM_RADIUS,
+        builtConfig.motionProfile.acceleration().in(RadiansPerSecondPerSecond),
+        1e-9);
+  }
+
+  @Test
+  public void testPeriodicRunsTheCurrentState() {
+    try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+      Extension extension = new Extension(constants, subsystem, 0, factory);
+
+      extension.periodic();
+      verify(motor).updateInputs(any());
+      verify(motor, never()).setControl(any());
+      logger.verify(
+          () -> Logger.processInputs(eq("TestExtensionSubsystem/Extension0/Leader"), any()));
+
+      extension.setVoltageGoal(Volts.of(6.0));
+      extension.periodic();
+      verify(motor).setControl(voltage(6.0));
+
+      extension.setPositionGoal(Meters.of(1.0));
+      extension.setGainSlot(GainSlot.ONE);
+      extension.periodic();
+      verify(motor)
+          .setControl(
+              new PositionRequest.ProfiledPositionVoltage(
+                  Radians.of(1.0 / DRUM_RADIUS),
+                  Volts.of(0.0),
+                  true,
+                  GainSlot.ONE,
+                  RequestOptions.DEFAULT));
+      assertEquals(GainSlot.ONE, extension.getGainSlot());
+
+      Setpoint<DistanceUnit> goal =
+          new Setpoint<>(Meters.of(0.5), Meters.of(0.01), Meters.of(0.0), Meters.of(1.5));
+      extension.setPositionGoal(goal);
+      assertSame(goal, extension.getPositionGoal());
+      extension.setVoltageGoal(
+          new Setpoint<>(Volts.of(2.0), Volts.of(0.1), Volts.of(-12), Volts.of(12)));
+      extension.periodic();
+      verify(motor).setControl(voltage(2.0));
+      assertTrue(extension.atVoltageGoal());
+      assertFalse(extension.atVoltageGoal(Volts.of(3.0)));
+    }
+  }
+
+  @Test
+  public void testConvertsTelemetryThroughTheDrum() {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      Extension extension =
           new Extension(
               constants,
               subsystem,
               0,
-              io,
-              new Setpoint<DistanceUnit>(
-                  Units.Meters.of(0.5),
-                  Units.Meters.of(0.01),
-                  Units.Meters.of(0.0),
-                  Units.Meters.of(1.5)));
-
-      assertNotNull(extension);
-
-      // Test periodic in IDLE state
+              factory,
+              new Setpoint<>(Meters.of(0.5), Meters.of(0.01), Meters.of(0.0), Meters.of(1.5)));
+      readAt(0.48, 0.3);
+      reading =
+          reading.andThen(
+              t -> {
+                t.torqueCurrent = Amps.of(12.0);
+                t.closedLoopPositionReferenceSlope = RadiansPerSecond.of(0.1 / DRUM_RADIUS);
+              });
       extension.periodic();
-      verify(io).updateInputs(any());
 
-      // Test open loop control state
-      extension.setVoltageGoal(Units.Volts.of(6.0));
-      extension.periodic();
-      verify(io).setVoltageGoal(Units.Volts.of(6.0));
-
-      // Test closed loop control state
-      extension.setPositionGoal(Units.Meters.of(1.0));
-      extension.periodic();
-      verify(io).setPositionGoal(any(Distance.class));
-
-      // Test setters/getters
-      extension.setVoltageGoal(
-          new Setpoint<>(
-              Units.Volts.of(2.0), Units.Volts.of(0.1), Units.Volts.of(-12), Units.Volts.of(12)));
-      extension.setPositionGoal(
-          new Setpoint<>(
-              Units.Meters.of(0.5),
-              Units.Meters.of(0.01),
-              Units.Meters.of(0.0),
-              Units.Meters.of(1.5)));
-
-      extension.getExtensionPosition();
-      // extension.getTorqueCurrent();
-      extension.getVelocity();
-
-      // Test delegates
-      extension.setPosition(Units.Meters.of(0.4));
-      verify(io).setPosition(Units.Meters.of(0.4));
-
-      extension.setGainSlot(GainSlot.ONE);
-      verify(io).setGainSlot(GainSlot.ONE);
-
-      extension.updateGains(Gains.builder().withPrefix("slot0").build(), GainSlot.ZERO);
-      verify(io).updateGains(any(), eq(GainSlot.ZERO));
-
-      extension.updateConstraints(
-          LinearConstraints.builder()
-              .withPrefix("constraints")
-              .withGoalTolerance(Units.Meters.of(0.01))
-              .withMaxVelocity(Units.MetersPerSecond.of(1.0))
-              .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(1.0))
-              .build());
-      verify(io).updateConstraints(any());
-
-      // test goals
-      when(io.atVoltageGoal(any())).thenReturn(true);
-      assertTrue(extension.atVoltageGoal());
-      assertTrue(extension.atVoltageGoal(Units.Volts.of(2.0)));
-
-      when(io.atPositionGoal(any())).thenReturn(true);
+      assertEquals(0.48, extension.getExtensionPosition().in(Meters), 1e-9);
+      assertEquals(0.3, extension.getVelocity().in(MetersPerSecond), 1e-9);
+      assertEquals(0.1, extension.getVelocitySetpoint().in(MetersPerSecond), 1e-9);
+      assertEquals(Amps.of(12.0), extension.getTorqueCurrent());
       assertTrue(extension.atPositionGoal());
-      assertTrue(extension.atPositionGoal(Units.Meters.of(0.5)));
+      assertFalse(extension.atPositionGoal(Meters.of(1.0)));
 
-      Command waitCmd = extension.waitUntilAtGoal();
-      assertNotNull(waitCmd);
-      waitCmd.initialize();
-      waitCmd.execute();
-      assertTrue(waitCmd.isFinished());
-      waitCmd.end(false);
+      extension.setPosition(Meters.of(0.4));
+      verify(motor).setPosition(Radians.of(0.4 / DRUM_RADIUS));
 
-      Command singleSysId = extension.runSysIdRoutine();
-      assertNotNull(singleSysId);
-      singleSysId.initialize();
-      singleSysId.execute();
-      singleSysId.end(false);
+      Command wait = extension.waitUntilAtGoal();
+      wait.initialize();
+      assertTrue(wait.isFinished());
+    }
+  }
 
-      var charRoutineField = Extension.class.getDeclaredField("characterizationRoutine");
-      charRoutineField.setAccessible(true);
-      org.wpilib.command2.sysid.SysIdRoutine charRoutine =
-          (org.wpilib.command2.sysid.SysIdRoutine) charRoutineField.get(extension);
-      Command quasi =
-          charRoutine.quasistatic(org.wpilib.command2.sysid.SysIdRoutine.Direction.FORWARD);
-      quasi.initialize();
-      quasi.execute();
-      quasi.end(true);
+  @Test
+  public void testForwardsGainsAndConstraints() throws Exception {
+    Extension extension = new Extension(constants, subsystem, 0, factory);
 
-      var multiCharMethod =
-          Extension.class.getDeclaredMethod(
-              "createCharacterizationRoutine", Subsystem.class, Extension[].class);
-      multiCharMethod.setAccessible(true);
-      org.wpilib.command2.sysid.SysIdRoutine multiRoutine =
-          (org.wpilib.command2.sysid.SysIdRoutine)
-              multiCharMethod.invoke(null, subsystem, new Extension[] {extension});
-      Command multiQuasi =
-          multiRoutine.quasistatic(org.wpilib.command2.sysid.SysIdRoutine.Direction.FORWARD);
-      multiQuasi.initialize();
-      multiQuasi.execute();
-      multiQuasi.end(true);
+    Gains gains = Gains.builder().withKP(3.0).build();
+    extension.updateGains(gains, GainSlot.TWO);
+    verify(motor).updateGains(gains, GainSlot.TWO);
 
-      extension.getVelocitySetpoint();
+    extension.updateConstraints(
+        LinearConstraints.builder()
+            .withMaxVelocity(MetersPerSecond.of(1.0))
+            .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
+            .build());
+    ArgumentCaptor<MotionProfileConfig> profile =
+        ArgumentCaptor.forClass(MotionProfileConfig.class);
+    verify(motor).updateMotionProfile(profile.capture());
+    assertEquals(1.0 / DRUM_RADIUS, profile.getValue().cruiseVelocity().in(RadiansPerSecond), 1e-9);
 
-      extension.inputs.torqueCurrentAmps = new double[] {-30.0};
-      Command resetCmd = extension.resetExtensionZero();
-      assertNotNull(resetCmd);
-      resetCmd.initialize();
-      for (int i = 0; i < 10 && !resetCmd.isFinished(); i++) {
-        resetCmd.execute();
+    // Tuning a slot's gains from a dashboard sends them to that slot.
+    var lastNotified = Gains.class.getDeclaredField("lastNotifiedValues");
+    lastNotified.setAccessible(true);
+    lastNotified.set(slot1, null);
+    var notify = Gains.class.getDeclaredMethod("notifyListeners");
+    notify.setAccessible(true);
+    notify.invoke(slot1);
+    verify(motor).updateGains(slot1, GainSlot.ONE);
+  }
+
+  @Test
+  public void testSimMechanism() {
+    assertInstanceOf(ElevatorMechanismSim.class, Extension.simMechanism(constants));
+  }
+
+  @Test
+  public void testZeroingDrivesToTheHardStop() {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      Extension extension = new Extension(constants, subsystem, 0, factory);
+      reading = t -> t.torqueCurrent = Amps.of(0.0);
+      extension.periodic();
+
+      Command reset = extension.resetExtensionZero();
+      reset.initialize();
+      reset.execute();
+      reset.execute();
+      verify(motor, atLeastOnce()).setControl(voltage(-1.0));
+
+      reading = t -> t.torqueCurrent = Amps.of(-20.0);
+      extension.periodic();
+      for (int i = 0; i < 5 && !reset.isFinished(); i++) {
+        reset.execute();
       }
-      resetCmd.end(false);
+      assertTrue(reset.isFinished());
+      verify(motor).setControl(voltage(0.0));
+      verify(motor).setPosition(Radians.of(0.0));
+    }
+  }
 
-      var anyAtEndStopMethod =
+  @Test
+  public void testSysIdDrivesEveryExtension() throws Exception {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      Extension extension = new Extension(constants, subsystem, 0, factory);
+      assertNotNull(extension.runSysIdRoutine());
+      assertNotNull(Extension.runSysIdRoutine(subsystem, extension));
+
+      var routineField = Extension.class.getDeclaredField("characterizationRoutine");
+      routineField.setAccessible(true);
+      Command quasistatic =
+          ((SysIdRoutine) routineField.get(extension)).quasistatic(SysIdRoutine.Direction.FORWARD);
+      quasistatic.initialize();
+      quasistatic.execute();
+      quasistatic.end(true);
+      verify(motor, atLeastOnce()).setControl(isA(OpenLoopRequest.VoltageOutput.class));
+
+      var anyAtEndStop =
           Extension.class.getDeclaredMethod(
-              "anyAtEndStop",
-              org.wpilib.command2.sysid.SysIdRoutine.Direction.class,
-              Extension[].class);
-      anyAtEndStopMethod.setAccessible(true);
-      extension.inputs.position = Units.Meters.of(2.0);
-      anyAtEndStopMethod.invoke(
-          null,
-          org.wpilib.command2.sysid.SysIdRoutine.Direction.FORWARD,
-          new Extension[] {extension});
-      extension.inputs.position = Units.Meters.of(-1.0);
-      anyAtEndStopMethod.invoke(
-          null,
-          org.wpilib.command2.sysid.SysIdRoutine.Direction.REVERSE,
-          new Extension[] {extension});
+              "anyAtEndStop", SysIdRoutine.Direction.class, Extension[].class);
+      anyAtEndStop.setAccessible(true);
+      readAt(1.5, 0.0);
+      extension.periodic();
+      assertTrue(
+          (boolean)
+              anyAtEndStop.invoke(
+                  null, SysIdRoutine.Direction.FORWARD, new Extension[] {extension}));
+      assertFalse(
+          (boolean)
+              anyAtEndStop.invoke(
+                  null, SysIdRoutine.Direction.REVERSE, new Extension[] {extension}));
+      readAt(0.0, 0.0);
+      extension.periodic();
+      assertTrue(
+          (boolean)
+              anyAtEndStop.invoke(
+                  null, SysIdRoutine.Direction.REVERSE, new Extension[] {extension}));
 
-      Command multiSysId = Extension.runSysIdRoutine(subsystem, extension);
-      assertNotNull(multiSysId);
-
-      for (var m : Extension.class.getDeclaredMethods()) {
-        if (m.getName().startsWith("lambda$runSysIdRoutine$")) {
-          m.setAccessible(true);
-          m.invoke(null, (Object) new Extension[] {extension});
-        }
-        if (m.getName().startsWith("lambda$resetExtensionZero$")) {
-          m.setAccessible(true);
-          try {
-            m.invoke(extension);
-          } catch (Exception ignored) {
-            try {
-              m.invoke(null);
-            } catch (Exception ignored2) {
-            }
-          }
+      // The sequence's state reset and end-stop checks are lambdas only a running scheduler calls.
+      for (var method : Extension.class.getDeclaredMethods()) {
+        if (method.getName().startsWith("lambda$runSysIdRoutine$")) {
+          method.setAccessible(true);
+          method.invoke(null, (Object) new Extension[] {extension});
         }
       }
-
-      var f = Gains.class.getDeclaredField("lastNotifiedValues");
-      f.setAccessible(true);
-      f.set(constants.slot0Gains, null);
-      f.set(constants.slot1Gains, null);
-      f.set(constants.slot2Gains, null);
-      var notifyGains = Gains.class.getDeclaredMethod("notifyListeners");
-      notifyGains.setAccessible(true);
-      notifyGains.invoke(constants.slot0Gains);
-      notifyGains.invoke(constants.slot1Gains);
-      notifyGains.invoke(constants.slot2Gains);
     }
   }
 }

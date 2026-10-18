@@ -1,32 +1,30 @@
 package first.robot.v3_Horse_CV2_TR;
 
-import edu.wpi.team190.gompeilib.core.io.gyro.GyroIO;
-import edu.wpi.team190.gompeilib.core.io.gyro.phoenix.GyroIOPigeon2;
-import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIO;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOSim;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOTalonFX;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOSim;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFX;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIO;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOSim;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOTalonFX;
-import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
-import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOSim;
-import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOTalonFX;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOSim;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOTalonFX;
+import edu.wpi.team190.gompeilib.io.encoder.phoenix.AbsoluteEncoderIOCANcoder;
+import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
+import edu.wpi.team190.gompeilib.io.gyro.phoenix.GyroIOPigeon2;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
+import edu.wpi.team190.gompeilib.io.motor.phoenix.MotorIOTalonFX;
+import edu.wpi.team190.gompeilib.io.motor.sim.MotorIOSim;
+import edu.wpi.team190.gompeilib.io.phoenix.PhoenixOdometryThread;
+import edu.wpi.team190.gompeilib.robot.RobotContainer;
+import edu.wpi.team190.gompeilib.robot.RobotMode;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDrive;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants.DriveConfig;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveModuleConfig;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveModuleHardware;
+import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
+import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheel;
+import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIO;
+import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIOSim;
+import edu.wpi.team190.gompeilib.subsystems.hood.GenericHoodIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.roller.GenericRoller;
 import edu.wpi.team190.gompeilib.subsystems.vision.Vision;
 import edu.wpi.team190.gompeilib.subsystems.vision.camera.CameraStaticLimelight;
 import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
-import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
 import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
@@ -57,8 +55,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
 
-  private final XKeysInput xkeys = new XKeysInput(1);
-
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
   public V3_Horse_CV2_TRRobotContainer() {
@@ -69,40 +65,27 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new SwerveDrive(
                   V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
                   new GyroIOPigeon2(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.gyroConfig(),
+                      PhoenixOdometryThread.getInstance(V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS),
                       V3_Horse_CV2_TRRobotState::setHeadingUpdateTimestamp),
-                  new SwerveModuleIOTalonFX(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontLeft()),
-                  new SwerveModuleIOTalonFX(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontRight()),
-                  new SwerveModuleIOTalonFX(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backLeft()),
-                  new SwerveModuleIOTalonFX(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backRight()),
+                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontLeft()),
+                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontRight()),
+                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backLeft()),
+                  talonFXModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backRight()),
                   V3_Horse_CV2_TRRobotState::getGlobalPose,
                   V3_Horse_CV2_TRRobotState::resetPose);
-          rollerFloor =
-              new V3_Horse_CV2_TRRollerFloor(
-                  new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+          rollerFloor = new V3_Horse_CV2_TRRollerFloor(MotorIOTalonFX.FACTORY);
           intake =
               new V3_Horse_CV2_TR_Intake(
-                  new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS),
-                  new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS),
-                  new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
-                  new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
-                  new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
+                  MotorIOTalonFX.FACTORY,
+                  MotorIOTalonFX.FACTORY,
+                  MotorIOTalonFX.FACTORY,
+                  MotorIOTalonFX.FACTORY,
+                  MotorIOTalonFX.FACTORY,
                   () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
-                  new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+                  MotorIOTalonFX.FACTORY,
                   new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
           vision =
               new Vision(
@@ -122,37 +105,40 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               new SwerveDrive(
                   V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
                   new GyroIO() {},
-                  new SwerveModuleIOSim(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontLeft()),
-                  new SwerveModuleIOSim(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontRight()),
-                  new SwerveModuleIOSim(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backLeft()),
-                  new SwerveModuleIOSim(
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backRight()),
+                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontLeft()),
+                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.frontRight()),
+                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backLeft()),
+                  simModule(V3_Horse_CV2_TRConstants.DRIVE_CONFIG.backRight()),
                   V3_Horse_CV2_TRRobotState::getGlobalPose,
                   V3_Horse_CV2_TRRobotState::resetPose);
           rollerFloor =
               new V3_Horse_CV2_TRRollerFloor(
-                  new GenericRollerIOSim(
-                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+                  MotorIOSim.factory(
+                      GenericRoller.simMechanism(
+                          V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS)));
           intake =
               new V3_Horse_CV2_TR_Intake(
-                  new GenericRollerIOSim(
-                      V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS),
-                  new GenericRollerIOSim(
-                      V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS),
-                  new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
-                  new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
-                  new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
+                  MotorIOSim.factory(
+                      GenericRoller.simMechanism(
+                          V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS)),
+                  MotorIOSim.factory(
+                      GenericRoller.simMechanism(
+                          V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS)),
+                  MotorIOSim.factory(
+                      GenericRoller.simMechanism(
+                          V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS)),
+                  MotorIOSim.factory(
+                      Extension.simMechanism(
+                          V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS)),
+                  MotorIOSim.factory(
+                      Extension.simMechanism(
+                          V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS)),
                   () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
-                  new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+                  MotorIOSim.factory(
+                      GenericFlywheel.simMechanism(
+                          V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS)),
                   new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
           vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
           break;
@@ -166,28 +152,28 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
           new SwerveDrive(
               V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
               new GyroIO() {},
-              new SwerveModuleIO() {},
-              new SwerveModuleIO() {},
-              new SwerveModuleIO() {},
-              new SwerveModuleIO() {},
+              SwerveModuleHardware.REPLAY,
+              SwerveModuleHardware.REPLAY,
+              SwerveModuleHardware.REPLAY,
+              SwerveModuleHardware.REPLAY,
               V3_Horse_CV2_TRRobotState::getGlobalPose,
               V3_Horse_CV2_TRRobotState::resetPose);
     }
     if (rollerFloor == null) {
-      rollerFloor = new V3_Horse_CV2_TRRollerFloor(new GenericRollerIO() {});
+      rollerFloor = new V3_Horse_CV2_TRRollerFloor(MotorIO.REPLAY_FACTORY);
     }
     if (intake == null) {
       intake =
           new V3_Horse_CV2_TR_Intake(
-              new GenericRollerIO() {},
-              new GenericRollerIO() {},
-              new GenericRollerIO() {},
-              new ExtensionIO() {},
-              new ExtensionIO() {},
+              MotorIO.REPLAY_FACTORY,
+              MotorIO.REPLAY_FACTORY,
+              MotorIO.REPLAY_FACTORY,
+              MotorIO.REPLAY_FACTORY,
+              MotorIO.REPLAY_FACTORY,
               () -> driver.getRightTriggerAxis());
     }
     if (shooter == null) {
-      shooter = new V3_Horse_CV2_TRShooter(new GenericFlywheelIO() {}, new GenericHoodIO() {});
+      shooter = new V3_Horse_CV2_TRShooter(MotorIO.REPLAY_FACTORY, new GenericHoodIO() {});
     }
 
     if (vision == null) {
@@ -197,6 +183,22 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");
     configureButtonBindings();
     configureAutos();
+  }
+
+  /** Builds a module's TalonFXs and CANcoder, their positions sampled by the odometry thread. */
+  private static SwerveModuleHardware talonFXModule(SwerveModuleConfig config) {
+    PhoenixOdometryThread odometryThread =
+        PhoenixOdometryThread.getInstance(V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS);
+    return new SwerveModuleHardware(
+        MotorIOTalonFX.factory(odometryThread),
+        MotorIOTalonFX.factory(odometryThread),
+        new AbsoluteEncoderIOCANcoder(config.encoder()));
+  }
+
+  /** Builds a module's simulated motors and encoder. */
+  private static SwerveModuleHardware simModule(SwerveModuleConfig config) {
+    DriveConfig driveConfig = V3_Horse_CV2_TRConstants.DRIVE_CONFIG;
+    return SwerveModuleHardware.sim(config, driveConfig.driveModel(), driveConfig.turnModel());
   }
 
   private void configureAutos() {

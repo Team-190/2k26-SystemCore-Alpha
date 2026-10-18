@@ -1,6 +1,6 @@
 package first.robot;
 
-import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.robot.RobotMode;
 import org.wpilib.framework.RobotBase;
 
 public final class Constants {

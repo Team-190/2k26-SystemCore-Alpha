@@ -2,9 +2,9 @@ package first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor;
 
 import static org.wpilib.units.Units.Volts;
 
-import edu.wpi.team190.gompeilib.core.utility.Setpoint;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRoller;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
+import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.subsystems.roller.GenericRoller;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
@@ -21,7 +21,7 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
   // Separate 0 V setpoint so stopping never overwrites the run or override voltage
   private final Setpoint<VoltageUnit> rollerFloorStopSetpoint;
 
-  public V3_Horse_CV2_TRRollerFloor(GenericRollerIO rollerFloorIO) {
+  public V3_Horse_CV2_TRRollerFloor(MotorIOFactory rollerFloorMotors) {
     rollerFloorGoal = RollerFloorState.STOP;
     rollerFloorSetpoint =
         new Setpoint<>(
@@ -43,7 +43,7 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
             Volts.of(0));
     rollerFloor =
         new GenericRoller(
-            rollerFloorIO,
+            rollerFloorMotors,
             this,
             V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS,
             " Floor",

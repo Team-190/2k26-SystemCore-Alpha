@@ -1,87 +1,74 @@
 package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.wpilib.units.Units.*;
 
-import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
+import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
-import org.wpilib.units.Units;
 
 public class ExtensionConstantsTest extends GompeiLibTestBase {
+  private static MotorConfig motor() {
+    return MotorConfig.builder()
+        .withCanId(1)
+        .withBus(CANBusId.named("rio"))
+        .withCurrentLimits(
+            CurrentLimits.fromDoubles()
+                .withSupplyCurrentLimit(40)
+                .withStatorCurrentLimit(40)
+                .build())
+        .build();
+  }
+
+  private static ExtensionConstants.ExtensionParameters parameters() {
+    return ExtensionConstants.ExtensionParameters.builder()
+        .withCarriageGearbox(DCMotor.getKrakenX60(1))
+        .withCarriageMass(Kilograms.of(5.0))
+        .withMinLength(Meters.of(0.0))
+        .withMaxLength(Meters.of(1.0))
+        .withSimulateGravity(true)
+        .build();
+  }
+
   @Test
   public void testConstantsAndBuilder() {
-    DCMotor motor = DCMotor.getNeo550(1);
-    ExtensionConstants.ExtensionParameters params =
-        ExtensionConstants.ExtensionParameters.builder()
-            .withEXTENSION_MOTOR_CONFIG(motor)
-            .withCARRIAGE_MASS_KG(15.0)
-            .withMIN_LENGTH(Units.Meters.of(0.0))
-            .withMAX_LENGTH(Units.Meters.of(1.5))
-            .withNUM_MOTORS(1)
-            .build();
-
-    Gains slot0 =
-        Gains.builder()
-            .withPrefix("slot0")
-            .withKP(1.0)
-            .withKI(0.0)
-            .withKD(0.1)
-            .withKS(0.01)
-            .withKV(0.01)
-            .withKA(0.01)
-            .withKG(0.1)
-            .build();
-    LinearConstraints constraints =
-        LinearConstraints.builder()
-            .withPrefix("test")
-            .withMaxVelocity(Units.MetersPerSecond.of(1.0))
-            .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(1.0))
-            .withGoalTolerance(Units.Meters.of(0.01))
-            .build();
+    MotorConfig motor = motor();
+    ExtensionConstants.ExtensionParameters parameters = parameters();
+    LinearConstraints constraints = LinearConstraints.builder().build();
 
     ExtensionConstants constants =
         ExtensionConstants.builder()
-            .withLeaderCANID(5)
-            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withCanBus(new CANBus("rio"))
-            .withExtensionGearRatio(10.0)
-            .withDrumRadius(0.02)
-            .withExtensionSupplyCurrentLimit(40.0)
-            .withExtensionStatorCurrentLimit(40.0)
-            .withExtensionParameters(params)
-            .withSlot0Gains(slot0)
+            .withMotor(motor)
+            .withDrumRadius(Meters.of(0.02))
+            .withExtensionParameters(parameters)
             .withConstraints(constraints)
-            .withVoltageOffsetStep(Units.Volts.of(0.5))
-            .withHeightOffsetStep(Units.Meters.of(0.05))
-            .withVerticalGravity(true)
+            .withVoltageOffsetStep(Volts.of(0.5))
+            .withHeightOffsetStep(Meters.of(0.01))
             .build();
 
-    assertNotNull(constants);
-    assertEquals(5, constants.leaderCANID);
-    assertEquals(10.0, constants.extensionGearRatio);
-    assertEquals(0.02, constants.drumRadius);
-    assertEquals(40.0, constants.extensionSupplyCurrentLimit);
-    assertEquals(40.0, constants.extensionStatorCurrentLimit);
-    assertEquals(params, constants.extensionParameters);
-    assertEquals(slot0, constants.slot0Gains);
-    assertEquals(constraints, constants.constraints);
-    assertEquals(0.5, constants.voltageOffsetStep.in(Units.Volts));
-    assertEquals(0.05, constants.heightOffsetStep.in(Units.Meters));
+    assertSame(motor, constants.motor);
+    assertEquals(Meters.of(0.02), constants.drumRadius);
+    assertSame(parameters, constants.extensionParameters);
+    assertSame(constraints, constants.constraints);
+    assertEquals(Volts.of(0.5), constants.voltageOffsetStep);
+    assertEquals(Meters.of(0.01), constants.heightOffsetStep);
+    assertEquals(Volts.of(1.0), constants.zeroVoltage);
+    assertEquals(Amps.of(-20.0), constants.zeroCurrentThreshold);
+    assertEquals(Amps.of(5.0), constants.zeroCurrentEpsilon);
 
-    // Test record fields
-    assertEquals(motor, params.EXTENSION_MOTOR_CONFIG());
-    assertEquals(15.0, params.CARRIAGE_MASS_KG());
-    assertEquals(0.0, params.MIN_LENGTH().in(Units.Meters));
-    assertEquals(1.5, params.MAX_LENGTH().in(Units.Meters));
-    assertEquals(1, params.NUM_MOTORS());
-    assertNotNull(params.toString());
-    assertEquals(params, params);
-    assertEquals(params.hashCode(), params.hashCode());
-    assertNotNull(ExtensionConstants.builder().toString());
-    assertNotNull(ExtensionConstants.ExtensionParameters.builder().toString());
+    assertEquals(Kilograms.of(5.0), parameters.carriageMass());
+    assertEquals(Meters.of(1.0), parameters.maxLength());
+    assertTrue(parameters.simulateGravity());
+  }
+
+  @Test
+  public void shouldRequireEveryField() {
+    assertThrows(NullPointerException.class, () -> ExtensionConstants.builder().build());
+    assertThrows(
+        NullPointerException.class, () -> ExtensionConstants.ExtensionParameters.builder().build());
   }
 }

@@ -1,86 +1,63 @@
 package edu.wpi.team190.gompeilib.subsystems.arm;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.wpilib.units.Units.*;
 
-import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.signals.InvertedValue;
-import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.DCMotor;
-import org.wpilib.units.Units;
 
 public class ArmConstantsTest extends GompeiLibTestBase {
   @Test
   public void testConstantsAndBuilder() {
-
-    DCMotor motor = DCMotor.getNeo550(1);
-    ArmConstants.ArmParameters params =
+    MotorConfig motor =
+        MotorConfig.builder()
+            .withCanId(1)
+            .withBus(CANBusId.named("rio"))
+            .withCurrentLimits(
+                CurrentLimits.fromDoubles()
+                    .withSupplyCurrentLimit(40)
+                    .withStatorCurrentLimit(40)
+                    .build())
+            .build();
+    ArmConstants.ArmParameters parameters =
         ArmConstants.ArmParameters.builder()
-            .withMotorConfig(motor)
-            .withMinAngle(Rotation2d.fromDegrees(0))
+            .withArmGearbox(DCMotor.getKrakenX60(1))
+            .withMinAngle(Rotation2d.fromDegrees(-90))
             .withMaxAngle(Rotation2d.fromDegrees(90))
-            .withContinuousOutput(false)
-            .withNumMotors(1)
-            .withGearRatio(100.0)
-            .withLengthMeters(0.5)
-            .withMomentOfInertia(0.1)
+            .withLength(Meters.of(0.5))
+            .withMomentOfInertia(KilogramSquareMeters.of(0.1))
+            .withSimulateGravity(true)
             .build();
-
-    Gains slot0 = Gains.builder().withPrefix("test").withKP(1.0).build();
-    AngularPositionConstraints constraints =
-        AngularPositionConstraints.builder()
-            .withPrefix("test")
-            .withMaxVelocity(Units.RadiansPerSecond.of(1.0))
-            .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(1.0))
-            .withGoalTolerance(Units.Radians.of(0.01))
-            .build();
-    CurrentLimits limits = CurrentLimits.builder().build();
+    AngularPositionConstraints constraints = AngularPositionConstraints.builder().build();
 
     ArmConstants constants =
         ArmConstants.builder()
-            .withArmCANID(4)
-            .withCanBus(new CANBus("rio"))
-            .withArmParameters(params)
-            .withSlot0Gains(slot0)
+            .withMotor(motor)
+            .withArmParameters(parameters)
             .withConstraints(constraints)
-            .withCurrentLimits(limits)
-            .withEnableFOC(false)
-            .withInvertedValue(InvertedValue.Clockwise_Positive)
-            .withVoltageOffsetStep(Units.Volts.of(0.5))
+            .withVoltageOffsetStep(Volts.of(0.5))
             .withPositionOffsetStep(Rotation2d.fromDegrees(5))
             .build();
 
-    assertNotNull(constants);
-    assertEquals(4, constants.armCANID);
-    assertEquals("rio", constants.canBus.getName());
-    assertEquals(params, constants.armParameters);
-    assertEquals(slot0, constants.slot0Gains);
-    assertNotNull(constants.slot1Gains);
-    assertNotNull(constants.slot2Gains);
-    assertEquals(constraints, constants.constraints);
-    assertEquals(limits, constants.currentLimits);
-    assertFalse(constants.enableFOC);
-    assertEquals(InvertedValue.Clockwise_Positive, constants.invertedValue);
-    assertEquals(0.5, constants.voltageOffsetStep.in(Units.Volts));
-    assertEquals(5.0, constants.positionOffsetStep.getDegrees(), 0.01);
+    assertSame(motor, constants.motor);
+    assertSame(parameters, constants.armParameters);
+    assertSame(constraints, constants.constraints);
+    assertEquals(Volts.of(0.5), constants.voltageOffsetStep);
+    assertEquals(Rotation2d.fromDegrees(5), constants.positionOffsetStep);
+    assertEquals(Meters.of(0.5), parameters.length());
+    assertEquals(Rotation2d.fromDegrees(90), parameters.maxAngle());
+    assertTrue(parameters.simulateGravity());
+  }
 
-    // Test record fields on ArmParameters
-    assertEquals(motor, params.motorConfig());
-    assertEquals(0.0, params.minAngle().getDegrees());
-    assertEquals(90.0, params.maxAngle().getDegrees());
-    assertFalse(params.continuousOutput());
-    assertEquals(1, params.numMotors());
-    assertEquals(100.0, params.gearRatio());
-    assertEquals(0.5, params.lengthMeters());
-    assertEquals(0.1, params.momentOfInertia());
-    assertNotNull(params.toString());
-    assertEquals(params, params);
-    assertEquals(params.hashCode(), params.hashCode());
-    assertNotNull(ArmConstants.builder().toString());
-    assertNotNull(ArmConstants.ArmParameters.builder().toString());
+  @Test
+  public void shouldRequireEveryField() {
+    assertThrows(NullPointerException.class, () -> ArmConstants.builder().build());
+    assertThrows(NullPointerException.class, () -> ArmConstants.ArmParameters.builder().build());
   }
 }

@@ -1,13 +1,18 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor;
 
 import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Seconds;
 import static org.wpilib.units.Units.Volts;
 
-import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
+import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
+import edu.wpi.team190.gompeilib.subsystems.roller.GenericRollerConstants;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
@@ -26,21 +31,26 @@ public class V3_Horse_CV2_TRRollerFloorConstants {
     ROLLER_FLOOR_SLOW_VOLTAGE = Volts.of(6);
     ROLLER_FLOOR_CONSTANTS =
         GenericRollerConstants.builder()
-            .withLeaderCANID(31)
-            .withCurrentLimits(
-                CurrentLimits.builder()
-                    .withSupplyCurrentLimit(Amps.of(40.0))
-                    .withStatorCurrentLimit(Amps.of(40.0))
+            .withMotor(
+                MotorConfig.builder()
+                    .withCanId(31)
+                    .withBus(CANBusId.port(CANPort.CAN_S3))
+                    .withDirection(MotorDirection.CLOCKWISE_POSITIVE)
+                    .withNeutralMode(NeutralMode.COAST)
+                    .withCurrentLimits(
+                        CurrentLimits.builder()
+                            .withSupplyCurrentLimit(Amps.of(40.0))
+                            .withStatorCurrentLimit(Amps.of(40.0))
+                            .build())
+                    .withGearRatio(84.0 / 16)
+                    .withOpenLoopRamps(
+                        new OpenLoopRamps(Seconds.of(0.0), Seconds.of(0.25), Seconds.of(0.0)))
+                    .withEnableFOC(false)
+                    .withFollower(new FollowerMotor(32, MotorAlignment.ALIGNED))
                     .build())
-            .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(2))
-            .withRollerMotorGearRatio(84.0 / 16)
-            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(0.0001))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus(CANPort.CAN_S3))
-            .withEnableFOC(false)
-            .withAlignedFollowerCANID(32)
             .build();
   }
 

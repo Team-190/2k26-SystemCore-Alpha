@@ -3,8 +3,8 @@ package edu.wpi.team190.gompeilib.subsystems.vision.io;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import edu.wpi.team190.gompeilib.core.utility.LimelightHelpers;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants;
+import edu.wpi.team190.gompeilib.subsystems.vision.io.limelight.LimelightHelpers;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.wpilib.math.geometry.Pose2d;

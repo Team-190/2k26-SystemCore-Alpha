@@ -1,6 +1,7 @@
 package first.robot.v3_Horse_CV2_TR;
 
 import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.Hertz;
 import static org.wpilib.units.Units.Inches;
 import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.MetersPerSecond;
@@ -8,36 +9,48 @@ import static org.wpilib.units.Units.MetersPerSecondPerSecond;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
+import static org.wpilib.units.Units.Seconds;
 
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
-import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants;
-import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants.DriveConfig;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.phoenix.CANBuses;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants.DriveConfig;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveModuleConfig;
+import edu.wpi.team190.gompeilib.subsystems.drive.swerve.phoenix.SwerveModuleConstantsConversions;
 import edu.wpi.team190.gompeilib.subsystems.vision.VisionConstants.StaticLimelightConfig;
 import edu.wpi.team190.gompeilib.subsystems.vision.camera.CameraType;
+import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import org.wpilib.math.geometry.Rotation3d;
 import org.wpilib.math.geometry.Transform3d;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.math.util.Units;
 
 public class V3_Horse_CV2_TRConstants {
+  public static final CANBusId DRIVE_BUS =
+      CANBuses.toCANBusId(V3_Horse_CV2_TRTunerConstants.kCANBus);
 
   public static final DriveConfig DRIVE_CONFIG =
       new DriveConfig(
-          V3_Horse_CV2_TRTunerConstants.kCANBus,
+          DRIVE_BUS,
           V3_Horse_CV2_TRTunerConstants.DrivetrainConstants.Pigeon2Id,
           V3_Horse_CV2_TRTunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
           V3_Horse_CV2_TRTunerConstants.kWheelRadius.in(Meters),
           DCMotor.getKrakenX60Foc(1),
           DCMotor.getKrakenX44Foc(1),
-          V3_Horse_CV2_TRTunerConstants.FrontLeft,
-          V3_Horse_CV2_TRTunerConstants.FrontRight,
-          V3_Horse_CV2_TRTunerConstants.BackLeft,
-          V3_Horse_CV2_TRTunerConstants.BackRight,
-          V3_Horse_CV2_TRTunerConstants.kDriveClosedLoopOutput,
-          V3_Horse_CV2_TRTunerConstants.kSteerClosedLoopOutput,
+          module(V3_Horse_CV2_TRTunerConstants.FrontLeft),
+          module(V3_Horse_CV2_TRTunerConstants.FrontRight),
+          module(V3_Horse_CV2_TRTunerConstants.BackLeft),
+          module(V3_Horse_CV2_TRTunerConstants.BackRight),
+          SwerveModuleConstantsConversions.toOutputType(
+              V3_Horse_CV2_TRTunerConstants.kDriveClosedLoopOutput),
+          SwerveModuleConstantsConversions.toOutputType(
+              V3_Horse_CV2_TRTunerConstants.kSteerClosedLoopOutput),
           Units.inchesToMeters(34.25), // width
           Units.inchesToMeters(32.25), // length
           0.0,
@@ -122,6 +135,14 @@ public class V3_Horse_CV2_TRConstants {
   public static final double ODOMETRY_FREQUENCY = 250.0;
   public static final double DRIVER_DEADBAND = 0.1;
   public static final double OPERATOR_DEADBAND = 0.1;
+
+  /** Converts one module's Tuner X constants, sampling odometry at {@link #ODOMETRY_FREQUENCY}. */
+  private static SwerveModuleConfig module(
+      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+          constants) {
+    return SwerveModuleConstantsConversions.toModuleConfig(
+        constants, DRIVE_BUS, Hertz.of(ODOMETRY_FREQUENCY), Seconds.of(0.02));
+  }
 
   public static final SwerveDriveConstants DRIVE_CONSTANTS = // TODO: Use Real Value
       SwerveDriveConstants.builder()

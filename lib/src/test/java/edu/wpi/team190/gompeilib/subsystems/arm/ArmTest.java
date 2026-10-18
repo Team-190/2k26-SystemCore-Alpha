@@ -1,165 +1,281 @@
 package edu.wpi.team190.gompeilib.subsystems.arm;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.wpilib.units.Units.*;
 
-import com.ctre.phoenix6.CANBus;
-import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.core.utility.Setpoint;
-import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
-import edu.wpi.team190.gompeilib.core.utility.phoenix.GainSlot;
+import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry;
+import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
+import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
+import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
+import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.physics.ArmMechanismSim;
+import java.util.Optional;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
+import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.units.Units;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.AngleUnit;
 
 public class ArmTest extends GompeiLibTestBase {
-  private ArmIO io;
+  private MotorIO motor;
+  private MotorIOFactory factory;
+  private MotorConfig builtConfig;
+  private Consumer<MotorTelemetry> reading = t -> {};
   private Subsystem subsystem;
   private ArmConstants constants;
+  private Gains slot0;
 
   @BeforeEach
   public void setUp() {
-
-    io = mock(ArmIO.class);
+    motor = mock(MotorIO.class);
+    doAnswer(
+            invocation -> {
+              reading.accept(invocation.getArgument(0));
+              return null;
+            })
+        .when(motor)
+        .updateInputs(any());
+    factory = mock(MotorIOFactory.class);
+    when(factory.family()).thenReturn("Mock");
+    when(factory.create(any()))
+        .thenAnswer(
+            invocation -> {
+              builtConfig = invocation.getArgument(0);
+              return motor;
+            });
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
     when(subsystem.getName()).thenReturn("TestArmSubsystem");
 
+    slot0 = Gains.builder().withPrefix("arm/slot0").withKG(0.3).build();
     constants =
         ArmConstants.builder()
-            .withArmCANID(4)
-            .withCanBus(new CANBus("rio"))
+            .withMotor(
+                MotorConfig.builder()
+                    .withCanId(10)
+                    .withBus(CANBusId.named("rio"))
+                    .withCurrentLimits(
+                        CurrentLimits.fromDoubles()
+                            .withSupplyCurrentLimit(40.0)
+                            .withStatorCurrentLimit(40.0)
+                            .build())
+                    .withGearRatio(50.0)
+                    .withSlot(GainSlot.ZERO, new SlotConfig(slot0, GravityType.COSINE))
+                    .build())
             .withArmParameters(
                 ArmConstants.ArmParameters.builder()
-                    .withMotorConfig(org.wpilib.math.system.DCMotor.getNeo550(1))
+                    .withArmGearbox(DCMotor.getKrakenX60(1))
                     .withMinAngle(Rotation2d.fromDegrees(-90))
                     .withMaxAngle(Rotation2d.fromDegrees(90))
-                    .withContinuousOutput(false)
-                    .withNumMotors(1)
-                    .withGearRatio(100.0)
-                    .withLengthMeters(0.5)
-                    .withMomentOfInertia(0.1)
+                    .withLength(Meters.of(0.5))
+                    .withMomentOfInertia(KilogramSquareMeters.of(0.1))
+                    .withSimulateGravity(true)
                     .build())
-            .withSlot0Gains(Gains.builder().withPrefix("slot0").build())
             .withConstraints(
                 AngularPositionConstraints.builder()
-                    .withPrefix("constraints")
-                    .withMaxVelocity(Units.RadiansPerSecond.of(1.0))
-                    .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(1.0))
-                    .withGoalTolerance(Units.Radians.of(0.01))
+                    .withPrefix("arm/constraints")
+                    .withMaxVelocity(RotationsPerSecond.of(1.0))
+                    .withMaxAcceleration(RotationsPerSecondPerSecond.of(2.0))
+                    .withGoalTolerance(Degrees.of(2.0))
                     .build())
-            .withCurrentLimits(
-                CurrentLimits.fromDoubles()
-                    .withSupplyCurrentLimit(40.0)
-                    .withStatorCurrentLimit(40.0)
-                    .build())
-            .withEnableFOC(false)
-            .withInvertedValue(com.ctre.phoenix6.signals.InvertedValue.Clockwise_Positive)
-            .withVoltageOffsetStep(Units.Volts.of(0.5))
+            .withVoltageOffsetStep(Volts.of(0.5))
             .withPositionOffsetStep(Rotation2d.fromDegrees(5))
             .build();
   }
 
-  @Test
-  public void testArm() throws Exception {
-    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
-      Arm arm = new Arm(io, subsystem, 0, constants);
+  private static OpenLoopRequest.VoltageOutput voltage(double volts) {
+    return new OpenLoopRequest.VoltageOutput(Volts.of(volts), true, RequestOptions.DEFAULT);
+  }
 
-      assertNotNull(arm);
+  @Test
+  public void testAddsTheProfileFromItsConstraints() {
+    new Arm(factory, subsystem, 0, constants);
+
+    assertEquals(
+        MotionProfileConfig.trapezoidal(
+            RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0)),
+        builtConfig.motionProfile);
+  }
+
+  @Test
+  public void testPeriodicRunsTheCurrentState() {
+    try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+      Arm arm = new Arm(factory, subsystem, 0, constants);
       assertEquals(ArmState.IDLE, arm.getCurrentState());
 
-      // Test alternative constructors
-      Arm arm5 = new Arm(io, subsystem, 0, constants, arm.getPositionGoal());
-      assertNotNull(arm5);
-
-      Arm arm6 = new Arm(io, subsystem, 0, constants, arm.getPositionGoal(), arm.getVoltageGoal());
-      assertNotNull(arm6);
-
-      // Test periodic in IDLE state
       arm.periodic();
-      verify(io).updateInputs(any());
+      verify(motor).updateInputs(any());
+      verify(motor, never()).setControl(any());
+      logger.verify(() -> Logger.processInputs(eq("TestArmSubsystem/Arms0/Leader"), any()));
 
-      // Test open loop control state
-      arm.setVoltageGoal(Units.Volts.of(6.0));
-      assertEquals(ArmState.OPEN_LOOP_VOLTAGE_CONTROL, arm.getCurrentState());
+      arm.setVoltageGoal(Volts.of(4.0));
       arm.periodic();
-      verify(io).setVoltageGoal(Units.Volts.of(6.0));
+      verify(motor).setControl(voltage(4.0));
 
-      // Test closed loop control state
-      arm.setPositionGoal(Rotation2d.fromDegrees(30));
-      assertEquals(ArmState.CLOSED_LOOP_POSITION_CONTROL, arm.getCurrentState());
+      arm.setPositionGoal(Rotation2d.fromDegrees(45));
+      arm.setGainSlot(GainSlot.TWO);
       arm.periodic();
-      verify(io).setPositionGoal(any(Rotation2d.class));
+      verify(motor)
+          .setControl(
+              new PositionRequest.ProfiledPositionVoltage(
+                  Rotation2d.fromDegrees(45).getMeasure(),
+                  Volts.of(0.0),
+                  true,
+                  GainSlot.TWO,
+                  RequestOptions.DEFAULT));
+      assertEquals(GainSlot.TWO, arm.getGainSlot());
 
-      // Test setters/getters
-      arm.setVoltageGoal(
-          new Setpoint<>(
-              Units.Volts.of(2.0), Units.Volts.of(0.1), Units.Volts.of(-12), Units.Volts.of(12)));
-      arm.setPositionGoal(
-          new Setpoint<>(
-              Units.Radians.of(0.5),
-              Units.Radians.of(0.01),
-              Units.Radians.of(-3.14),
-              Units.Radians.of(3.14)));
+      Setpoint<AngleUnit> goal =
+          new Setpoint<>(Degrees.of(10), Degrees.of(1), Degrees.of(-90), Degrees.of(90));
+      arm.setPositionGoal(goal);
+      assertSame(goal, arm.getPositionGoal());
+      arm.setVoltageGoal(new Setpoint<>(Volts.of(2.0), Volts.of(0.1), Volts.of(-12), Volts.of(12)));
+      arm.periodic();
+      verify(motor).setControl(voltage(2.0));
+      assertNotNull(arm.getVoltageGoal());
+    }
+  }
 
-      arm.getArmPosition();
+  @Test
+  public void testGoalsCompareAgainstTheLeader() {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      Arm arm =
+          new Arm(
+              factory,
+              subsystem,
+              0,
+              constants,
+              new Setpoint<>(Degrees.of(30), Degrees.of(1), Degrees.of(-90), Degrees.of(90)));
+      reading =
+          t -> {
+            t.position = Degrees.of(29.0);
+            t.appliedVoltage = Volts.of(0.2);
+          };
+      arm.periodic();
 
-      // Test delegates
-      arm.setPosition(Rotation2d.fromDegrees(10));
-      verify(io).setPosition(Rotation2d.fromDegrees(10));
-
-      arm.setGainSlot(GainSlot.ONE);
-      verify(io).setGainSlot(GainSlot.ONE);
-
-      arm.updateGains(Gains.builder().withPrefix("slot0").build(), GainSlot.ZERO);
-      verify(io).updateGains(any(), eq(GainSlot.ZERO));
-
-      arm.updateConstraints(
-          AngularPositionConstraints.builder()
-              .withPrefix("constraints")
-              .withGoalTolerance(Units.Radians.of(0.01))
-              .withMaxVelocity(Units.RadiansPerSecond.of(1.0))
-              .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(1.0))
-              .build());
-      verify(io).updateConstraints(any());
-
-      // test goals
-      when(io.atVoltageGoal(any())).thenReturn(true);
-      assertTrue(arm.atVoltageGoal());
-      assertTrue(arm.atVoltageGoal(Units.Volts.of(2.0)));
-
-      when(io.atPositionGoal(any())).thenReturn(true);
+      assertEquals(29.0, arm.getArmPosition().getDegrees(), 1e-9);
       assertTrue(arm.atPositionGoal());
-      assertTrue(arm.atPositionGoal(Rotation2d.fromDegrees(30)));
+      assertFalse(arm.atPositionGoal(Rotation2d.fromDegrees(40)));
+      assertTrue(arm.atVoltageGoal());
+      assertFalse(arm.atVoltageGoal(Volts.of(3.0)));
 
-      Command waitCmd = arm.waitUntilAtGoal();
-      assertNotNull(waitCmd);
+      Command wait = arm.waitUntilAtGoal();
+      wait.initialize();
+      assertTrue(wait.isFinished());
 
-      Command sysIdCmd = arm.sysIdRoutine();
-      assertNotNull(sysIdCmd);
+      arm.setPosition(Rotation2d.fromDegrees(12));
+      verify(motor).setPosition(Rotation2d.fromDegrees(12).getMeasure());
+    }
+  }
 
-      sysIdCmd.initialize();
-      sysIdCmd.execute();
-      sysIdCmd.end(true);
+  @Test
+  public void testSeedsPositionFromItsEncoder() {
+    try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+      AbsoluteEncoderIO encoder = mock(AbsoluteEncoderIO.class);
+      doAnswer(
+              invocation -> {
+                ((AbsoluteEncoderTelemetry) invocation.getArgument(0)).absolutePosition =
+                    Rotations.of(0.125);
+                return null;
+              })
+          .when(encoder)
+          .updateInputs(any());
+      Arm arm =
+          new Arm(
+              factory,
+              Optional.of(encoder),
+              subsystem,
+              1,
+              constants,
+              new Setpoint<>(Degrees.of(0), Degrees.of(1), Degrees.of(-90), Degrees.of(90)),
+              new Setpoint<>(Volts.of(0), Volts.of(0.5), Volts.of(-12), Volts.of(12)));
 
-      var f = Gains.class.getDeclaredField("lastNotifiedValues");
-      f.setAccessible(true);
-      f.set(constants.slot0Gains, null);
-      f.set(constants.slot1Gains, null);
-      f.set(constants.slot2Gains, null);
-      var notifyGains = Gains.class.getDeclaredMethod("notifyListeners");
-      notifyGains.setAccessible(true);
-      notifyGains.invoke(constants.slot0Gains);
-      notifyGains.invoke(constants.slot1Gains);
-      notifyGains.invoke(constants.slot2Gains);
+      arm.periodic();
+      logger.verify(() -> Logger.processInputs(eq("TestArmSubsystem/Arms1/Encoder"), any()));
+
+      arm.resetPositionFromEncoder();
+      verify(motor).setPosition(Rotations.of(0.125));
+    }
+  }
+
+  @Test
+  public void testResetFromEncoderWithoutOneDoesNothing() {
+    Arm arm = new Arm(factory, subsystem, 0, constants);
+    arm.resetPositionFromEncoder();
+    verify(motor, never()).setPosition(any());
+  }
+
+  @Test
+  public void testForwardsGainsAndConstraints() throws Exception {
+    Arm arm = new Arm(factory, subsystem, 0, constants);
+
+    Gains gains = Gains.builder().withKP(3.0).build();
+    arm.updateGains(gains, GainSlot.ONE);
+    verify(motor).updateGains(gains, GainSlot.ONE);
+
+    arm.updateConstraints(
+        AngularPositionConstraints.builder()
+            .withMaxVelocity(RotationsPerSecond.of(0.5))
+            .withMaxAcceleration(RotationsPerSecondPerSecond.of(0.5))
+            .build());
+    ArgumentCaptor<MotionProfileConfig> profile =
+        ArgumentCaptor.forClass(MotionProfileConfig.class);
+    verify(motor).updateMotionProfile(profile.capture());
+    assertEquals(0.5, profile.getValue().cruiseVelocity().in(RotationsPerSecond), 1e-9);
+
+    var lastNotified = Gains.class.getDeclaredField("lastNotifiedValues");
+    lastNotified.setAccessible(true);
+    lastNotified.set(slot0, null);
+    var notify = Gains.class.getDeclaredMethod("notifyListeners");
+    notify.setAccessible(true);
+    notify.invoke(slot0);
+    verify(motor).updateGains(slot0, GainSlot.ZERO);
+  }
+
+  @Test
+  public void testSimMechanism() {
+    assertInstanceOf(ArmMechanismSim.class, Arm.simMechanism(constants));
+  }
+
+  @Test
+  public void testSysIdDrivesTheArm() throws Exception {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      Arm arm = new Arm(factory, subsystem, 0, constants);
+      Command sysId = arm.sysIdRoutine();
+      sysId.initialize();
+      sysId.execute();
+      sysId.end(true);
+      assertEquals(ArmState.IDLE, arm.getCurrentState());
+
+      var routineField = Arm.class.getDeclaredField("characterizationRoutine");
+      routineField.setAccessible(true);
+      Command quasistatic =
+          ((SysIdRoutine) routineField.get(arm)).quasistatic(SysIdRoutine.Direction.FORWARD);
+      quasistatic.initialize();
+      quasistatic.execute();
+      quasistatic.end(true);
+      verify(motor, atLeastOnce()).setControl(isA(OpenLoopRequest.VoltageOutput.class));
     }
   }
 }

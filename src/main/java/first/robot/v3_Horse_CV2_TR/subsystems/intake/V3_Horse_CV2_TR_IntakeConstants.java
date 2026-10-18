@@ -2,22 +2,27 @@ package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 
 import static org.wpilib.units.Units.*;
 
-import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.team190.gompeilib.core.utility.Setpoint;
-import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
-import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
+import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
+import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
+import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
+import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants.ExtensionParameters;
-import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
+import edu.wpi.team190.gompeilib.subsystems.roller.GenericRollerConstants;
 import java.util.Map;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.VoltageUnit;
+import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Voltage;
 
 public class V3_Horse_CV2_TR_IntakeConstants {
@@ -36,6 +41,8 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final double MOMENT_OF_INERTIA = 0.0004;
   public static final DCMotor MOTOR_CONFIG = DCMotor.getKrakenX60Foc(1);
+
+  public static final Distance EXTENSION_DRUM_RADIUS = Meters.of(0.0127);
 
   public static final double MAX_EXTENSION = 0.3;
   public static final double MIN_EXTENSION = 0.0;
@@ -81,152 +88,25 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     IDLE_ROLLER_VOLTAGE = Volts.of(4.0); // TODO: tune
 
     LEFT_INTAKE_ROLLER_CONSTANTS =
-        GenericRollerConstants.builder()
-            .withLeaderCANID(23)
-            .withCurrentLimits(
-                CurrentLimits.builder()
-                    .withSupplyCurrentLimit(Amps.of(40.0))
-                    .withStatorCurrentLimit(Amps.of(40.0))
-                    .build())
-            .withNeutralMode(NeutralModeValue.Coast)
-            .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio(36.0 / 12)
-            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
-            .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus(CANPort.CAN_S2))
-            .withEnableFOC(false)
-            .build();
+        rollerConstants(
+            23,
+            CANBusId.port(CANPort.CAN_S2),
+            MotorDirection.COUNTER_CLOCKWISE_POSITIVE,
+            36.0 / 12);
     RIGHT_INTAKE_ROLLER_CONSTANTS =
-        GenericRollerConstants.builder()
-            .withLeaderCANID(24)
-            .withCurrentLimits(
-                CurrentLimits.builder()
-                    .withSupplyCurrentLimit(Amps.of(40.0))
-                    .withStatorCurrentLimit(Amps.of(40.0))
-                    .build())
-            .withNeutralMode(NeutralModeValue.Coast)
-            .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio(36 / 12.0)
-            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
-            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
-            .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus(CANPort.CAN_S1))
-            .withEnableFOC(false)
-            .build();
+        rollerConstants(
+            24, CANBusId.port(CANPort.CAN_S1), MotorDirection.CLOCKWISE_POSITIVE, 36.0 / 12);
     KICKER_ROLLER_CONSTANTS =
-        GenericRollerConstants.builder()
-            .withLeaderCANID(25)
-            .withCurrentLimits(
-                CurrentLimits.builder()
-                    .withSupplyCurrentLimit(Amps.of(40.0))
-                    .withStatorCurrentLimit(Amps.of(40.0))
-                    .build())
-            .withNeutralMode(NeutralModeValue.Coast)
-            .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio(((58.0 / 26) * (24.0 / 18)))
-            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
-            .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus("Extension"))
-            .withEnableFOC(false)
-            .build();
+        rollerConstants(
+            25,
+            CANBusId.named("Extension"),
+            MotorDirection.COUNTER_CLOCKWISE_POSITIVE,
+            (58.0 / 26) * (24.0 / 18));
 
     LEFT_EXTENSION_CONSTANTS =
-        ExtensionConstants.builder()
-            .withLeaderCANID(21)
-            .withExtensionGearRatio((52.0 / 30) * (52.0 / 16))
-            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withDrumRadius(0.0127)
-            .withExtensionSupplyCurrentLimit(40.0)
-            .withExtensionStatorCurrentLimit(40.0)
-            .withSlot0Gains(
-                Gains.builder()
-                    .withPrefix("Intake/Left Extension/Slot0")
-                    .withKP(10)
-                    .withKD(0.0)
-                    .withKS(0.42002)
-                    .withKV(6.3697)
-                    .withKA(0.0)
-                    .build())
-            .withSlot1Gains(
-                Gains.builder()
-                    .withPrefix("Intake/Left Extension/Slot1")
-                    .withKP(1.0)
-                    .withKD(0.0)
-                    .withKS(0.0)
-                    .withKV(0.0)
-                    .withKA(0.0)
-                    .build())
-            .withSlot2Gains(Gains.builder().build())
-            .withVerticalGravity(false)
-            .withVoltageOffsetStep(Volts.of(1))
-            .withHeightOffsetStep(Meters.of(0.01))
-            .withCanBus(new CANBus("Extension"))
-            .withExtensionParameters(
-                ExtensionParameters.builder()
-                    .withCARRIAGE_MASS_KG(10.0)
-                    .withEXTENSION_MOTOR_CONFIG(DCMotor.getKrakenX44Foc(1))
-                    .withMAX_LENGTH(Meters.of(MAX_EXTENSION))
-                    .withMIN_LENGTH(Meters.of(MIN_EXTENSION))
-                    .withNUM_MOTORS(1)
-                    .build())
-            .withConstraints(
-                LinearConstraints.builder()
-                    .withPrefix("Intake/Left Extension/Constraints")
-                    .withGoalTolerance(Meters.of(0.01))
-                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
-                    .withMaxVelocity(MetersPerSecond.of(20))
-                    .build())
-            .build();
-
+        extensionConstants(21, MotorDirection.COUNTER_CLOCKWISE_POSITIVE, "Left Extension");
     RIGHT_EXTENSION_CONSTANTS =
-        ExtensionConstants.builder()
-            .withLeaderCANID(22)
-            .withExtensionGearRatio((52.0 / 30) * (52.0 / 16))
-            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
-            .withDrumRadius(0.0127)
-            .withExtensionSupplyCurrentLimit(40.0)
-            .withExtensionStatorCurrentLimit(40.0)
-            .withSlot0Gains(
-                Gains.builder()
-                    .withPrefix("Intake/Right Extension/Slot0")
-                    .withKP(10)
-                    .withKD(0.0)
-                    .withKS(0.42002)
-                    .withKV(6.3697)
-                    .withKA(0.0)
-                    .build())
-            .withSlot1Gains(
-                Gains.builder()
-                    .withPrefix("Intake/Right Extension/Slot1")
-                    .withKP(1.0)
-                    .withKD(0.0)
-                    .withKS(0)
-                    .withKV(0)
-                    .withKA(0.0)
-                    .build())
-            .withSlot2Gains(Gains.builder().build())
-            .withVerticalGravity(false)
-            .withVoltageOffsetStep(Volts.of(1))
-            .withHeightOffsetStep(Meters.of(0.01))
-            .withCanBus(new CANBus("Extension"))
-            .withExtensionParameters(
-                ExtensionParameters.builder()
-                    .withCARRIAGE_MASS_KG(10.0)
-                    .withEXTENSION_MOTOR_CONFIG(DCMotor.getKrakenX44Foc(1))
-                    .withMAX_LENGTH(Meters.of(MAX_EXTENSION))
-                    .withMIN_LENGTH(Meters.of(MIN_EXTENSION))
-                    .withNUM_MOTORS(1)
-                    .build())
-            .withConstraints(
-                LinearConstraints.builder()
-                    .withPrefix("Intake/Right Extension/Constraints")
-                    .withGoalTolerance(Meters.of(0.01))
-                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
-                    .withMaxVelocity(MetersPerSecond.of(20))
-                    .build())
-            .build();
+        extensionConstants(22, MotorDirection.CLOCKWISE_POSITIVE, "Right Extension");
 
     LEFT_EXTENSION_STATES =
         Map.of(
@@ -311,6 +191,97 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 KICKER_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)));
+  }
+
+  /** Converts a per-meter extension gain to per drum rotation, the unit the motor works in. */
+  private static double perDrumRotation(double perMeter) {
+    return perMeter * 2.0 * Math.PI * EXTENSION_DRUM_RADIUS.in(Meters);
+  }
+
+  /** The two extensions share everything but their ID, direction, and tunable prefix. */
+  private static ExtensionConstants extensionConstants(
+      int canId, MotorDirection direction, String name) {
+    return ExtensionConstants.builder()
+        .withMotor(
+            MotorConfig.builder()
+                .withCanId(canId)
+                .withBus(CANBusId.named("Extension"))
+                .withDirection(direction)
+                .withNeutralMode(NeutralMode.COAST)
+                .withCurrentLimits(
+                    CurrentLimits.builder()
+                        .withSupplyCurrentLimit(Amps.of(40.0))
+                        .withStatorCurrentLimit(Amps.of(40.0))
+                        .build())
+                .withGearRatio((52.0 / 30) * (52.0 / 16))
+                .withSlot(
+                    GainSlot.ZERO,
+                    new SlotConfig(
+                        Gains.builder()
+                            .withPrefix("Intake/" + name + "/Slot0")
+                            .withKP(perDrumRotation(10))
+                            .withKD(0.0)
+                            .withKS(0.42002)
+                            .withKV(perDrumRotation(6.3697))
+                            .withKA(0.0)
+                            .build()))
+                .withSlot(
+                    GainSlot.ONE,
+                    new SlotConfig(
+                        Gains.builder()
+                            .withPrefix("Intake/" + name + "/Slot1")
+                            .withKP(perDrumRotation(1.0))
+                            .withKD(0.0)
+                            .withKS(0.0)
+                            .withKV(0.0)
+                            .withKA(0.0)
+                            .build()))
+                .build())
+        .withDrumRadius(EXTENSION_DRUM_RADIUS)
+        .withVoltageOffsetStep(Volts.of(1))
+        .withHeightOffsetStep(Meters.of(0.01))
+        .withExtensionParameters(
+            ExtensionParameters.builder()
+                .withCarriageMass(Kilograms.of(10.0))
+                .withCarriageGearbox(DCMotor.getKrakenX44Foc(1))
+                .withMaxLength(Meters.of(MAX_EXTENSION))
+                .withMinLength(Meters.of(MIN_EXTENSION))
+                .withSimulateGravity(false)
+                .build())
+        .withConstraints(
+            LinearConstraints.builder()
+                .withPrefix("Intake/" + name + "/Constraints")
+                .withGoalTolerance(Meters.of(0.01))
+                .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
+                .withMaxVelocity(MetersPerSecond.of(20))
+                .build())
+        .build();
+  }
+
+  /** The intake and kicker rollers share everything but their ID, bus, direction, and ratio. */
+  private static GenericRollerConstants rollerConstants(
+      int canId, CANBusId bus, MotorDirection direction, double gearRatio) {
+    return GenericRollerConstants.builder()
+        .withMotor(
+            MotorConfig.builder()
+                .withCanId(canId)
+                .withBus(bus)
+                .withDirection(direction)
+                .withNeutralMode(NeutralMode.COAST)
+                .withCurrentLimits(
+                    CurrentLimits.builder()
+                        .withSupplyCurrentLimit(Amps.of(40.0))
+                        .withStatorCurrentLimit(Amps.of(40.0))
+                        .build())
+                .withGearRatio(gearRatio)
+                .withOpenLoopRamps(
+                    new OpenLoopRamps(Seconds.of(0.0), Seconds.of(0.25), Seconds.of(0.0)))
+                .withEnableFOC(false)
+                .build())
+        .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
+        .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+        .withVoltageOffsetStep(Volts.of(1))
+        .build();
   }
 
   public enum ExtensionState {

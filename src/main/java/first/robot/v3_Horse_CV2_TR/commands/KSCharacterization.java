@@ -1,6 +1,6 @@
 package first.robot.v3_Horse_CV2_TR.commands;
 
-import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
+import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
