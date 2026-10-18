@@ -6,8 +6,8 @@ import static org.wpilib.units.Units.Volts;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.subsystems.extension.Extension;
-import edu.wpi.team190.gompeilib.subsystems.roller.GenericRoller;
+import edu.wpi.team190.gompeilib.robot.mechanisms.extension.Extension;
+import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRoller;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import java.util.function.DoubleSupplier;
@@ -57,7 +57,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             intakeRollerMotors,
             this,
             V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_CONSTANTS,
-            "Intake Roller",
+            "IntakeRoller",
             V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
 
     kickerRoller =
@@ -65,22 +65,22 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             kickerRollerMotors,
             this,
             V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS,
-            "Kicker Roller",
+            "KickerRoller",
             V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
 
     leftExtension =
         new Extension(
-            V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS,
-            this,
-            0,
             leftExtensionMotors,
+            this,
+            "LeftExtension",
+            V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS,
             V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(extensionState));
     rightExtension =
         new Extension(
-            V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS,
-            this,
-            1,
             rightExtensionMotors,
+            this,
+            "RightExtension",
+            V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS,
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
 
     leftManualPositionGoal =
@@ -147,7 +147,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     leftExtension.periodic();
     rightExtension.periodic();
 
-    extensionPosition = leftExtension.getExtensionPosition();
+    extensionPosition = Meters.of(leftExtension.getPosition().in(Meters));
 
     Logger.recordOutput("Intake/Rollers/State", rollerState.toString());
     Logger.recordOutput("Intake/Extension/State", extensionState.toString());
@@ -253,7 +253,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     return Commands.sequence(
         Commands.runOnce(() -> rollerState = RollerState.STOP),
         Commands.runOnce(() -> extensionState = ExtensionState.OVERRIDE),
-        Commands.parallel(leftExtension.resetExtensionZero(), rightExtension.resetExtensionZero()),
+        Commands.parallel(leftExtension.home(), rightExtension.home()),
         Commands.runOnce(() -> extensionState = ExtensionState.STOW));
   }
 
@@ -297,8 +297,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   private boolean isNearStow(double tolerance) {
     double threshold = V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION + tolerance;
-    return leftExtension.getExtensionPosition().in(Meters) <= threshold
-        && rightExtension.getExtensionPosition().in(Meters) <= threshold;
+    return leftExtension.getPosition().in(Meters) <= threshold
+        && rightExtension.getPosition().in(Meters) <= threshold;
   }
 
   public Command sysID() {

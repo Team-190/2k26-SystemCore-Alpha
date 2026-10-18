@@ -24,8 +24,8 @@ public class TestContractEnforcerTest {
           "edu/wpi/team190/gompeilib/logging/TracerAspect.java",
           // CameraStaticLimelight and CameraMovingLimelight are tested in CameraLimelightTest until
           // refactored in #39
-          "edu/wpi/team190/gompeilib/subsystems/vision/camera/CameraStaticLimelight.java",
-          "edu/wpi/team190/gompeilib/subsystems/vision/camera/CameraMovingLimelight.java");
+          "edu/wpi/team190/gompeilib/robot/subsystems/vision/camera/CameraStaticLimelight.java",
+          "edu/wpi/team190/gompeilib/robot/subsystems/vision/camera/CameraMovingLimelight.java");
 
   // Shared test fixtures or meta-tests that don't correspond to a single main class
   private static final Set<String> MIRROR_EXCLUDED_TEST =
@@ -34,8 +34,10 @@ public class TestContractEnforcerTest {
           "edu/wpi/team190/gompeilib/contract/TestContractEnforcerTest.java",
           // Shared reflection helpers for the core/io contract and Phoenix6 coverage tests
           "edu/wpi/team190/gompeilib/io/IOTestSupport.java",
+          // Shared motor fixture and all-capability test mechanism for the mechanism-layer tests
+          "edu/wpi/team190/gompeilib/robot/mechanisms/MechanismTestSupport.java",
           // Joint test for StaticLimelight and MovingLimelight
-          "edu/wpi/team190/gompeilib/subsystems/vision/camera/CameraLimelightTest.java");
+          "edu/wpi/team190/gompeilib/robot/subsystems/vision/camera/CameraLimelightTest.java");
 
   private Path resolveDir(Path rel) {
     if (Files.exists(rel)) {

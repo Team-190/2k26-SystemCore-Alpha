@@ -3,8 +3,8 @@ package edu.wpi.team190.gompeilib.localization;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionMultiTxTyObservation;
-import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionMultiTxTyObservation;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionPoseObservation;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

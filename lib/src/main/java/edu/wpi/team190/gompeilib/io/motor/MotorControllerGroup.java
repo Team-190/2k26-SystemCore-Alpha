@@ -2,6 +2,13 @@ package edu.wpi.team190.gompeilib.io.motor;
 
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.base.ConnectedIO;
+import edu.wpi.team190.gompeilib.io.base.CurrentLimitConfigurableIO;
+import edu.wpi.team190.gompeilib.io.base.GainSlotControllableIO;
+import edu.wpi.team190.gompeilib.io.base.MotionProfileConfigurableIO;
+import edu.wpi.team190.gompeilib.io.base.PositionResettableIO;
+import edu.wpi.team190.gompeilib.io.base.RequestControllableIO;
+import edu.wpi.team190.gompeilib.io.base.StickyFaultClearableIO;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.FeedbackSensor;
 import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor;
@@ -37,7 +44,14 @@ import org.wpilib.units.measure.Angle;
  * group with a mirrored follower throws instead of being sent, so two independent closed loops
  * never fight each other.
  */
-public class MotorControllerGroup {
+public class MotorControllerGroup
+    implements RequestControllableIO<MotorRequest>,
+        PositionResettableIO,
+        GainSlotControllableIO,
+        MotionProfileConfigurableIO,
+        CurrentLimitConfigurableIO,
+        StickyFaultClearableIO,
+        ConnectedIO {
   /** The requests that give the same result whether followed or mirrored. */
   public static final Set<Class<? extends MotorRequest>> MIRRORABLE_REQUESTS =
       Set.of(
@@ -144,6 +158,7 @@ public class MotorControllerGroup {
    * @throws IllegalStateException if the request can't be mirrored and a follower is mirrored;
    *     nothing is sent
    */
+  @Override
   public void setControl(MotorRequest request) {
     boolean mirrorable = MIRRORABLE_REQUESTS.contains(request.getClass());
     if (hasMirroredFollower && !mirrorable) {
@@ -181,6 +196,7 @@ public class MotorControllerGroup {
    *
    * @param position the new position
    */
+  @Override
   public void setPosition(Angle position) {
     for (Member member : members()) {
       member.io().setPosition(position);
@@ -193,6 +209,7 @@ public class MotorControllerGroup {
    * @param gains the gains
    * @param slot the slot
    */
+  @Override
   public void updateGains(Gains gains, GainSlot slot) {
     for (Member member : members()) {
       member.io().updateGains(gains, slot);
@@ -204,6 +221,7 @@ public class MotorControllerGroup {
    *
    * @param motionProfile the constraints
    */
+  @Override
   public void updateMotionProfile(MotionProfileConfig motionProfile) {
     for (Member member : members()) {
       member.io().updateMotionProfile(motionProfile);
@@ -215,6 +233,7 @@ public class MotorControllerGroup {
    *
    * @param currentLimits the limits
    */
+  @Override
   public void updateCurrentLimits(CurrentLimits currentLimits) {
     for (Member member : members()) {
       member.io().updateCurrentLimits(currentLimits);
@@ -222,6 +241,7 @@ public class MotorControllerGroup {
   }
 
   /** Clears sticky faults on every motor. */
+  @Override
   public void clearStickyFaults() {
     for (Member member : members()) {
       member.io().clearStickyFaults();
@@ -233,6 +253,7 @@ public class MotorControllerGroup {
    *
    * @return true if all are connected
    */
+  @Override
   public boolean isConnected() {
     for (Member member : members()) {
       if (!member.telemetry().connected) {

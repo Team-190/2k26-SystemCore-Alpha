@@ -15,7 +15,7 @@ package edu.wpi.team190.gompeilib.io.phoenix;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;

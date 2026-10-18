@@ -1,0 +1,6 @@
+package edu.wpi.team190.gompeilib.robot.subsystems.vision.data;
+
+import org.wpilib.math.geometry.Pose3d;
+
+public record VisionSingleTxTyObservation(
+    int tagId, double tx, double ty, double distance, double timestamp, Pose3d cameraPose) {}

@@ -1,6 +1,0 @@
-package edu.wpi.team190.gompeilib.subsystems.vision.data;
-
-import org.wpilib.math.geometry.Pose3d;
-
-public record VisionMultiTxTyObservation(
-    int tagId, double[] tx, double[] ty, double distance, double timestamp, Pose3d cameraPose) {}

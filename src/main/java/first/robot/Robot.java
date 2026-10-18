@@ -6,7 +6,7 @@ package first.robot;
 
 import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixUtil;
-import edu.wpi.team190.gompeilib.robot.VirtualSubsystem;
+import edu.wpi.team190.gompeilib.robot.subsystems.VirtualSubsystem;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotContainer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;

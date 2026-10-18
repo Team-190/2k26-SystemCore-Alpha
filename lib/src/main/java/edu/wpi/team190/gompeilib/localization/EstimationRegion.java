@@ -1,8 +1,8 @@
 package edu.wpi.team190.gompeilib.localization;
 
 import edu.wpi.team190.gompeilib.math.GeometryUtil;
-import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionMultiTxTyObservation;
-import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionMultiTxTyObservation;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionPoseObservation;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
