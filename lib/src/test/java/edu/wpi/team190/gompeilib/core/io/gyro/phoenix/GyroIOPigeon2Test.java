@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.core.io.components.inertial;
+package edu.wpi.team190.gompeilib.core.io.gyro.phoenix;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.Pigeon2Configurator;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.team190.gompeilib.core.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.core.io.gyro.GyroIO;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants;
 import java.util.ArrayDeque;
 import java.util.Queue;

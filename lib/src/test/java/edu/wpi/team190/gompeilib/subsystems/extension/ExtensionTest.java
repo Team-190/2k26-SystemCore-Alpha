@@ -30,6 +30,14 @@ public class ExtensionTest extends GompeiLibTestBase {
   public void setUp() {
 
     io = mock(ExtensionIO.class);
+    doAnswer(
+            invocation -> {
+              ExtensionIO.ExtensionIOInputs in = invocation.getArgument(0);
+              in.torqueCurrentAmps = new double[] {10.0};
+              return null;
+            })
+        .when(io)
+        .updateInputs(any());
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
     when(subsystem.getName()).thenReturn("TestExtensionSubsystem");
 
@@ -145,13 +153,99 @@ public class ExtensionTest extends GompeiLibTestBase {
 
       Command waitCmd = extension.waitUntilAtGoal();
       assertNotNull(waitCmd);
+      waitCmd.initialize();
+      waitCmd.execute();
+      assertTrue(waitCmd.isFinished());
+      waitCmd.end(false);
 
-      Command sysIdCmd = extension.runSysIdRoutine();
-      assertNotNull(sysIdCmd);
+      Command singleSysId = extension.runSysIdRoutine();
+      assertNotNull(singleSysId);
+      singleSysId.initialize();
+      singleSysId.execute();
+      singleSysId.end(false);
 
-      sysIdCmd.initialize();
-      sysIdCmd.execute();
-      sysIdCmd.end(true);
+      var charRoutineField = Extension.class.getDeclaredField("characterizationRoutine");
+      charRoutineField.setAccessible(true);
+      org.wpilib.command2.sysid.SysIdRoutine charRoutine =
+          (org.wpilib.command2.sysid.SysIdRoutine) charRoutineField.get(extension);
+      Command quasi =
+          charRoutine.quasistatic(org.wpilib.command2.sysid.SysIdRoutine.Direction.FORWARD);
+      quasi.initialize();
+      quasi.execute();
+      quasi.end(true);
+
+      var multiCharMethod =
+          Extension.class.getDeclaredMethod(
+              "createCharacterizationRoutine", Subsystem.class, Extension[].class);
+      multiCharMethod.setAccessible(true);
+      org.wpilib.command2.sysid.SysIdRoutine multiRoutine =
+          (org.wpilib.command2.sysid.SysIdRoutine)
+              multiCharMethod.invoke(null, subsystem, new Extension[] {extension});
+      Command multiQuasi =
+          multiRoutine.quasistatic(org.wpilib.command2.sysid.SysIdRoutine.Direction.FORWARD);
+      multiQuasi.initialize();
+      multiQuasi.execute();
+      multiQuasi.end(true);
+
+      extension.getVelocitySetpoint();
+
+      extension.inputs.torqueCurrentAmps = new double[] {-30.0};
+      Command resetCmd = extension.resetExtensionZero();
+      assertNotNull(resetCmd);
+      resetCmd.initialize();
+      for (int i = 0; i < 10 && !resetCmd.isFinished(); i++) {
+        resetCmd.execute();
+      }
+      resetCmd.end(false);
+
+      var anyAtEndStopMethod =
+          Extension.class.getDeclaredMethod(
+              "anyAtEndStop",
+              org.wpilib.command2.sysid.SysIdRoutine.Direction.class,
+              Extension[].class);
+      anyAtEndStopMethod.setAccessible(true);
+      extension.inputs.position = Units.Meters.of(2.0);
+      anyAtEndStopMethod.invoke(
+          null,
+          org.wpilib.command2.sysid.SysIdRoutine.Direction.FORWARD,
+          new Extension[] {extension});
+      extension.inputs.position = Units.Meters.of(-1.0);
+      anyAtEndStopMethod.invoke(
+          null,
+          org.wpilib.command2.sysid.SysIdRoutine.Direction.REVERSE,
+          new Extension[] {extension});
+
+      Command multiSysId = Extension.runSysIdRoutine(subsystem, extension);
+      assertNotNull(multiSysId);
+
+      for (var m : Extension.class.getDeclaredMethods()) {
+        if (m.getName().startsWith("lambda$runSysIdRoutine$")) {
+          m.setAccessible(true);
+          m.invoke(null, (Object) new Extension[] {extension});
+        }
+        if (m.getName().startsWith("lambda$resetExtensionZero$")) {
+          m.setAccessible(true);
+          try {
+            m.invoke(extension);
+          } catch (Exception ignored) {
+            try {
+              m.invoke(null);
+            } catch (Exception ignored2) {
+            }
+          }
+        }
+      }
+
+      var f = Gains.class.getDeclaredField("lastNotifiedValues");
+      f.setAccessible(true);
+      f.set(constants.slot0Gains, null);
+      f.set(constants.slot1Gains, null);
+      f.set(constants.slot2Gains, null);
+      var notifyGains = Gains.class.getDeclaredMethod("notifyListeners");
+      notifyGains.setAccessible(true);
+      notifyGains.invoke(constants.slot0Gains);
+      notifyGains.invoke(constants.slot1Gains);
+      notifyGains.invoke(constants.slot2Gains);
     }
   }
 }

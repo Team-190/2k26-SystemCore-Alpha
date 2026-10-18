@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.core.io.components.inertial;
+package edu.wpi.team190.gompeilib.core.io.gyro;
 
 import static org.junit.jupiter.api.Assertions.*;
 

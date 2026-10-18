@@ -56,6 +56,7 @@ public class VisionConstantsTest {
     assertEquals(config.hashCode(), config.hashCode());
     assertEquals(config, config);
     assertNotEquals(config, null);
+    assertNotNull(VisionConstants.StaticLimelightConfig.builder().toString());
   }
 
   @Test

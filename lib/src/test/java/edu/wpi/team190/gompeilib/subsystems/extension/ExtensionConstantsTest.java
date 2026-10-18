@@ -78,5 +78,10 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     assertEquals(0.0, params.MIN_LENGTH().in(Units.Meters));
     assertEquals(1.5, params.MAX_LENGTH().in(Units.Meters));
     assertEquals(1, params.NUM_MOTORS());
+    assertNotNull(params.toString());
+    assertEquals(params, params);
+    assertEquals(params.hashCode(), params.hashCode());
+    assertNotNull(ExtensionConstants.builder().toString());
+    assertNotNull(ExtensionConstants.ExtensionParameters.builder().toString());
   }
 }

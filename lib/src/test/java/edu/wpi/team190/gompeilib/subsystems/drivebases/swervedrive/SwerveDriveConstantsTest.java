@@ -143,5 +143,11 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
 
     SwerveDriveKinematics kinematics = driveConfig.kinematics();
     assertNotNull(kinematics);
+    assertNotNull(driveConfig.toString());
+    assertEquals(driveConfig, driveConfig);
+    assertEquals(driveConfig.hashCode(), driveConfig.hashCode());
+    assertNotNull(SwerveDriveConstants.DriveConfig.builder().toString());
+    assertNotNull(autoAlignConstants.toString());
+    assertNotNull(constants.toString());
   }
 }

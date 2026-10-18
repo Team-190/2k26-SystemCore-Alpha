@@ -31,4 +31,9 @@ public class ExtensionMethodsTest {
     assertTrue(ExtensionMethods.matchesSetpoint(matchingEquivalent, setpoint));
     assertFalse(ExtensionMethods.matchesSetpoint(different, setpoint));
   }
+
+  @Test
+  public void testConstructor() {
+    assertNotNull(new ExtensionMethods());
+  }
 }

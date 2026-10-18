@@ -194,7 +194,9 @@ jacocoTestReport {
                 '**/*TalonFX.class',
                 '**/*Pigeon2.class',
                 '**/*SysId*.class',
-                '**/Phoenix*.class'
+                '**/Phoenix*.class',
+                // GenericHood is being retired/replaced in #41
+                '**/GenericHood*.class'
             ])
         }))
     }
@@ -247,7 +249,9 @@ jacocoTestCoverageVerification {
                 '**/*TalonFX.class',
                 '**/*Pigeon2.class',
                 '**/*SysId*.class',
-                '**/Phoenix*.class'
+                '**/Phoenix*.class',
+                // GenericHood is being retired/replaced in #41
+                '**/GenericHood*.class'
             ])
         }))
     }

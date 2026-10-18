@@ -40,6 +40,8 @@ public class TestContractEnforcerTest {
       Set.of(
           "edu/wpi/team190/gompeilib/core/GompeiLibTestBase.java",
           "edu/wpi/team190/gompeilib/core/contract/TestContractEnforcerTest.java",
+          // Shared reflection helpers for the core/io contract and Phoenix6 coverage tests
+          "edu/wpi/team190/gompeilib/core/io/IOTestSupport.java",
           // Joint test for StaticLimelight and MovingLimelight
           "edu/wpi/team190/gompeilib/subsystems/vision/camera/CameraLimelightTest.java");
 

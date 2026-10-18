@@ -1,7 +1,7 @@
 package first.robot.v3_Horse_CV2_TR;
 
-import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
-import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
+import edu.wpi.team190.gompeilib.core.io.gyro.GyroIO;
+import edu.wpi.team190.gompeilib.core.io.gyro.phoenix.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;

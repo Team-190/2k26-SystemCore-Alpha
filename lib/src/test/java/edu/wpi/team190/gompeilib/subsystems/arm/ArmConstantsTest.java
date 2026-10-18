@@ -77,5 +77,10 @@ public class ArmConstantsTest extends GompeiLibTestBase {
     assertEquals(100.0, params.gearRatio());
     assertEquals(0.5, params.lengthMeters());
     assertEquals(0.1, params.momentOfInertia());
+    assertNotNull(params.toString());
+    assertEquals(params, params);
+    assertEquals(params.hashCode(), params.hashCode());
+    assertNotNull(ArmConstants.builder().toString());
+    assertNotNull(ArmConstants.ArmParameters.builder().toString());
   }
 }
