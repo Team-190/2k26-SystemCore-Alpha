@@ -30,6 +30,7 @@ import org.wpilib.networktables.NetworkTablesJNI;
 import org.wpilib.smartdashboard.Field2d;
 import org.wpilib.system.Timer;
 import org.wpilib.tunable.Tunables;
+import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 
@@ -57,14 +58,14 @@ public class V3_Horse_CV2_TRRobotState {
 
   @Getter private static boolean inAllianceZone;
 
-  private static final InterpolatingTreeMap<Distance, Rotation2d> shootAngleTree;
+  private static final InterpolatingTreeMap<Distance, Angle> shootAngleTree;
   private static final InterpolatingTreeMap<Distance, AngularVelocity> shootSpeedTree;
-  private static final InterpolatingTreeMap<Distance, Rotation2d> feedAngleTree;
+  private static final InterpolatingTreeMap<Distance, Angle> feedAngleTree;
   private static final InterpolatingTreeMap<Distance, AngularVelocity> feedSpeedTree;
 
-  @Getter private static Rotation2d scoreAngle;
+  @Getter private static Angle scoreAngle;
   @Getter private static AngularVelocity scoreVelocity;
-  @Getter private static Rotation2d feedAngle;
+  @Getter private static Angle feedAngle;
   @Getter private static AngularVelocity feedVelocity;
 
   @Getter private static final LEDStates ledStates;
@@ -113,7 +114,10 @@ public class V3_Horse_CV2_TRRobotState {
             (start, end, q) ->
                 InverseInterpolator.forDouble()
                     .inverseInterpolate(start.in(Meters), end.in(Meters), q.in(Meters)),
-            Rotation2d::interpolate);
+            (start, end, t) ->
+                Angle.ofBaseUnits(
+                    Interpolator.forDouble().interpolate(start.in(Radians), end.in(Radians), t),
+                    Radians));
     shootSpeedTree =
         new InterpolatingTreeMap<>(
             (start, end, q) ->
@@ -130,7 +134,10 @@ public class V3_Horse_CV2_TRRobotState {
             (start, end, q) ->
                 InverseInterpolator.forDouble()
                     .inverseInterpolate(start.in(Meters), end.in(Meters), q.in(Meters)),
-            Rotation2d::interpolate);
+            (start, end, t) ->
+                Angle.ofBaseUnits(
+                    Interpolator.forDouble().interpolate(start.in(Radians), end.in(Radians), t),
+                    Radians));
     feedSpeedTree =
         new InterpolatingTreeMap<>(
             (start, end, q) ->
@@ -142,44 +149,42 @@ public class V3_Horse_CV2_TRRobotState {
                         .interpolate(start.in(RadiansPerSecond), end.in(RadiansPerSecond), t),
                     RadiansPerSecond));
 
-    shootAngleTree.put(Meters.of(1.090), Rotation2d.fromDegrees(0.17));
+    shootAngleTree.put(Meters.of(1.090), Degrees.of(0.17));
     shootSpeedTree.put(Meters.of(1.090), RadiansPerSecond.of(140.0));
 
-    shootAngleTree.put(Meters.of(1.348), Rotation2d.fromDegrees(4.0));
+    shootAngleTree.put(Meters.of(1.348), Degrees.of(4.0));
     shootSpeedTree.put(Meters.of(1.348), RadiansPerSecond.of(140.0));
 
-    shootAngleTree.put(Meters.of(1.661), Rotation2d.fromDegrees(8.0));
+    shootAngleTree.put(Meters.of(1.661), Degrees.of(8.0));
     shootSpeedTree.put(Meters.of(1.661), RadiansPerSecond.of(145.0));
 
-    shootAngleTree.put(Meters.of(2.0), Rotation2d.fromDegrees(10.0));
+    shootAngleTree.put(Meters.of(2.0), Degrees.of(10.0));
     shootSpeedTree.put(Meters.of(2.0), RadiansPerSecond.of(160.0));
 
-    shootAngleTree.put(Meters.of(2.49), Rotation2d.fromDegrees(14.0));
+    shootAngleTree.put(Meters.of(2.49), Degrees.of(14.0));
     shootSpeedTree.put(Meters.of(2.49), RadiansPerSecond.of(165.0));
 
-    shootAngleTree.put(Meters.of(3), Rotation2d.fromDegrees(18.0));
+    shootAngleTree.put(Meters.of(3), Degrees.of(18.0));
     shootSpeedTree.put(Meters.of(3), RadiansPerSecond.of(165.0));
 
-    shootAngleTree.put(Meters.of(3.5), Rotation2d.fromDegrees(22.0));
+    shootAngleTree.put(Meters.of(3.5), Degrees.of(22.0));
     shootSpeedTree.put(Meters.of(3.5), RadiansPerSecond.of(165.0));
 
-    shootAngleTree.put(Meters.of(4.0), Rotation2d.fromDegrees(21.3));
+    shootAngleTree.put(Meters.of(4.0), Degrees.of(21.3));
     shootSpeedTree.put(Meters.of(4.0), RadiansPerSecond.of(185.0));
 
-    shootAngleTree.put(Meters.of(4.5), Rotation2d.fromDegrees(21.3));
+    shootAngleTree.put(Meters.of(4.5), Degrees.of(21.3));
     shootSpeedTree.put(Meters.of(4.5), RadiansPerSecond.of(190.0));
 
     feedAngleTree.put(
-        Meters.of(0.0),
-        Rotation2d.fromDegrees(
-            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.maxAngle().in(Degrees)));
+        Meters.of(0.0), V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.maxAngle());
 
     feedSpeedTree.put(
         Meters.of(0.0), RadiansPerSecond.of(Units.rotationsPerMinuteToRadiansPerSecond(4500)));
 
-    scoreAngle = new Rotation2d();
+    scoreAngle = Radians.of(0.0);
     scoreVelocity = AngularVelocity.ofBaseUnits(0, RadiansPerSecond);
-    feedAngle = new Rotation2d();
+    feedAngle = Radians.of(0.0);
     feedVelocity = AngularVelocity.ofBaseUnits(0, RadiansPerSecond);
 
     field.setRobotPose(getGlobalPose());
@@ -324,22 +329,22 @@ public class V3_Horse_CV2_TRRobotState {
     return towerZonePose;
   }
 
-  public record FixedShotParameters(Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
+  public record FixedShotParameters(Angle hoodAngle, AngularVelocity flywheelSpeed) {}
 
   /** Robot angles are blue-alliance field headings; they are alliance-flipped at use time. */
   @RequiredArgsConstructor
   public enum FixedShots {
     BUMP(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(10.0), // TODO: Use Real Value
+            Degrees.of(10.0), // TODO: Use Real Value
             RadiansPerSecond.of(160.0))), // TODO: Use Real Value
     TRENCH(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
+            Degrees.of(20.0), // TODO: Use Real Value
             RadiansPerSecond.of(165.0))), // TODO: Use Real Value
     FAR(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(21.3), // TODO: Use Real Value
+            Degrees.of(21.3), // TODO: Use Real Value
             RadiansPerSecond.of(190.0))); // TODO: Use Real Value
 
     @Getter private final FixedShotParameters parameters;

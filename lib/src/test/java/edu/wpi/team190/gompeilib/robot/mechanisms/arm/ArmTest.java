@@ -177,6 +177,31 @@ public class ArmTest extends GompeiLibTestBase {
   }
 
   @Test
+  public void testPositionsPastHalfATurnDoNotWrap() {
+    Arm arm =
+        new Arm(
+            factory,
+            subsystem,
+            "Arm",
+            constants,
+            new Setpoint<>(Degrees.of(0), Degrees.of(1), Degrees.of(-720), Degrees.of(720)));
+    reading = t -> t.position = Degrees.of(190.0);
+    arm.periodic();
+    assertEquals(190.0, arm.getPosition().in(Degrees), 1e-9);
+
+    // -170 deg is the same orientation as 190 deg, but a full turn away for the mechanism
+    assertFalse(arm.atPositionGoal(Degrees.of(-170)));
+    assertTrue(arm.atPositionGoal(Degrees.of(190)));
+
+    arm.setPositionGoal(Degrees.of(540));
+    arm.periodic();
+    verify(motor)
+        .setControl(
+            new PositionRequest.ProfiledPositionVoltage(
+                Degrees.of(540), Volts.of(0.0), true, GainSlot.ZERO, RequestOptions.DEFAULT));
+  }
+
+  @Test
   public void testSeedsPositionFromItsEncoder() {
     AbsoluteEncoderIO encoder = mock(AbsoluteEncoderIO.class);
     doAnswer(

@@ -176,6 +176,12 @@ public class SwerveModuleTest extends GompeiLibTestBase {
           module.getPosition());
       assertEquals(4.0 * WHEEL_RADIUS, module.getState().velocity, 1e-9);
 
+      report(turn, Degrees.of(390.0), 0.0, 2);
+      module.updateInputs();
+      assertEquals(30.0, module.getAngle().getDegrees(), 1e-9);
+      report(turn, Degrees.of(30.0), 0.0, 2);
+      module.updateInputs();
+
       assertArrayEquals(new double[] {0.0, 1.0}, module.getOdometryTimestamps());
       assertEquals(2, module.getOdometryPositions().length);
       assertEquals(10.0 * WHEEL_RADIUS, module.getOdometryPositions()[1].distance, 1e-9);
@@ -282,7 +288,7 @@ public class SwerveModuleTest extends GompeiLibTestBase {
       MotorIO drive = motors.get(0);
       MotorIO turn = motors.get(1);
 
-      module.runCharacterization(3.0);
+      module.runCharacterization(new OpenLoopRequest.CurrentOutput(Amps.of(3.0)));
       verify(drive).setControl(new OpenLoopRequest.CurrentOutput(Amps.of(3.0)));
       verify(turn).setControl(isA(PositionRequest.ProfiledPositionVoltage.class));
 

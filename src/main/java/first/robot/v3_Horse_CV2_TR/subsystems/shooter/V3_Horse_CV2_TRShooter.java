@@ -22,11 +22,11 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.Trigger;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.VoltageUnit;
+import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 
 public class V3_Horse_CV2_TRShooter extends SubsystemBase {
@@ -133,15 +133,15 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         flywheel.stop();
         break;
       case SCORE:
-        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle().getMeasure());
+        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
         flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity(), Amps.of(0));
         break;
       case FEED:
-        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle().getMeasure());
+        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
         flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity(), Amps.of(0));
         break;
       case FIXED_SHOTS:
-        hood.setPositionGoal(fixedShotParameters.hoodAngle().getMeasure());
+        hood.setPositionGoal(fixedShotParameters.hoodAngle());
         flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed(), Amps.of(0));
         break;
       case ZERO:
@@ -240,9 +240,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
     return Commands.runOnce(hood.getPositionGoal()::decrement);
   }
 
-  public Command setHoodAngle(Rotation2d angle) {
-    return setGoal(ShooterGoal.IDLE)
-        .andThen(Commands.runOnce(() -> hood.setPositionGoal(angle.getMeasure())));
+  public Command setHoodAngle(Angle angle) {
+    return setGoal(ShooterGoal.IDLE).andThen(Commands.runOnce(() -> hood.setPositionGoal(angle)));
   }
 
   public void setHoodGains(Gains<?, AngleUnit, AngularVelocityUnit> hoodGains) {
@@ -271,8 +270,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
     return hood.home();
   }
 
-  public Rotation2d getHoodAngle() {
-    return Rotation2d.fromRadians(hood.getPosition().in(Radians));
+  public Angle getHoodAngle() {
+    return Radians.of(hood.getPosition().in(Radians));
   }
 
   public AngularVelocity getFlywheelVelocity() {

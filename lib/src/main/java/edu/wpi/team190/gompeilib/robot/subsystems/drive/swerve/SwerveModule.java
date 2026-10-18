@@ -218,10 +218,10 @@ public class SwerveModule {
     }
   }
 
-  /** Runs the module with the specified output while controlling to zero degrees. */
+  /** Runs the drive motor with an open-loop request while controlling to zero degrees. */
   @Trace
-  public void runCharacterization(double amps) {
-    drive.setControl(new OpenLoopRequest.CurrentOutput(Amps.of(amps)));
+  public void runCharacterization(OpenLoopRequest request) {
+    drive.setControl(request);
     setTurnPosition(new Rotation2d());
   }
 

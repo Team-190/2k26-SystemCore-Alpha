@@ -1,6 +1,7 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.shooter;
 
 import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.Seconds;
 
@@ -15,6 +16,7 @@ import org.wpilib.math.geometry.Transform2d;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.util.MathUtil;
+import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.Time;
@@ -34,7 +36,7 @@ public class ShotCalculator {
   private static final double MIN_ALIGN_DISTANCE_METERS = 0.5;
 
   private static Rotation2d lastChassisAngle;
-  private static Rotation2d lastHoodAngle;
+  private static Angle lastHoodAngle;
 
   public static void clear() {
     smoothedChassisAngle = null;
@@ -51,7 +53,7 @@ public class ShotCalculator {
       ChassisVelocities robotRelativeVelocity,
       Time phaseDelay,
       Function<Distance, Time> distanceToTimeFunction,
-      Function<Distance, Rotation2d> distanceToHoodFunction,
+      Function<Distance, Angle> distanceToHoodFunction,
       Function<Distance, AngularVelocity> distanceToFlywheelFunction) {
 
     Pose2d phaseDelayedPose =
@@ -101,10 +103,9 @@ public class ShotCalculator {
     }
 
     double clampedLookaheadDistance = Math.max(lookaheadDistance, MIN_ALIGN_DISTANCE_METERS);
-    Rotation2d rawHoodAngle = distanceToHoodFunction.apply(Meters.of(clampedLookaheadDistance));
+    Angle rawHoodAngle = distanceToHoodFunction.apply(Meters.of(clampedLookaheadDistance));
 
-    Rotation2d currentHoodAngle =
-        Rotation2d.fromRadians(hoodSetpointFilter.calculate(rawHoodAngle.getRadians()));
+    Angle currentHoodAngle = Radians.of(hoodSetpointFilter.calculate(rawHoodAngle.in(Radians)));
 
     Rotation2d currentChassisAngle;
     if (smoothedChassisAngle == null) {
@@ -132,7 +133,7 @@ public class ShotCalculator {
     AngularVelocity hoodVelocity =
         RadiansPerSecond.of(
             hoodVelocityFilter.calculate(
-                currentHoodAngle.minus(lastHoodAngle).getRadians() / GompeiLib.getLoopPeriod()));
+                currentHoodAngle.minus(lastHoodAngle).in(Radians) / GompeiLib.getLoopPeriod()));
 
     lastChassisAngle = currentChassisAngle;
     lastHoodAngle = currentHoodAngle;
@@ -151,7 +152,7 @@ public class ShotCalculator {
       boolean isValid,
       Pose2d adjustedRobotPose,
       Rotation2d chassisAngle,
-      Rotation2d hoodAngle,
+      Angle hoodAngle,
       AngularVelocity chassisVelocity,
       AngularVelocity hoodVelocity,
       AngularVelocity flywheelSpeed) {}
