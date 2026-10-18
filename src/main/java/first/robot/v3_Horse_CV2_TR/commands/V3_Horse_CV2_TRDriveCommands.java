@@ -6,9 +6,9 @@ import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDrive;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants.AutoAlignConstants;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants.AutoAlignConstants;
 import first.robot.FieldConstants;
 import first.robot.util.AllianceFlipUtil;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;

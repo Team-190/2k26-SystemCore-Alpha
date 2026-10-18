@@ -6,8 +6,8 @@ import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDrive;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDriveConstants.AutoAlignConstants;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants.AutoAlignConstants;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;

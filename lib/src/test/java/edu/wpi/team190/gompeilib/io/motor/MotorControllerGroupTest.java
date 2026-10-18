@@ -8,6 +8,13 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.base.ConnectedIO;
+import edu.wpi.team190.gompeilib.io.base.CurrentLimitConfigurableIO;
+import edu.wpi.team190.gompeilib.io.base.GainSlotControllableIO;
+import edu.wpi.team190.gompeilib.io.base.MotionProfileConfigurableIO;
+import edu.wpi.team190.gompeilib.io.base.PositionResettableIO;
+import edu.wpi.team190.gompeilib.io.base.RequestControllableIO;
+import edu.wpi.team190.gompeilib.io.base.StickyFaultClearableIO;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup.FollowMode;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.FeedbackSensor;
@@ -83,6 +90,22 @@ public class MotorControllerGroupTest extends GompeiLibTestBase {
                 .withSupplyCurrentLimit(40.0)
                 .withStatorCurrentLimit(40.0)
                 .build());
+  }
+
+  @Test
+  public void testImplementsTheMotorCapabilities() {
+    for (Class<?> capability :
+        List.of(
+            RequestControllableIO.class,
+            PositionResettableIO.class,
+            GainSlotControllableIO.class,
+            MotionProfileConfigurableIO.class,
+            CurrentLimitConfigurableIO.class,
+            StickyFaultClearableIO.class,
+            ConnectedIO.class)) {
+      assertTrue(
+          capability.isAssignableFrom(MotorControllerGroup.class), capability.getSimpleName());
+    }
   }
 
   @Test

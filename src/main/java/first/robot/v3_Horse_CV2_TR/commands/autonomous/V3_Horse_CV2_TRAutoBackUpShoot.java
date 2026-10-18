@@ -2,7 +2,7 @@ package first.robot.v3_Horse_CV2_TR.commands.autonomous;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDrive;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
 import first.robot.util.AllianceFlipUtil;
 import first.robot.util.Elastic;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;

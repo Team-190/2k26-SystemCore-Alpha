@@ -9,8 +9,8 @@ import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheel;
-import edu.wpi.team190.gompeilib.subsystems.hood.GenericHood;
+import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheel;
+import edu.wpi.team190.gompeilib.robot.mechanisms.hood.GenericHood;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShotParameters;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
@@ -56,8 +56,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     Setpoint<AngleUnit> hoodAngleSetpoint =
         new Setpoint<AngleUnit>(
-            Radians.of(0.0),
-            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.positionOffsetStep.getMeasure());
+            Radians.of(0.0), V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.positionOffsetStep);
     Setpoint<VoltageUnit> hoodVoltageSetpoint =
         new Setpoint<VoltageUnit>(
             Volts.of(0.0), V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.voltageOffsetStep);
@@ -67,14 +66,14 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             flywheelMotors,
             this,
             V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS,
-            "",
+            "Flywheel",
             flywheelVelocitySetpoint,
             flywheelVoltageSetpoint);
     this.hood =
         new GenericHood(
             hoodMotors,
             this,
-            0,
+            "Hood",
             V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS,
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
@@ -86,7 +85,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             () ->
                 Math.abs(
                         flywheel
-                            .getFlywheelVelocity()
+                            .getVelocity()
                             .minus(flywheel.getVelocityGoal().getNewSetpoint())
                             .in(RadiansPerSecond))
                     <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
@@ -99,7 +98,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             () ->
                 Math.abs(
                         flywheel
-                            .getFlywheelVelocity()
+                            .getVelocity()
                             .minus(flywheel.getVelocityGoal().getNewSetpoint())
                             .in(RadiansPerSecond))
                     <= (V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
@@ -113,8 +112,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         new Trigger(
             () ->
                 Math.abs(
-                        hood.getAngle()
-                            .getMeasure()
+                        hood.getPosition()
                             .minus(hood.getPositionGoal().getNewSetpoint())
                             .in(Radians))
                     <= (V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS
@@ -134,23 +132,23 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         flywheel.stop();
         break;
       case SCORE:
-        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
+        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle().getMeasure());
         flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity(), Amps.of(0));
         break;
       case FEED:
-        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
+        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle().getMeasure());
         flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity(), Amps.of(0));
         break;
       case FIXED_SHOTS:
-        hood.setPositionGoal(fixedShotParameters.hoodAngle());
+        hood.setPositionGoal(fixedShotParameters.hoodAngle().getMeasure());
         flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed(), Amps.of(0));
         break;
       case ZERO:
-        hood.setPositionGoal(Rotation2d.ZERO);
+        hood.setPositionGoal(Radians.of(0.0));
         flywheel.stop();
         break;
       case STOP:
-        hood.setPositionGoal(Rotation2d.ZERO);
+        hood.setPositionGoal(Radians.of(0.0));
         flywheel.stop();
         break;
       default:
@@ -210,15 +208,15 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   }
 
   public Command waitUntilHoodAtGoal() {
-    return hood.waitUntilAtGoal();
+    return hood.waitUntilAtPositionGoal();
   }
 
   public Command waitUntilFlywheelAtGoal() {
-    return flywheel.waitUntilAtGoal();
+    return flywheel.waitUntilAtVelocityGoal();
   }
 
   public Command hoodSysId() {
-    return hood.runSysIdRoutine();
+    return hood.sysIdRoutine();
   }
 
   public Command flywheelSysId() {
@@ -242,15 +240,16 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   }
 
   public Command setHoodAngle(Rotation2d angle) {
-    return setGoal(ShooterGoal.IDLE).andThen(Commands.runOnce(() -> hood.setPositionGoal(angle)));
+    return setGoal(ShooterGoal.IDLE)
+        .andThen(Commands.runOnce(() -> hood.setPositionGoal(angle.getMeasure())));
   }
 
   public void setHoodGains(Gains hoodGains) {
-    hood.setGains(hoodGains);
+    hood.updateGains(hoodGains, GainSlot.ZERO);
   }
 
   public void setHoodConstraints(AngularPositionConstraints constraints) {
-    hood.setProfile(constraints);
+    hood.updateConstraints(constraints);
   }
 
   public void setFlywheelGains(Gains flywheelGains) {
@@ -267,14 +266,14 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   }
 
   public Command resetHoodZero() {
-    return hood.resetHoodZero();
+    return hood.home();
   }
 
   public Rotation2d getHoodAngle() {
-    return hood.getAngle();
+    return Rotation2d.fromRadians(hood.getPosition().in(Radians));
   }
 
   public AngularVelocity getFlywheelVelocity() {
-    return flywheel.getFlywheelVelocity();
+    return RadiansPerSecond.of(flywheel.getVelocity().in(RadiansPerSecond));
   }
 }

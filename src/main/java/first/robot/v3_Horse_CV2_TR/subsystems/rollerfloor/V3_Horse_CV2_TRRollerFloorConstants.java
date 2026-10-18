@@ -12,7 +12,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
-import edu.wpi.team190.gompeilib.subsystems.roller.GenericRollerConstants;
+import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRollerConstants;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;

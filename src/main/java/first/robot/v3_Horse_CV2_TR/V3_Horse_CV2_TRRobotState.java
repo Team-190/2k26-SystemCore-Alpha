@@ -5,8 +5,8 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.localization.FieldZone;
 import edu.wpi.team190.gompeilib.localization.Localization;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.subsystems.drive.swerve.SwerveDrive;
-import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
+import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionPoseObservation;
 import first.robot.FieldConstants;
 import first.robot.util.AllianceFlipUtil;
 import first.robot.util.NTPrefixes;
@@ -172,7 +172,7 @@ public class V3_Horse_CV2_TRRobotState {
     feedAngleTree.put(
         Meters.of(0.0),
         Rotation2d.fromDegrees(
-            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.maxAngle().getDegrees()));
+            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.maxAngle().in(Degrees)));
 
     feedSpeedTree.put(
         Meters.of(0.0), RadiansPerSecond.of(Units.rotationsPerMinuteToRadiansPerSecond(4500)));

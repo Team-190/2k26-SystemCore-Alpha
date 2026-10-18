@@ -15,10 +15,12 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
-import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants.ExtensionParameters;
-import edu.wpi.team190.gompeilib.subsystems.roller.GenericRollerConstants;
+import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants;
+import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants.ExtensionParameters;
+import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRollerConstants;
 import java.util.Map;
+import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
@@ -272,6 +274,11 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                             .build()))
                 .build())
         .withDrumRadius(EXTENSION_DRUM_RADIUS)
+        // Drive back into the hard stop at 1 V until the torque current reaches -20 A
+        .withHoming(
+            Optional.of(
+                new CurrentHoming.Config<>(
+                    Volts.of(-1.0), Amps.of(-20.0), Amps.of(5.0), Meters.of(MIN_EXTENSION))))
         .withVoltageOffsetStep(Volts.of(1))
         .withHeightOffsetStep(Meters.of(0.01))
         .withExtensionParameters(

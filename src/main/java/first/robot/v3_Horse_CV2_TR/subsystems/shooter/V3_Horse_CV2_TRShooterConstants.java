@@ -23,12 +23,13 @@ import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
-import edu.wpi.team190.gompeilib.subsystems.arm.ArmConstants;
-import edu.wpi.team190.gompeilib.subsystems.flywheel.GenericFlywheelConstants;
+import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
+import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
 import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.Angle;
 
 public class V3_Horse_CV2_TRShooterConstants {
 
@@ -91,8 +92,8 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withVoltageOffsetStep(Volts.of(1))
           .build();
 
-  private static final Rotation2d HOOD_MIN_ANGLE = Rotation2d.fromDegrees(0.5);
-  private static final Rotation2d HOOD_MAX_ANGLE = Rotation2d.fromDegrees(35.0);
+  private static final Angle HOOD_MIN_ANGLE = Degrees.of(0.5);
+  private static final Angle HOOD_MAX_ANGLE = Degrees.of(35.0);
 
   public static final ArmConstants HOOD_CONSTANTS =
       ArmConstants.builder()
@@ -102,8 +103,7 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withBus(CANBusId.port(CANPort.CAN_S4))
                   .withDirection(MotorDirection.CLOCKWISE_POSITIVE)
                   .withCurrentLimits(new CurrentLimits(40, 30))
-                  .withSoftLimits(
-                      SoftLimits.between(HOOD_MIN_ANGLE.getMeasure(), HOOD_MAX_ANGLE.getMeasure()))
+                  .withSoftLimits(SoftLimits.between(HOOD_MIN_ANGLE, HOOD_MAX_ANGLE))
                   .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
                   .withSlot(
                       GainSlot.ZERO,
@@ -135,16 +135,12 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
                   .withGoalTolerance(Degrees.of(1))
                   .build())
-          .withPositionOffsetStep(Rotation2d.fromDegrees(1))
+          .withPositionOffsetStep(Degrees.of(1))
           .withVoltageOffsetStep(Volts.of(0.5))
           .withHoming(
               Optional.of(
-                  ArmConstants.Homing.builder()
-                      .withVoltage(Volts.of(-1.0))
-                      .withCurrentThreshold(Amps.of(40.0))
-                      .withCurrentEpsilon(Milliamps.of(500))
-                      .withPosition(Rotation2d.ZERO)
-                      .build()))
+                  new CurrentHoming.Config<>(
+                      Volts.of(-1.0), Amps.of(40.0), Milliamps.of(500), Degrees.of(0.0))))
           .build();
 
   public enum ShooterGoal {
