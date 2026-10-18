@@ -4,9 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
-import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
@@ -24,7 +25,7 @@ public class MotorIOTest extends GompeiLibTestBase {
 
     io.updateInputs(telemetry);
     io.setPosition(Rotations.of(2.0));
-    io.updateGains(Gains.builder().withKP(1.0).build(), GainSlot.ONE);
+    io.updateGains(SlotConfig.position(TestGains.positionKP(1.0)), GainSlot.ONE);
     io.clearStickyFaults();
     io.setControl(new OpenLoopRequest.VoltageOutput(Volts.of(1.0)));
 

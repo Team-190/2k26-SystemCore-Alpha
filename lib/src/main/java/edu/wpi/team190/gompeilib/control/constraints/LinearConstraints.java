@@ -21,8 +21,10 @@ import org.wpilib.units.measure.LinearVelocity;
 
 /**
  * Tunable linear motion constraints, published under {@code prefix} (for example {@code
- * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Unset
- * values default to zero, except the SysId margin, which defaults to the goal tolerance.
+ * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Each
+ * value is published and edited in the unit it was declared in, with its unit next to it. Unset
+ * values default to zero, published in meters, except the SysId margin, which defaults to the goal
+ * tolerance.
  */
 public final class LinearConstraints implements Constraints.PositionConstraints<LinearConstraints> {
   private final Tunable<Distance> goalTolerance;
@@ -84,15 +86,15 @@ public final class LinearConstraints implements Constraints.PositionConstraints<
     return sysIdMargin;
   }
 
-  public double getGoalToleranceMeters(DistanceUnit unit) {
+  public double getGoalTolerance(DistanceUnit unit) {
     return goalTolerance.get().in(unit);
   }
 
-  public double getMaxVelocityMetersPerSecond(LinearVelocityUnit unit) {
+  public double getMaxVelocity(LinearVelocityUnit unit) {
     return maxVelocity.get().in(unit);
   }
 
-  public double getMaxAccelerationMetersPerSecondSquared(LinearAccelerationUnit unit) {
+  public double getMaxAcceleration(LinearAccelerationUnit unit) {
     return maxAcceleration.get().in(unit);
   }
 

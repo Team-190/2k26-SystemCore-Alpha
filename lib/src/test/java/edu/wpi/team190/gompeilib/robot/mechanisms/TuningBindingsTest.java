@@ -12,21 +12,34 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import org.junit.jupiter.api.Test;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.VoltageUnit;
 
 public class TuningBindingsTest extends GompeiLibTestBase {
   @Test
   public void testForwardsEachSlotsGainChanges() {
-    Gains slot0 = Gains.builder().withPrefix("bindings/slot0").withKP(1.0).build();
-    Gains slot1 = Gains.builder().withPrefix("bindings/slot1").withKP(2.0).build();
+    Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> gains0 =
+        Gains.angularPosition(Volts)
+            .withPrefix("bindings/slot0")
+            .withKP(Volts.per(Rotations).ofNative(1.0))
+            .build();
+    Gains<VoltageUnit, AngularVelocityUnit, AngularVelocityUnit> gains1 =
+        Gains.angularVelocity(Volts)
+            .withPrefix("bindings/slot1")
+            .withKP(Volts.per(RotationsPerSecond).ofNative(2.0))
+            .build();
+    SlotConfig slot0 = SlotConfig.position(gains0);
+    SlotConfig slot1 = SlotConfig.velocity(gains1);
     MotorConfig config =
         MechanismTestSupport.config().toBuilder()
-            .withSlot(GainSlot.ZERO, new SlotConfig(slot0))
-            .withSlot(GainSlot.ONE, new SlotConfig(slot1))
+            .withSlot(GainSlot.ZERO, slot0)
+            .withSlot(GainSlot.ONE, slot1)
             .build();
     MotorControllerGroup motors = mock(MotorControllerGroup.class);
 
     TuningBindings.bindGains(motors, config);
-    MechanismTestSupport.fireChange(slot1);
+    MechanismTestSupport.fireChange(gains1);
 
     verify(motors).updateGains(slot1, GainSlot.ONE);
     verify(motors, never()).updateGains(slot0, GainSlot.ZERO);

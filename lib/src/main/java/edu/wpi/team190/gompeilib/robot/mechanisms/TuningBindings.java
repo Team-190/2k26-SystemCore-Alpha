@@ -19,7 +19,7 @@ public final class TuningBindings {
   public static void bindGains(MotorControllerGroup motors, MotorConfig config) {
     config.slots.forEach(
         (slot, slotConfig) ->
-            slotConfig.gains().onChange(gains -> motors.updateGains(gains, slot)));
+            slotConfig.gains().onChange(gains -> motors.updateGains(slotConfig, slot)));
   }
 
   /**

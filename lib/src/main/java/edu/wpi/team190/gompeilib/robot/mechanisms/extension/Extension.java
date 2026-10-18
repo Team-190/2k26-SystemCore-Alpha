@@ -6,6 +6,8 @@ import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.physics.ElevatorMechanismSim;
@@ -76,16 +78,23 @@ public class Extension
     this.constants = constants;
     conversion = MechanismConversion.drum(constants.drumRadius);
     ExtensionConstants.ExtensionParameters parameters = constants.extensionParameters;
-    MotorControllerGroup motors =
-        new MotorControllerGroup(
-            constants.motor.toBuilder()
-                .withSoftLimits(
-                    SoftLimits.between(
-                        conversion.toMotorPosition(parameters.minLength()),
-                        conversion.toMotorPosition(parameters.maxLength())))
-                .withMotionProfile(motionProfile(constants.constraints))
-                .build(),
-            motorFactory);
+    if (!constants.motor.slots.isEmpty()) {
+      throw new IllegalArgumentException(
+          name + "'s motor slots must be empty; set its gains per distance in slots instead");
+    }
+    MotorConfig.MotorConfigBuilder motorBuilder =
+        constants.motor.toBuilder()
+            .withSoftLimits(
+                SoftLimits.between(
+                    conversion.toMotorPosition(parameters.minLength()),
+                    conversion.toMotorPosition(parameters.maxLength())))
+            .withMotionProfile(motionProfile(constants.constraints));
+    constants.slots.forEach(
+        (slot, gains) ->
+            motorBuilder.withSlot(
+                slot, SlotConfig.position(conversion.toMotorPositionGains(gains))));
+    MotorConfig motor = motorBuilder.build();
+    MotorControllerGroup motors = new MotorControllerGroup(motor, motorFactory);
     core = new MechanismCore(motors, subsystem, name);
     boolean foc = constants.motor.enableFOC;
     positionControl =
@@ -102,7 +111,7 @@ public class Extension
             parameters.maxLength(),
             constants.constraints.sysIdMargin());
 
-    TuningBindings.bindGains(motors, constants.motor);
+    TuningBindings.bindGains(motors, motor);
     TuningBindings.bindConstraints(motors, constants.constraints, this::motionProfile);
   }
 

@@ -1,6 +1,5 @@
 package edu.wpi.team190.gompeilib.io.motor;
 
-import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.ConnectedIO;
 import edu.wpi.team190.gompeilib.io.base.CurrentLimitConfigurableIO;
@@ -17,6 +16,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
@@ -206,11 +206,11 @@ public class MotorControllerGroup
   /**
    * Updates a gain slot on every motor.
    *
-   * @param gains the gains
+   * @param gains the slot's gains and gravity type
    * @param slot the slot
    */
   @Override
-  public void updateGains(Gains gains, GainSlot slot) {
+  public void updateGains(SlotConfig gains, GainSlot slot) {
     for (Member member : members()) {
       member.io().updateGains(gains, slot);
     }

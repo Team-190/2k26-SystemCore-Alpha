@@ -5,6 +5,7 @@ import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
+import com.pathplanner.lib.config.PIDConstants;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
@@ -409,9 +410,9 @@ public final class V3_Horse_CV2_TRDriveCommands {
     AutoAlignConstants constants = driveConstants.autoAlignConstants;
     ProfiledPIDController omegaController =
         new ProfiledPIDController(
-            constants.rotationGains().kP().get(),
+            SwerveDrive.rotationConstants(constants.rotationGains()).kP,
             0.0,
-            constants.rotationGains().kD().get(),
+            SwerveDrive.rotationConstants(constants.rotationGains()).kD,
             new TrapezoidProfile.Constraints(
                 constants.rotationConstraints().maxVelocity().get().in(RadiansPerSecond),
                 // Must be finite: alpha-7 TrapezoidProfile computes inf * 0 = NaN otherwise
@@ -455,7 +456,11 @@ public final class V3_Horse_CV2_TRDriveCommands {
     driveConstants
         .autoAlignConstants
         .rotationGains()
-        .onChange(g -> omegaController.setPID(g.getKP(), 0, g.getKD()));
+        .onChange(
+            g -> {
+              PIDConstants pid = SwerveDrive.rotationConstants(g);
+              omegaController.setPID(pid.kP, 0, pid.kD);
+            });
     return omegaController;
   }
 

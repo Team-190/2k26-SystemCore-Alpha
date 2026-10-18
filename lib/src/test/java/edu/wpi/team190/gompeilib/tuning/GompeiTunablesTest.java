@@ -1,6 +1,7 @@
 package edu.wpi.team190.gompeilib.tuning;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,6 +14,7 @@ import org.wpilib.tunable.TunableConfig;
 import org.wpilib.tunable.TunableDouble;
 import org.wpilib.tunable.TunableRegistry;
 import org.wpilib.tunable.TunableTable;
+import org.wpilib.units.measure.Angle;
 
 public class GompeiTunablesTest extends GompeiLibTestBase {
   private MockTunableBackend backend;
@@ -75,5 +77,39 @@ public class GompeiTunablesTest extends GompeiLibTestBase {
     TunableDouble unpubNum = GompeiTunables.number(null, "speed2", 10.0, null);
     assertNotNull(unpubNum);
     assertEquals(10.0, unpubNum.get(), 1e-6);
+  }
+
+  @Test
+  public void shouldPublishMeasuresWithTheirUnit() {
+    TunableTable table = GompeiTunables.table("Units");
+    Tunable<Angle> angle = GompeiTunables.value(table, "Angle", Degrees.of(30.0), null);
+
+    assertInstanceOf(TunableMeasure.class, angle);
+    assertEquals(30.0, backend.getDouble("/Units/Angle"));
+    assertEquals(
+        Degrees.symbol(),
+        backend.getValue("/Units/Angle" + GompeiTunables.UNIT_SUFFIX, String.class));
+    assertEquals(
+        "{\"" + GompeiTunables.UNIT_PROPERTY + "\":\"" + Degrees.symbol() + "\"}",
+        backend.getTunable("/Units/Angle").getConfig().getProperties());
+  }
+
+  @Test
+  public void shouldPublishUnitsWithSlashesAsValues() {
+    TunableTable table = GompeiTunables.table("Units");
+    GompeiTunables.measure(table, "Gain", Volts.per(Rotations).ofNative(2.0), null);
+
+    // The slash stays inside the value, so it never splits the key into a subtable
+    assertEquals(2.0, backend.getDouble("/Units/Gain"));
+    String symbol = backend.getValue("/Units/Gain" + GompeiTunables.UNIT_SUFFIX, String.class);
+    assertEquals(Volts.per(Rotations).symbol(), symbol);
+    assertTrue(symbol.contains("/"));
+  }
+
+  @Test
+  public void shouldLeaveUnpublishedMeasuresOffTheTable() {
+    TunableMeasure<Angle> angle = GompeiTunables.measure(null, "Hidden", Radians.of(1.0), null);
+    assertEquals(1.0, angle.get().in(Radians));
+    assertThrows(IllegalArgumentException.class, () -> backend.getTunable("/Hidden"));
   }
 }

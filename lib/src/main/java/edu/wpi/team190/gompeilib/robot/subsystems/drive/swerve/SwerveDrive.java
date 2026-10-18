@@ -1,7 +1,7 @@
 // Copyright 2021-2024 FRC 6328
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve;
 
-import static org.wpilib.units.Units.RadiansPerSecond;
+import static org.wpilib.units.Units.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -12,6 +12,7 @@ import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixOdometryThread;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import java.util.List;
@@ -38,6 +39,11 @@ import org.wpilib.math.linalg.VecBuilder;
 import org.wpilib.math.linalg.Vector;
 import org.wpilib.math.numbers.N2;
 import org.wpilib.math.util.Units;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.LinearVelocityUnit;
+import org.wpilib.units.MultUnit;
 
 public class SwerveDrive extends SubsystemBase {
   private final SwerveDriveConstants driveConstants;
@@ -74,6 +80,15 @@ public class SwerveDrive extends SubsystemBase {
       Supplier<Pose2d> robotPoseSupplier,
       Consumer<Pose2d> resetPoseConsumer) {
     this.driveConstants = driveConstants;
+    // The modules pick volts or torque current at runtime, so check the gains match before use.
+    SlotConfig.requireOutputType(
+        SlotConfig.velocity(driveConstants.driveGains),
+        driveConstants.driveConfig.driveClosedLoopOutputType(),
+        "Drive");
+    SlotConfig.requireOutputType(
+        SlotConfig.position(driveConstants.turnGains),
+        driveConstants.driveConfig.steerClosedLoopOutputType(),
+        "Turn");
     this.gyroIO = gyroIO;
     gyroInputs = new GyroTelemetryAutoLogged();
     modules = new SwerveModule[4]; // FL, FR, BL, BR
@@ -106,24 +121,10 @@ public class SwerveDrive extends SubsystemBase {
     // Start the odometry thread (no-op if no device registered a high-frequency signal)
     PhoenixOdometryThread.getInstance(driveConstants).start();
 
-    autoHeadingController =
-        new PIDController(
-            driveConstants.autoRotationGains.kP().get(),
-            0.0,
-            driveConstants.autoRotationGains.kD().get(),
-            GompeiLib.getLoopPeriod());
-    autoXController =
-        new PIDController(
-            driveConstants.autoTranslationGains.kP().get(),
-            0.0,
-            driveConstants.autoTranslationGains.kD().get(),
-            GompeiLib.getLoopPeriod());
-    autoYController =
-        new PIDController(
-            driveConstants.autoTranslationGains.kP().get(),
-            0.0,
-            driveConstants.autoTranslationGains.kD().get(),
-            GompeiLib.getLoopPeriod());
+    autoHeadingController = new PIDController(0.0, 0.0, 0.0, GompeiLib.getLoopPeriod());
+    autoXController = new PIDController(0.0, 0.0, 0.0, GompeiLib.getLoopPeriod());
+    autoYController = new PIDController(0.0, 0.0, 0.0, GompeiLib.getLoopPeriod());
+    setAutoControllers(driveConstants.autoTranslationGains, driveConstants.autoRotationGains);
 
     autoHeadingController.enableContinuousInput(-Math.PI, Math.PI);
     autoHeadingController.setTolerance(Units.degreesToRadians(1.0));
@@ -158,14 +159,8 @@ public class SwerveDrive extends SubsystemBase {
             runVelocity(speeds);
           },
           new PPHolonomicDriveController(
-              new PIDConstants(
-                  driveConstants.autoTranslationGains.kP().getAsDouble(),
-                  driveConstants.autoTranslationGains.kI().getAsDouble(),
-                  driveConstants.autoTranslationGains.kD().getAsDouble()),
-              new PIDConstants(
-                  driveConstants.autoRotationGains.kP().getAsDouble(),
-                  driveConstants.autoRotationGains.kI().getAsDouble(),
-                  driveConstants.autoRotationGains.kD().getAsDouble())),
+              translationConstants(driveConstants.autoTranslationGains),
+              rotationConstants(driveConstants.autoRotationGains)),
           config,
           () -> {
             var alliance = DriverStationBackend.getAlliance();
@@ -422,7 +417,8 @@ public class SwerveDrive extends SubsystemBase {
    * @param slot the target gain slot
    */
   @Trace
-  public void updateDriveGains(Gains gains, GainSlot slot) {
+  public void updateDriveGains(
+      Gains<?, AngularVelocityUnit, AngularVelocityUnit> gains, GainSlot slot) {
     for (var module : modules) {
       module.updateDriveGains(gains, slot);
     }
@@ -435,7 +431,7 @@ public class SwerveDrive extends SubsystemBase {
    * @param slot the target gain slot
    */
   @Trace
-  public void updateTurnGains(Gains gains, GainSlot slot) {
+  public void updateTurnGains(Gains<?, AngleUnit, AngularVelocityUnit> gains, GainSlot slot) {
     for (var module : modules) {
       module.updateTurnGains(gains, slot);
     }
@@ -444,10 +440,50 @@ public class SwerveDrive extends SubsystemBase {
   // TODO: restore choreoDrive(SwerveSample) once ChoreoLib ships a WPILib 2027 alpha build;
   // it has no compatible release yet, so the choreo dependency and this method are removed.
 
-  public void setAutoControllers(Gains translationGains, Gains rotationGains) {
-    autoXController.setPID(translationGains.kP().get(), 0.0, translationGains.kD().get());
-    autoYController.setPID(translationGains.kP().get(), 0.0, translationGains.kD().get());
-    autoHeadingController.setPID(rotationGains.kP().get(), 0.0, rotationGains.kD().get());
+  /**
+   * Sets the auto controllers' proportional and derivative gains.
+   *
+   * @param translationGains the translation gains
+   * @param rotationGains the rotation gains
+   */
+  public void setAutoControllers(
+      Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> translationGains,
+      Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit> rotationGains) {
+    PIDConstants translation = translationConstants(translationGains);
+    PIDConstants rotation = rotationConstants(rotationGains);
+    autoXController.setPID(translation.kP, 0.0, translation.kD);
+    autoYController.setPID(translation.kP, 0.0, translation.kD);
+    autoHeadingController.setPID(rotation.kP, 0.0, rotation.kD);
+  }
+
+  /**
+   * Reads translation gains in the units WPILib's and PathPlanner's controllers use: meters per
+   * second of output per meter of error.
+   *
+   * @param gains the gains
+   * @return the PID constants
+   */
+  public static PIDConstants translationConstants(
+      Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> gains) {
+    return new PIDConstants(
+        gains.getKP(MetersPerSecond.per(Meters)),
+        gains.getKI(MetersPerSecond.per(MultUnit.combine(Meters, Seconds))),
+        gains.getKD(MetersPerSecond.per(MetersPerSecond)));
+  }
+
+  /**
+   * Reads rotation gains in the units WPILib's and PathPlanner's controllers use: radians per
+   * second of output per radian of error.
+   *
+   * @param gains the gains
+   * @return the PID constants
+   */
+  public static PIDConstants rotationConstants(
+      Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit> gains) {
+    return new PIDConstants(
+        gains.getKP(RadiansPerSecond.per(Radians)),
+        gains.getKI(RadiansPerSecond.per(MultUnit.combine(Radians, Seconds))),
+        gains.getKD(RadiansPerSecond.per(RadiansPerSecond)));
   }
 
   /**

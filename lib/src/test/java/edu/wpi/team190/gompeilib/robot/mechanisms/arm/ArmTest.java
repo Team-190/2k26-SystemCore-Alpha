@@ -40,6 +40,8 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.VoltageUnit;
 
 public class ArmTest extends GompeiLibTestBase {
   private MockedStatic<Logger> logger;
@@ -49,7 +51,7 @@ public class ArmTest extends GompeiLibTestBase {
   private Consumer<MotorTelemetry> reading = t -> {};
   private Subsystem subsystem;
   private ArmConstants constants;
-  private Gains slot0;
+  private Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> slot0;
 
   @BeforeEach
   public void setUp() {
@@ -73,7 +75,7 @@ public class ArmTest extends GompeiLibTestBase {
     subsystem = mock(Subsystem.class, CALLS_REAL_METHODS);
     when(subsystem.getName()).thenReturn("TestArmSubsystem");
 
-    slot0 = Gains.builder().withPrefix("arm/slot0").withKG(0.3).build();
+    slot0 = Gains.angularPosition(Volts).withPrefix("arm/slot0").withKG(Volts.of(0.3)).build();
     constants = constants(Optional.empty());
   }
 
@@ -94,7 +96,7 @@ public class ArmTest extends GompeiLibTestBase {
                         .withStatorCurrentLimit(40.0)
                         .build())
                 .withGearRatio(50.0)
-                .withSlot(GainSlot.ZERO, new SlotConfig(slot0, GravityType.COSINE))
+                .withSlot(GainSlot.ZERO, SlotConfig.position(slot0, GravityType.COSINE))
                 .build())
         .withArmParameters(
             ArmConstants.ArmParameters.builder()
@@ -244,7 +246,7 @@ public class ArmTest extends GompeiLibTestBase {
     var notify = Gains.class.getDeclaredMethod("notifyListeners");
     notify.setAccessible(true);
     notify.invoke(slot0);
-    verify(motor).updateGains(slot0, GainSlot.ZERO);
+    verify(motor).updateGains(SlotConfig.position(slot0, GravityType.COSINE), GainSlot.ZERO);
 
     var constraintsNotified =
         AngularPositionConstraints.class.getDeclaredField("lastNotifiedValues");

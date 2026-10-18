@@ -1,9 +1,9 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms;
 
-import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import java.util.List;
 import org.wpilib.units.measure.Current;
@@ -66,7 +66,7 @@ public interface Mechanism {
     motors().updateCurrentLimits(currentLimits);
   }
 
-  default void updateGains(Gains gains, GainSlot slot) {
+  default void updateGains(SlotConfig gains, GainSlot slot) {
     motors().updateGains(gains, slot);
   }
 

@@ -7,6 +7,9 @@ import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.Milliamps;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
+import static org.wpilib.units.Units.Rotations;
+import static org.wpilib.units.Units.RotationsPerSecond;
+import static org.wpilib.units.Units.RotationsPerSecondPerSecond;
 import static org.wpilib.units.Units.Seconds;
 import static org.wpilib.units.Units.Volts;
 
@@ -54,33 +57,21 @@ public class V3_Horse_CV2_TRShooterConstants {
                       new TorqueCurrentLimits(TorqueCurrentLimits.NONE.peakForward(), Amps.of(0.0)))
                   .withGearRatio(30.0 / 18.0)
                   .withEnableFOC(true)
-                  .withSlot(
-                      GainSlot.ZERO,
-                      new SlotConfig(
-                          Gains.builder() // TODO: Use Real Value
-                              .withPrefix("Shooter/Flywheel/Voltage")
-                              .withKP(0.0)
-                              .withKD(0.0)
-                              .withKS(0.0)
-                              .withKV(0.0)
-                              .withKA(0.0)
-                              .build()))
-                  .withSlot(
-                      GainSlot.ONE,
-                      new SlotConfig(
-                          Gains.builder() // TODO: Use Real Value
-                              .withPrefix("Shooter/Flywheel/Torque")
-                              .withKP(12)
-                              .withKD(0)
-                              .withKS(6.5)
-                              .withKV(0.25)
-                              .withKA(
-                                  0.92854 * 2
-                                      * Math.PI) // measured in A/(rad/s^2), Talon uses rotations
-                              .build()))
                   .withFollower(new FollowerMotor(42, MotorAlignment.OPPOSED))
                   .withFollower(new FollowerMotor(43, MotorAlignment.ALIGNED))
                   .withFollower(new FollowerMotor(44, MotorAlignment.OPPOSED))
+                  .build())
+          .withVoltageGains(
+              Gains.angularVelocity(Volts) // TODO: Use Real Value
+                  .withPrefix("Shooter/Flywheel/Voltage")
+                  .build())
+          .withCurrentGains(
+              Gains.angularVelocity(Amps) // TODO: Use Real Value
+                  .withPrefix("Shooter/Flywheel/Torque")
+                  .withKP(Amps.per(RotationsPerSecond).ofNative(12))
+                  .withKS(Amps.of(6.5))
+                  .withKV(Amps.per(RotationsPerSecond).ofNative(0.25))
+                  .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0.92854))
                   .build())
           .withFlywheelGearbox(DCMotor.getKrakenX60Foc(4))
           .withMomentOfInertia(KilogramSquareMeters.of(0.09473883059))
@@ -128,14 +119,14 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
                   .withSlot(
                       GainSlot.ZERO,
-                      new SlotConfig(
-                          Gains.builder()
+                      SlotConfig.position(
+                          Gains.angularPosition(Volts)
                               .withPrefix("Shooter/Hood")
-                              .withKP(1152)
-                              .withKD(20)
-                              .withKS(0.60085)
-                              .withKV(0.15846)
-                              .withKA(0.13428)
+                              .withKP(Volts.per(Rotations).ofNative(1152))
+                              .withKD(Volts.per(RotationsPerSecond).ofNative(20))
+                              .withKS(Volts.of(0.60085))
+                              .withKV(Volts.per(RotationsPerSecond).ofNative(0.15846))
+                              .withKA(Volts.per(RotationsPerSecondPerSecond).ofNative(0.13428))
                               .build()))
                   .build())
           .withArmParameters(

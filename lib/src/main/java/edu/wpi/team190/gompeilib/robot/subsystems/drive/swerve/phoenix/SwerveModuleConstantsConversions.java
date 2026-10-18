@@ -28,6 +28,12 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleConfig;
 import java.util.Map;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.Measure;
+import org.wpilib.units.MultUnit;
+import org.wpilib.units.PerUnit;
+import org.wpilib.units.Unit;
 import org.wpilib.units.measure.Frequency;
 import org.wpilib.units.measure.Time;
 
@@ -73,7 +79,11 @@ public final class SwerveModuleConstantsConversions {
             .withCurrentLimits(new CurrentLimits(null, Amps.of(constants.SlipCurrent)))
             .withTorqueCurrentLimits(TorqueCurrentLimits.symmetric(Amps.of(constants.SlipCurrent)))
             .withGearRatio(constants.DriveMotorGearRatio)
-            .withSlot(GainSlot.ZERO, new SlotConfig(toGains(constants.DriveMotorGains)))
+            .withSlot(
+                GainSlot.ZERO,
+                SlotConfig.velocity(
+                    toVelocityGains(
+                        null, constants.DriveMotorGains, constants.DriveMotorClosedLoopOutput)))
             .withClosedLoopRamps(ramps)
             .withSignalRates(odometryRates)
             .build();
@@ -94,7 +104,11 @@ public final class SwerveModuleConstantsConversions {
                 new FeedbackSensor.RemoteEncoder(
                     constants.EncoderId, toRemoteSensorMode(constants.FeedbackSource)))
             .withContinuousWrap(true)
-            .withSlot(GainSlot.ZERO, new SlotConfig(toGains(constants.SteerMotorGains)))
+            .withSlot(
+                GainSlot.ZERO,
+                SlotConfig.position(
+                    toPositionGains(
+                        null, constants.SteerMotorGains, constants.SteerMotorClosedLoopOutput)))
             .withMotionProfile(
                 new MotionProfileConfig(
                     RotationsPerSecond.of(cruiseRotationsPerSecond),
@@ -161,21 +175,72 @@ public final class SwerveModuleConstantsConversions {
   }
 
   /**
-   * Converts slot gains, without publishing them as tunables.
+   * Converts a velocity slot, whose gains are per wheel rotation per second in volts or amps.
    *
+   * @param prefix where to publish the gains, or null to leave them unpublished
    * @param slot the Phoenix6 slot
+   * @param output the output the slot's requests use
    * @return the gains
    */
-  public static Gains toGains(Slot0Configs slot) {
-    return Gains.builder()
-        .withKP(slot.kP)
-        .withKI(slot.kI)
-        .withKD(slot.kD)
-        .withKS(slot.kS)
-        .withKV(slot.kV)
-        .withKA(slot.kA)
-        .withKG(slot.kG)
-        .build();
+  public static Gains<?, AngularVelocityUnit, AngularVelocityUnit> toVelocityGains(
+      String prefix, Slot0Configs slot, ClosedLoopOutputType output) {
+    return switch (output) {
+      case Voltage -> velocityGains(Volts, prefix, slot);
+      case TorqueCurrentFOC -> velocityGains(Amps, prefix, slot);
+    };
+  }
+
+  /**
+   * Converts a position slot, whose gains are per module rotation in volts or amps.
+   *
+   * @param prefix where to publish the gains, or null to leave them unpublished
+   * @param slot the Phoenix6 slot
+   * @param output the output the slot's requests use
+   * @return the gains
+   */
+  public static Gains<?, AngleUnit, AngularVelocityUnit> toPositionGains(
+      String prefix, Slot0Configs slot, ClosedLoopOutputType output) {
+    return switch (output) {
+      case Voltage -> positionGains(Volts, prefix, slot);
+      case TorqueCurrentFOC -> positionGains(Amps, prefix, slot);
+    };
+  }
+
+  // A Phoenix slot holds the output's base unit per rotation (or rotation per second).
+  private static <O extends Unit> Gains<O, AngularVelocityUnit, AngularVelocityUnit> velocityGains(
+      O output, String prefix, Slot0Configs slot) {
+    Gains.Builder<O, AngularVelocityUnit, AngularVelocityUnit> builder =
+        Gains.angularVelocity(output)
+            .withPrefix(prefix)
+            .withKP(PerUnit.combine(output, RotationsPerSecond).ofNative(slot.kP))
+            .withKI(
+                PerUnit.combine(output, MultUnit.combine(RotationsPerSecond, Seconds))
+                    .ofNative(slot.kI))
+            .withKD(PerUnit.combine(output, RotationsPerSecondPerSecond).ofNative(slot.kD));
+    return feedforward(builder, output, slot).build();
+  }
+
+  private static <O extends Unit> Gains<O, AngleUnit, AngularVelocityUnit> positionGains(
+      O output, String prefix, Slot0Configs slot) {
+    Gains.Builder<O, AngleUnit, AngularVelocityUnit> builder =
+        Gains.angularPosition(output)
+            .withPrefix(prefix)
+            .withKP(PerUnit.combine(output, Rotations).ofNative(slot.kP))
+            .withKI(PerUnit.combine(output, MultUnit.combine(Rotations, Seconds)).ofNative(slot.kI))
+            .withKD(PerUnit.combine(output, RotationsPerSecond).ofNative(slot.kD));
+    return feedforward(builder, output, slot).build();
+  }
+
+  // A unit's of() returns that unit's own measure type, which is a Measure<O> for an O.
+  @SuppressWarnings("unchecked")
+  private static <O extends Unit, Q extends Unit>
+      Gains.Builder<O, Q, AngularVelocityUnit> feedforward(
+          Gains.Builder<O, Q, AngularVelocityUnit> builder, O output, Slot0Configs slot) {
+    return builder
+        .withKS((Measure<O>) output.of(slot.kS))
+        .withKV(PerUnit.combine(output, RotationsPerSecond).ofNative(slot.kV))
+        .withKA(PerUnit.combine(output, RotationsPerSecondPerSecond).ofNative(slot.kA))
+        .withKG((Measure<O>) output.of(slot.kG));
   }
 
   private static MotorDirection direction(boolean inverted) {

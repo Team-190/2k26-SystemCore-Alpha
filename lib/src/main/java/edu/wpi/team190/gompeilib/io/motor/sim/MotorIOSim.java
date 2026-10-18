@@ -32,8 +32,12 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.math.trajectory.ExponentialProfile;
 import org.wpilib.math.trajectory.TrapezoidProfile;
 import org.wpilib.system.RobotController;
+import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularAccelerationUnit;
 import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.MultUnit;
+import org.wpilib.units.PerUnit;
+import org.wpilib.units.Unit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularAcceleration;
@@ -98,8 +102,7 @@ public class MotorIOSim implements MotorIO {
     this.driver = mechanism.claimDriver(this);
     this.motionProfile = config.motionProfile;
     for (Map.Entry<GainSlot, SlotConfig> slot : config.slots.entrySet()) {
-      slots.put(
-          slot.getKey(), SlotGains.of(slot.getValue().gains(), slot.getValue().gravityType()));
+      slots.put(slot.getKey(), SlotGains.of(slot.getValue()));
     }
   }
 
@@ -157,10 +160,8 @@ public class MotorIOSim implements MotorIO {
   }
 
   @Override
-  public void updateGains(Gains gains, GainSlot gainSlot) {
-    GravityType gravity =
-        slots.containsKey(gainSlot) ? slots.get(gainSlot).gravityType() : GravityType.CONSTANT;
-    slots.put(gainSlot, SlotGains.of(gains, gravity));
+  public void updateGains(SlotConfig gains, GainSlot gainSlot) {
+    slots.put(gainSlot, SlotGains.of(gains));
   }
 
   @Override
@@ -628,15 +629,39 @@ public class MotorIOSim implements MotorIO {
       GravityType gravityType) {
     static final SlotGains ZERO = new SlotGains(0, 0, 0, 0, 0, 0, 0, GravityType.CONSTANT);
 
-    static SlotGains of(Gains gains, GravityType gravityType) {
+    /** Reads a slot in the units the simulation runs in: per rotation, or per rotation/s. */
+    static SlotGains of(SlotConfig slot) {
+      return switch (slot) {
+        case SlotConfig.Position position -> position(position.gains(), slot.gravityType());
+        case SlotConfig.Velocity velocity -> velocity(velocity.gains(), slot.gravityType());
+      };
+    }
+
+    private static <O extends Unit> SlotGains position(
+        Gains<O, AngleUnit, AngularVelocityUnit> gains, GravityType gravityType) {
+      O output = gains.baseOutputUnit();
       return new SlotGains(
-          gains.getKP(),
-          gains.getKI(),
-          gains.getKD(),
-          gains.getKS(),
-          gains.getKV(),
-          gains.getKA(),
-          gains.getKG(),
+          gains.getKP(PerUnit.combine(output, Rotations)),
+          gains.getKI(PerUnit.combine(output, MultUnit.combine(Rotations, Seconds))),
+          gains.getKD(PerUnit.combine(output, RotationsPerSecond)),
+          gains.getKS(output),
+          gains.getKV(PerUnit.combine(output, RotationsPerSecond)),
+          gains.getKA(PerUnit.combine(output, RotationsPerSecondPerSecond)),
+          gains.getKG(output),
+          gravityType);
+    }
+
+    private static <O extends Unit> SlotGains velocity(
+        Gains<O, AngularVelocityUnit, AngularVelocityUnit> gains, GravityType gravityType) {
+      O output = gains.baseOutputUnit();
+      return new SlotGains(
+          gains.getKP(PerUnit.combine(output, RotationsPerSecond)),
+          gains.getKI(PerUnit.combine(output, MultUnit.combine(RotationsPerSecond, Seconds))),
+          gains.getKD(PerUnit.combine(output, RotationsPerSecondPerSecond)),
+          gains.getKS(output),
+          gains.getKV(PerUnit.combine(output, RotationsPerSecond)),
+          gains.getKA(PerUnit.combine(output, RotationsPerSecondPerSecond)),
+          gains.getKG(output),
           gravityType);
     }
 

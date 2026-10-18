@@ -6,6 +6,7 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.sysid.SysIdConfig.Leg;
+import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.EnumSet;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
@@ -121,9 +122,12 @@ public class SysIdConfigTest extends GompeiLibTestBase {
     assertNotNull(backend.getTunable("/Published/Dynamic Timeout"));
     assertNotNull(backend.getTunable("/Published/Settle Time"));
 
-    backend.setValue("/Published/Step Output", Volts.of(6));
+    backend.setDouble("/Published/Step Output", 6);
     TunableRegistry.update();
     assertEquals(6, config.stepOutput().get().in(Volts), 1e-9);
+    assertEquals(
+        Volts.symbol(),
+        backend.getValue("/Published/Step Output" + GompeiTunables.UNIT_SUFFIX, String.class));
   }
 
   @Test

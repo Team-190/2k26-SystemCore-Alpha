@@ -30,6 +30,10 @@ import org.wpilib.math.geometry.Rotation3d;
 import org.wpilib.math.geometry.Transform3d;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.math.util.Units;
+import org.wpilib.units.AngleUnit;
+import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.LinearVelocityUnit;
 
 public class V3_Horse_CV2_TRConstants {
   public static final CANBusId DRIVE_BUS =
@@ -59,32 +63,42 @@ public class V3_Horse_CV2_TRConstants {
           0.0,
           2.0);
 
-  public static final Gains DRIVE_GAINS =
-      Gains.builder()
-          .withPrefix("Drive/Teleoperated/Drive")
-          .withKP(V3_Horse_CV2_TRTunerConstants.driveGains.kP)
-          .withKD(V3_Horse_CV2_TRTunerConstants.driveGains.kD)
-          .withKS(V3_Horse_CV2_TRTunerConstants.driveGains.kS)
-          .withKV(V3_Horse_CV2_TRTunerConstants.driveGains.kV)
-          .build();
+  // Tuner X gains are per wheel (or module) rotation, in the output its closed-loop type uses.
+  public static final Gains<?, AngularVelocityUnit, AngularVelocityUnit> DRIVE_GAINS =
+      SwerveModuleConstantsConversions.toVelocityGains(
+          "Drive/Teleoperated/Drive",
+          V3_Horse_CV2_TRTunerConstants.driveGains,
+          V3_Horse_CV2_TRTunerConstants.kDriveClosedLoopOutput);
 
-  public static final Gains TURN_GAINS =
-      Gains.builder()
-          .withPrefix("Drive/Teleoperated/Turn")
-          .withKP(V3_Horse_CV2_TRTunerConstants.steerGains.kP)
-          .withKD(V3_Horse_CV2_TRTunerConstants.steerGains.kD)
-          .withKS(V3_Horse_CV2_TRTunerConstants.steerGains.kS)
-          .withKV(V3_Horse_CV2_TRTunerConstants.steerGains.kV)
-          .build();
+  public static final Gains<?, AngleUnit, AngularVelocityUnit> TURN_GAINS =
+      SwerveModuleConstantsConversions.toPositionGains(
+          "Drive/Teleoperated/Turn",
+          V3_Horse_CV2_TRTunerConstants.steerGains,
+          V3_Horse_CV2_TRTunerConstants.kSteerClosedLoopOutput);
 
-  public static final Gains TRANSLATION_AUTO_GAINS = // TODO: Use Real Value
-      Gains.builder().withPrefix("Drive/Auto/Translation").withKP(5.0).withKD(0.0).build();
+  public static final Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit>
+      TRANSLATION_AUTO_GAINS = // TODO: Use Real Value
+      Gains.linearPosition(MetersPerSecond)
+              .withPrefix("Drive/Auto/Translation")
+              .withKP(MetersPerSecond.per(Meters).ofNative(5.0))
+              .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.0))
+              .build();
 
-  public static final Gains ROTATION_AUTO_GAINS = // TODO: Use Real Value
-      Gains.builder().withPrefix("Drive/Auto/Rotation").withKP(5.0).withKD(0.0).build();
+  public static final Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit>
+      ROTATION_AUTO_GAINS = // TODO: Use Real Value
+      Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
+              .withPrefix("Drive/Auto/Rotation")
+              .withKP(RadiansPerSecond.per(Radians).ofNative(5.0))
+              .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(0.0))
+              .build();
 
-  public static final Gains AUTO_ALIGN_X_GAINS = // TODO: Use Real Value
-      Gains.builder().withPrefix("Drive/Auto Align/X").withKP(3.0).withKD(0.15).build();
+  public static final Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit>
+      AUTO_ALIGN_X_GAINS = // TODO: Use Real Value
+      Gains.linearPosition(MetersPerSecond)
+              .withPrefix("Drive/Auto Align/X")
+              .withKP(MetersPerSecond.per(Meters).ofNative(3.0))
+              .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.15))
+              .build();
 
   public static final LinearConstraints AUTO_ALIGN_X_CONSTRAINTS = // TODO: Use Real Value
       LinearConstraints.builder()
@@ -94,8 +108,13 @@ public class V3_Horse_CV2_TRConstants {
           .withGoalTolerance(Meters.of(0.03))
           .build();
 
-  public static final Gains AUTO_ALIGN_Y_GAINS = // TODO: Use Real Value
-      Gains.builder().withPrefix("Drive/Auto Align/Y").withKP(3.0).withKD(0.15).build();
+  public static final Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit>
+      AUTO_ALIGN_Y_GAINS = // TODO: Use Real Value
+      Gains.linearPosition(MetersPerSecond)
+              .withPrefix("Drive/Auto Align/Y")
+              .withKP(MetersPerSecond.per(Meters).ofNative(3.0))
+              .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.15))
+              .build();
 
   public static final LinearConstraints AUTO_ALIGN_Y_CONSTRAINTS = // TODO: Use Real Value
       LinearConstraints.builder()
@@ -105,8 +124,13 @@ public class V3_Horse_CV2_TRConstants {
           .withGoalTolerance(Meters.of(0.05))
           .build();
 
-  public static final Gains AUTO_ALIGN_THETA_GAINS = // TODO: Use Real Value
-      Gains.builder().withPrefix("Drive/Auto Align/Theta").withKP(6.5).withKD(0.2).build();
+  public static final Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit>
+      AUTO_ALIGN_THETA_GAINS = // TODO: Use Real Value
+      Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
+              .withPrefix("Drive/Auto Align/Theta")
+              .withKP(RadiansPerSecond.per(Radians).ofNative(6.5))
+              .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(0.2))
+              .build();
 
   public static final AngularPositionConstraints
       AUTO_ALIGN_THETA_CONSTRAINTS = // TODO: Use Real Value

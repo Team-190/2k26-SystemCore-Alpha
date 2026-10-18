@@ -5,10 +5,12 @@ import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
@@ -18,6 +20,7 @@ import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetry;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
@@ -50,6 +53,7 @@ import org.wpilib.math.linalg.Vector;
 import org.wpilib.math.numbers.N2;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
+import org.wpilib.units.MultUnit;
 import org.wpilib.units.measure.Angle;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
@@ -124,27 +128,28 @@ public class SwerveDriveTest extends GompeiLibTestBase {
             .withWheelCOF(1.2)
             .build();
 
-    Gains driveGains = Gains.builder().withKP(1.0).withKD(0.1).build();
-
-    Gains turnGains = Gains.builder().withKP(2.0).withKD(0.2).build();
+    var driveGains = TestGains.velocity(1.0, 0, 0.1, 0, 0, 0, 0);
+    var turnGains = TestGains.position(2.0, 0, 0.2, 0, 0, 0, 0);
+    var translationGains = SwerveDriveConstantsTest.translationGains(1.0, 0.1);
+    var rotationGains = SwerveDriveConstantsTest.rotationGains(2.0, 0.2);
 
     SwerveDriveConstants.AutoAlignConstants autoAlignConstants =
         SwerveDriveConstants.AutoAlignConstants.builder()
-            .withXGains(driveGains)
+            .withXGains(translationGains)
             .withXConstraints(
                 LinearConstraints.builder()
                     .withMaxVelocity(MetersPerSecond.of(1.0))
                     .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
                     .withGoalTolerance(Meters.of(0.05))
                     .build())
-            .withYGains(driveGains)
+            .withYGains(translationGains)
             .withYConstraints(
                 LinearConstraints.builder()
                     .withMaxVelocity(MetersPerSecond.of(1.0))
                     .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
                     .withGoalTolerance(Meters.of(0.05))
                     .build())
-            .withRotationGains(turnGains)
+            .withRotationGains(rotationGains)
             .withRotationConstraints(
                 AngularPositionConstraints.builder()
                     .withMaxVelocity(RadiansPerSecond.of(1.0))
@@ -160,8 +165,8 @@ public class SwerveDriveTest extends GompeiLibTestBase {
             .withDriveConfig(driveConfig)
             .withDriveGains(driveGains)
             .withTurnGains(turnGains)
-            .withAutoTranslationGains(driveGains)
-            .withAutoRotationGains(turnGains)
+            .withAutoTranslationGains(translationGains)
+            .withAutoRotationGains(rotationGains)
             .withAutoAlignConstants(autoAlignConstants)
             .withOdometryFrequency(250.0)
             .withDriverDeadband(0.1)
@@ -329,13 +334,13 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       assertEquals(5.0 / (2 * Math.PI), drive.getFFCharacterizationVelocity(), 1e-6);
 
       // updateDriveGains / updateTurnGains
-      Gains newDriveGains = Gains.builder().withKP(2.0).withKD(0.2).withKS(0.1).build();
+      var newDriveGains = TestGains.velocity(2.0, 0, 0.2, 0.1, 0, 0, 0);
       drive.updateDriveGains(newDriveGains, GainSlot.ZERO);
-      verify(flMotors.get(0)).updateGains(newDriveGains, GainSlot.ZERO);
+      verify(flMotors.get(0)).updateGains(SlotConfig.velocity(newDriveGains), GainSlot.ZERO);
 
-      Gains newTurnGains = Gains.builder().withKP(3.0).withKD(0.3).build();
+      var newTurnGains = TestGains.position(3.0, 0, 0.3, 0, 0, 0, 0);
       drive.updateTurnGains(newTurnGains, GainSlot.ZERO);
-      verify(flMotors.get(1)).updateGains(newTurnGains, GainSlot.ZERO);
+      verify(flMotors.get(1)).updateGains(SlotConfig.position(newTurnGains), GainSlot.ZERO);
 
       // updateCurrentLimits
       drive.updateCurrentLimits(40.0, 30.0);
@@ -343,7 +348,8 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       verify(flMotors.get(1)).updateCurrentLimits(new CurrentLimits(Amps.of(60.0), Amps.of(30.0)));
 
       // setAutoControllers
-      drive.setAutoControllers(driveConstants.driveGains, driveConstants.turnGains);
+      drive.setAutoControllers(
+          driveConstants.autoTranslationGains, driveConstants.autoRotationGains);
 
       var f = Gains.class.getDeclaredField("lastNotifiedValues");
       f.setAccessible(true);
@@ -357,8 +363,10 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       notifyGains.invoke(driveConstants.turnGains);
       notifyGains.invoke(driveConstants.autoTranslationGains);
       notifyGains.invoke(driveConstants.autoRotationGains);
-      verify(flMotors.get(0), atLeastOnce()).updateGains(driveConstants.driveGains, GainSlot.ZERO);
-      verify(flMotors.get(1), atLeastOnce()).updateGains(driveConstants.turnGains, GainSlot.ZERO);
+      verify(flMotors.get(0), atLeastOnce())
+          .updateGains(SlotConfig.velocity(driveConstants.driveGains), GainSlot.ZERO);
+      verify(flMotors.get(1), atLeastOnce())
+          .updateGains(SlotConfig.position(driveConstants.turnGains), GainSlot.ZERO);
 
       // TODO: restore choreoDrive test once ChoreoLib ships a WPILib 2027 alpha build.
 
@@ -518,5 +526,83 @@ public class SwerveDriveTest extends GompeiLibTestBase {
                   robotPoseSupplier,
                   resetPoseConsumer));
     }
+  }
+
+  @Test
+  public void shouldRejectGainsThatDontMatchTheClosedLoopOutputType() {
+    SwerveDriveConstants.DriveConfig c = driveConstants.driveConfig;
+    SwerveDriveConstants.DriveConfig torqueCurrent =
+        new SwerveDriveConstants.DriveConfig(
+            c.canBus(),
+            c.pigeon2Id(),
+            c.maxLinearVelocityMetersPerSecond(),
+            c.wheelRadiusMeters(),
+            c.driveModel(),
+            c.turnModel(),
+            c.frontLeft(),
+            c.frontRight(),
+            c.backLeft(),
+            c.backRight(),
+            OutputType.CURRENT,
+            OutputType.CURRENT,
+            c.bumperWidth(),
+            c.bumperLength(),
+            c.robotMassKilograms(),
+            c.trackWidth(),
+            c.robotMOI(),
+            c.moduleCurrentLimit(),
+            c.wheelCOF());
+    // The drive and turn gains are in volts, but the modules would run torque current
+    SwerveDriveConstants mismatched =
+        SwerveDriveConstants.builder()
+            .withDriveConfig(torqueCurrent)
+            .withDriveGains(driveConstants.driveGains)
+            .withTurnGains(driveConstants.turnGains)
+            .withAutoTranslationGains(driveConstants.autoTranslationGains)
+            .withAutoRotationGains(driveConstants.autoRotationGains)
+            .withAutoAlignConstants(driveConstants.autoAlignConstants)
+            .withOdometryFrequency(250.0)
+            .withDriverDeadband(0.1)
+            .withOperatorDeadband(0.1)
+            .build();
+
+    IllegalArgumentException error =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new SwerveDrive(
+                    mismatched,
+                    lowFreqGyroIO,
+                    flModuleIO,
+                    frModuleIO,
+                    blModuleIO,
+                    brModuleIO,
+                    robotPoseSupplier,
+                    resetPoseConsumer));
+    assertTrue(error.getMessage().startsWith("Drive"));
+  }
+
+  @Test
+  public void shouldReadChassisGainsInSIUnits() {
+    var translation =
+        Gains.linearPosition(MetersPerSecond)
+            .withKP(MetersPerSecond.per(Centimeters).ofNative(0.02))
+            .withKI(MetersPerSecond.per(MultUnit.combine(Meters, Seconds)).ofNative(0.5))
+            .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.1))
+            .build();
+    PIDConstants linear = SwerveDrive.translationConstants(translation);
+    assertEquals(2.0, linear.kP, 1e-9);
+    assertEquals(0.5, linear.kI, 1e-9);
+    assertEquals(0.1, linear.kD, 1e-9);
+
+    var rotation =
+        Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
+            .withKP(DegreesPerSecond.per(Degrees).ofNative(3.0))
+            .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(0.2))
+            .build();
+    PIDConstants angular = SwerveDrive.rotationConstants(rotation);
+    assertEquals(3.0, angular.kP, 1e-9);
+    assertEquals(0.0, angular.kI, 1e-9);
+    assertEquals(0.2, angular.kD, 1e-9);
   }
 }
