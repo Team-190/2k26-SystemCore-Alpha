@@ -290,18 +290,14 @@ public class SwerveModuleTest extends GompeiLibTestBase {
     MotorIO drive = motors.get(0);
     MotorIO turn = motors.get(1);
 
-    module.setPID(1.0, 0.1, 2.0, 0.2);
-    verify(drive)
-        .updateGains(
-            argThat(g -> g.getKP() == 1.0 && g.getKD() == 0.1 && g.getKS() == 0.2),
-            eq(GainSlot.ZERO));
-    verify(turn).updateGains(argThat(g -> g.getKP() == 2.0 && g.getKD() == 0.2), eq(GainSlot.ZERO));
+    Gains driveGains = Gains.builder().withKP(1.0).withKD(0.1).withKS(0.3).withKV(0.4).build();
+    module.updateDriveGains(driveGains, GainSlot.ZERO);
+    verify(drive).updateGains(driveGains, GainSlot.ZERO);
+    verify(turn, never()).updateGains(any(), any());
 
-    module.setFF(0.3, 0.4);
-    verify(drive)
-        .updateGains(
-            argThat(g -> g.getKP() == 1.0 && g.getKS() == 0.3 && g.getKV() == 0.4),
-            eq(GainSlot.ZERO));
+    Gains turnGains = Gains.builder().withKP(2.0).withKD(0.2).build();
+    module.updateTurnGains(turnGains, GainSlot.ONE);
+    verify(turn).updateGains(turnGains, GainSlot.ONE);
 
     module.updateCurrentLimits(50.0, 20.0);
     verify(drive).updateCurrentLimits(new CurrentLimits(Amps.of(60.0), Amps.of(50.0)));

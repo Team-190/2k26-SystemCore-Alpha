@@ -8,7 +8,6 @@ import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
-import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
@@ -42,9 +41,6 @@ public class SwerveModule {
       new AbsoluteEncoderTelemetryAutoLogged();
   private final String aKitTopic;
 
-  private Gains driveGains;
-  private Gains turnGains;
-
   private final Alert driveDisconnectedAlert;
   private final Alert turnDisconnectedAlert;
   private final Alert turnEncoderDisconnectedAlert;
@@ -70,8 +66,6 @@ public class SwerveModule {
     turn = new MotorControllerGroup(config.turnMotor(), hardware.turnMotor());
     encoder = hardware.encoder();
     aKitTopic = "Drive/Module" + index;
-    driveGains = slotGains(config.driveMotor().slots);
-    turnGains = slotGains(config.turnMotor().slots);
 
     driveDisconnectedAlert =
         getAlert(
@@ -85,11 +79,6 @@ public class SwerveModule {
         getAlert(
             "SwerveModule" + index + "TurnEncoderDisconnected",
             "Disconnected turn encoder on module " + index + ".");
-  }
-
-  private static Gains slotGains(Map<GainSlot, SlotConfig> slots) {
-    SlotConfig slot = slots.get(GainSlot.ZERO);
-    return slot == null ? Gains.builder().build() : slot.gains();
   }
 
   private static Alert getAlert(String id, String text) {
@@ -246,41 +235,26 @@ public class SwerveModule {
     return drive.leader().velocity.in(RotationsPerSecond);
   }
 
-  /** Sets module PID gains, keeping the feedforward gains. */
+  /**
+   * Updates the drive motor's closed-loop gains for a slot.
+   *
+   * @param gains the gains to apply
+   * @param slot the target gain slot
+   */
   @Trace
-  public void setPID(double drive_Kp, double drive_Kd, double turn_Kp, double turn_Kd) {
-    driveGains = withPD(driveGains, drive_Kp, drive_Kd);
-    turnGains = withPD(turnGains, turn_Kp, turn_Kd);
-    drive.updateGains(driveGains, GainSlot.ZERO);
-    turn.updateGains(turnGains, GainSlot.ZERO);
+  public void updateDriveGains(Gains gains, GainSlot slot) {
+    drive.updateGains(gains, slot);
   }
 
-  /** Sets drive feedforward gains, keeping the feedback gains. */
+  /**
+   * Updates the turn motor's closed-loop gains for a slot.
+   *
+   * @param gains the gains to apply
+   * @param slot the target gain slot
+   */
   @Trace
-  public void setFF(double kS, double kV) {
-    driveGains =
-        Gains.builder()
-            .withKP(driveGains.getKP())
-            .withKI(driveGains.getKI())
-            .withKD(driveGains.getKD())
-            .withKS(kS)
-            .withKV(kV)
-            .withKA(driveGains.getKA())
-            .withKG(driveGains.getKG())
-            .build();
-    drive.updateGains(driveGains, GainSlot.ZERO);
-  }
-
-  private static Gains withPD(Gains gains, double kP, double kD) {
-    return Gains.builder()
-        .withKP(kP)
-        .withKI(gains.getKI())
-        .withKD(kD)
-        .withKS(gains.getKS())
-        .withKV(gains.getKV())
-        .withKA(gains.getKA())
-        .withKG(gains.getKG())
-        .build();
+  public void updateTurnGains(Gains gains, GainSlot slot) {
+    turn.updateGains(gains, slot);
   }
 
   /**

@@ -11,6 +11,7 @@ import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
+import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixOdometryThread;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import java.util.List;
@@ -127,15 +128,8 @@ public class SwerveDrive extends SubsystemBase {
     autoHeadingController.enableContinuousInput(-Math.PI, Math.PI);
     autoHeadingController.setTolerance(Units.degreesToRadians(1.0));
 
-    Gains driveGains = driveConstants.driveGains;
-    Gains turnGains = driveConstants.turnGains;
-    Runnable applyModuleGains =
-        () -> {
-          setPIDGains(driveGains.getKP(), driveGains.getKD(), turnGains.getKP(), turnGains.getKD());
-          setFFGains(driveGains.getKS(), driveGains.getKV());
-        };
-    driveGains.onChange(gains -> applyModuleGains.run());
-    turnGains.onChange(gains -> applyModuleGains.run());
+    driveConstants.driveGains.onChange(gains -> updateDriveGains(gains, GainSlot.ZERO));
+    driveConstants.turnGains.onChange(gains -> updateTurnGains(gains, GainSlot.ZERO));
     driveConstants.autoTranslationGains.onChange(
         gains -> setAutoControllers(gains, driveConstants.autoRotationGains));
     driveConstants.autoRotationGains.onChange(
@@ -421,19 +415,29 @@ public class SwerveDrive extends SubsystemBase {
     return gyroInputs.yawVelocity.in(RadiansPerSecond);
   }
 
-  /** Sets PID gains for modules */
+  /**
+   * Updates every module's drive motor gains for a slot.
+   *
+   * @param gains the gains to apply
+   * @param slot the target gain slot
+   */
   @Trace
-  public void setPIDGains(double drive_Kp, double drive_Kd, double turn_Kp, double turn_Kd) {
+  public void updateDriveGains(Gains gains, GainSlot slot) {
     for (var module : modules) {
-      module.setPID(drive_Kp, drive_Kd, turn_Kp, turn_Kd);
+      module.updateDriveGains(gains, slot);
     }
   }
 
-  /** Sets FF gains for modules */
+  /**
+   * Updates every module's turn motor gains for a slot.
+   *
+   * @param gains the gains to apply
+   * @param slot the target gain slot
+   */
   @Trace
-  public void setFFGains(double kS, double kV) {
+  public void updateTurnGains(Gains gains, GainSlot slot) {
     for (var module : modules) {
-      module.setFF(kS, kV);
+      module.updateTurnGains(gains, slot);
     }
   }
 
