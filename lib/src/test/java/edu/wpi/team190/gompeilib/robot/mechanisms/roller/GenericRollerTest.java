@@ -95,6 +95,17 @@ public class GenericRollerTest extends GompeiLibTestBase {
       roller.periodic();
       verify(leader).setControl(voltage(4.0));
       assertSame(setpoint, roller.getVoltageGoal());
+
+      roller.setCurrentGoal(Amps.of(20.0));
+      roller.periodic();
+      verify(leader).setControl(new OpenLoopRequest.CurrentOutput(Amps.of(20.0)));
+      assertNotNull(roller.currentControl());
+
+      roller.setDutyCycleGoal(0.8);
+      roller.periodic();
+      verify(leader)
+          .setControl(new OpenLoopRequest.DutyCycleOutput(0.8, false, RequestOptions.DEFAULT));
+      assertNotNull(roller.dutyCycleControl());
     }
   }
 
@@ -129,6 +140,11 @@ public class GenericRollerTest extends GompeiLibTestBase {
       assertTrue(roller.atVoltageGoal());
       assertTrue(roller.atVoltageGoal(Volts.of(6.2)));
       assertFalse(roller.atVoltageGoal(Volts.of(7.0)));
+
+      assertTrue(roller.atCurrentGoal());
+      assertFalse(roller.atCurrentGoal(Amps.of(10.0)));
+      assertTrue(roller.atDutyCycleGoal());
+      assertFalse(roller.atDutyCycleGoal(0.5));
     }
   }
 

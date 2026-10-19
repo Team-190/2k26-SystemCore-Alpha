@@ -192,6 +192,17 @@ public class ExtensionTest extends GompeiLibTestBase {
     extension.periodic();
     verify(motor)
         .setControl(new OpenLoopRequest.VoltageOutput(Volts.of(2.0), true, RequestOptions.DEFAULT));
+
+    extension.setCurrentGoal(Amps.of(12.0));
+    extension.periodic();
+    verify(motor).setControl(new OpenLoopRequest.CurrentOutput(Amps.of(12.0)));
+    assertNotNull(extension.currentControl());
+
+    extension.setDutyCycleGoal(0.4);
+    extension.periodic();
+    verify(motor)
+        .setControl(new OpenLoopRequest.DutyCycleOutput(0.4, true, RequestOptions.DEFAULT));
+    assertNotNull(extension.dutyCycleControl());
   }
 
   @Test
@@ -353,5 +364,23 @@ public class ExtensionTest extends GompeiLibTestBase {
     assertEquals(
         new OpenLoopRequest.VoltageOutput(Volts.of(2), true, RequestOptions.DEFAULT),
         target.request().apply(Volts.of(2)));
+  }
+
+  @Test
+  public void testRunsPositionWithCurrentOutputType() {
+    ExtensionConstants currentConstants =
+        constants.toBuilder()
+            .withClosedLoopOutputType(edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.CURRENT)
+            .build();
+    Extension extension = new Extension(factory, subsystem, "Extension", currentConstants);
+    extension.setPositionGoal(Meters.of(0.5));
+    extension.periodic();
+    verify(motor)
+        .setControl(
+            new PositionRequest.ProfiledPositionCurrent(
+                Radians.of(0.5 / DRUM_RADIUS),
+                Amps.of(0.0),
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT));
   }
 }

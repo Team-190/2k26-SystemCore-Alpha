@@ -19,6 +19,8 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
+import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControl;
+import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MotionReadable;
@@ -45,6 +47,7 @@ public class GenericFlywheel
     implements VelocityControllable<AngularVelocityUnit>,
         VoltageControllable,
         CurrentControllable,
+        DutyCycleControllable,
         MotionReadable<AngleUnit, AngularVelocityUnit>,
         ConstraintConfigurable<AngularVelocityConstraints>,
         Characterizable {
@@ -61,6 +64,7 @@ public class GenericFlywheel
   private final VelocityControl<AngularVelocityUnit> velocityControl;
   private final VoltageControl voltageControl;
   private final CurrentControl currentControl;
+  private final DutyCycleControl dutyCycleControl;
 
   private final SysIdConfig<VoltageUnit> voltageSysIdConfig;
   private final SysIdConfig<CurrentUnit> currentSysIdConfig;
@@ -107,6 +111,11 @@ public class GenericFlywheel
     voltageControl = new VoltageControl(core, voltageGoal, foc);
     currentControl =
         new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
+    dutyCycleControl =
+        new DutyCycleControl(
+            core,
+            new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
+            foc);
 
     voltageSysIdConfig = constants.voltageSysId;
     currentSysIdConfig = constants.currentSysId;
@@ -237,6 +246,11 @@ public class GenericFlywheel
   @Override
   public CurrentControl currentControl() {
     return currentControl;
+  }
+
+  @Override
+  public DutyCycleControl dutyCycleControl() {
+    return dutyCycleControl;
   }
 
   @Override

@@ -68,6 +68,8 @@ public final class MechanismTestSupport {
   public static final class TestMechanism
       implements VoltageControllable,
           CurrentControllable,
+          DutyCycleControllable,
+          DifferentialControllable<AngleUnit, AngleUnit>,
           PositionControllable<AngleUnit>,
           VelocityControllable<AngularVelocityUnit>,
           MotionReadable<AngleUnit, AngularVelocityUnit>,
@@ -78,8 +80,10 @@ public final class MechanismTestSupport {
     public final MechanismCore core;
     public final VoltageControl voltage;
     public final CurrentControl current;
+    public final DutyCycleControl dutyCycle;
     public final PositionControl<AngleUnit> position;
     public final VelocityControl<AngularVelocityUnit> velocity;
+    public final DifferentialControl<AngleUnit, AngleUnit> differential;
     public final CurrentHoming<AngleUnit> homing;
     public final EncoderSeed encoder;
 
@@ -87,6 +91,7 @@ public final class MechanismTestSupport {
       core = motors.core();
       voltage = new VoltageControl(core, Volts.of(0.5), true);
       current = new CurrentControl(core, new Setpoint<>(Amps.of(0), Amps.of(1)));
+      dutyCycle = new DutyCycleControl(core, 0.05, true);
       position =
           new PositionControl<>(
               core,
@@ -103,6 +108,18 @@ public final class MechanismTestSupport {
               true,
               GainSlot.ZERO,
               GainSlot.ONE);
+      differential =
+          new DifferentialControl<>(
+              core,
+              CONVERSION,
+              CONVERSION,
+              new Setpoint<>(Radians.of(0), Radians.of(0.1)),
+              new Setpoint<>(Radians.of(0), Radians.of(0.1)),
+              () -> Radians.of(0.05),
+              () -> Radians.of(0.05),
+              () -> CONVERSION.fromMotorPosition(core.getMotors().leader().position),
+              () -> CONVERSION.fromMotorPosition(core.getMotors().leader().position),
+              true);
       homing =
           new CurrentHoming<>(
               core,
@@ -133,6 +150,11 @@ public final class MechanismTestSupport {
     }
 
     @Override
+    public DutyCycleControl dutyCycleControl() {
+      return dutyCycle;
+    }
+
+    @Override
     public PositionControl<AngleUnit> positionControl() {
       return position;
     }
@@ -140,6 +162,11 @@ public final class MechanismTestSupport {
     @Override
     public VelocityControl<AngularVelocityUnit> velocityControl() {
       return velocity;
+    }
+
+    @Override
+    public DifferentialControl<AngleUnit, AngleUnit> differentialControl() {
+      return differential;
     }
 
     @Override

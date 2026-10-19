@@ -36,6 +36,16 @@ public class GenericRollerConstantsTest {
     assertSame(gearbox, constants.rollerGearbox);
     assertEquals(Units.KilogramSquareMeters.of(0.001), constants.momentOfInertia);
     assertEquals(Units.Volts.of(0.5), constants.voltageOffsetStep);
+    assertEquals(Units.Amps.of(1.0), constants.currentOffsetStep);
+    assertEquals(Units.Value.of(0.05), constants.dutyCycleOffsetStep);
+
+    GenericRollerConstants custom =
+        constants.toBuilder()
+            .withCurrentOffsetStep(Units.Amps.of(2.5))
+            .withDutyCycleOffsetStep(Units.Value.of(0.1))
+            .build();
+    assertEquals(Units.Amps.of(2.5), custom.currentOffsetStep);
+    assertEquals(Units.Value.of(0.1), custom.dutyCycleOffsetStep);
   }
 
   @Test

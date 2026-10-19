@@ -759,21 +759,26 @@ public class MotorIOSimTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void shouldRejectDifferentialRequests() {
+  public void testDifferentialRequests() {
     MotorIOSim motor = motor(config().build());
 
-    assertThrows(
-        UnsupportedOperationException.class,
-        () ->
-            motor.setControl(
-                new Differential(
-                    new OpenLoopRequest.VoltageOutput(Volts.of(1.0)),
-                    new OpenLoopRequest.VoltageOutput(Volts.of(0.0)))));
-    assertThrows(
-        UnsupportedOperationException.class,
-        () -> motor.setControl(new FollowerRequest.DifferentialFollow(2, MotorAlignment.ALIGNED)));
-    assertThrows(
-        UnsupportedOperationException.class,
-        () -> motor.setControl(new FollowerRequest.DifferentialStrictFollow(2)));
+    motor.setControl(
+        new Differential(
+            new OpenLoopRequest.VoltageOutput(Volts.of(1.0)),
+            new OpenLoopRequest.VoltageOutput(Volts.of(0.0))));
+    run(motor, 1);
+    assertEquals(MotorControlMode.VOLTAGE_OUTPUT, telemetry.controlMode);
+
+    motor.setControl(new FollowerRequest.DifferentialFollow(2, MotorAlignment.ALIGNED));
+    run(motor, 1);
+    assertEquals(MotorControlMode.FOLLOWER, telemetry.controlMode);
+
+    motor.setControl(new FollowerRequest.DifferentialFollow(2, MotorAlignment.OPPOSED));
+    run(motor, 1);
+    assertEquals(MotorControlMode.FOLLOWER, telemetry.controlMode);
+
+    motor.setControl(new FollowerRequest.DifferentialStrictFollow(2));
+    run(motor, 1);
+    assertEquals(MotorControlMode.FOLLOWER, telemetry.controlMode);
   }
 }

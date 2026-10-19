@@ -218,6 +218,13 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
       flywheel.periodic();
       verify(leader).setControl(new OpenLoopRequest.CurrentOutput(Amps.of(4.0)));
 
+      flywheel.setDutyCycleGoal(0.75);
+      assertEquals("DutyCycle", flywheel.getMode());
+      flywheel.periodic();
+      verify(leader)
+          .setControl(new OpenLoopRequest.DutyCycleOutput(0.75, true, RequestOptions.DEFAULT));
+      assertNotNull(flywheel.dutyCycleControl());
+
       flywheel.stop();
       assertEquals(MechanismCore.STOP, flywheel.getMode());
       flywheel.periodic();
@@ -257,6 +264,8 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
       assertFalse(flywheel.atVoltageGoal(Volts.of(3.0)));
       assertTrue(flywheel.atCurrentGoal());
       assertFalse(flywheel.atCurrentGoal(Amps.of(5.0)));
+      assertTrue(flywheel.atDutyCycleGoal());
+      assertFalse(flywheel.atDutyCycleGoal(0.9));
 
       // Waits a loop for periodic to apply the goal before checking it
       Command wait = flywheel.waitUntilAtVelocityGoal();

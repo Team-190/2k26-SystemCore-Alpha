@@ -73,6 +73,22 @@ public class ArmConstantsTest extends GompeiLibTestBase {
     assertEquals(KilogramSquareMeters.of(0.1), parameters.momentOfInertia());
     assertTrue(parameters.simulateGravity());
     assertTrue(constants.homing.isEmpty());
+    assertEquals(
+        edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.VOLTAGE,
+        constants.closedLoopOutputType);
+    assertEquals(Amps.of(1.0), constants.currentOffsetStep);
+    assertEquals(Value.of(0.05), constants.dutyCycleOffsetStep);
+
+    ArmConstants custom =
+        constants.toBuilder()
+            .withClosedLoopOutputType(edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.CURRENT)
+            .withCurrentOffsetStep(Amps.of(2.0))
+            .withDutyCycleOffsetStep(Value.of(0.1))
+            .build();
+    assertEquals(
+        edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.CURRENT, custom.closedLoopOutputType);
+    assertEquals(Amps.of(2.0), custom.currentOffsetStep);
+    assertEquals(Value.of(0.1), custom.dutyCycleOffsetStep);
   }
 
   @Test

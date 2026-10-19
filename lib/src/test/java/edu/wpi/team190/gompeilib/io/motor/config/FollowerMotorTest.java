@@ -41,10 +41,42 @@ public class FollowerMotorTest {
   }
 
   @Test
+  public void testFollowType() {
+    FollowerMotor follower = new FollowerMotor(12, MotorAlignment.OPPOSED);
+    assertEquals(FollowerMotor.FollowType.STANDARD, follower.followType());
+
+    FollowerMotor diff =
+        new FollowerMotor(13, MotorAlignment.ALIGNED, FollowerMotor.FollowType.DIFFERENTIAL);
+    assertEquals(FollowerMotor.FollowType.DIFFERENTIAL, diff.followType());
+
+    FollowerMotor strict = follower.withFollowType(FollowerMotor.FollowType.STRICT);
+    assertEquals(FollowerMotor.FollowType.STRICT, strict.followType());
+  }
+
+  @Test
+  public void testFourArgConstructor() {
+    FollowerMotor follower =
+        new FollowerMotor(
+            15,
+            MotorAlignment.ALIGNED,
+            Optional.of(CANBusId.named("Rio")),
+            Optional.of(MotorIO.REPLAY_FACTORY));
+    assertEquals(15, follower.canId());
+    assertEquals(MotorAlignment.ALIGNED, follower.alignment());
+    assertEquals(FollowerMotor.FollowType.STANDARD, follower.followType());
+    assertEquals(Optional.of(CANBusId.named("Rio")), follower.bus());
+    assertEquals(Optional.of(MotorIO.REPLAY_FACTORY), follower.factory());
+  }
+
+  @Test
   public void shouldRejectNulls() {
     assertThrows(
         NullPointerException.class,
         () -> new FollowerMotor(1, null, Optional.empty(), Optional.empty()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new FollowerMotor(1, MotorAlignment.ALIGNED, null, Optional.empty(), Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () -> new FollowerMotor(1, MotorAlignment.ALIGNED, null, Optional.empty()));

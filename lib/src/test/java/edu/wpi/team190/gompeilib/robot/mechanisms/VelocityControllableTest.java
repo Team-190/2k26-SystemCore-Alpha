@@ -6,6 +6,7 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Setpoint;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMechanism;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMotors;
 import org.junit.jupiter.api.AfterEach;
@@ -53,7 +54,28 @@ public class VelocityControllableTest extends GompeiLibTestBase {
     mechanism.setVelocityGoal(other, Amps.of(1));
     assertSame(other, mechanism.getVelocityGoal());
 
-    motors.read(t -> t.velocity = RadiansPerSecond.of(10));
+    mechanism.setVelocityGoal(RadiansPerSecond.of(35), Volts.of(1.5));
+    assertEquals("VelocityVoltage", mechanism.getMode());
+    assertEquals(Volts.of(1.5), mechanism.getVelocityVoltageFeedforward());
+
+    Setpoint<AngularVelocityUnit> vGoal =
+        new Setpoint<>(RadiansPerSecond.of(15), RadiansPerSecond.of(1));
+    mechanism.setVelocityGoal(vGoal, Volts.of(2.0));
+    assertSame(vGoal, mechanism.getVelocityGoal());
+
+    mechanism.setVelocityGoal(RadiansPerSecond.of(40), 0.3);
+    assertEquals("VelocityDutyCycle", mechanism.getMode());
+    assertEquals(0.3, mechanism.getVelocityDutyCycleFeedforward());
+
+    Setpoint<AngularVelocityUnit> dGoal =
+        new Setpoint<>(RadiansPerSecond.of(25), RadiansPerSecond.of(1));
+    mechanism.setVelocityGoal(dGoal, 0.25);
+    assertSame(dGoal, mechanism.getVelocityGoal());
+
+    mechanism.setVelocityOutputType(OutputType.CURRENT);
+    assertEquals(OutputType.CURRENT, mechanism.getVelocityOutputType());
+
+    motors.read(t -> t.velocity = RadiansPerSecond.of(25));
     assertTrue(mechanism.atVelocityGoal());
     assertFalse(mechanism.atVelocityGoal(RadiansPerSecond.of(40)));
 

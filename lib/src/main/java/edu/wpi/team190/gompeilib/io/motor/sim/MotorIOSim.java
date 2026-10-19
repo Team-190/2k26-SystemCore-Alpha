@@ -550,13 +550,19 @@ public class MotorIOSim implements MotorIO {
         setMode(MotorControlMode.FOLLOWER, false);
         yield new Command.Follow(1.0);
       }
+      case FollowerRequest.DifferentialFollow r -> {
+        setMode(MotorControlMode.FOLLOWER, false);
+        yield new Command.Follow(r.alignment() == MotorAlignment.ALIGNED ? 1.0 : -1.0);
+      }
+      case FollowerRequest.DifferentialStrictFollow r -> {
+        setMode(MotorControlMode.FOLLOWER, false);
+        yield new Command.Follow(1.0);
+      }
       case NeutralRequest.Neutral r -> zero(MotorControlMode.NEUTRAL);
       case NeutralRequest.Coast r -> zero(MotorControlMode.COAST);
       case NeutralRequest.StaticBrake r -> zero(MotorControlMode.STATIC_BRAKE);
       case NeutralRequest.Tone r -> zero(MotorControlMode.TONE);
-      case Differential r -> throw unsupported(r);
-      case FollowerRequest.DifferentialFollow r -> throw unsupported(r);
-      case FollowerRequest.DifferentialStrictFollow r -> throw unsupported(r);
+      case Differential r -> translate(r.average());
     };
   }
 
@@ -568,11 +574,6 @@ public class MotorIOSim implements MotorIO {
   private Command zero(MotorControlMode mode) {
     setMode(mode, false);
     return new Command.Zero();
-  }
-
-  private static UnsupportedOperationException unsupported(MotorRequest request) {
-    return new UnsupportedOperationException(
-        request.getClass().getSimpleName() + " is unsupported by MotorIOSim");
   }
 
   private static Command.Position position(

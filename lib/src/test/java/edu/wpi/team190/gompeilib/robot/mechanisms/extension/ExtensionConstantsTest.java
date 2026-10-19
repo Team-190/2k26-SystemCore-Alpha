@@ -76,6 +76,22 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     assertEquals(Kilograms.of(5.0), parameters.carriageMass());
     assertEquals(Meters.of(1.0), parameters.maxLength());
     assertTrue(parameters.simulateGravity());
+    assertEquals(
+        edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.VOLTAGE,
+        constants.closedLoopOutputType);
+    assertEquals(Amps.of(1.0), constants.currentOffsetStep);
+    assertEquals(Value.of(0.05), constants.dutyCycleOffsetStep);
+
+    ExtensionConstants custom =
+        constants.toBuilder()
+            .withClosedLoopOutputType(edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.CURRENT)
+            .withCurrentOffsetStep(Amps.of(3.0))
+            .withDutyCycleOffsetStep(Value.of(0.1))
+            .build();
+    assertEquals(
+        edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.CURRENT, custom.closedLoopOutputType);
+    assertEquals(Amps.of(3.0), custom.currentOffsetStep);
+    assertEquals(Value.of(0.1), custom.dutyCycleOffsetStep);
   }
 
   @Test

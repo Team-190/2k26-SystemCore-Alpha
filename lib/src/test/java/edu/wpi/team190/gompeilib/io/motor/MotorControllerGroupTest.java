@@ -132,6 +132,27 @@ public class MotorControllerGroupTest extends GompeiLibTestBase {
   }
 
   @Test
+  public void testHardwareFollowTypes() {
+    RecordingFactory factory = new RecordingFactory("Vendor", true);
+    new MotorControllerGroup(
+        leader()
+            .withFollower(
+                new FollowerMotor(2, MotorAlignment.ALIGNED, FollowerMotor.FollowType.STRICT))
+            .withFollower(
+                new FollowerMotor(3, MotorAlignment.OPPOSED, FollowerMotor.FollowType.DIFFERENTIAL))
+            .withFollower(
+                new FollowerMotor(
+                    4, MotorAlignment.ALIGNED, FollowerMotor.FollowType.DIFFERENTIAL_STRICT))
+            .build(),
+        factory);
+
+    verify(factory.motors.get(2)).setControl(new FollowerRequest.StrictFollow(1));
+    verify(factory.motors.get(3))
+        .setControl(new FollowerRequest.DifferentialFollow(1, MotorAlignment.OPPOSED));
+    verify(factory.motors.get(4)).setControl(new FollowerRequest.DifferentialStrictFollow(1));
+  }
+
+  @Test
   public void testFollowerConfigsInheritTheLeaders() {
     RecordingFactory factory = new RecordingFactory("Vendor", true);
     new MotorControllerGroup(

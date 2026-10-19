@@ -15,7 +15,11 @@ import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
+import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
+import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControl;
+import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Homeable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
@@ -44,6 +48,8 @@ import org.wpilib.units.VoltageUnit;
 public class Extension
     implements PositionControllable<DistanceUnit>,
         VoltageControllable,
+        CurrentControllable,
+        DutyCycleControllable,
         MotionReadable<DistanceUnit, LinearVelocityUnit>,
         ConstraintConfigurable<LinearConstraints>,
         Homeable,
@@ -54,6 +60,8 @@ public class Extension
   private final MechanismCore core;
   private final PositionControl<DistanceUnit> positionControl;
   private final VoltageControl voltageControl;
+  private final CurrentControl currentControl;
+  private final DutyCycleControl dutyCycleControl;
   private final Optional<CurrentHoming<DistanceUnit>> homing;
 
   private final SysIdConstraint<DistanceUnit> sysIdConstraint;
@@ -99,8 +107,20 @@ public class Extension
     boolean foc = constants.motor.enableFOC;
     positionControl =
         new PositionControl<>(
-            core, conversion, positionGoal, () -> constants.constraints.goalTolerance().get(), foc);
+            core,
+            conversion,
+            positionGoal,
+            () -> constants.constraints.goalTolerance().get(),
+            foc,
+            constants.closedLoopOutputType);
     voltageControl = new VoltageControl(core, voltageGoal, foc);
+    currentControl =
+        new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
+    dutyCycleControl =
+        new DutyCycleControl(
+            core,
+            new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
+            foc);
     homing =
         constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
 
@@ -193,6 +213,16 @@ public class Extension
   @Override
   public VoltageControl voltageControl() {
     return voltageControl;
+  }
+
+  @Override
+  public CurrentControl currentControl() {
+    return currentControl;
+  }
+
+  @Override
+  public DutyCycleControl dutyCycleControl() {
+    return dutyCycleControl;
   }
 
   @Override
