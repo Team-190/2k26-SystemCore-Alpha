@@ -81,7 +81,7 @@ public class Plan {
                 (endPose.getX() - startPose.getX()) * speedPerMeter,
                 (endPose.getY() - startPose.getY()) * speedPerMeter,
                 endPose.getRotation().minus(startPose.getRotation()).getRadians() * speedPerMeter);
-        return new State(pose, velocity, distance);
+        return new State(pose, fraction == 1 ? path.getEndVelocity() : velocity, distance);
       }
       pathStart += length;
     }
