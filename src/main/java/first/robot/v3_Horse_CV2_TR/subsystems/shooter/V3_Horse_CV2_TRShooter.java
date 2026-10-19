@@ -134,7 +134,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         break;
       case SCORE:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
-        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity(), Amps.of(0));
+        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity(), Amps.of(30));
         break;
       case FEED:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
@@ -142,7 +142,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         break;
       case FIXED_SHOTS:
         hood.setPositionGoal(fixedShotParameters.hoodAngle());
-        flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed(), Amps.of(0));
+        flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed(), Amps.of(30));
         break;
       case ZERO:
         hood.setPositionGoal(Rotation2d.ZERO);
