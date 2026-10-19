@@ -18,6 +18,7 @@ public class V3_Horse_CV2_TRRobotContainer {
 
   private SwerveDrive drive;
   private Plan autoPlan;
+  private Plan cornerTestPlan;
 
   public V3_Horse_CV2_TRRobotContainer() {
 
@@ -61,13 +62,24 @@ public class V3_Horse_CV2_TRRobotContainer {
             new Path(sharpTurn, shortSegment, 4, 3),
             new Path(shortSegment, endOfSlowZone, 1.5, 3),
             new Path(endOfSlowZone, end, 4, 3));
+
+    Pose2d squareStart = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
+    Pose2d sharpCorner = new Pose2d(4, 0, Rotation2d.fromDegrees(0));
+    Pose2d smallCurve = new Pose2d(4, 4, Rotation2d.fromDegrees(0));
+    Pose2d bigCurve = new Pose2d(0, 4, Rotation2d.fromDegrees(0));
+    cornerTestPlan =
+        new Plan(
+            new Path(squareStart, sharpCorner, 3, 3),
+            new Path(sharpCorner, smallCurve, 3, 3, 0.5),
+            new Path(smallCurve, bigCurve, 3, 3, 1.0),
+            new Path(bigCurve, squareStart, 3, 3));
     configureBindings();
   }
 
   private void configureBindings() {}
 
   public Command getAutonomousCommand() {
-    return Planner.followPath(autoPlan, V3_Horse_CV2_TRRobotState::getGlobalPose);
+    return Planner.followPath(cornerTestPlan, V3_Horse_CV2_TRRobotState::getGlobalPose);
   }
 
   public void robotPeriodic() {

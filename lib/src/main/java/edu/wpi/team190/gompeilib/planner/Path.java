@@ -5,16 +5,22 @@ import org.wpilib.math.geometry.Pose2d;
 public class Path {
 
   public static final double RATE = 10; // states per second
-  private Pose2d startPose;
-  private Pose2d endPose;
-  private double maxVel;
-  private double maxAccel;
+  private final Pose2d startPose;
+  private final Pose2d endPose;
+  private final double maxVel;
+  private final double maxAccel;
+  private final double endRadius;
 
   public Path(Pose2d startPose, Pose2d endPose, double maxVel, double maxAccel) {
+    this(startPose, endPose, maxVel, maxAccel, 0);
+  }
+
+  public Path(Pose2d startPose, Pose2d endPose, double maxVel, double maxAccel, double endRadius) {
     this.startPose = startPose;
     this.endPose = endPose;
     this.maxAccel = maxAccel;
     this.maxVel = maxVel;
+    this.endRadius = endRadius;
   }
 
   public Pose2d getStartPose() {
@@ -31,6 +37,10 @@ public class Path {
 
   public double getMaxAccel() {
     return maxAccel;
+  }
+
+  public double getEndRadius() {
+    return endRadius;
   }
 }
 

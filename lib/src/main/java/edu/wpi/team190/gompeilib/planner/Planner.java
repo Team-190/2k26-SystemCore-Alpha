@@ -34,6 +34,7 @@ public class Planner {
     Solver solver = new Solver();
     Timer timer = new Timer();
     double[] lastTime = {-1};
+    double[] skippedTime = {0};
 
     int lastIndex = states.size() - 1;
     State finalState = states.get(lastIndex);
@@ -44,6 +45,7 @@ public class Planner {
             () -> {
               timer.restart();
               lastTime[0] = -1;
+              skippedTime[0] = 0;
             })
         .andThen(
             Commands.run(
@@ -51,8 +53,21 @@ public class Planner {
                       Logger.recordOutput("Planner/isRunning", true);
                       Pose2d[] poses = (Pose2d[]) plan.getAsPose2dList().toArray();
                       Logger.recordOutput("Planner/path", poses);
+                      Pose2d pose = robotPose.get();
+                      double time = timer.get();
+                      double planTime = time + skippedTime[0];
+
+                      // close enough to the end of this path so just kindaa jump to the next one
+                      int pathIndex = plan.pathIndexAt(planTime);
+                      Path path = plan.getPath(pathIndex);
+                      if (pose.getTranslation().getDistance(path.getEndPose().getTranslation())
+                          < path.getEndRadius()) {
+                        planTime = Math.max(planTime, plan.getPathEndTime(pathIndex));
+                        skippedTime[0] = planTime - time;
+                      }
+
                       // each state is 1 / RATE seconds after the last, so find where we are
-                      double exactIndex = timer.get() * Path.RATE;
+                      double exactIndex = planTime * Path.RATE;
                       int currentIndex = (int) exactIndex;
 
                       State target;
@@ -75,18 +90,18 @@ public class Planner {
                       driveCommand.accept(solvedVel);
 
                       // run any command whose time we passed since the last loop
-                      double now = timer.get();
                       for (var entry : plan.getCommandMap().entrySet()) {
-                        if (entry.getKey() > lastTime[0] && entry.getKey() <= now) {
+                        if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
                           CommandScheduler.getInstance().schedule(entry.getValue());
                         }
                       }
-                      lastTime[0] = now;
+                      lastTime[0] = planTime;
                     })
                 .until(
                     () -> {
                       // only done once the plan time is over AAND we actually got to the end
-                      boolean planTimeOver = timer.get() * Path.RATE >= lastIndex;
+                      boolean planTimeOver =
+                          (timer.get() + skippedTime[0]) * Path.RATE >= lastIndex;
                       boolean atEnd = atReference(solver, robotPose.get(), finalState);
                       return planTimeOver && atEnd;
                     }))
