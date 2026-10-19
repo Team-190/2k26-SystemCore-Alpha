@@ -89,9 +89,13 @@ public class Plan {
   public ArrayList<State> getPlan() {
     return states;
   }
-  protected ArrayList<Pose2d> getAsPose2dList(){
+
+  protected ArrayList<Pose2d> getAsPose2dList() {
     ArrayList<Pose2d> poseList = new ArrayList<>();
-    states.forEach((State state)->{poseList.add(state.pose());});
+    states.forEach(
+        (State state) -> {
+          poseList.add(state.pose());
+        });
     return poseList;
   }
 }

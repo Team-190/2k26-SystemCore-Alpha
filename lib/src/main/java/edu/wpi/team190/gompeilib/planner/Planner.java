@@ -3,7 +3,6 @@ package edu.wpi.team190.gompeilib.planner;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
@@ -50,7 +49,7 @@ public class Planner {
             Commands.run(
                     () -> {
                       Logger.recordOutput("Planner/isRunning", true);
-                      Pose2d[] poses= (Pose2d[]) plan.getAsPose2dList().toArray();
+                      Pose2d[] poses = (Pose2d[]) plan.getAsPose2dList().toArray();
                       Logger.recordOutput("Planner/path", poses);
                       // each state is 1 / RATE seconds after the last, so find where we are
                       double exactIndex = timer.get() * Path.RATE;
