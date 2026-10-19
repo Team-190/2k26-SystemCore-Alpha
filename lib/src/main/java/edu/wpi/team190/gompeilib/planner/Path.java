@@ -5,7 +5,6 @@ import org.wpilib.math.geometry.Pose2d;
 public class Path {
 
   public static final double RATE = 10; // states per second
-  private double distance;
   private Pose2d startPose;
   private Pose2d endPose;
   private double maxVel;
