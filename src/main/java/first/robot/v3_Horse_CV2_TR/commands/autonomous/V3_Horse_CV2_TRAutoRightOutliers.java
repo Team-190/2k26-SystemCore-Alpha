@@ -10,6 +10,8 @@ import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
+import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
+
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 
@@ -37,10 +39,11 @@ public class V3_Horse_CV2_TRAutoRightOutliers {
           drive.runOnce(drive::stop),
           V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 7),
           V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter),
-          Commands.waitSeconds(5), // for the inertia wheel to calm down
+          Commands.waitSeconds(V3_Horse_CV2_TRShooterConstants.SHOOTER_CALM_DOWN_TIME),
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
           AutoBuilder.followPath(DOUBLE_DIP_2),
-          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 5));
+          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 5),
+          V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter));
     } catch (Exception e) {
       e.printStackTrace();
       return Commands.runOnce(

@@ -146,7 +146,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         leftExtension.setPositionGoal(leftManualPositionGoal);
         rightExtension.setPositionGoal(rightManualPositionGoal);
         break;
-      case MANUAL_RELEASE, OVERRIDE:
+
+      case MANUAL_RELEASE:
         break;
     }
     // if (extensionState != ExtensionState.OVERRIDE) {
@@ -192,6 +193,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
     rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
   }
+  
 
   public Command stopRollers() {
     return Commands.runOnce(
@@ -314,7 +316,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   public Command squishIntake() {
 
-    return Commands.run(
+    return Commands.runOnce(
             () -> {
               if (extensionState == ExtensionState.MANUAL_EXTEND
                   || extensionState == ExtensionState.MANUAL_RELEASE) {

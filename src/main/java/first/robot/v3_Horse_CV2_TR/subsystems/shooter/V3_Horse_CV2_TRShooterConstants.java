@@ -68,6 +68,8 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withVoltageOffsetStep(Volts.of(1))
           .build();
 
+          public static final double SHOOTER_CALM_DOWN_TIME = 3.0;
+
   public static final GenericHoodConstants HOOD_CONSTANTS =
       GenericHoodConstants.builder()
           .withMotorCanId(45)
