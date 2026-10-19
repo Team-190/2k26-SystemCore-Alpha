@@ -1,8 +1,11 @@
 package edu.wpi.team190.gompeilib.planner;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.Commands;
@@ -47,6 +50,9 @@ public class Planner {
         .andThen(
             Commands.run(
                     () -> {
+                      Logger.recordOutput("Planner/isRunning", true);
+                      Pose2d[] poses= (Pose2d[]) plan.getAsPose2dList().toArray();
+                      Logger.recordOutput("Planner/path", poses);
                       // each state is 1 / RATE seconds after the last, so find where we are
                       double exactIndex = timer.get() * Path.RATE;
                       int currentIndex = (int) exactIndex;
@@ -65,7 +71,7 @@ public class Planner {
                       } else {
                         target = holdAtEnd;
                       }
-
+                      Logger.recordOutput("Planner/target", target);
                       driveCommand.accept(calculate(solver, robotPose.get(), target));
 
                       // run any command whose time we passed since the last loop
@@ -86,6 +92,7 @@ public class Planner {
                     }))
         .finallyDo(
             () -> {
+              Logger.recordOutput("Planner/isRunning", false);
               driveCommand.accept(new ChassisVelocities(0, 0, 0));
             });
   }

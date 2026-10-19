@@ -89,5 +89,10 @@ public class Plan {
   public ArrayList<State> getPlan() {
     return states;
   }
+  protected ArrayList<Pose2d> getAsPose2dList(){
+    ArrayList<Pose2d> poseList = new ArrayList<>();
+    states.forEach((State state)->{poseList.add(state.pose());});
+    return poseList;
+  }
 }
 // puts together the paths and generates states along the path
