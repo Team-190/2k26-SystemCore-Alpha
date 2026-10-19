@@ -48,11 +48,11 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withTorqueGains(
               Gains.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(12)
+                  .withKP(4)
                   .withKD(0)
-                  .withKS(6.5)
-                  .withKV(0.25)
-                  .withKA(0.92854 * 2 * Math.PI) // measured in A/(rad/s^2), Talon uses rotations
+                  .withKS(4)
+                  .withKV(0)
+                  .withKA(0) // measured in A/(rad/s^2), Talon uses rotations
                   .build())
           .withConstraints(
               AngularVelocityConstraints.builder()
