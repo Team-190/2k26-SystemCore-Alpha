@@ -41,9 +41,6 @@ public class Planner {
 
     int lastIndex = states.size() - 1;
     State finalState = states.get(lastIndex);
-    // when we run out of states just sit at the last pose w no velocity so it dont fly past it
-    State holdAtEnd = new State(finalState.pose(), new ChassisVelocities(0, 0, 0), 0);
-
     return Commands.runOnce(
             () -> {
               timer.restart();
@@ -73,7 +70,6 @@ public class Planner {
                       int currentIndex = (int) exactIndex;
 
                       State target;
-                      if (currentIndex < lastIndex) {
                         // blend between states
                         State before = states.get(currentIndex);
                         State after = states.get(currentIndex + 1);
@@ -83,9 +79,6 @@ public class Planner {
                                 before.pose().interpolate(after.pose(), fraction),
                                 before.velocity().interpolate(after.velocity(), fraction),
                                 0);
-                      } else {
-                        target = holdAtEnd;
-                      }
                       ChassisVelocities output = calculate(solver, pose, target);
                       driveCommand.accept(output);
                       logTarget(pose, target, output, path, pathIndex, planTime);
