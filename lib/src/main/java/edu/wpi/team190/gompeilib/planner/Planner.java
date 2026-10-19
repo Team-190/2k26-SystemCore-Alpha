@@ -69,8 +69,10 @@ public class Planner {
                       } else {
                         target = holdAtEnd;
                       }
-                      Logger.recordOutput("Planner/target", target);
-                      driveCommand.accept(calculate(solver, robotPose.get(), target));
+                      Logger.recordOutput("Planner/targets/targetState", target);
+                      ChassisVelocities solvedVel = calculate(solver, robotPose.get(), target);
+                      Logger.recordOutput("Planner/targets/currentTargetState", solvedVel);
+                      driveCommand.accept(solvedVel);
 
                       // run any command whose time we passed since the last loop
                       double now = timer.get();
