@@ -56,18 +56,18 @@ public class LEDRequestTest {
   /** Fails to compile if an {@link LEDRequest} record is added without a case here. */
   private static String describe(LEDRequest request) {
     return switch (request) {
-      case Solid r -> "Solid";
-      case SupplyModulation r -> "SupplyModulation";
-      case ColorFlow r -> "ColorFlow";
-      case Fire r -> "Fire";
-      case Larson r -> "Larson";
-      case Rainbow r -> "Rainbow";
-      case RgbFade r -> "RgbFade";
-      case SingleFade r -> "SingleFade";
-      case Strobe r -> "Strobe";
-      case Twinkle r -> "Twinkle";
-      case TwinkleOff r -> "TwinkleOff";
-      case ClearAnimation r -> "ClearAnimation";
+      case Solid _ -> "Solid";
+      case SupplyModulation _ -> "SupplyModulation";
+      case ColorFlow _ -> "ColorFlow";
+      case Fire _ -> "Fire";
+      case Larson _ -> "Larson";
+      case Rainbow _ -> "Rainbow";
+      case RgbFade _ -> "RgbFade";
+      case SingleFade _ -> "SingleFade";
+      case Strobe _ -> "Strobe";
+      case Twinkle _ -> "Twinkle";
+      case TwinkleOff _ -> "TwinkleOff";
+      case ClearAnimation _ -> "ClearAnimation";
     };
   }
 

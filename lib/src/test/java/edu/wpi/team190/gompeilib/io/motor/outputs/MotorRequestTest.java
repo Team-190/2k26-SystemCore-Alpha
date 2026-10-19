@@ -196,42 +196,42 @@ public class MotorRequestTest {
   /** Fails to compile if a {@link MotorRequest} record is added without a case here. */
   private static String describe(MotorRequest request) {
     return switch (request) {
-      case DutyCycleOutput r -> "DutyCycleOutput";
-      case VoltageOutput r -> "VoltageOutput";
-      case CurrentOutput r -> "CurrentOutput";
-      case PositionDutyCycle r -> "PositionDutyCycle";
-      case PositionVoltage r -> "PositionVoltage";
-      case PositionCurrent r -> "PositionCurrent";
-      case ProfiledPositionDutyCycle r -> "ProfiledPositionDutyCycle";
-      case ProfiledPositionVoltage r -> "ProfiledPositionVoltage";
-      case ProfiledPositionCurrent r -> "ProfiledPositionCurrent";
-      case ExponentialProfiledPositionDutyCycle r -> "ExponentialProfiledPositionDutyCycle";
-      case ExponentialProfiledPositionVoltage r -> "ExponentialProfiledPositionVoltage";
-      case ExponentialProfiledPositionCurrent r -> "ExponentialProfiledPositionCurrent";
-      case DynamicProfiledPositionDutyCycle r -> "DynamicProfiledPositionDutyCycle";
-      case DynamicProfiledPositionVoltage r -> "DynamicProfiledPositionVoltage";
-      case DynamicProfiledPositionCurrent r -> "DynamicProfiledPositionCurrent";
-      case DynamicExponentialProfiledPositionDutyCycle r ->
+      case DutyCycleOutput _ -> "DutyCycleOutput";
+      case VoltageOutput _ -> "VoltageOutput";
+      case CurrentOutput _ -> "CurrentOutput";
+      case PositionDutyCycle _ -> "PositionDutyCycle";
+      case PositionVoltage _ -> "PositionVoltage";
+      case PositionCurrent _ -> "PositionCurrent";
+      case ProfiledPositionDutyCycle _ -> "ProfiledPositionDutyCycle";
+      case ProfiledPositionVoltage _ -> "ProfiledPositionVoltage";
+      case ProfiledPositionCurrent _ -> "ProfiledPositionCurrent";
+      case ExponentialProfiledPositionDutyCycle _ -> "ExponentialProfiledPositionDutyCycle";
+      case ExponentialProfiledPositionVoltage _ -> "ExponentialProfiledPositionVoltage";
+      case ExponentialProfiledPositionCurrent _ -> "ExponentialProfiledPositionCurrent";
+      case DynamicProfiledPositionDutyCycle _ -> "DynamicProfiledPositionDutyCycle";
+      case DynamicProfiledPositionVoltage _ -> "DynamicProfiledPositionVoltage";
+      case DynamicProfiledPositionCurrent _ -> "DynamicProfiledPositionCurrent";
+      case DynamicExponentialProfiledPositionDutyCycle _ ->
           "DynamicExponentialProfiledPositionDutyCycle";
-      case DynamicExponentialProfiledPositionVoltage r ->
+      case DynamicExponentialProfiledPositionVoltage _ ->
           "DynamicExponentialProfiledPositionVoltage";
-      case DynamicExponentialProfiledPositionCurrent r ->
+      case DynamicExponentialProfiledPositionCurrent _ ->
           "DynamicExponentialProfiledPositionCurrent";
-      case VelocityDutyCycle r -> "VelocityDutyCycle";
-      case VelocityVoltage r -> "VelocityVoltage";
-      case VelocityCurrent r -> "VelocityCurrent";
-      case ProfiledVelocityDutyCycle r -> "ProfiledVelocityDutyCycle";
-      case ProfiledVelocityVoltage r -> "ProfiledVelocityVoltage";
-      case ProfiledVelocityCurrent r -> "ProfiledVelocityCurrent";
-      case Differential r -> "Differential";
-      case Follow r -> "Follow";
-      case StrictFollow r -> "StrictFollow";
-      case DifferentialFollow r -> "DifferentialFollow";
-      case DifferentialStrictFollow r -> "DifferentialStrictFollow";
-      case Neutral r -> "Neutral";
-      case Coast r -> "Coast";
-      case StaticBrake r -> "StaticBrake";
-      case Tone r -> "Tone";
+      case VelocityDutyCycle _ -> "VelocityDutyCycle";
+      case VelocityVoltage _ -> "VelocityVoltage";
+      case VelocityCurrent _ -> "VelocityCurrent";
+      case ProfiledVelocityDutyCycle _ -> "ProfiledVelocityDutyCycle";
+      case ProfiledVelocityVoltage _ -> "ProfiledVelocityVoltage";
+      case ProfiledVelocityCurrent _ -> "ProfiledVelocityCurrent";
+      case Differential _ -> "Differential";
+      case Follow _ -> "Follow";
+      case StrictFollow _ -> "StrictFollow";
+      case DifferentialFollow _ -> "DifferentialFollow";
+      case DifferentialStrictFollow _ -> "DifferentialStrictFollow";
+      case Neutral _ -> "Neutral";
+      case Coast _ -> "Coast";
+      case StaticBrake _ -> "StaticBrake";
+      case Tone _ -> "Tone";
     };
   }
 

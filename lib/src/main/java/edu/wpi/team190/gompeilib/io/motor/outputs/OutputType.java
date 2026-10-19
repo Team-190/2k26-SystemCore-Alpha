@@ -21,9 +21,9 @@ public enum OutputType {
    */
   public static Optional<OutputType> of(Unit unit) {
     return switch (unit) {
-      case DimensionlessUnit u -> Optional.of(DUTY_CYCLE);
-      case VoltageUnit u -> Optional.of(VOLTAGE);
-      case CurrentUnit u -> Optional.of(CURRENT);
+      case DimensionlessUnit _ -> Optional.of(DUTY_CYCLE);
+      case VoltageUnit _ -> Optional.of(VOLTAGE);
+      case CurrentUnit _ -> Optional.of(CURRENT);
       default -> Optional.empty();
     };
   }

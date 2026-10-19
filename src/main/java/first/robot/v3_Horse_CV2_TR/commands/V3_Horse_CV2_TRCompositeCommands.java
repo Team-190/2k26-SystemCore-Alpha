@@ -23,9 +23,7 @@ import org.wpilib.math.geometry.Translation2d;
 public class V3_Horse_CV2_TRCompositeCommands {
 
   public static Command resetHeading(
-      SwerveDrive drive,
-      Consumer<Pose2d> resetHeadingConsumer,
-      Supplier<Translation2d> currentRobotTranslation) {
+      Consumer<Pose2d> resetHeadingConsumer, Supplier<Translation2d> currentRobotTranslation) {
     return Commands.runOnce(
             () -> {
               resetHeadingConsumer.accept(
@@ -95,7 +93,6 @@ public class V3_Horse_CV2_TRCompositeCommands {
    * and heading are ready.
    */
   public static Command fixedShotCommand(
-      SwerveDrive drive,
       V3_Horse_CV2_TRRollerFloor rollerFloor,
       V3_Horse_CV2_TRShooter shooter,
       FixedShots fixedShot) {

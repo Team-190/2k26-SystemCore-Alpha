@@ -202,7 +202,7 @@ public class MotorIOSim implements MotorIO {
       case Command.Velocity velocity -> runVelocity(velocity, dt, battery);
       case Command.Follow follow ->
           appliedVolts = driver ? 0.0 : follow.sign() * mechanism.inputVoltage().in(Volts);
-      case Command.Zero zero -> appliedVolts = 0.0;
+      case Command.Zero _ -> appliedVolts = 0.0;
     }
     applySoftLimits();
     resetLoop = false;
@@ -245,7 +245,7 @@ public class MotorIOSim implements MotorIO {
             : command.target();
     double velocityTarget = command.velocity();
     switch (command.profile()) {
-      case Profile.None none -> {
+      case Profile.None _ -> {
         setpointPosition = target;
         setpointVelocity = velocityTarget;
       }
@@ -546,7 +546,7 @@ public class MotorIOSim implements MotorIO {
         setMode(MotorControlMode.FOLLOWER, false);
         yield new Command.Follow(r.alignment() == MotorAlignment.ALIGNED ? 1.0 : -1.0);
       }
-      case FollowerRequest.StrictFollow r -> {
+      case FollowerRequest.StrictFollow _ -> {
         setMode(MotorControlMode.FOLLOWER, false);
         yield new Command.Follow(1.0);
       }
@@ -554,14 +554,14 @@ public class MotorIOSim implements MotorIO {
         setMode(MotorControlMode.FOLLOWER, false);
         yield new Command.Follow(r.alignment() == MotorAlignment.ALIGNED ? 1.0 : -1.0);
       }
-      case FollowerRequest.DifferentialStrictFollow r -> {
+      case FollowerRequest.DifferentialStrictFollow _ -> {
         setMode(MotorControlMode.FOLLOWER, false);
         yield new Command.Follow(1.0);
       }
-      case NeutralRequest.Neutral r -> zero(MotorControlMode.NEUTRAL);
-      case NeutralRequest.Coast r -> zero(MotorControlMode.COAST);
-      case NeutralRequest.StaticBrake r -> zero(MotorControlMode.STATIC_BRAKE);
-      case NeutralRequest.Tone r -> zero(MotorControlMode.TONE);
+      case NeutralRequest.Neutral _ -> zero(MotorControlMode.NEUTRAL);
+      case NeutralRequest.Coast _ -> zero(MotorControlMode.COAST);
+      case NeutralRequest.StaticBrake _ -> zero(MotorControlMode.STATIC_BRAKE);
+      case NeutralRequest.Tone _ -> zero(MotorControlMode.TONE);
       case Differential r -> translate(r.average());
     };
   }

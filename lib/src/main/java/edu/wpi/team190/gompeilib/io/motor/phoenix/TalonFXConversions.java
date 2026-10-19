@@ -99,8 +99,7 @@ public final class TalonFXConversions {
             });
 
     switch (config.feedbackSensor) {
-      case FeedbackSensor.Internal internal ->
-          talon.Feedback.SensorToMechanismRatio = config.gearRatio;
+      case FeedbackSensor.Internal _ -> talon.Feedback.SensorToMechanismRatio = config.gearRatio;
       case FeedbackSensor.RemoteEncoder remote -> {
         talon.Feedback.FeedbackRemoteSensorID = remote.canId();
         talon.Feedback.FeedbackSensorSource =
@@ -434,9 +433,9 @@ public final class TalonFXConversions {
     ControlRequest diffRequest = toControlRequest(request.difference());
     String diffCategory =
         switch (request.difference()) {
-          case OpenLoopRequest r -> "Open";
-          case PositionRequest r -> "Position";
-          case VelocityRequest r -> "Velocity";
+          case OpenLoopRequest _ -> "Open";
+          case PositionRequest _ -> "Position";
+          case VelocityRequest _ -> "Velocity";
         };
     return toDifferentialCompound(
         avgRequest.getClass().getSimpleName(),

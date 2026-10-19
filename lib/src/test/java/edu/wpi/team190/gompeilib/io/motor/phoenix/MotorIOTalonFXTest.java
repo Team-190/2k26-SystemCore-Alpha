@@ -246,6 +246,7 @@ public class MotorIOTalonFXTest extends GompeiLibTestBase {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void testSamplesPositionOnTheOdometryThread() throws Exception {
     withMockedTalonFX(
         okConfigurator(),
