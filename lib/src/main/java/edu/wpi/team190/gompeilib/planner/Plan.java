@@ -105,6 +105,10 @@ public class Plan {
     return paths.get(pathIndex);
   }
 
+  public int getPathCount() {
+    return paths.size();
+  }
+
   public double getPathEndTime(int pathIndex) {
     return pathEndTimes[pathIndex];
   }

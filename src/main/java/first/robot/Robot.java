@@ -55,7 +55,6 @@ public class Robot extends LoggedRobot {
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
-      Logger.recordOutput("is it running (please god)", true);
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
   }
