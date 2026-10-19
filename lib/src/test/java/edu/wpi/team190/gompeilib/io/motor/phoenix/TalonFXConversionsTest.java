@@ -50,7 +50,10 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.Differential;
 import edu.wpi.team190.gompeilib.io.motor.outputs.FollowerRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequestTest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -381,10 +384,6 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
     assertEquals(2, phoenix.getClass().getField("Slot").get(phoenix));
   }
 
-  /**
-   * The requests MotorIOTalonFX doesn't support until differential control is configured and
-   * verified.
-   */
   private static final Set<Class<?>> DIFFERENTIAL_REQUESTS =
       Set.of(
           Differential.class,
@@ -392,16 +391,89 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
           FollowerRequest.DifferentialStrictFollow.class);
 
   @Test
-  public void shouldRejectDifferentialRequests() throws ReflectiveOperationException {
-    for (Class<?> type : DIFFERENTIAL_REQUESTS) {
-      MotorRequest request = (MotorRequest) IOTestSupport.sampleRecord(type);
-      UnsupportedOperationException error =
-          assertThrows(
-              UnsupportedOperationException.class,
-              () -> TalonFXConversions.toControlRequest(request),
-              type.getSimpleName());
-      assertTrue(error.getMessage().startsWith(type.getSimpleName()), error.getMessage());
-    }
+  public void testConvertsDifferentialRequests() {
+    ControlRequest follow =
+        TalonFXConversions.toControlRequest(
+            new FollowerRequest.DifferentialFollow(4, MotorAlignment.OPPOSED));
+    assertInstanceOf(com.ctre.phoenix6.controls.DifferentialFollower.class, follow);
+    com.ctre.phoenix6.controls.DifferentialFollower diffFollower =
+        (com.ctre.phoenix6.controls.DifferentialFollower) follow;
+    assertEquals(4, diffFollower.LeaderID);
+    assertEquals(MotorAlignmentValue.Opposed, diffFollower.MotorAlignment);
+
+    ControlRequest strictFollow =
+        TalonFXConversions.toControlRequest(new FollowerRequest.DifferentialStrictFollow(5));
+    assertInstanceOf(com.ctre.phoenix6.controls.DifferentialStrictFollower.class, strictFollow);
+    com.ctre.phoenix6.controls.DifferentialStrictFollower diffStrictFollower =
+        (com.ctre.phoenix6.controls.DifferentialStrictFollower) strictFollow;
+    assertEquals(5, diffStrictFollower.LeaderID);
+
+    Differential diff =
+        new Differential(
+            new PositionRequest.PositionVoltage(
+                Rotations.of(1.0),
+                RotationsPerSecond.of(0.0),
+                Volts.of(0.0),
+                false,
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT),
+            new PositionRequest.PositionVoltage(
+                Rotations.of(0.5),
+                RotationsPerSecond.of(0.0),
+                Volts.of(0.0),
+                false,
+                GainSlot.ONE,
+                RequestOptions.DEFAULT));
+    ControlRequest compound = TalonFXConversions.toControlRequest(diff);
+    assertInstanceOf(
+        com.ctre.phoenix6.controls.compound.Diff_PositionVoltage_Position.class, compound);
+
+    Differential diffOpen =
+        new Differential(
+            new PositionRequest.PositionVoltage(
+                Rotations.of(1.0),
+                RotationsPerSecond.of(0.0),
+                Volts.of(0.0),
+                false,
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT),
+            new OpenLoopRequest.VoltageOutput(Volts.of(2.0)));
+    ControlRequest compoundOpen = TalonFXConversions.toControlRequest(diffOpen);
+    assertInstanceOf(
+        com.ctre.phoenix6.controls.compound.Diff_PositionVoltage_Open.class, compoundOpen);
+
+    Differential diffVel =
+        new Differential(
+            new PositionRequest.PositionVoltage(
+                Rotations.of(1.0),
+                RotationsPerSecond.of(0.0),
+                Volts.of(0.0),
+                false,
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT),
+            new VelocityRequest.VelocityVoltage(
+                RotationsPerSecond.of(5.0),
+                RotationsPerSecondPerSecond.of(0.0),
+                Volts.of(0.0),
+                false,
+                GainSlot.TWO,
+                RequestOptions.DEFAULT));
+    ControlRequest compoundVel = TalonFXConversions.toControlRequest(diffVel);
+    assertInstanceOf(
+        com.ctre.phoenix6.controls.compound.Diff_PositionVoltage_Velocity.class, compoundVel);
+  }
+
+  @Test
+  public void shouldWrapReflectiveErrorInDifferentialConversion() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            TalonFXConversions.toDifferentialCompound(
+                "Invalid",
+                "Open",
+                new Object(),
+                new Object(),
+                RequestOptions.DEFAULT_UPDATE_FREQUENCY));
   }
 
   /** Phoenix6 request field name to {@code MotorRequest} record component name. */

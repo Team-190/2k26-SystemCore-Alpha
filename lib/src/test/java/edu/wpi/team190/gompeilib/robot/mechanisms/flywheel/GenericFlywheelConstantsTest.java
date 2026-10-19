@@ -64,8 +64,13 @@ public class GenericFlywheelConstantsTest extends GompeiLibTestBase {
     assertEquals(RadiansPerSecond.of(5), constants.velocityOffsetStep);
     assertEquals(Volts.of(1), constants.voltageOffsetStep);
     assertEquals(Amps.of(1.0), constants.currentOffsetStep);
+    assertEquals(Value.of(0.05), constants.dutyCycleOffsetStep);
     assertSame(voltageSysId, constants.voltageSysId);
     assertSame(currentSysId, constants.currentSysId);
+
+    GenericFlywheelConstants custom =
+        constants.toBuilder().withDutyCycleOffsetStep(Value.of(0.1)).build();
+    assertEquals(Value.of(0.1), custom.dutyCycleOffsetStep);
   }
 
   @Test

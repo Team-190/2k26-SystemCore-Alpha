@@ -127,7 +127,16 @@ public class MotorControllerGroup
 
       MotorIO io = followerFactory.create(followerConfig);
       if (hardware) {
-        io.setControl(new FollowerRequest.Follow(config.canId, follower.alignment()));
+        FollowerRequest request =
+            switch (follower.followType()) {
+              case STANDARD -> new FollowerRequest.Follow(config.canId, follower.alignment());
+              case STRICT -> new FollowerRequest.StrictFollow(config.canId);
+              case DIFFERENTIAL ->
+                  new FollowerRequest.DifferentialFollow(config.canId, follower.alignment());
+              case DIFFERENTIAL_STRICT ->
+                  new FollowerRequest.DifferentialStrictFollow(config.canId);
+            };
+        io.setControl(request);
       }
       mirrored |= !hardware;
       // CAN IDs are only unique per bus, so a follower off the leader's bus is keyed by its bus

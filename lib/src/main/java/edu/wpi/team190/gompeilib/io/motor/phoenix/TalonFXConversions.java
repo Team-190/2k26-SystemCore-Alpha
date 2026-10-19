@@ -407,14 +407,17 @@ public final class TalonFXConversions {
                   .withFeedForward(r.feedforward())
                   .withSlot(r.slot().ordinal()),
               r.options());
-      case Differential r -> throw unsupported(r);
+      case Differential r -> toDifferentialControlRequest(r);
       case FollowerRequest.Follow r ->
           new Follower(r.leaderId(), toAlignment(r.alignment()))
               .withUpdateFreqHz(r.updateFrequency());
       case FollowerRequest.StrictFollow r ->
           new StrictFollower(r.leaderId()).withUpdateFreqHz(r.updateFrequency());
-      case FollowerRequest.DifferentialFollow r -> throw unsupported(r);
-      case FollowerRequest.DifferentialStrictFollow r -> throw unsupported(r);
+      case FollowerRequest.DifferentialFollow r ->
+          new DifferentialFollower(r.leaderId(), toAlignment(r.alignment()))
+              .withUpdateFreqHz(r.updateFrequency());
+      case FollowerRequest.DifferentialStrictFollow r ->
+          new DifferentialStrictFollower(r.leaderId()).withUpdateFreqHz(r.updateFrequency());
       case NeutralRequest.Neutral r ->
           new NeutralOut().withUseTimesync(r.useTimesync()).withUpdateFreqHz(r.updateFrequency());
       case NeutralRequest.Coast r ->
@@ -426,11 +429,41 @@ public final class TalonFXConversions {
     };
   }
 
-  private static UnsupportedOperationException unsupported(MotorRequest request) {
-    return new UnsupportedOperationException(
-        request.getClass().getSimpleName()
-            + " is not supported by MotorIOTalonFX yet: differential control needs a differential"
-            + " sensor config and hardware verification");
+  static ControlRequest toDifferentialControlRequest(Differential request) {
+    ControlRequest avgRequest = toControlRequest(request.average());
+    ControlRequest diffRequest = toControlRequest(request.difference());
+    String diffCategory =
+        switch (request.difference()) {
+          case OpenLoopRequest r -> "Open";
+          case PositionRequest r -> "Position";
+          case VelocityRequest r -> "Velocity";
+        };
+    return toDifferentialCompound(
+        avgRequest.getClass().getSimpleName(),
+        diffCategory,
+        avgRequest,
+        diffRequest,
+        request.updateFrequency());
+  }
+
+  static ControlRequest toDifferentialCompound(
+      String avgSimpleName,
+      String diffCategory,
+      Object avgRequest,
+      Object diffRequest,
+      org.wpilib.units.measure.Frequency updateFrequency) {
+    String className =
+        "com.ctre.phoenix6.controls.compound.Diff_" + avgSimpleName + "_" + diffCategory;
+    try {
+      Class<?> compoundClass = Class.forName(className);
+      java.lang.reflect.Constructor<?> constructor =
+          compoundClass.getConstructor(avgRequest.getClass(), diffRequest.getClass());
+      ControlRequest compound = (ControlRequest) constructor.newInstance(avgRequest, diffRequest);
+      return compound.withUpdateFreqHz(updateFrequency);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalArgumentException(
+          "Failed to construct Phoenix differential request " + className, e);
+    }
   }
 
   /**

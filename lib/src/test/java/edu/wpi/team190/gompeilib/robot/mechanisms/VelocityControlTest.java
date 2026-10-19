@@ -52,7 +52,7 @@ public class VelocityControlTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testVoltageLoopUsesTheVoltageSlot() {
+  public void testVoltageLoopUsesTheVoltageSlotAndFeedforward() {
     VelocityControl<AngularVelocityUnit> control = control(zero());
     assertTrue(core.components().contains(control));
 
@@ -71,9 +71,35 @@ public class VelocityControlTest extends GompeiLibTestBase {
                 GainSlot.ZERO,
                 RequestOptions.DEFAULT));
 
+    control.setGoal(RadiansPerSecond.of(120), Volts.of(2.5));
+    assertEquals(Volts.of(2.5), control.getVoltageFeedforward());
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new VelocityRequest.VelocityVoltage(
+                RadiansPerSecond.of(120),
+                RadiansPerSecondPerSecond.of(0),
+                Volts.of(2.5),
+                true,
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT));
+
+    control.setProfiled(true);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new VelocityRequest.ProfiledVelocityVoltage(
+                RadiansPerSecond.of(120),
+                RadiansPerSecondPerSecond.of(0),
+                Volts.of(2.5),
+                true,
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT));
+
     Setpoint<AngularVelocityUnit> goal = zero();
-    control.setGoal(goal);
+    control.setGoal(goal, Volts.of(1.0));
     assertSame(goal, control.getGoal());
+    assertEquals(Volts.of(1.0), control.getVoltageFeedforward());
   }
 
   @Test
@@ -94,12 +120,75 @@ public class VelocityControlTest extends GompeiLibTestBase {
                 GainSlot.ONE,
                 RequestOptions.DEFAULT));
 
+    control.setProfiled(true);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new VelocityRequest.ProfiledVelocityCurrent(
+                RadiansPerSecond.of(200),
+                RadiansPerSecondPerSecond.of(0),
+                Amps.of(3),
+                GainSlot.ONE,
+                RequestOptions.DEFAULT));
+
+    // When setting goal without feedforward, output type is preserved
+    control.setGoal(RadiansPerSecond.of(250));
+    assertEquals(OutputType.CURRENT, control.getOutputType());
+
     Setpoint<AngularVelocityUnit> goal = zero();
     core.idle();
     control.setGoal(goal, Amps.of(1));
     assertSame(goal, control.getGoal());
     assertTrue(core.isActive(control));
     assertEquals(Amps.of(1), control.getFeedforward());
+
+    control.setGoal(goal);
+    assertSame(goal, control.getGoal());
+  }
+
+  @Test
+  public void testDutyCycleLoopUsesDutyCycleSlotAndFeedforward() {
+    VelocityControl<AngularVelocityUnit> control =
+        new VelocityControl<>(
+            core,
+            MechanismTestSupport.CONVERSION,
+            zero(),
+            () -> RadiansPerSecond.of(10),
+            true,
+            OutputType.DUTY_CYCLE,
+            GainSlot.TWO);
+    assertEquals(OutputType.DUTY_CYCLE, control.getOutputType());
+
+    control.setGoal(RadiansPerSecond.of(150), 0.2);
+    assertEquals("VelocityDutyCycle", control.name());
+    assertEquals(0.2, control.getDutyCycleFeedforward());
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new VelocityRequest.VelocityDutyCycle(
+                RadiansPerSecond.of(150),
+                RadiansPerSecondPerSecond.of(0),
+                0.2,
+                true,
+                GainSlot.TWO,
+                RequestOptions.DEFAULT));
+
+    control.setProfiled(true);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new VelocityRequest.ProfiledVelocityDutyCycle(
+                RadiansPerSecond.of(150),
+                RadiansPerSecondPerSecond.of(0),
+                0.2,
+                true,
+                GainSlot.TWO,
+                RequestOptions.DEFAULT));
+
+    Setpoint<AngularVelocityUnit> goal = zero();
+    control.setGoal(goal, 0.1);
+    assertSame(goal, control.getGoal());
+    assertEquals(0.1, control.getDutyCycleFeedforward());
   }
 
   @Test
@@ -126,6 +215,14 @@ public class VelocityControlTest extends GompeiLibTestBase {
     logger.verify(() -> Logger.recordOutputMeasure(eq("T/Velocity/Measured"), any()));
     logger.verify(() -> Logger.recordOutputMeasure(eq("T/Velocity/Feedforward"), any()));
     logger.verify(() -> Logger.recordOutput("T/Velocity/AtGoal", true));
+    logger.verify(() -> Logger.recordOutput("T/Velocity/OutputType", "VOLTAGE"));
+
+    control.setGoal(RadiansPerSecond.of(10), Amps.of(1));
+    control.periodic("T");
+
+    control.setGoal(RadiansPerSecond.of(10), 0.5);
+    control.periodic("T");
+    logger.verify(() -> Logger.recordOutput("T/Velocity/Feedforward", 0.5));
   }
 
   @Test
@@ -162,18 +259,48 @@ public class VelocityControlTest extends GompeiLibTestBase {
         NullPointerException.class,
         () ->
             new VelocityControl<>(
-                core, conversion, zero(), () -> RadiansPerSecond.of(1), true, null, GainSlot.ONE));
+                core,
+                conversion,
+                zero(),
+                () -> RadiansPerSecond.of(1),
+                true,
+                (GainSlot) null,
+                GainSlot.ONE));
     assertThrows(
         NullPointerException.class,
         () ->
             new VelocityControl<>(
                 core, conversion, zero(), () -> RadiansPerSecond.of(1), true, GainSlot.ZERO, null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new VelocityControl<>(
+                core,
+                conversion,
+                zero(),
+                () -> RadiansPerSecond.of(1),
+                true,
+                null,
+                GainSlot.ZERO,
+                GainSlot.ONE));
+
     VelocityControl<AngularVelocityUnit> control = control(zero());
     assertThrows(
         NullPointerException.class, () -> control.setGoal((Setpoint<AngularVelocityUnit>) null));
     assertThrows(
         NullPointerException.class,
         () -> control.setGoal((Setpoint<AngularVelocityUnit>) null, Amps.of(1)));
-    assertThrows(NullPointerException.class, () -> control.setGoal(RadiansPerSecond.of(1), null));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal(RadiansPerSecond.of(1), (org.wpilib.units.measure.Current) null));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal((Setpoint<AngularVelocityUnit>) null, Volts.of(1)));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal(RadiansPerSecond.of(1), (org.wpilib.units.measure.Voltage) null));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal((Setpoint<AngularVelocityUnit>) null, 0.5));
   }
 }

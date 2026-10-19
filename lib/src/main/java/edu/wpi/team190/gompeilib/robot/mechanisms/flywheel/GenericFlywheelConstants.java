@@ -1,6 +1,7 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms.flywheel;
 
 import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Value;
 import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.control.Gains;
@@ -15,10 +16,11 @@ import org.wpilib.units.CurrentUnit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Current;
+import org.wpilib.units.measure.Dimensionless;
 import org.wpilib.units.measure.MomentOfInertia;
 import org.wpilib.units.measure.Voltage;
 
-@Builder(setterPrefix = "with")
+@Builder(setterPrefix = "with", toBuilder = true)
 public class GenericFlywheelConstants {
   /**
    * The leader motor and its followers. Leave its slots empty: the flywheel fills slot {@code ZERO}
@@ -53,6 +55,9 @@ public class GenericFlywheelConstants {
 
   /** How far one increment or decrement moves the open-loop torque-current goal. */
   @NonNull @Builder.Default public final Current currentOffsetStep = Amps.of(1.0);
+
+  /** How far one increment or decrement moves the open-loop duty-cycle goal. */
+  @NonNull @Builder.Default public final Dimensionless dutyCycleOffsetStep = Value.of(0.05);
 
   /** How the flywheel is characterized in voltage. */
   @NonNull public final SysIdConfig<VoltageUnit> voltageSysId;

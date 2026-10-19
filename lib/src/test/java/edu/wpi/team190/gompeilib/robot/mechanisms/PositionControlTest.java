@@ -7,6 +7,7 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMotors;
@@ -46,7 +47,7 @@ public class PositionControlTest extends GompeiLibTestBase {
   public void testSendsTheProfiledGoalThroughTheConversion() {
     PositionControl<DistanceUnit> control = control(new Setpoint<>(Meters.of(0), Meters.of(0.1)));
     assertTrue(core.components().contains(control));
-    assertEquals("Position", control.name());
+    assertEquals("PositionVoltage", control.name());
 
     control.setGoal(Meters.of(1.0));
     control.setGainSlot(GainSlot.TWO);
@@ -63,6 +64,125 @@ public class PositionControlTest extends GompeiLibTestBase {
     control.setGoal(goal);
     assertSame(goal, control.getGoal());
     assertTrue(core.isActive(control));
+  }
+
+  @Test
+  public void testVoltageFeedforwardAndModes() {
+    PositionControl<DistanceUnit> control = control(new Setpoint<>(Meters.of(0), Meters.of(0.1)));
+
+    control.setGoal(Meters.of(1.0), Volts.of(2.0));
+    assertEquals(OutputType.VOLTAGE, control.getOutputType());
+    assertEquals(Volts.of(2.0), control.getVoltageFeedforward());
+    assertEquals("PositionVoltage", control.name());
+
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.ProfiledPositionVoltage(
+                Radians.of(2.0), Volts.of(2.0), false, GainSlot.ZERO, RequestOptions.DEFAULT));
+
+    control.setProfileMode(PositionControl.ProfileMode.UNPROFILED);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.PositionVoltage(
+                Radians.of(2.0),
+                RadiansPerSecond.of(0.0),
+                Volts.of(2.0),
+                false,
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT));
+
+    control.setProfileMode(PositionControl.ProfileMode.EXPONENTIAL);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.ExponentialProfiledPositionVoltage(
+                Radians.of(2.0), Volts.of(2.0), false, GainSlot.ZERO, RequestOptions.DEFAULT));
+
+    Setpoint<DistanceUnit> sp = new Setpoint<>(Meters.of(0.5), Meters.of(0.1));
+    control.setGoal(sp, Volts.of(1.5));
+    assertSame(sp, control.getGoal());
+    assertEquals(Volts.of(1.5), control.getVoltageFeedforward());
+  }
+
+  @Test
+  public void testCurrentFeedforwardAndModes() {
+    PositionControl<DistanceUnit> control = control(new Setpoint<>(Meters.of(0), Meters.of(0.1)));
+
+    control.setGoal(Meters.of(1.0), Amps.of(5.0));
+    assertEquals(OutputType.CURRENT, control.getOutputType());
+    assertEquals(Amps.of(5.0), control.getCurrentFeedforward());
+    assertEquals("PositionCurrent", control.name());
+
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.ProfiledPositionCurrent(
+                Radians.of(2.0), Amps.of(5.0), GainSlot.ZERO, RequestOptions.DEFAULT));
+
+    control.setProfileMode(PositionControl.ProfileMode.UNPROFILED);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.PositionCurrent(
+                Radians.of(2.0),
+                RadiansPerSecond.of(0.0),
+                Amps.of(5.0),
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT));
+
+    control.setProfileMode(PositionControl.ProfileMode.EXPONENTIAL);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.ExponentialProfiledPositionCurrent(
+                Radians.of(2.0), Amps.of(5.0), GainSlot.ZERO, RequestOptions.DEFAULT));
+
+    Setpoint<DistanceUnit> sp = new Setpoint<>(Meters.of(0.5), Meters.of(0.1));
+    control.setGoal(sp, Amps.of(2.5));
+    assertSame(sp, control.getGoal());
+    assertEquals(Amps.of(2.5), control.getCurrentFeedforward());
+  }
+
+  @Test
+  public void testDutyCycleFeedforwardAndModes() {
+    PositionControl<DistanceUnit> control = control(new Setpoint<>(Meters.of(0), Meters.of(0.1)));
+
+    control.setGoal(Meters.of(1.0), 0.25);
+    assertEquals(OutputType.DUTY_CYCLE, control.getOutputType());
+    assertEquals(0.25, control.getDutyCycleFeedforward());
+    assertEquals("PositionDutyCycle", control.name());
+
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.ProfiledPositionDutyCycle(
+                Radians.of(2.0), 0.25, false, GainSlot.ZERO, RequestOptions.DEFAULT));
+
+    control.setProfileMode(PositionControl.ProfileMode.UNPROFILED);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.PositionDutyCycle(
+                Radians.of(2.0),
+                RadiansPerSecond.of(0.0),
+                0.25,
+                false,
+                GainSlot.ZERO,
+                RequestOptions.DEFAULT));
+
+    control.setProfileMode(PositionControl.ProfileMode.EXPONENTIAL);
+    core.periodic();
+    verify(motors.motor)
+        .setControl(
+            new PositionRequest.ExponentialProfiledPositionDutyCycle(
+                Radians.of(2.0), 0.25, false, GainSlot.ZERO, RequestOptions.DEFAULT));
+
+    Setpoint<DistanceUnit> sp = new Setpoint<>(Meters.of(0.5), Meters.of(0.1));
+    control.setGoal(sp, 0.1);
+    assertSame(sp, control.getGoal());
+    assertEquals(0.1, control.getDutyCycleFeedforward());
   }
 
   @Test
@@ -98,6 +218,7 @@ public class PositionControlTest extends GompeiLibTestBase {
     logger.verify(() -> Logger.recordOutputMeasure(eq("T/Position/Measured"), any()));
     logger.verify(() -> Logger.recordOutput("T/Position/AtGoal", true));
     logger.verify(() -> Logger.recordOutput("T/Position/GainSlot", "ZERO"));
+    logger.verify(() -> Logger.recordOutput("T/Position/OutputType", "VOLTAGE"));
   }
 
   @Test
@@ -111,7 +232,24 @@ public class PositionControlTest extends GompeiLibTestBase {
         () -> new PositionControl<>(core, drum, null, () -> Meters.of(0.01), true));
     assertThrows(
         NullPointerException.class, () -> new PositionControl<>(core, drum, goal, null, true));
+    assertThrows(
+        NullPointerException.class,
+        () -> new PositionControl<>(core, drum, goal, () -> Meters.of(0.01), true, null));
     PositionControl<DistanceUnit> control = control(goal);
     assertThrows(NullPointerException.class, () -> control.setGoal((Setpoint<DistanceUnit>) null));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal(Meters.of(1.0), (org.wpilib.units.measure.Voltage) null));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal((Setpoint<DistanceUnit>) null, Volts.of(1)));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal(Meters.of(1.0), (org.wpilib.units.measure.Current) null));
+    assertThrows(
+        NullPointerException.class,
+        () -> control.setGoal((Setpoint<DistanceUnit>) null, Amps.of(1)));
+    assertThrows(
+        NullPointerException.class, () -> control.setGoal((Setpoint<DistanceUnit>) null, 0.5));
   }
 }

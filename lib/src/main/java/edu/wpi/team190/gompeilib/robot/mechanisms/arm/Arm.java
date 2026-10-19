@@ -13,7 +13,11 @@ import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
+import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
+import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControl;
+import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.EncoderSeed;
 import edu.wpi.team190.gompeilib.robot.mechanisms.EncoderSeedable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Homeable;
@@ -43,6 +47,8 @@ import org.wpilib.units.VoltageUnit;
 public class Arm
     implements PositionControllable<AngleUnit>,
         VoltageControllable,
+        CurrentControllable,
+        DutyCycleControllable,
         MotionReadable<AngleUnit, AngularVelocityUnit>,
         ConstraintConfigurable<AngularPositionConstraints>,
         Homeable,
@@ -54,6 +60,8 @@ public class Arm
   private final MechanismCore core;
   private final PositionControl<AngleUnit> positionControl;
   private final VoltageControl voltageControl;
+  private final CurrentControl currentControl;
+  private final DutyCycleControl dutyCycleControl;
   private final EncoderSeed encoderSeed;
   private final Optional<CurrentHoming<AngleUnit>> homing;
 
@@ -87,8 +95,20 @@ public class Arm
     boolean foc = constants.motor.enableFOC;
     positionControl =
         new PositionControl<>(
-            core, CONVERSION, positionGoal, () -> constants.constraints.goalTolerance().get(), foc);
+            core,
+            CONVERSION,
+            positionGoal,
+            () -> constants.constraints.goalTolerance().get(),
+            foc,
+            constants.closedLoopOutputType);
     voltageControl = new VoltageControl(core, voltageGoal, foc);
+    currentControl =
+        new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
+    dutyCycleControl =
+        new DutyCycleControl(
+            core,
+            new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
+            foc);
     encoderSeed = new EncoderSeed(core, encoder);
     homing =
         constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
@@ -190,6 +210,16 @@ public class Arm
   @Override
   public VoltageControl voltageControl() {
     return voltageControl;
+  }
+
+  @Override
+  public CurrentControl currentControl() {
+    return currentControl;
+  }
+
+  @Override
+  public DutyCycleControl dutyCycleControl() {
+    return dutyCycleControl;
   }
 
   @Override

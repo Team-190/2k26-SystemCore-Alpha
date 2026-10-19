@@ -157,6 +157,17 @@ public class ArmTest extends GompeiLibTestBase {
     arm.periodic();
     verify(motor)
         .setControl(new OpenLoopRequest.VoltageOutput(Volts.of(4.0), true, RequestOptions.DEFAULT));
+
+    arm.setCurrentGoal(Amps.of(15.0));
+    arm.periodic();
+    verify(motor).setControl(new OpenLoopRequest.CurrentOutput(Amps.of(15.0)));
+    assertNotNull(arm.currentControl());
+
+    arm.setDutyCycleGoal(0.6);
+    arm.periodic();
+    verify(motor)
+        .setControl(new OpenLoopRequest.DutyCycleOutput(0.6, true, RequestOptions.DEFAULT));
+    assertNotNull(arm.dutyCycleControl());
   }
 
   @Test
@@ -319,5 +330,20 @@ public class ArmTest extends GompeiLibTestBase {
     assertEquals(Math.PI / 2, constraint.position().get().baseUnitMagnitude(), 1e-9);
     assertTrue(constraint.atLimit(true));
     assertFalse(constraint.atLimit(false));
+  }
+
+  @Test
+  public void testRunsPositionWithCurrentOutputType() {
+    ArmConstants currentConstants =
+        constants.toBuilder()
+            .withClosedLoopOutputType(edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.CURRENT)
+            .build();
+    Arm arm = new Arm(factory, subsystem, "Arm", currentConstants);
+    arm.setPositionGoal(Degrees.of(30));
+    arm.periodic();
+    verify(motor)
+        .setControl(
+            new PositionRequest.ProfiledPositionCurrent(
+                Degrees.of(30), Amps.of(0.0), GainSlot.ZERO, RequestOptions.DEFAULT));
   }
 }
