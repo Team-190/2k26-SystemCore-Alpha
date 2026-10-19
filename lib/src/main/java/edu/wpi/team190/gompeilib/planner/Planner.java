@@ -31,7 +31,8 @@ public class Planner {
     }
     ArrayList<State> states = plan.getPlan();
     if (states.isEmpty()) {
-      DriverStationErrors.reportError("GompeiPlanner was given an empty plan, nothing to follow", false);
+      DriverStationErrors.reportError(
+          "GompeiPlanner was given an empty plan, nothing to follow", false);
       return Commands.none();
     }
     Solver solver = new Solver();
@@ -127,7 +128,8 @@ public class Planner {
       endRadii[i] = path.getEndRadius();
       pathStartTime = plan.getPathEndTime(i);
     }
-    Logger.recordOutput("GompeiPlanner/Plan/Trajectory", plan.getAsPose2dList().toArray(new Pose2d[0]));
+    Logger.recordOutput(
+        "GompeiPlanner/Plan/Trajectory", plan.getAsPose2dList().toArray(new Pose2d[0]));
     Logger.recordOutput("GompeiPlanner/Plan/Waypoints", waypoints);
     Logger.recordOutput("GompeiPlanner/Plan/StartSpeeds", startSpeeds);
     Logger.recordOutput("GompeiPlanner/Plan/EndSpeeds", endSpeeds);
@@ -169,7 +171,7 @@ public class Planner {
     return Math.hypot(velocity.vx, velocity.vy);
   }
 
-  //this is lwk kinda cooked, but idk how to create a circle in advantage scope
+  // this is lwk kinda cooked, but idk how to create a circle in advantage scope
   private static Pose2d[] circle(Pose2d center, double radius) {
     if (radius <= 0) {
       return new Pose2d[0];
