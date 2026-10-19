@@ -318,7 +318,10 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     INTAKE,
     MANUAL_EXTEND,
     MANUAL_RELEASE,
-    OVERRIDE
+    ZERO,
+    STOP,
+    SLOW_MOVE,
+    SYSID
   }
 
   public enum RollerState {

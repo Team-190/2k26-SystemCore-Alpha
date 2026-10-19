@@ -146,7 +146,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         leftExtension.setPositionGoal(leftManualPositionGoal);
         rightExtension.setPositionGoal(rightManualPositionGoal);
         break;
-      case MANUAL_RELEASE, OVERRIDE:
+      case MANUAL_RELEASE:
         break;
     }
     // if (extensionState != ExtensionState.OVERRIDE) {
@@ -269,7 +269,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command zeroExtensions() {
     return Commands.sequence(
         Commands.runOnce(() -> rollerState = RollerState.STOP),
-        Commands.runOnce(() -> extensionState = ExtensionState.OVERRIDE),
+        Commands.runOnce(() -> extensionState = ExtensionState.ZERO),
         Commands.parallel(leftExtension.resetExtensionZero(), rightExtension.resetExtensionZero()),
         Commands.runOnce(() -> extensionState = ExtensionState.STOW));
   }
@@ -277,7 +277,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command resetIntakeZeroPosition() {
     return Commands.runOnce(
             () -> {
-              extensionState = ExtensionState.OVERRIDE;
+              extensionState = ExtensionState.ZERO;
               leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
               rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
               extensionState = ExtensionState.STOW;
@@ -288,7 +288,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command slowMoveIn() {
     return Commands.runOnce(
         () -> {
-          extensionState = ExtensionState.OVERRIDE;
+          extensionState = ExtensionState.SLOW_MOVE;
           leftExtension.setVoltageGoal(Volts.of(-1));
           rightExtension.setVoltageGoal(Volts.of(-1));
         });
@@ -297,7 +297,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command slowMoveOut() {
     return Commands.runOnce(
         () -> {
-          extensionState = ExtensionState.OVERRIDE;
+          extensionState = ExtensionState.SLOW_MOVE;
           leftExtension.setVoltageGoal(Volts.of(1));
           rightExtension.setVoltageGoal(Volts.of(1));
         });
@@ -306,7 +306,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command stopExtensions() {
     return Commands.runOnce(
         () -> {
-          extensionState = ExtensionState.OVERRIDE;
+          extensionState = ExtensionState.STOP;
           leftExtension.setVoltageGoal(Volts.zero());
           rightExtension.setVoltageGoal(Volts.zero());
         });
@@ -319,7 +319,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   public Command sysID() {
-    return setExtensionState(ExtensionState.OVERRIDE)
+    return setExtensionState(ExtensionState.SYSID)
         .andThen(Extension.runSysIdRoutine(this, leftExtension, rightExtension));
   }
 }
