@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.planner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
@@ -13,8 +14,12 @@ public class Plan {
 
   private final ArrayList<State> states = new ArrayList<State>();
   private final HashMap<Double, Command> commands = new HashMap<Double, Command>();
+  private final List<Path> paths;
+  private final double[] pathEndTimes;
 
   public Plan(Path... paths) {
+    this.paths = List.of(paths);
+    this.pathEndTimes = new double[paths.length];
     // one trapezoid over the whole plan, so it only speeds up at the start and slows down at the
     // end, uses the slowest limits out of all the paths
     double totalDistance = 0;
@@ -41,6 +46,16 @@ public class Plan {
       TrapezoidProfile.State now =
           profile.calculate(Math.min(step / Path.RATE, totalTime), start, end);
       states.add(stateAt(paths, now.position, now.velocity));
+    }
+
+    double pathEnd = 0;
+    for (int i = 0; i < paths.length; i++) {
+      pathEnd += length(paths[i]);
+      int step = 0;
+      while (step < states.size() - 1 && states.get(step).distance() < pathEnd) {
+        step++;
+      }
+      pathEndTimes[i] = step / Path.RATE;
     }
   }
 
@@ -84,6 +99,23 @@ public class Plan {
 
   public HashMap<Double, Command> getCommandMap() {
     return commands;
+  }
+
+  public Path getPath(int pathIndex) {
+    return paths.get(pathIndex);
+  }
+
+  public double getPathEndTime(int pathIndex) {
+    return pathEndTimes[pathIndex];
+  }
+
+  public int pathIndexAt(double time) {
+    for (int i = 0; i < pathEndTimes.length - 1; i++) {
+      if (time < pathEndTimes[i]) {
+        return i;
+      }
+    }
+    return pathEndTimes.length - 1;
   }
 
   public ArrayList<State> getPlan() {
