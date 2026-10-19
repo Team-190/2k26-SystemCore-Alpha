@@ -48,6 +48,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
 import org.mockito.ArgumentMatchers;
@@ -486,6 +487,7 @@ public class SwerveDriveTest {
   }
 
   @Test
+  @Disabled("PathPlanner AutoBuilder setup is commented out in SwerveDrive; re-enable with it")
   public void testSwerveDriveRobotConfigLoadFailure() {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class)) {

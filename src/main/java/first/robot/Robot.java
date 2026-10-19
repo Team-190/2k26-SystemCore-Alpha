@@ -6,6 +6,8 @@ package first.robot;
 
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.core.utility.VirtualSubsystem;
+import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixUtil;
 import first.robot.v3_Horse_CV2_TR.subsystems.V3_Horse_CV2_TRRobotContainer;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -30,6 +32,10 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    // Refresh all registered CTRE status signals before any subsystem reads its inputs
+    PhoenixUtil.refreshAll();
+    VirtualSubsystem.periodicAll();
+    robotContainer.robotPeriodic();
     CommandScheduler.getInstance().run();
     robotContainer.robotPeriodic();
     Logger.recordOutput("RobotPose", robotContainer.getPose());
