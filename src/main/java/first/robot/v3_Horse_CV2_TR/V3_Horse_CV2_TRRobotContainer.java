@@ -210,6 +210,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         "Back up and shoot",
         V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor));
 
+    autoChooser.add("Shooter Flywheel Torque SysId", shooter.flywheelSysId());
+
     autoChooser.addDefault("Do Nothing", Commands.none());
   }
 
