@@ -325,7 +325,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .y()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.CORNER)
+                    drive,
+                    rollerFloor,
+                    shooter,
+                    intake,
+                    V3_Horse_CV2_TRRobotState.FixedShots.CORNER)
                 .withName("driver-Y-true"))
         .onFalse(stopShooter("driver-Y-false"));
 
@@ -333,7 +337,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .a()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER)
+                    drive,
+                    rollerFloor,
+                    shooter,
+                    intake,
+                    V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER)
                 .withName("driver-A-true"))
         .onFalse(stopShooter("driver-A-false"));
 
@@ -341,7 +349,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .x()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.SIDE_TOWER)
+                    drive,
+                    rollerFloor,
+                    shooter,
+                    intake,
+                    V3_Horse_CV2_TRRobotState.FixedShots.SIDE_TOWER)
                 .withName("driver-X-true"))
         .onFalse(stopShooter("driver-X-false"));
 

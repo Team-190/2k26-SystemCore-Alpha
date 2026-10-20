@@ -152,7 +152,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
       case FIXED_SHOTS:
         hood.setPositionGoal(
             Rotation2d.fromDegrees(fixedShotParameters.hoodAngle().get().in(Degree)));
-        flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed().get(), getCurrentFeedforward());
+        flywheel.setVelocityGoal(
+            fixedShotParameters.flywheelSpeed().get(), getCurrentFeedforward());
         break;
       case ZERO:
         hood.setPositionGoal(Rotation2d.ZERO);
