@@ -3,6 +3,7 @@ package edu.wpi.team190.gompeilib.io.gyro.sim;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetryAutoLogged;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ public class GyroIOSimTest extends GompeiLibTestBase {
     GyroTelemetryAutoLogged telemetry = new GyroTelemetryAutoLogged();
     gyro.setYawVelocity(RadiansPerSecond.of(1.0));
 
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < Math.round(1.0 / GompeiLib.LOOP_PERIOD_SECS); i++) {
       gyro.updateInputs(telemetry);
     }
 

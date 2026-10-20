@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.io.base;
 
 import static org.wpilib.units.Units.Hertz;
 
+import edu.wpi.team190.gompeilib.GompeiLib;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
@@ -28,7 +29,7 @@ public record SignalRates(
 
   /** Loop-rate control signals and slow diagnostics. */
   public static final SignalRates DEFAULT =
-      new SignalRates(Hertz.of(50.0), Hertz.of(4.0), Map.of());
+      new SignalRates(Hertz.of(1.0 / GompeiLib.LOOP_PERIOD_SECS), Hertz.of(4.0), Map.of());
 
   public SignalRates {
     if (control.lt(MIN_CONTROL_RATE)) {

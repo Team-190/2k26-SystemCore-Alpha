@@ -23,6 +23,7 @@ public class Robot extends LoggedRobot {
   private final V3_Horse_CV2_TRRobotContainer robotContainer;
 
   public Robot() {
+    super(Constants.LOOP_PERIOD_SECONDS);
 
     // Set up data receivers & replay source
     switch (Constants.getMode()) {

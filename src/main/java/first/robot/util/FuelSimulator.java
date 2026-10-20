@@ -4,6 +4,7 @@ import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.MetersPerSecond;
 import static org.wpilib.units.Units.Radians;
 
+import first.robot.Constants;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
@@ -25,7 +26,7 @@ import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.LinearVelocity;
 
 public class FuelSimulator {
-  protected static final double PERIOD = 0.02; // sec
+  protected static final double PERIOD = Constants.LOOP_PERIOD_SECONDS; // sec
   protected static final Translation3d GRAVITY = new Translation3d(0, 0, -9.81); // m/s^2
   // Room temperature dry air density: https://en.wikipedia.org/wiki/Density_of_air#Dry_air
   protected static final double AIR_DENSITY = 1.2041; // kg/m^3

@@ -1,11 +1,12 @@
 package first.robot;
 
+import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.robot.RobotMode;
 import org.wpilib.framework.RobotBase;
 
 public final class Constants {
   public static final boolean TUNING_MODE = true;
-  public static final double LOOP_PERIOD_SECONDS = 0.02;
+  public static final double LOOP_PERIOD_SECONDS = GompeiLib.LOOP_PERIOD_SECS;
 
   public static RobotMode getMode() {
     switch (RobotConfig.ROBOT) {

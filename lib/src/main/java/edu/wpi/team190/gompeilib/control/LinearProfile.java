@@ -23,7 +23,8 @@ public class LinearProfile {
    * Creates a new LinearProfile
    *
    * @param maxAcceleration The max ramp rate in velocity in rps/sec
-   * @param period Period of control loop (0.02)
+   * @param period Period of control loop, usually {@link
+   *     edu.wpi.team190.gompeilib.GompeiLib#LOOP_PERIOD_SECS}
    */
   public LinearProfile(double maxAcceleration, double maxVelocity, double period) {
     this.period = period;

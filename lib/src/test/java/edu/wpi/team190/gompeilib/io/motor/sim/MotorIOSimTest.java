@@ -3,6 +3,7 @@ package edu.wpi.team190.gompeilib.io.motor.sim;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.TestGains;
@@ -90,6 +91,11 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     for (int i = 0; i < loops; i++) {
       motor.updateInputs(telemetry);
     }
+  }
+
+  /** Returns how many loops cover {@code seconds} at the target loop period. */
+  private static int loopsFor(double seconds) {
+    return (int) Math.round(seconds / GompeiLib.LOOP_PERIOD_SECS);
   }
 
   /** Runs one cycle as a single 5 ms control step, so the loop terms reflect the start state. */
@@ -358,7 +364,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
 
     // Re-sending the same request continues the profile instead of restarting it.
     motor.setControl(new PositionRequest.ProfiledPositionVoltage(Rotations.of(1.0)));
-    run(motor, 100);
+    run(motor, loopsFor(2.0));
 
     assertTrue(telemetry.profileAtTarget);
     assertEquals(1.0, telemetry.closedLoopPositionReference.in(Rotations), 1e-9);
@@ -413,7 +419,10 @@ public class MotorIOSimTest extends GompeiLibTestBase {
             RotationsPerSecondPerSecond.of(2.0),
             RotationsPerSecondPerSecond.per(Second).of(0.0)));
     run(motor, 1);
-    assertEquals(0.04, telemetry.closedLoopPositionReferenceSlope.in(RotationsPerSecond), 1e-6);
+    assertEquals(
+        2.0 * GompeiLib.LOOP_PERIOD_SECS,
+        telemetry.closedLoopPositionReferenceSlope.in(RotationsPerSecond),
+        1e-6);
     assertEquals(MotorControlMode.PROFILED_POSITION_VOLTAGE, telemetry.controlMode);
 
     motor.setControl(
@@ -460,13 +469,16 @@ public class MotorIOSimTest extends GompeiLibTestBase {
             RequestOptions.DEFAULT));
 
     run(motor, 1);
-    assertEquals(0.2, telemetry.closedLoopVelocityReference.in(RotationsPerSecond), 1e-9);
+    assertEquals(
+        10.0 * GompeiLib.LOOP_PERIOD_SECS,
+        telemetry.closedLoopVelocityReference.in(RotationsPerSecond),
+        1e-9);
     assertEquals(
         10.0, telemetry.closedLoopVelocityReferenceSlope.in(RotationsPerSecondPerSecond), 1e-9);
     assertTrue(telemetry.profileRunning);
     assertFalse(telemetry.profileAtTarget);
 
-    run(motor, 10);
+    run(motor, loopsFor(0.2));
     assertTrue(telemetry.profileAtTarget);
     assertEquals(0.0, telemetry.closedLoopVelocityReferenceSlope.in(RotationsPerSecondPerSecond));
   }
@@ -488,7 +500,10 @@ public class MotorIOSimTest extends GompeiLibTestBase {
 
     run(motor, 1);
 
-    assertEquals(0.1, telemetry.closedLoopVelocityReference.in(RotationsPerSecond), 1e-9);
+    assertEquals(
+        5.0 * GompeiLib.LOOP_PERIOD_SECS,
+        telemetry.closedLoopVelocityReference.in(RotationsPerSecond),
+        1e-9);
   }
 
   @Test

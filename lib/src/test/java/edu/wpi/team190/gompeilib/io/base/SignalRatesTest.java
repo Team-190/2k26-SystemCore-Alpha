@@ -21,14 +21,14 @@ public class SignalRatesTest {
 
   @Test
   public void testDefaultRates() {
-    assertEquals(Hertz.of(50.0), SignalRates.DEFAULT.control());
+    assertEquals(Hertz.of(200.0), SignalRates.DEFAULT.control());
     assertEquals(Hertz.of(4.0), SignalRates.DEFAULT.diagnostic());
     assertEquals(Map.of(), SignalRates.DEFAULT.overrides());
   }
 
   @Test
   public void testRateForControlAndDiagnosticFields() {
-    assertEquals(Hertz.of(50.0), SignalRates.DEFAULT.rateFor("position", CONTROL));
+    assertEquals(Hertz.of(200.0), SignalRates.DEFAULT.rateFor("position", CONTROL));
     assertEquals(Hertz.of(4.0), SignalRates.DEFAULT.rateFor("temperature", CONTROL));
   }
 
