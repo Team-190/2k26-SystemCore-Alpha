@@ -13,13 +13,19 @@ import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocityConstraints;
+import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
 import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelConstants;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodConstants;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.tunable.Tunable;
+import org.wpilib.units.measure.Current;
 
 public class V3_Horse_CV2_TRShooterConstants {
+
+  public static final Tunable<Current> SHOOTER_FEEDFORWARD =
+      GompeiTunables.value("Shooter/Feedforward", Amps.of(40));
 
   public static final GenericFlywheelConstants SHOOT_CONSTANTS =
       GenericFlywheelConstants.builder()
@@ -48,18 +54,18 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withTorqueGains(
               Gains.builder() // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(12)
+                  .withKP(20)
                   .withKD(0)
-                  .withKS(6.5)
-                  .withKV(0.25)
-                  .withKA(0.92854 * 2 * Math.PI) // measured in A/(rad/s^2), Talon uses rotations
+                  .withKS(4)
+                  .withKV(0)
+                  .withKA(0) // measured in A/(rad/s^2), Talon uses rotations
                   .build())
           .withConstraints(
               AngularVelocityConstraints.builder()
                   .withPrefix("Shooter/Flywheel")
                   .withMaxVelocity(RadiansPerSecond.of(1000))
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
-                  .withGoalTolerance(RadiansPerSecond.of(10))
+                  .withGoalTolerance(RadiansPerSecond.of(1))
                   .build())
           .withOpposedFollowerCANID(42)
           .withOpposedFollowerCANID(44)

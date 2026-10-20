@@ -16,6 +16,7 @@ import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShotParameters;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
@@ -28,6 +29,7 @@ import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Current;
 
 public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
@@ -45,7 +47,10 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private FixedShotParameters fixedShotParameters;
 
-  public V3_Horse_CV2_TRShooter(GenericFlywheelIO flywheelIO, GenericHoodIO hoodIO) {
+  private BooleanSupplier isHopperRunning;
+
+  public V3_Horse_CV2_TRShooter(
+      GenericFlywheelIO flywheelIO, GenericHoodIO hoodIO, BooleanSupplier isHopperRunning) {
 
     Setpoint<AngularVelocityUnit> flywheelVelocitySetpoint =
         new Setpoint<AngularVelocityUnit>(
@@ -79,7 +84,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
     this.shooterGoal = ShooterGoal.STOW;
-    this.fixedShotParameters = FixedShots.BUMP.getParameters();
+    this.fixedShotParameters = FixedShots.FRONT_TOWER.getParameters();
 
     flywheelShootingTrigger =
         new Trigger(
@@ -123,6 +128,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
                             .get()
                             .in(Radians)
                         + Units.degreesToRadians(5)));
+
+    this.isHopperRunning = isHopperRunning;
   }
 
   @Trace
@@ -134,15 +141,18 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         break;
       case SCORE:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
-        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity(), Amps.of(0));
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRRobotState.getScoreVelocity(), getCurrentFeedforward());
         break;
       case FEED:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
-        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity(), Amps.of(0));
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRRobotState.getFeedVelocity(), getCurrentFeedforward());
         break;
       case FIXED_SHOTS:
-        hood.setPositionGoal(fixedShotParameters.hoodAngle());
-        flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed(), Amps.of(0));
+        hood.setPositionGoal(
+            Rotation2d.fromDegrees(fixedShotParameters.hoodAngle().get().in(Degree)));
+        flywheel.setVelocityGoal(fixedShotParameters.flywheelSpeed().get(), getCurrentFeedforward());
         break;
       case ZERO:
         hood.setPositionGoal(Rotation2d.ZERO);
@@ -182,6 +192,16 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         (V3_Horse_CV2_TRRobotState.isInAllianceZone())
             ? hood.atPositionGoal()
             : hoodFeedingTrigger.getAsBoolean());
+  }
+
+  private Current getCurrentFeedforward() {
+    return isHopperRunning.getAsBoolean()
+        ? (flywheel
+                .getFlywheelVelocity()
+                .lt(flywheel.getVelocityGoal().getSetpoint().minus(RadiansPerSecond.of(5)))
+            ? V3_Horse_CV2_TRShooterConstants.SHOOTER_FEEDFORWARD.get()
+            : Amps.zero())
+        : Amps.zero();
   }
 
   public Command setGoal(ShooterGoal shooterGoal) {
