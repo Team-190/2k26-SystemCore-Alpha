@@ -335,20 +335,20 @@ public class V3_Horse_CV2_TRRobotState {
   /** Robot angles are blue-alliance field headings; they are alliance-flipped at use time. */
   @RequiredArgsConstructor
   public enum FixedShots {
-    BUMP(
+    FRONT_TOWER(
         new FixedShotParameters(
             GompeiTunables.value(
-                "FixedShots/Bump/Angle", Rotation2d.fromRadians(0.2890658503988659).getMeasure()),
+                "FixedShots/Front-Tower/Angle", Rotation2d.fromRadians(0.2890658503988659).getMeasure()),
             GompeiTunables.value("FixedShots/Bump/Speed", RadiansPerSecond.of(175.0)))),
-    TRENCH(
+    SIDE_TOWER(
         new FixedShotParameters(
             GompeiTunables.value(
-                "FixedShots/Trench/Angle", Rotation2d.fromDegrees(20.0).getMeasure()),
+                "FixedShots/Side-Tower/Angle", Rotation2d.fromDegrees(20.0).getMeasure()),
             GompeiTunables.value("FixedShots/Trench/Speed", RadiansPerSecond.of(185.0)))),
-    FAR(
+    CORNER(
         new FixedShotParameters(
             GompeiTunables.value(
-                "FixedShots/Far/Angle", Rotation2d.fromRadians(0.4517551306747923).getMeasure()),
+                "FixedShots/Corner/Angle", Rotation2d.fromRadians(0.4517551306747923).getMeasure()),
             GompeiTunables.value("FixedShots/Far/Speed", RadiansPerSecond.of(205.0))));
 
     @Getter private final FixedShotParameters parameters;

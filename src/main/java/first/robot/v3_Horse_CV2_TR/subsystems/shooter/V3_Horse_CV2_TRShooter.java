@@ -84,7 +84,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
     this.shooterGoal = ShooterGoal.STOW;
-    this.fixedShotParameters = FixedShots.BUMP.getParameters();
+    this.fixedShotParameters = FixedShots.FRONT_TOWER.getParameters();
 
     flywheelShootingTrigger =
         new Trigger(
