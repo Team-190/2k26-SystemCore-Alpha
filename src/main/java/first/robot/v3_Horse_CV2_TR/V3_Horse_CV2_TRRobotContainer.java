@@ -13,8 +13,8 @@ import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOSim;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFX;
 import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIO;
-import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOSim;
 import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOTalonFXSim;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOSim;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOTalonFX;
@@ -155,7 +155,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   () -> driver.getRightTriggerAxis());
           shooter =
               new V3_Horse_CV2_TRShooter(
-                  new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+                  new GenericFlywheelIOTalonFXSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
                   new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS),
                   V3_Horse_CV2_TRRobotState::isHopperRunning);
           vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());

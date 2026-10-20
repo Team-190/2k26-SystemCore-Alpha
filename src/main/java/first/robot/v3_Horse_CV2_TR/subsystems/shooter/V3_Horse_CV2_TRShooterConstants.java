@@ -83,7 +83,7 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withCanBus(new CANBus(CANPort.CAN_S4))
           .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
           .withCurrentLimits(new CurrentLimits(40, 30))
-          .withMomentOfInertia(0.0001)
+          .withMomentOfInertia(0.02)
           .withInvertedValue(InvertedValue.Clockwise_Positive)
           .withMotorConfig(DCMotor.getKrakenX44Foc(1))
           .withLengthMeters(0.211582)

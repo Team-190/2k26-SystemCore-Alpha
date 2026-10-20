@@ -108,6 +108,9 @@ public class ExtensionIOSim implements ExtensionIO {
 
   @Override
   public void setPositionGoal(Distance position) {
+    if (!isClosedLoop) {
+      feedback.reset(sim.getPosition(), sim.getVelocity());
+    }
     isClosedLoop = true;
     feedback.setGoal(position.in(Meters));
   }

@@ -97,8 +97,9 @@ public class V3_Horse_CV2_TRCompositeCommands {
         Commands.sequence(
             Commands.waitUntil(() -> shooter.atGoal() && isAimedForShot()),
             Commands.waitSeconds(1),
-            intake.squishIntake(),
-            rollerFloor.setState(RollerFloorState.RUN)));
+            rollerFloor.setState(RollerFloorState.RUN),
+            intake.squishIntake()
+            ));
   }
 
   private static boolean isAimedForShot() {
@@ -127,7 +128,8 @@ public class V3_Horse_CV2_TRCompositeCommands {
             shooter.runFixedShot(fixedShot),
             Commands.waitUntil(() -> shooter.atGoal()),
             Commands.waitSeconds(1),
-            intake.squishIntake(),
-            rollerFloor.setState(RollerFloorState.RUN)));
+            rollerFloor.setState(RollerFloorState.RUN),
+            intake.squishIntake()
+            ));
   }
 }
