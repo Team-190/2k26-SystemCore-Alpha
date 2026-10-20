@@ -29,12 +29,11 @@ public class V3_Horse_CV2_TRAutoBackUpShoot {
               () ->
                   V3_Horse_CV2_TRRobotState.resetPose(
                       AllianceFlipUtil.apply(BACK_UP_SHOOT.getStartingHolonomicPose().get()))),
-
           AutoBuilder.followPath(BACK_UP_SHOOT),
           drive.runOnce(drive::stop),
           V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 10),
           V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter));
-          
+
     } catch (Exception e) {
       e.printStackTrace();
       return Commands.runOnce(

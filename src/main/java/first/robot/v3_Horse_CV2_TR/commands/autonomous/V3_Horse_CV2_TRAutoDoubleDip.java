@@ -11,23 +11,34 @@ import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
-
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 
-public class V3_Horse_CV2_TRAutoRightCheesy {
+public class V3_Horse_CV2_TRAutoDoubleDip {
   public static Command getAutoRoutine(
       SwerveDrive drive,
       V3_Horse_CV2_TRShooter shooter,
       V3_Horse_CV2_TRRollerFloor rollerFloor,
-      V3_Horse_CV2_TR_Intake intake) {
+      V3_Horse_CV2_TR_Intake intake,
+      String path1Name,
+      String path2Name,
+      boolean mirror,
+      double shot1Seconds,
+      double shot2Seconds) {
 
     PathPlannerPath DOUBLE_DIP_1;
     PathPlannerPath DOUBLE_DIP_2;
 
     try {
-      DOUBLE_DIP_1 = PathPlannerPath.fromPathFile("DOUBLE_DIP_1").mirrorPath();
-      DOUBLE_DIP_2 = PathPlannerPath.fromPathFile("DOUBLE_DIP_2_CHEESY").mirrorPath();
+
+      DOUBLE_DIP_1 =
+          mirror
+              ? PathPlannerPath.fromPathFile(path1Name).mirrorPath()
+              : PathPlannerPath.fromPathFile(path1Name);
+      DOUBLE_DIP_2 =
+          mirror
+              ? PathPlannerPath.fromPathFile(path2Name).mirrorPath()
+              : PathPlannerPath.fromPathFile(path2Name);
 
       return Commands.sequence(
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
@@ -37,13 +48,15 @@ public class V3_Horse_CV2_TRAutoRightCheesy {
                       AllianceFlipUtil.apply(DOUBLE_DIP_1.getStartingHolonomicPose().get()))),
           AutoBuilder.followPath(DOUBLE_DIP_1),
           drive.runOnce(drive::stop),
-          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 7),
+          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(
+              drive, rollerFloor, shooter, intake, shot1Seconds),
           V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter),
           Commands.waitSeconds(V3_Horse_CV2_TRShooterConstants.SHOOTER_CALM_DOWN_TIME),
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
           AutoBuilder.followPath(DOUBLE_DIP_2),
           drive.runOnce(drive::stop),
-          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 5),
+          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(
+              drive, rollerFloor, shooter, intake, shot2Seconds),
           V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter));
     } catch (Exception e) {
       e.printStackTrace();

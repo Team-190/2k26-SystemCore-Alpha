@@ -76,24 +76,13 @@ public class V3_Horse_CV2_TRCompositeCommands {
       V3_Horse_CV2_TR_Intake intake,
       double seconds) {
     return Commands.race(
+        V3_Horse_CV2_TRDriveCommands.aimAtHub(drive, V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS),
         scoreOrFeedCommand(rollerFloor, shooter, intake),
-        V3_Horse_CV2_TRDriveCommands.joystickDriveRotationLock(
-            drive,
-            V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
-            () -> 0.0,
-            () -> 0.0,
-            () -> 0.0,
-            V3_Horse_CV2_TRRobotState::getHeading,
-            () -> true, // aim at hub / feed point
-            () -> V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
-            () -> 0.0,
-            () -> false,
-            V3_Horse_CV2_TRRobotState::getCardinalDirection),
         Commands.waitSeconds(seconds));
   }
 
   /**
-   * Spins up for score or feed, then runs the roller floor once the shooter and heading are ready.
+   * Spins up for score or feed, thxen runs the roller floor once the shooter and heading are ready.
    */
   public static Command scoreOrFeedCommand(
       V3_Horse_CV2_TRRollerFloor rollerFloor,

@@ -193,7 +193,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
     rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
   }
-  
 
   public Command stopRollers() {
     return Commands.runOnce(
@@ -315,22 +314,25 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   public Command squishIntake() {
-
-    return Commands.runOnce(
-            () -> {
-              if (extensionState == ExtensionState.MANUAL_EXTEND
-                  || extensionState == ExtensionState.MANUAL_RELEASE) {
-                return;
-              }
-              extensionState = ExtensionState.OVERRIDE;
-              leftExtension.setVoltageGoal(Volts.of(-2.5));
-              rightExtension.setVoltageGoal(Volts.of(-2.5));
-            })
-        .until(() -> isNearStow(0.01))
-        .withTimeout(5)
+    return Commands.sequence(
+            Commands.runOnce(
+                () -> {
+                  if (extensionState == ExtensionState.MANUAL_EXTEND
+                      || extensionState == ExtensionState.MANUAL_RELEASE
+                      || extensionState == ExtensionState.STOW) {
+                    return;
+                  }
+                  extensionState = ExtensionState.OVERRIDE;
+                  leftExtension.setVoltageGoal(Volts.of(-2.5));
+                  rightExtension.setVoltageGoal(Volts.of(-2.5));
+                }),
+            Commands.waitUntil(() -> extensionState != ExtensionState.OVERRIDE || isNearStow(0.01))
+                .withTimeout(5))
         .finallyDo(
             () -> {
               if (extensionState == ExtensionState.OVERRIDE) {
+                leftExtension.setVoltageGoal(Volts.zero());
+                rightExtension.setVoltageGoal(Volts.zero());
                 extensionState = ExtensionState.STOW;
               }
             });
