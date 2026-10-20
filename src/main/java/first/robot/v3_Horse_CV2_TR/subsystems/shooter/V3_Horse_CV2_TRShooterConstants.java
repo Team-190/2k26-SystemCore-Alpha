@@ -30,14 +30,20 @@ import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
+import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
 import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.Angle;
+import org.wpilib.tunable.Tunable;
+import org.wpilib.units.measure.Current;
 
 public class V3_Horse_CV2_TRShooterConstants {
+
+  public static final Tunable<Current> SHOOTER_FEEDFORWARD =
+      GompeiTunables.value("Shooter/Feedforward", Amps.of(40));
 
   public static final GenericFlywheelConstants SHOOT_CONSTANTS =
       GenericFlywheelConstants.builder()
@@ -68,10 +74,10 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withCurrentGains(
               Gains.angularVelocity(Amps) // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(Amps.per(RotationsPerSecond).ofNative(12))
-                  .withKS(Amps.of(6.5))
-                  .withKV(Amps.per(RotationsPerSecond).ofNative(0.25))
-                  .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0.92854))
+                  .withKP(Amps.per(RotationsPerSecond).ofNative(20))
+                  .withKS(Amps.of(4))
+                  .withKV(Amps.per(RotationsPerSecond).ofNative(0))
+                  .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0))
                   .build())
           .withFlywheelGearbox(DCMotor.getKrakenX60Foc(4))
           .withMomentOfInertia(KilogramSquareMeters.of(0.09473883059))
@@ -80,7 +86,7 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withPrefix("Shooter/Flywheel")
                   .withMaxVelocity(RadiansPerSecond.of(1000))
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
-                  .withGoalTolerance(RadiansPerSecond.of(10))
+                  .withGoalTolerance(RadiansPerSecond.of(1))
                   .build())
           .withVelocityOffsetStep(RadiansPerSecond.of(5))
           .withVoltageOffsetStep(Volts.of(1))

@@ -7,8 +7,6 @@ plugins {
     id "io.freefair.lombok" version "8.4"
     id "io.freefair.aspectj.post-compile-weaving" version "9.5.0"
     id "jacoco"
-    // Patches PathPlannerLib alpha-4 for WPILib alpha-7 Alert ids; see buildSrc. Remove once fixed upstream.
-    id "frc190.pathplanner-alert-patch"
 }
 
 java {
