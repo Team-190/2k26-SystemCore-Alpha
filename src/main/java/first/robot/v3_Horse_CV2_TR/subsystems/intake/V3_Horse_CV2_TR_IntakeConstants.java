@@ -73,12 +73,15 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final Voltage IDLE_ROLLER_VOLTAGE;
 
+  public static final Voltage EXTENSION_SLOW_MOVE_VOLTAGE;
+
   static {
     INTAKE_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     INTAKE_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
     KICKER_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     KICKER_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
-    IDLE_ROLLER_VOLTAGE = Volts.of(4.0); // TODO: tune
+    IDLE_ROLLER_VOLTAGE = Volts.of(5.0); // TODO: tune
+    EXTENSION_SLOW_MOVE_VOLTAGE = Volts.of(1.0);
 
     LEFT_INTAKE_ROLLER_CONSTANTS =
         GenericRollerConstants.builder()
@@ -317,7 +320,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     STOW,
     INTAKE,
     MANUAL_EXTEND,
-    MANUAL_RELEASE,
     ZERO,
     STOP,
     SLOW_MOVE,
