@@ -103,7 +103,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
-                  new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
+                  new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS),
+                  V3_Horse_CV2_TRRobotState::isHopperRunning);
           vision =
               new Vision(
                   () -> FieldConstants.tagLayoutType.getLayout(),
@@ -153,7 +154,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
           shooter =
               new V3_Horse_CV2_TRShooter(
                   new GenericFlywheelIOSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
-                  new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS));
+                  new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS),
+                  V3_Horse_CV2_TRRobotState::isHopperRunning);
           vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
           break;
         default:
@@ -187,7 +189,11 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
               () -> driver.getRightTriggerAxis());
     }
     if (shooter == null) {
-      shooter = new V3_Horse_CV2_TRShooter(new GenericFlywheelIO() {}, new GenericHoodIO() {});
+      shooter =
+          new V3_Horse_CV2_TRShooter(
+              new GenericFlywheelIO() {},
+              new GenericHoodIO() {},
+              V3_Horse_CV2_TRRobotState::isHopperRunning);
     }
 
     if (vision == null) {
