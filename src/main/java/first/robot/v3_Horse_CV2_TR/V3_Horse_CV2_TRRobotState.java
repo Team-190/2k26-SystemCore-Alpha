@@ -5,6 +5,7 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.state.localization.FieldZone;
 import edu.wpi.team190.gompeilib.core.state.localization.Localization;
+import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import first.robot.FieldConstants;
@@ -29,6 +30,7 @@ import org.wpilib.math.util.Units;
 import org.wpilib.networktables.NetworkTablesJNI;
 import org.wpilib.smartdashboard.Field2d;
 import org.wpilib.system.Timer;
+import org.wpilib.tunable.Tunable;
 import org.wpilib.tunable.Tunables;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
@@ -324,23 +326,24 @@ public class V3_Horse_CV2_TRRobotState {
     return towerZonePose;
   }
 
-  public record FixedShotParameters(Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
+  public record FixedShotParameters(
+      Tunable<Rotation2d> hoodAngle, Tunable<AngularVelocity> flywheelSpeed) {}
 
   /** Robot angles are blue-alliance field headings; they are alliance-flipped at use time. */
   @RequiredArgsConstructor
   public enum FixedShots {
     BUMP(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(10.0), // TODO: Use Real Value
-            RadiansPerSecond.of(160.0))), // TODO: Use Real Value
+            GompeiTunables.value("FixedShots/Bump/Angle", Rotation2d.fromDegrees(10.0)),
+            GompeiTunables.value("FixedShots/Bump/Speed", RadiansPerSecond.of(160.0)))),
     TRENCH(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(20.0), // TODO: Use Real Value
-            RadiansPerSecond.of(165.0))), // TODO: Use Real Value
+            GompeiTunables.value("FixedShots/Trench/Angle", Rotation2d.fromDegrees(20.0)),
+            GompeiTunables.value("FixedShots/Trench/Speed", RadiansPerSecond.of(165.0)))),
     FAR(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(21.3), // TODO: Use Real Value
-            RadiansPerSecond.of(190.0))); // TODO: Use Real Value
+            GompeiTunables.value("FixedShots/Far/Angle", Rotation2d.fromDegrees(21.3)),
+            GompeiTunables.value("FixedShots/Far/Speed", RadiansPerSecond.of(190.0))));
 
     @Getter private final FixedShotParameters parameters;
   }
