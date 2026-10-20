@@ -4,17 +4,17 @@ import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
-import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.FollowerRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixOdometryThread;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
-import edu.wpi.team190.gompeilib.logging.Trace;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import org.wpilib.system.Notifier;
 import org.wpilib.system.RobotController;
 
 /**
@@ -24,8 +24,19 @@ import org.wpilib.system.RobotController;
  * <p>The first motor on a mechanism drives it with the voltage Phoenix6 applies. Every motor on the
  * mechanism, including followers, has its rotor set from the mechanism's state, oriented by how it
  * is mounted relative to the driver.
+ *
+ * <p>Phoenix6 closes its loops on its own thread, so the physics runs on a shared 1 ms thread
+ * rather than in the robot loop, matching the TalonFX's onboard loop. Otherwise gains tuned on
+ * hardware see 20 ms-stale feedback and can go unstable in simulation.
  */
 public class MotorIOTalonFXSim extends MotorIOTalonFX {
+  /** How often the physics steps and is fed to Phoenix6. */
+  static final double SIM_PERIOD_SECONDS = 0.001;
+
+  private static final List<MotorIOTalonFXSim> SIMULATED = new CopyOnWriteArrayList<>();
+  private static Notifier simThread;
+  private static double lastSimTimeSeconds = Double.NaN;
+
   private final MechanismSim mechanism;
   private final TalonFXSimState simState;
   private final boolean driver;
@@ -49,6 +60,23 @@ public class MotorIOTalonFXSim extends MotorIOTalonFX {
    */
   public MotorIOTalonFXSim(
       MotorConfig config, MechanismSim mechanism, PhoenixOdometryThread odometryThread) {
+    this(config, mechanism, odometryThread, true);
+  }
+
+  /**
+   * Creates a simulated TalonFX, optionally without joining the sim thread so a test can step it
+   * with {@link #simulate(double)}.
+   *
+   * @param config the motor's config
+   * @param mechanism the physics model it drives or reads
+   * @param odometryThread the thread that samples position between cycles, or null for none
+   * @param threaded whether the shared sim thread steps this motor
+   */
+  MotorIOTalonFXSim(
+      MotorConfig config,
+      MechanismSim mechanism,
+      PhoenixOdometryThread odometryThread,
+      boolean threaded) {
     super(config, odometryThread);
     this.mechanism = mechanism;
     this.simState = talonFX.getSimState();
@@ -59,6 +87,58 @@ public class MotorIOTalonFXSim extends MotorIOTalonFX {
       // A mirrored opposed follower: its direction is flipped in config because it is mounted
       // facing the other way.
       simState.Orientation = ChassisReference.Clockwise_Positive;
+    }
+    if (threaded) {
+      register(this);
+    }
+  }
+
+  private static synchronized void register(MotorIOTalonFXSim motor) {
+    SIMULATED.add(motor);
+    if (simThread == null) {
+      simThread = new Notifier(MotorIOTalonFXSim::simulateAll);
+      simThread.setName("TalonFXSim");
+      simThread.startPeriodic(SIM_PERIOD_SECONDS);
+    }
+  }
+
+  /** Stops the shared sim thread and forgets every motor on it, so tests don't leak it. */
+  static synchronized void stopSimThread() {
+    if (simThread != null) {
+      simThread.close();
+      simThread = null;
+    }
+    SIMULATED.clear();
+    lastSimTimeSeconds = Double.NaN;
+  }
+
+  private static void simulateAll() {
+    double now = RobotController.getTime() / 1e6;
+    double dt = Double.isNaN(lastSimTimeSeconds) ? SIM_PERIOD_SECONDS : now - lastSimTimeSeconds;
+    lastSimTimeSeconds = now;
+    if (dt <= 0) {
+      return;
+    }
+    for (MotorIOTalonFXSim motor : SIMULATED) {
+      motor.simulate(dt);
+    }
+  }
+
+  /**
+   * Steps the mechanism, if this motor drives it, and feeds its state to Phoenix6.
+   *
+   * @param dtSeconds the time since the last step
+   */
+  void simulate(double dtSeconds) {
+    synchronized (mechanism) {
+      simState.setSupplyVoltage(RobotController.getBatteryVoltage());
+      if (driver) {
+        mechanism.setInputVoltage(Volts.of(simState.getMotorVoltage()));
+        mechanism.update(Seconds.of(dtSeconds));
+      }
+      simState.setRawRotorPosition(mechanism.position().times(config.gearRatio));
+      simState.setRotorVelocity(mechanism.velocity().times(config.gearRatio));
+      simState.setRotorAcceleration(mechanism.acceleration().times(config.gearRatio));
     }
   }
 
@@ -119,19 +199,5 @@ public class MotorIOTalonFXSim extends MotorIOTalonFX {
               : ChassisReference.CounterClockwise_Positive;
     }
     super.setControl(request);
-  }
-
-  @Override
-  @Trace
-  public void updateInputs(MotorTelemetry telemetry) {
-    simState.setSupplyVoltage(RobotController.getBatteryVoltage());
-    if (driver) {
-      mechanism.setInputVoltage(Volts.of(simState.getMotorVoltage()));
-      mechanism.update(Seconds.of(GompeiLib.getLoopPeriod()));
-    }
-    simState.setRawRotorPosition(mechanism.position().times(config.gearRatio));
-    simState.setRotorVelocity(mechanism.velocity().times(config.gearRatio));
-    simState.setRotorAcceleration(mechanism.acceleration().times(config.gearRatio));
-    super.updateInputs(telemetry);
   }
 }

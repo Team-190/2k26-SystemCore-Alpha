@@ -52,7 +52,7 @@ import org.wpilib.units.measure.Per;
  * velocity target. Like real hardware, the motor outputs nothing while the robot is disabled.
  *
  * <p>Soft limits, continuous wrap, and the torque-current peaks are applied; current limits are
- * not. Each cycle reports one odometry sample.
+ * not. Each cycle steps the loop and physics in 5 ms substeps, and reports one odometry sample.
  *
  * <p>Simplifications: profile jerk and the exponential profile's velocity limit are ignored; coast
  * and brake both apply zero volts; differential requests are unsupported because a single {@link
@@ -60,6 +60,9 @@ import org.wpilib.units.measure.Per;
  */
 public class MotorIOSim implements MotorIO {
   private static final double EPSILON = 1e-9;
+
+  /** How often the closed loop and physics step within one robot cycle. */
+  private static final double CONTROL_PERIOD_SECONDS = 0.005;
 
   private final MotorConfig config;
   private final MechanismSim mechanism;
@@ -175,13 +178,19 @@ public class MotorIOSim implements MotorIO {
     double battery = RobotController.getBatteryVoltage();
     boolean enabled = RobotState.isEnabled();
 
-    run(dt, battery);
-    if (!enabled) {
-      appliedVolts = 0.0;
-    }
-    if (driver) {
-      mechanism.setInputVoltage(Volts.of(appliedVolts));
-      mechanism.update(Seconds.of(dt));
+    // Step faster than the robot loop, so gains tuned on hardware, where the motor controller
+    // closes the loop onboard, stay stable in simulation.
+    int substeps = Math.max(1, (int) Math.round(dt / CONTROL_PERIOD_SECONDS));
+    double substepDt = dt / substeps;
+    for (int i = 0; i < substeps; i++) {
+      run(substepDt, battery);
+      if (!enabled) {
+        appliedVolts = 0.0;
+      }
+      if (driver) {
+        mechanism.setInputVoltage(Volts.of(appliedVolts));
+        mechanism.update(Seconds.of(substepDt));
+      }
     }
     fill(telemetry, battery, enabled);
   }

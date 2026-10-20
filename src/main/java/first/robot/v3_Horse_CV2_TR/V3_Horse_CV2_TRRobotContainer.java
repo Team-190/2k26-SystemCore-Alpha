@@ -1,5 +1,6 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
 import edu.wpi.team190.gompeilib.io.gyro.phoenix.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
@@ -27,6 +28,7 @@ import first.robot.RobotConfig;
 import first.robot.util.AllianceFlipUtil;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoDoubleDip;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
@@ -204,9 +206,65 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   }
 
   private void configureAutos() {
+
+    NamedCommands.registerCommand("INTAKE", V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake));
+    NamedCommands.registerCommand("STOP_INTAKE", intake.setRollerState(RollerState.IDLE));
+
     autoChooser.add(
         "Back up and shoot",
-        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor));
+        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor, intake));
+
+    autoChooser.add(
+        "Left Cheesy",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_CHEESY",
+            false,
+            7,
+            5));
+
+    autoChooser.add(
+        "Right Cheesy",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_CHEESY",
+            true,
+            7,
+            5));
+
+    autoChooser.add(
+        "Left Outliers",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_OUTLIERS",
+            false,
+            7,
+            5));
+
+    autoChooser.add(
+        "Right Outliers",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_OUTLIERS",
+            true,
+            7,
+            5));
 
     autoChooser.addDefault("Do Nothing", Commands.none());
   }
@@ -246,7 +304,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     driver
         .rightBumper()
         .whileTrue(
-            V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter)
+            V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter, intake)
                 .withName("driver-rightBumper-true"))
         .onFalse(stopShooter("driver-rightBumper-false"));
 
@@ -271,7 +329,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .y()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.CORNER)
+                    rollerFloor, shooter, intake, V3_Horse_CV2_TRRobotState.FixedShots.CORNER)
                 .withName("driver-Y-true"))
         .onFalse(stopShooter("driver-Y-false"));
 
@@ -279,7 +337,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .a()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER)
+                    rollerFloor, shooter, intake, V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER)
                 .withName("driver-A-true"))
         .onFalse(stopShooter("driver-A-false"));
 
@@ -287,7 +345,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
         .x()
         .whileTrue(
             V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                    rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.SIDE_TOWER)
+                    rollerFloor, shooter, intake, V3_Horse_CV2_TRRobotState.FixedShots.SIDE_TOWER)
                 .withName("driver-X-true"))
         .onFalse(stopShooter("driver-X-false"));
 

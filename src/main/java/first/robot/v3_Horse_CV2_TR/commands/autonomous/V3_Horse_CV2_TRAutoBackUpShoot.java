@@ -7,6 +7,7 @@ import first.robot.util.AllianceFlipUtil;
 import first.robot.util.Elastic;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
+import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import org.wpilib.command2.Command;
@@ -14,7 +15,10 @@ import org.wpilib.command2.Commands;
 
 public class V3_Horse_CV2_TRAutoBackUpShoot {
   public static Command getAutoRoutine(
-      SwerveDrive drive, V3_Horse_CV2_TRShooter shooter, V3_Horse_CV2_TRRollerFloor rollerFloor) {
+      SwerveDrive drive,
+      V3_Horse_CV2_TRShooter shooter,
+      V3_Horse_CV2_TRRollerFloor rollerFloor,
+      V3_Horse_CV2_TR_Intake intake) {
 
     PathPlannerPath BACK_UP_SHOOT;
     try {
@@ -27,7 +31,9 @@ public class V3_Horse_CV2_TRAutoBackUpShoot {
                       AllianceFlipUtil.apply(BACK_UP_SHOOT.getStartingHolonomicPose().get()))),
           AutoBuilder.followPath(BACK_UP_SHOOT),
           drive.runOnce(drive::stop),
-          V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter));
+          V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(drive, rollerFloor, shooter, intake, 10),
+          V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter));
+
     } catch (Exception e) {
       e.printStackTrace();
       return Commands.runOnce(

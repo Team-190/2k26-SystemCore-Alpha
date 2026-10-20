@@ -33,6 +33,7 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.robot.RobotMode;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.AfterEach;
@@ -89,6 +90,13 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     for (int i = 0; i < loops; i++) {
       motor.updateInputs(telemetry);
     }
+  }
+
+  /** Runs one cycle as a single 5 ms control step, so the loop terms reflect the start state. */
+  private void runOneStep(MotorIOSim motor) {
+    reinitGompeiLib(RobotMode.SIM, isTuningMode(), 0.005);
+    motor.updateInputs(telemetry);
+    reinitGompeiLib(RobotMode.SIM, isTuningMode(), loopPeriodSecs());
   }
 
   @Test
@@ -215,7 +223,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     MotorIOSim motor = motor(config().build());
     motor.setControl(new OpenLoopRequest.CurrentOutput(Amps.of(5.0)));
 
-    run(motor, 1);
+    runOneStep(motor);
     double stalled = telemetry.appliedVoltage.in(Volts);
     run(motor, 20);
 
@@ -236,7 +244,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
                 .build());
     motor.setControl(new PositionRequest.PositionVoltage(Rotations.of(1.0)));
 
-    run(motor, 1);
+    runOneStep(motor);
     assertEquals(8.0, telemetry.closedLoopProportionalOutput, 1e-9);
     assertEquals(1.0, telemetry.closedLoopPositionError.in(Rotations), 1e-9);
     run(motor, 300);
@@ -247,6 +255,22 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     assertEquals(MotorControlMode.POSITION_VOLTAGE, telemetry.controlMode);
     assertFalse(telemetry.profileRunning);
     assertEquals(GainSlot.ZERO, telemetry.gainSlot);
+  }
+
+  @Test
+  public void shouldHoldAStiffPositionLoopThatAOneCycleStepWouldDestabilize() {
+    // At one 20 ms step per cycle, this kP overshoots further every cycle
+    MotorIOSim motor =
+        motor(
+            config()
+                .withSlot(GainSlot.ZERO, SlotConfig.position(TestGains.positionKP(100.0)))
+                .build());
+    motor.setControl(new PositionRequest.PositionVoltage(Rotations.of(1.0)));
+
+    run(motor, 100);
+
+    assertEquals(1.0, telemetry.position.in(Rotations), 0.01);
+    assertEquals(0.0, telemetry.velocity.in(RotationsPerSecond), 0.01);
   }
 
   @Test
@@ -268,7 +292,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
             GainSlot.ZERO,
             RequestOptions.DEFAULT));
 
-    run(motor, 1);
+    runOneStep(motor);
 
     assertEquals(8.0, telemetry.closedLoopProportionalOutput, 1e-9);
     assertEquals(2.0 * 1.5, telemetry.closedLoopFeedforward, 1e-9);
@@ -577,7 +601,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     motor.updateGains(
         SlotConfig.position(TestGains.position(3.0, 0, 0, 0, 0, 0, 1.0), GravityType.COSINE),
         GainSlot.ZERO);
-    run(motor, 1);
+    runOneStep(motor);
     assertEquals(3.0, telemetry.closedLoopProportionalOutput, 1e-9);
     // The gravity type travels with the slot's gains.
     assertEquals(1.0, telemetry.closedLoopFeedforward, 1e-3);

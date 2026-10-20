@@ -20,7 +20,6 @@ import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
-import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.FollowerRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
@@ -29,6 +28,7 @@ import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -97,15 +97,39 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
     return simStates.get(talons.constructed().get(index));
   }
 
+  /** A motor the test steps itself, kept off the shared sim thread. */
+  private MotorIOTalonFXSim motor(MotorConfig config) {
+    return new MotorIOTalonFXSim(config, mechanism, null, false);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    MotorIOTalonFXSim.stopSimThread();
+  }
+
+  @Test
+  public void testSimThreadStepsTheMechanismOnItsOwn() throws Exception {
+    withMockedTalonFX(
+        talons -> {
+          new MotorIOTalonFXSim(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
+
+          long deadline = System.nanoTime() + 2_000_000_000L;
+          while (mechanism.velocity().in(RadiansPerSecond) <= 0 && System.nanoTime() < deadline) {
+            Thread.sleep(5);
+          }
+
+          assertEquals(6.0, mechanism.inputVoltage().in(Volts), 1e-9);
+          assertTrue(mechanism.velocity().in(RadiansPerSecond) > 0);
+        });
+  }
+
   @Test
   public void testDriverAppliesPhoenixVoltageToTheMechanism() throws Exception {
     withMockedTalonFX(
         talons -> {
-          MotorIOTalonFXSim motor =
-              new MotorIOTalonFXSim(
-                  config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
+          MotorIOTalonFXSim motor = motor(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE));
 
-          motor.updateInputs(new MotorTelemetryAutoLogged());
+          motor.simulate(0.02);
 
           assertTrue(motor.isDriver());
           assertEquals(6.0, mechanism.inputVoltage().in(Volts), 1e-9);
@@ -122,12 +146,10 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
   public void testPassengerReadsButDoesNotDrive() throws Exception {
     withMockedTalonFX(
         talons -> {
-          new MotorIOTalonFXSim(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
-          MotorIOTalonFXSim passenger =
-              new MotorIOTalonFXSim(
-                  config(2, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
+          motor(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE));
+          MotorIOTalonFXSim passenger = motor(config(2, MotorDirection.COUNTER_CLOCKWISE_POSITIVE));
 
-          passenger.updateInputs(new MotorTelemetryAutoLogged());
+          passenger.simulate(0.02);
 
           assertFalse(passenger.isDriver());
           assertEquals(0.0, mechanism.inputVoltage().in(Volts));
@@ -142,8 +164,8 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
   public void testMirroredOpposedPassengerIsOrientedClockwise() throws Exception {
     withMockedTalonFX(
         talons -> {
-          new MotorIOTalonFXSim(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
-          new MotorIOTalonFXSim(config(2, MotorDirection.CLOCKWISE_POSITIVE), mechanism);
+          motor(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE));
+          motor(config(2, MotorDirection.CLOCKWISE_POSITIVE));
 
           assertEquals(ChassisReference.Clockwise_Positive, simState(talons, 1).Orientation);
         });
@@ -154,8 +176,7 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
     mechanism.claimDriver(new Object());
     withMockedTalonFX(
         talons -> {
-          MotorIOTalonFXSim passenger =
-              new MotorIOTalonFXSim(config(2, MotorDirection.CLOCKWISE_POSITIVE), mechanism);
+          MotorIOTalonFXSim passenger = motor(config(2, MotorDirection.CLOCKWISE_POSITIVE));
 
           assertFalse(passenger.isDriver());
           assertNull(simState(talons, 0).Orientation);
@@ -166,10 +187,8 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
   public void testFollowRequestSetsOrientation() throws Exception {
     withMockedTalonFX(
         talons -> {
-          new MotorIOTalonFXSim(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
-          MotorIOTalonFXSim follower =
-              new MotorIOTalonFXSim(
-                  config(2, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
+          motor(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE));
+          MotorIOTalonFXSim follower = motor(config(2, MotorDirection.COUNTER_CLOCKWISE_POSITIVE));
           TalonFXSimState sim = simState(talons, 1);
 
           follower.setControl(new FollowerRequest.Follow(1, MotorAlignment.OPPOSED));

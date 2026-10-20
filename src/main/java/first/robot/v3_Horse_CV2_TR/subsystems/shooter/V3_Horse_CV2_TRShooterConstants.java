@@ -141,9 +141,9 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMinAngle(HOOD_MIN_ANGLE)
                   .withMaxAngle(HOOD_MAX_ANGLE)
                   .withLength(Meters.of(0.211582))
-                  .withMomentOfInertia(KilogramSquareMeters.of(0.0001))
-                  // Gravity off: the sim infers mass from MOI, which overstates load on a geared
-                  // hood
+                  // Sim only. The effective inertia the characterized kA implies through the 70:1
+                  // reduction; much lower and the tuned kP/kD go unstable in sim
+                  .withMomentOfInertia(KilogramSquareMeters.of(0.5))
                   .withSimulateGravity(false)
                   .build())
           .withConstraints(

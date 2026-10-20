@@ -2,6 +2,7 @@ package first.robot.v3_Horse_CV2_TR.commands;
 
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
 import first.robot.util.AllianceFlipUtil;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRConstants;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
@@ -39,6 +40,11 @@ public class V3_Horse_CV2_TRCompositeCommands {
         .ignoringDisable(true);
   }
 
+  public static Command deployIntake(V3_Horse_CV2_TR_Intake intake) {
+    return Commands.parallel(
+        intake.setExtensionState(ExtensionState.INTAKE), intake.setRollerState(RollerState.IDLE));
+  }
+
   public static Command intakeCollect(V3_Horse_CV2_TR_Intake intake) {
     return Commands.parallel(
         intake.setExtensionState(ExtensionState.INTAKE), intake.setRollerState(RollerState.INTAKE));
@@ -61,11 +67,25 @@ public class V3_Horse_CV2_TRCompositeCommands {
                     V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1))));
   }
 
+  public static Command autoScoreOrFeed(
+      SwerveDrive drive,
+      V3_Horse_CV2_TRRollerFloor rollerFloor,
+      V3_Horse_CV2_TRShooter shooter,
+      V3_Horse_CV2_TR_Intake intake,
+      double seconds) {
+    return Commands.race(
+        V3_Horse_CV2_TRDriveCommands.aimAtHub(drive, V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS),
+        scoreOrFeedCommand(rollerFloor, shooter, intake),
+        Commands.waitSeconds(seconds));
+  }
+
   /**
-   * Spins up for score or feed, then runs the roller floor once the shooter and heading are ready.
+   * Spins up for score or feed, thxen runs the roller floor once the shooter and heading are ready.
    */
   public static Command scoreOrFeedCommand(
-      V3_Horse_CV2_TRRollerFloor rollerFloor, V3_Horse_CV2_TRShooter shooter) {
+      V3_Horse_CV2_TRRollerFloor rollerFloor,
+      V3_Horse_CV2_TRShooter shooter,
+      V3_Horse_CV2_TR_Intake intake) {
     return Commands.parallel(
         shooter.setGoal(
             () ->
@@ -75,7 +95,8 @@ public class V3_Horse_CV2_TRCompositeCommands {
         Commands.sequence(
             Commands.waitUntil(() -> shooter.atGoal() && isAimedForShot()),
             Commands.waitSeconds(1),
-            rollerFloor.setState(RollerFloorState.RUN)));
+            rollerFloor.setState(RollerFloorState.RUN),
+            intake.squishIntake()));
   }
 
   private static boolean isAimedForShot() {
@@ -96,12 +117,14 @@ public class V3_Horse_CV2_TRCompositeCommands {
   public static Command fixedShotCommand(
       V3_Horse_CV2_TRRollerFloor rollerFloor,
       V3_Horse_CV2_TRShooter shooter,
+      V3_Horse_CV2_TR_Intake intake,
       FixedShots fixedShot) {
     return Commands.parallel(
         Commands.sequence(
             shooter.runFixedShot(fixedShot),
             Commands.waitUntil(() -> shooter.atGoal()),
             Commands.waitSeconds(1),
-            rollerFloor.setState(RollerFloorState.RUN)));
+            rollerFloor.setState(RollerFloorState.RUN),
+            intake.squishIntake()));
   }
 }
