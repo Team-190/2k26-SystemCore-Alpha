@@ -30,14 +30,14 @@ import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
-import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
 import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
+import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
-import org.wpilib.units.measure.Angle;
 import org.wpilib.tunable.Tunable;
+import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Current;
 
 public class V3_Horse_CV2_TRShooterConstants {

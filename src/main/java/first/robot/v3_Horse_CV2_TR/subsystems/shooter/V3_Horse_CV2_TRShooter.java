@@ -47,7 +47,10 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private FixedShotParameters fixedShotParameters;
 
-  public V3_Horse_CV2_TRShooter(MotorIOFactory flywheelMotors, MotorIOFactory hoodMotors) {
+  private final BooleanSupplier isHopperRunning;
+
+  public V3_Horse_CV2_TRShooter(
+      MotorIOFactory flywheelMotors, MotorIOFactory hoodMotors, BooleanSupplier isHopperRunning) {
 
     Setpoint<AngularVelocityUnit> flywheelVelocitySetpoint =
         new Setpoint<AngularVelocityUnit>(
@@ -147,8 +150,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             V3_Horse_CV2_TRRobotState.getFeedVelocity(), getCurrentFeedforward());
         break;
       case FIXED_SHOTS:
-        hood.setPositionGoal(
-            Rotation2d.fromDegrees(fixedShotParameters.hoodAngle().get().in(Degree)));
+        hood.setPositionGoal(fixedShotParameters.hoodAngle().get());
         flywheel.setVelocityGoal(
             fixedShotParameters.flywheelSpeed().get(), getCurrentFeedforward());
         break;
@@ -195,7 +197,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   private Current getCurrentFeedforward() {
     return isHopperRunning.getAsBoolean()
         ? (flywheel
-                .getFlywheelVelocity()
+                .getVelocity()
                 .lt(flywheel.getVelocityGoal().getSetpoint().minus(RadiansPerSecond.of(5)))
             ? V3_Horse_CV2_TRShooterConstants.SHOOTER_FEEDFORWARD.get()
             : Amps.zero())
