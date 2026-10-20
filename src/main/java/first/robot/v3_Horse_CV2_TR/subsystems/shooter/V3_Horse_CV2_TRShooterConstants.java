@@ -25,7 +25,7 @@ import org.wpilib.units.measure.Current;
 public class V3_Horse_CV2_TRShooterConstants {
 
   public static final Tunable<Current> SHOOTER_FEEDFORWARD =
-      GompeiTunables.value("Shooter/Feedforward", Amps.of(50));
+      GompeiTunables.value("Shooter/Feedforward", Amps.of(40));
 
   public static final GenericFlywheelConstants SHOOT_CONSTANTS =
       GenericFlywheelConstants.builder()
