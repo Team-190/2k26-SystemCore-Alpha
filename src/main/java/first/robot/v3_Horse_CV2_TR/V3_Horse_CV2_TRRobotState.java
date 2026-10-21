@@ -344,7 +344,8 @@ public class V3_Horse_CV2_TRRobotState {
     SIDE_TOWER(
         new FixedShotParameters(
             GompeiTunables.value(
-                "FixedShots/Side-Tower/Angle", Rotation2d.fromRadians(0.3490658503988659).getMeasure()),
+                "FixedShots/Side-Tower/Angle",
+                Rotation2d.fromRadians(0.3490658503988659).getMeasure()),
             GompeiTunables.value("FixedShots/Side-Tower/Speed", RadiansPerSecond.of(165.0)))),
     CORNER(
         new FixedShotParameters(
