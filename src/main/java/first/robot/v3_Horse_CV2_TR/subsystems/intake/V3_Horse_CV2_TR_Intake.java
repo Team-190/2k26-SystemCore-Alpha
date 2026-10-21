@@ -46,6 +46,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   @Getter private Distance extensionPosition;
 
+  private boolean manualReachedStow;
+
   private ExtensionState previousExtensionState;
   private boolean leftCompliant;
   private boolean rightCompliant;
@@ -118,6 +120,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
     extensionPosition = Meters.zero();
 
+    manualReachedStow = false;
     previousExtensionState = extensionState;
     leftCompliant = false;
     rightCompliant = false;
@@ -128,10 +131,17 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   @Trace
   @Override
   public void periodic() {
-    if (extensionState == ExtensionState.MANUAL_EXTEND
-        && linearExtensionMap().in(Meters)
+    boolean triggerAtStow =
+        linearExtensionMap().in(Meters)
             <= V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
-                + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD
+                + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD;
+    // Remembers whether this press reached the stow point, so release can stow even if the
+    // intake hasn't physically gotten there yet.
+    manualReachedStow =
+        extensionState == ExtensionState.MANUAL_EXTEND && (manualReachedStow || triggerAtStow);
+
+    if (extensionState == ExtensionState.MANUAL_EXTEND
+        && triggerAtStow
         && isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD)) {
       // Pulled in to stow: latch so releasing the trigger doesn't drive it back out.
       // The goal
@@ -196,8 +206,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   // Firm (ZERO) while driving to a new goal, then compliant (ONE) until the state changes, so
   // getting pushed off the goal doesn't make it fight back.
   private void updateGainSlots() {
-    boolean holdingGoal =
-        extensionState == ExtensionState.STOW || extensionState == ExtensionState.INTAKE;
+    boolean holdingGoal = extensionState == ExtensionState.INTAKE;
     if (!holdingGoal || extensionState != previousExtensionState) {
       leftCompliant = false;
       rightCompliant = false;
@@ -207,8 +216,11 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     }
     previousExtensionState = extensionState;
 
-    // setGainSlot sends a position request, so only touch it in closed loop states
-    if (holdingGoal || extensionState == ExtensionState.MANUAL_EXTEND) {
+    // setGainSlot sends a position request, so only touch it in closed loop states. STOW and
+    // MANUAL_EXTEND still need it so a compliant slot left over from INTAKE gets cleared.
+    if (holdingGoal
+        || extensionState == ExtensionState.STOW
+        || extensionState == ExtensionState.MANUAL_EXTEND) {
       GainSlot leftSlot = leftCompliant ? GainSlot.ONE : GainSlot.ZERO;
       GainSlot rightSlot = rightCompliant ? GainSlot.ONE : GainSlot.ZERO;
       if (leftSlot != leftGainSlot) {
@@ -288,15 +300,15 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
-  /** Releases manual control, unless it already latched to stow. */
+  /**
+   * Releases manual control, unless it already latched to stow. Stows only if the trigger reached
+   * the stow point during this press, otherwise goes back out to intake.
+   */
   public Command releaseManualExtend() {
     return Commands.runOnce(
         () -> {
           if (extensionState == ExtensionState.MANUAL_EXTEND) {
-            extensionState =
-                isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD)
-                    ? ExtensionState.STOW
-                    : ExtensionState.INTAKE;
+            extensionState = manualReachedStow ? ExtensionState.STOW : ExtensionState.INTAKE;
           }
         });
   }

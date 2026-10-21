@@ -46,9 +46,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final double EXTENSION_INTAKE_POSITION = 0.3;
 
-  // Releasing agitate within this distance of stow stows the intake
-  public static final double AGITATE_STOW_THRESHOLD = 0.05; // TODO: tune
-
   // While agitating, reaching within this distance of stow latches the intake to stow
   public static final double AGITATE_AUTO_STOW_THRESHOLD = 0.01;
 

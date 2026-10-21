@@ -136,7 +136,7 @@ public class V3_Horse_CV2_TRConstants {
           .withOperatorDeadband(OPERATOR_DEADBAND)
           .build();
 
-  public static final StaticLimelightConfig LIMELIGHT_SHOOTER_CONFIG = // TODO: Use Real Value
+  public static final StaticLimelightConfig LIMELIGHT_SHOOTER_CONFIG =
       StaticLimelightConfig.builder()
           .key("shooter")
           .cameraType(CameraType.LIMELIGHT_4)
@@ -157,7 +157,7 @@ public class V3_Horse_CV2_TRConstants {
           .enableRewind(true)
           .build();
 
-  public static final StaticLimelightConfig LIMELIGHT_LEFT_CONFIG = // TODO: Use Real Value
+  public static final StaticLimelightConfig LIMELIGHT_LEFT_CONFIG =
       StaticLimelightConfig.builder()
           .key("left")
           .cameraType(CameraType.LIMELIGHT_4)
@@ -173,21 +173,8 @@ public class V3_Horse_CV2_TRConstants {
                   0.209285,
                   new Rotation3d(
                       Units.degreesToRadians(0),
-                      Units.degreesToRadians(60),
+                      Units.degreesToRadians(30),
                       Units.degreesToRadians(90))))
-          .enableRewind(true)
-          .build();
-
-  public static final StaticLimelightConfig frontcamera = // TODO: Use Real Value
-      StaticLimelightConfig.builder()
-          .key("front")
-          .cameraType(CameraType.LIMELIGHT_4)
-          .horizontalFOV(CameraType.LIMELIGHT_4.horizontalFOV)
-          .verticalFOV(CameraType.LIMELIGHT_4.verticalFOV)
-          .megatagXYStdev(CameraType.LIMELIGHT_4.secondaryXYStandardDeviationCoefficient)
-          .metatagThetaStdev(CameraType.LIMELIGHT_4.primaryThetaStandardDeviationCoefficient)
-          .megatag2XYStdev(CameraType.LIMELIGHT_4.primaryXYStandardDeviationCoefficient)
-          .robotToCameraTransform(new Transform3d(0.0, 0.0, 0.0, new Rotation3d(0.0, 0.0, 0.0)))
           .enableRewind(true)
           .build();
 

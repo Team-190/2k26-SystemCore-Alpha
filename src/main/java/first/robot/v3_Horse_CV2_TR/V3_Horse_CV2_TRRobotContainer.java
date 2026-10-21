@@ -116,6 +116,14 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       drive::getMeasuredChassisVelocities,
                       V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                      List.of()),
+                  new CameraStaticLimelight(
+                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG),
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG,
+                      V3_Horse_CV2_TRRobotState::getHeading,
+                      drive::getMeasuredChassisVelocities,
+                      V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
+                      List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
                       List.of()));
 
           break;
