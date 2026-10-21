@@ -46,6 +46,12 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   @Getter private Distance extensionPosition;
 
+  private ExtensionState previousExtensionState;
+  private boolean leftCompliant;
+  private boolean rightCompliant;
+  private GainSlot leftGainSlot;
+  private GainSlot rightGainSlot;
+
   public V3_Horse_CV2_TR_Intake(
       GenericRollerIO leftIntakeRollerIO,
       GenericRollerIO rightIntakeRollerIO,
@@ -111,17 +117,18 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
 
     extensionPosition = Meters.zero();
+
+    previousExtensionState = extensionState;
+    leftCompliant = false;
+    rightCompliant = false;
+    leftGainSlot = GainSlot.ZERO;
+    rightGainSlot = GainSlot.ZERO;
   }
 
   @Trace
   @Override
   public void periodic() {
-    if (extensionState == ExtensionState.MANUAL_RELEASE) {
-      extensionState =
-          isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD)
-              ? ExtensionState.STOW
-              : ExtensionState.INTAKE;
-    } else if (extensionState == ExtensionState.MANUAL_EXTEND
+    if (extensionState == ExtensionState.MANUAL_EXTEND
         && linearExtensionMap().in(Meters)
             <= V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
                 + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD
@@ -146,12 +153,11 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         leftExtension.setPositionGoal(leftManualPositionGoal);
         rightExtension.setPositionGoal(rightManualPositionGoal);
         break;
-      case MANUAL_RELEASE, OVERRIDE:
+      case ZERO, STOP, SLOW_MOVE, SYSID:
+        // Open loop; the command that entered the state owns the extension output.
         break;
     }
-    // if (extensionState != ExtensionState.OVERRIDE) {
-    // updateGainSlots();
-    // }
+    updateGainSlots();
     leftIntakeRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
     rightIntakeRoller.setVoltageGoal(
@@ -187,10 +193,36 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     return position;
   }
 
-  // Compliant (ZERO) at rest, firmer (ONE) while driving to a new goal.
+  // Firm (ZERO) while driving to a new goal, then compliant (ONE) until the state changes, so
+  // getting pushed off the goal doesn't make it fight back.
   private void updateGainSlots() {
-    leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
-    rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
+    boolean holdingGoal =
+        extensionState == ExtensionState.STOW || extensionState == ExtensionState.INTAKE;
+    if (!holdingGoal || extensionState != previousExtensionState) {
+      leftCompliant = false;
+      rightCompliant = false;
+    } else {
+      leftCompliant |= leftExtension.atPositionGoal();
+      rightCompliant |= rightExtension.atPositionGoal();
+    }
+    previousExtensionState = extensionState;
+
+    // setGainSlot sends a position request, so only touch it in closed loop states
+    if (holdingGoal || extensionState == ExtensionState.MANUAL_EXTEND) {
+      GainSlot leftSlot = leftCompliant ? GainSlot.ONE : GainSlot.ZERO;
+      GainSlot rightSlot = rightCompliant ? GainSlot.ONE : GainSlot.ZERO;
+      if (leftSlot != leftGainSlot) {
+        leftExtension.setGainSlot(leftSlot);
+        leftGainSlot = leftSlot;
+      }
+      if (rightSlot != rightGainSlot) {
+        rightExtension.setGainSlot(rightSlot);
+        rightGainSlot = rightSlot;
+      }
+    }
+
+    Logger.recordOutput("Intake/Extension/Left Compliant", leftCompliant);
+    Logger.recordOutput("Intake/Extension/Right Compliant", rightCompliant);
   }
 
   public Command stopRollers() {
@@ -261,23 +293,35 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     return Commands.runOnce(
         () -> {
           if (extensionState == ExtensionState.MANUAL_EXTEND) {
-            extensionState = ExtensionState.MANUAL_RELEASE;
+            extensionState =
+                isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD)
+                    ? ExtensionState.STOW
+                    : ExtensionState.INTAKE;
           }
         });
   }
 
   public Command zeroExtensions() {
     return Commands.sequence(
-        Commands.runOnce(() -> rollerState = RollerState.STOP),
-        Commands.runOnce(() -> extensionState = ExtensionState.OVERRIDE),
-        Commands.parallel(leftExtension.resetExtensionZero(), rightExtension.resetExtensionZero()),
-        Commands.runOnce(() -> extensionState = ExtensionState.STOW));
+            Commands.runOnce(() -> rollerState = RollerState.STOP),
+            Commands.runOnce(() -> extensionState = ExtensionState.ZERO),
+            Commands.parallel(
+                leftExtension.resetExtensionZero(), rightExtension.resetExtensionZero()),
+            Commands.runOnce(() -> extensionState = ExtensionState.STOW))
+        .finallyDo(
+            interrupted -> {
+              // Not zeroed, so don't trust position control; stop driving into the hard stop.
+              if (interrupted) {
+                extensionState = ExtensionState.STOP;
+                leftExtension.setVoltageGoal(Volts.zero());
+                rightExtension.setVoltageGoal(Volts.zero());
+              }
+            });
   }
 
   public Command resetIntakeZeroPosition() {
     return Commands.runOnce(
             () -> {
-              extensionState = ExtensionState.OVERRIDE;
               leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
               rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
               extensionState = ExtensionState.STOW;
@@ -288,25 +332,28 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   public Command slowMoveIn() {
     return Commands.runOnce(
         () -> {
-          extensionState = ExtensionState.OVERRIDE;
-          leftExtension.setVoltageGoal(Volts.of(-1));
-          rightExtension.setVoltageGoal(Volts.of(-1));
+          extensionState = ExtensionState.SLOW_MOVE;
+          leftExtension.setVoltageGoal(
+              V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE.times(-1));
+          rightExtension.setVoltageGoal(
+              V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE.times(-1));
         });
   }
 
   public Command slowMoveOut() {
     return Commands.runOnce(
         () -> {
-          extensionState = ExtensionState.OVERRIDE;
-          leftExtension.setVoltageGoal(Volts.of(1));
-          rightExtension.setVoltageGoal(Volts.of(1));
+          extensionState = ExtensionState.SLOW_MOVE;
+          leftExtension.setVoltageGoal(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE);
+          rightExtension.setVoltageGoal(
+              V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE);
         });
   }
 
   public Command stopExtensions() {
     return Commands.runOnce(
         () -> {
-          extensionState = ExtensionState.OVERRIDE;
+          extensionState = ExtensionState.STOP;
           leftExtension.setVoltageGoal(Volts.zero());
           rightExtension.setVoltageGoal(Volts.zero());
         });
@@ -319,7 +366,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   }
 
   public Command sysID() {
-    return setExtensionState(ExtensionState.OVERRIDE)
+    return setExtensionState(ExtensionState.SYSID)
         .andThen(Extension.runSysIdRoutine(this, leftExtension, rightExtension));
   }
 }
