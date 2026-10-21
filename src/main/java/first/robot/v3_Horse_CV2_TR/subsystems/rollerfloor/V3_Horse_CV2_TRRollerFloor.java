@@ -37,7 +37,7 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
             Volts.of(12));
     rollerFloorStopSetpoint =
         new Setpoint<>(
-            Volts.of(0),
+            Volts.of(1),
             V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(0),
             Volts.of(0));
