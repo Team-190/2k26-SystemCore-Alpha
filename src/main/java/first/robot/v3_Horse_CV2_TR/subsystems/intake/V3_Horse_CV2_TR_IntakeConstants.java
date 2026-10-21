@@ -155,7 +155,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withSlot1Gains(
                 Gains.builder()
                     .withPrefix("Intake/Left Extension/Slot1")
-                    .withKP(1.0)
+                    .withKP(0.1)
                     .withKD(0.0)
                     .withKS(0.0)
                     .withKV(0.0)
@@ -203,7 +203,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withSlot1Gains(
                 Gains.builder()
                     .withPrefix("Intake/Right Extension/Slot1")
-                    .withKP(1.0)
+                    .withKP(0.1)
                     .withKD(0.0)
                     .withKS(0)
                     .withKV(0)
