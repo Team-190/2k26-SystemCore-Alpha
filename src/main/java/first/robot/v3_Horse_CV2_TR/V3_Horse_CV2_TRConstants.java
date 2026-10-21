@@ -157,9 +157,9 @@ public class V3_Horse_CV2_TRConstants {
           .enableRewind(true)
           .build();
 
-  public static final StaticLimelightConfig LIMELIGHT_CLIMBER_CONFIG = // TODO: Use Real Value
+  public static final StaticLimelightConfig LIMELIGHT_LEFT_CONFIG = // TODO: Use Real Value
       StaticLimelightConfig.builder()
-          .key("climber")
+          .key("left")
           .cameraType(CameraType.LIMELIGHT_4)
           .horizontalFOV(CameraType.LIMELIGHT_4.horizontalFOV)
           .verticalFOV(CameraType.LIMELIGHT_4.verticalFOV)
@@ -168,13 +168,13 @@ public class V3_Horse_CV2_TRConstants {
           .megatag2XYStdev(CameraType.LIMELIGHT_4.primaryXYStandardDeviationCoefficient)
           .robotToCameraTransform(
               new Transform3d(
-                  -0.060142,
-                  0.398769,
-                  0.305,
+                  -0.016925,
+                  0.343076,
+                  0.209285,
                   new Rotation3d(
                       Units.degreesToRadians(0),
-                      Units.degreesToRadians(0),
-                      Units.degreesToRadians(90.409532))))
+                      Units.degreesToRadians(60),
+                      Units.degreesToRadians(90))))
           .enableRewind(true)
           .build();
 
