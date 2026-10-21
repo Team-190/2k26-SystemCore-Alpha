@@ -2,16 +2,20 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.extension;
 
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConstraint;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationRoutine;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
+import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
-import edu.wpi.team190.gompeilib.io.physics.ElevatorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
@@ -29,8 +33,6 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.TuningBindings;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
-import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
-import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
 import lombok.Getter;
 import org.wpilib.command2.Command;
@@ -38,7 +40,10 @@ import org.wpilib.command2.Subsystem;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.LinearAccelerationUnit;
 import org.wpilib.units.LinearVelocityUnit;
+import org.wpilib.units.Unit;
 import org.wpilib.units.VoltageUnit;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.Distance;
 
 /**
  * A linear extension driven through a drum: one leader motor and any number of followers. The
@@ -64,7 +69,7 @@ public class Extension
   private final DutyCycleControl dutyCycleControl;
   private final Optional<CurrentHoming<DistanceUnit>> homing;
 
-  private final SysIdConstraint<DistanceUnit> sysIdConstraint;
+  private final CharacterizationConstraint<DistanceUnit> characterizationConstraint;
 
   /**
    * Creates an extension.
@@ -124,12 +129,12 @@ public class Extension
     homing =
         constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
 
-    sysIdConstraint =
-        new SysIdConstraint<>(
+    characterizationConstraint =
+        new CharacterizationConstraint<>(
             this::getPosition,
             parameters.minLength(),
             parameters.maxLength(),
-            constants.constraints.sysIdMargin());
+            constants.constraints.characterizationMargin());
 
     TuningBindings.bindGains(motors, motor);
     TuningBindings.bindConstraints(motors, constants.constraints, this::motionProfile);
@@ -182,22 +187,23 @@ public class Extension
   }
 
   /**
-   * Builds the physics model for simulating an extension. It starts at the shortest extension.
+   * Builds the physics model for simulating an extension: its plant at the drum, between hard stops
+   * at its travel limits. It starts at the shortest extension.
    *
    * @param constants the extension's constants
    * @return the physics model
    */
   public static MechanismSim simMechanism(ExtensionConstants constants) {
     ExtensionConstants.ExtensionParameters parameters = constants.extensionParameters;
-    return new ElevatorMechanismSim(
+    double drumMeters = constants.drumRadius.in(Meters);
+    Angle min = Radians.of(parameters.minLength().in(Meters) / drumMeters);
+    return new PlantMechanismSim(
         parameters.carriageGearbox(),
         constants.motor.gearRatio,
-        parameters.carriageMass(),
-        constants.drumRadius,
-        parameters.minLength(),
-        parameters.maxLength(),
-        parameters.simulateGravity(),
-        parameters.minLength());
+        parameters.plant(),
+        min,
+        Radians.of(parameters.maxLength().in(Meters) / drumMeters),
+        min);
   }
 
   @Override
@@ -250,27 +256,40 @@ public class Extension
   }
 
   @Override
-  public Optional<SysIdConstraint<?>> sysIdConstraint() {
-    return Optional.of(sysIdConstraint);
+  public Optional<CharacterizationConstraint<?>> characterizationConstraint() {
+    return Optional.of(characterizationConstraint);
+  }
+
+  @Override
+  public Optional<GravityType> characterizationGravity() {
+    return Optional.of(GravityType.CONSTANT);
+  }
+
+  @Override
+  public Optional<Distance> characterizationDrumRadius() {
+    return Optional.of(constants.drumRadius);
   }
 
   /**
-   * Returns this extension as a voltage SysId target, for characterizing several extensions
-   * together.
+   * Returns this extension as a target driven open loop in a config's unit, for characterizing
+   * several extensions together.
    *
+   * @param config the config whose unit picks voltage or torque current
+   * @param <U> the output unit
    * @return the target
    */
-  public CustomSysIdRoutine.Target<VoltageUnit> voltageSysIdTarget() {
-    return sysIdTarget(voltageControl::request);
+  public <U extends Unit> CharacterizationRoutine.Target<U> characterizationTarget(
+      CharacterizationConfig<U> config) {
+    return characterizationTarget(config, voltageControl, currentControl);
   }
 
   /**
-   * Returns a command that characterizes the extension in voltage, stopping each leg short of its
-   * travel limits.
+   * Returns a command that characterizes the extension in its config's unit, stopping each leg
+   * short of its travel limits, and prints its plant and gains.
    *
    * @return the command
    */
-  public Command runSysIdRoutine() {
-    return characterize(constants.sysId, voltageControl::request);
+  public Command characterize() {
+    return characterize(constants.characterization, voltageControl, currentControl);
   }
 }

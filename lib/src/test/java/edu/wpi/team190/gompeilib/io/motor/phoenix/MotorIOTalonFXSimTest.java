@@ -24,8 +24,9 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.FollowerRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixUtil;
-import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -47,8 +48,12 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
   @BeforeEach
   public void setUp() {
     mechanism =
-        new DCMotorMechanismSim(
-            DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.001), GEAR_RATIO);
+        new PlantMechanismSim(
+            DCMotor.getKrakenX60(1),
+            GEAR_RATIO,
+            PlantCharacterization.ofInertia(
+                    DCMotor.getKrakenX60(1), GEAR_RATIO, KilogramSquareMeters.of(0.001))
+                .build());
   }
 
   private static MotorConfig config(int canId, MotorDirection direction) {

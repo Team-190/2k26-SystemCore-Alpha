@@ -16,13 +16,7 @@ public class MechanismSimTest {
 
   @Test
   public void testEveryModelImplementsIt() {
-    for (Class<?> model :
-        new Class<?>[] {
-          DCMotorMechanismSim.class,
-          FlywheelMechanismSim.class,
-          ElevatorMechanismSim.class,
-          ArmMechanismSim.class
-        }) {
+    for (Class<?> model : new Class<?>[] {PlantMechanismSim.class}) {
       assertTrue(MechanismSim.class.isAssignableFrom(model), model.getSimpleName());
     }
   }

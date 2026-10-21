@@ -2,14 +2,17 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.arm;
 
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConstraint;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
+import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
-import edu.wpi.team190.gompeilib.io.physics.ArmMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
@@ -29,8 +32,6 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.TuningBindings;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
-import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
@@ -65,8 +66,8 @@ public class Arm
   private final EncoderSeed encoderSeed;
   private final Optional<CurrentHoming<AngleUnit>> homing;
 
-  private final SysIdConfig<VoltageUnit> sysIdConfig;
-  private final SysIdConstraint<AngleUnit> sysIdConstraint;
+  private final CharacterizationConfig<?> characterizationConfig;
+  private final CharacterizationConstraint<AngleUnit> characterizationConstraint;
 
   /**
    * Creates an arm.
@@ -113,13 +114,13 @@ public class Arm
     homing =
         constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
 
-    sysIdConfig = constants.sysId;
-    sysIdConstraint =
-        new SysIdConstraint<>(
+    characterizationConfig = constants.characterization;
+    characterizationConstraint =
+        new CharacterizationConstraint<>(
             this::getPosition,
             constants.armParameters.minAngle(),
             constants.armParameters.maxAngle(),
-            constants.constraints.sysIdMargin());
+            constants.constraints.characterizationMargin());
 
     TuningBindings.bindGains(motors, constants.motor);
     TuningBindings.bindConstraints(motors, constants.constraints, Arm::profile);
@@ -174,21 +175,20 @@ public class Arm
   }
 
   /**
-   * Builds the physics model for simulating an arm. It starts at its lowest angle.
+   * Builds the physics model for simulating an arm: its plant, between hard stops at its travel
+   * limits. It starts at its lowest angle.
    *
    * @param constants the arm's constants
    * @return the physics model
    */
   public static MechanismSim simMechanism(ArmConstants constants) {
     ArmConstants.ArmParameters parameters = constants.armParameters;
-    return new ArmMechanismSim(
+    return new PlantMechanismSim(
         parameters.armGearbox(),
         constants.motor.gearRatio,
-        parameters.momentOfInertia(),
-        parameters.length(),
+        parameters.plant(),
         parameters.minAngle(),
         parameters.maxAngle(),
-        parameters.simulateGravity(),
         parameters.minAngle());
   }
 
@@ -250,17 +250,22 @@ public class Arm
   }
 
   @Override
-  public Optional<SysIdConstraint<?>> sysIdConstraint() {
-    return Optional.of(sysIdConstraint);
+  public Optional<CharacterizationConstraint<?>> characterizationConstraint() {
+    return Optional.of(characterizationConstraint);
+  }
+
+  @Override
+  public Optional<GravityType> characterizationGravity() {
+    return Optional.of(GravityType.COSINE);
   }
 
   /**
-   * Returns a command that characterizes the arm in voltage, stopping each leg short of its travel
-   * limits.
+   * Returns a command that characterizes the arm in its config's unit, stopping each leg short of
+   * its travel limits, and prints its plant and gains.
    *
    * @return the command
    */
-  public Command sysIdRoutine() {
-    return characterize(sysIdConfig, voltageControl::request);
+  public Command characterize() {
+    return characterize(characterizationConfig, voltageControl, currentControl);
   }
 }

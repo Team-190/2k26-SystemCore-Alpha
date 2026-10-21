@@ -330,8 +330,8 @@ public class SwerveDriveTest extends GompeiLibTestBase {
       assertEquals(4, wheelRadPos.length);
       assertEquals(10.0, wheelRadPos[0], 1e-6);
 
-      // getFFCharacterizationVelocity
-      assertEquals(5.0 / (2 * Math.PI), drive.getFFCharacterizationVelocity(), 1e-6);
+      // getFFCharacterizationSample
+      assertEquals(5.0, drive.getFFCharacterizationSample(OutputType.VOLTAGE).velocity(), 1e-6);
 
       // updateDriveGains / updateTurnGains
       var newDriveGains = TestGains.velocity(2.0, 0, 0.2, 0.1, 0, 0, 0);

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
@@ -12,11 +13,11 @@ import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.Arm;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,8 @@ import org.wpilib.units.AngleUnit;
 import org.wpilib.units.VoltageUnit;
 
 public class GenericHoodTest extends GompeiLibTestBase {
-  private static SysIdConfig<VoltageUnit> sysId() {
-    return SysIdConfig.voltage()
+  private static CharacterizationConfig<VoltageUnit> sysId() {
+    return CharacterizationConfig.voltage()
         .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
         .withStepOutput(Volts.of(3))
         .withQuasistaticTimeout(Seconds.of(3))
@@ -60,13 +61,14 @@ public class GenericHoodTest extends GompeiLibTestBase {
                 .withArmGearbox(DCMotor.getKrakenX44Foc(1))
                 .withMinAngle(Degrees.of(0.5))
                 .withMaxAngle(Degrees.of(35))
-                .withLength(Meters.of(0.2))
-                .withMomentOfInertia(KilogramSquareMeters.of(0.0001))
-                .withSimulateGravity(false)
+                .withPlant(
+                    PlantCharacterization.ofInertia(
+                            DCMotor.getKrakenX60(1), 50.0, KilogramSquareMeters.of(0.0001))
+                        .build())
                 .build())
         .withConstraints(AngularPositionConstraints.builder().build())
         .withVoltageOffsetStep(Volts.of(0.5))
-        .withSysId(sysId())
+        .withCharacterization(sysId())
         .withPositionOffsetStep(Degrees.of(1))
         .withHoming(homing)
         .build();

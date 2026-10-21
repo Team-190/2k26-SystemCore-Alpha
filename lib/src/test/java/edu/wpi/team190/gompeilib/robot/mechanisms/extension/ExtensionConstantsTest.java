@@ -4,19 +4,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.VoltageUnit;
 
 public class ExtensionConstantsTest extends GompeiLibTestBase {
-  private static SysIdConfig<VoltageUnit> sysId() {
-    return SysIdConfig.voltage()
+  private static CharacterizationConfig<VoltageUnit> sysId() {
+    return CharacterizationConfig.voltage()
         .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
         .withStepOutput(Volts.of(3))
         .withQuasistaticTimeout(Seconds.of(3))
@@ -39,10 +40,12 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
   private static ExtensionConstants.ExtensionParameters parameters() {
     return ExtensionConstants.ExtensionParameters.builder()
         .withCarriageGearbox(DCMotor.getKrakenX60(1))
-        .withCarriageMass(Kilograms.of(5.0))
         .withMinLength(Meters.of(0.0))
         .withMaxLength(Meters.of(1.0))
-        .withSimulateGravity(true)
+        .withPlant(
+            PlantCharacterization.ofElevator(
+                    DCMotor.getNeo550(1), 10.0, Kilograms.of(5.0), Meters.of(0.02))
+                .build())
         .build();
   }
 
@@ -51,7 +54,7 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     MotorConfig motor = motor();
     ExtensionConstants.ExtensionParameters parameters = parameters();
     LinearConstraints constraints = LinearConstraints.builder().build();
-    SysIdConfig<VoltageUnit> sysId = sysId();
+    CharacterizationConfig<VoltageUnit> sysId = sysId();
 
     ExtensionConstants constants =
         ExtensionConstants.builder()
@@ -60,7 +63,7 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
             .withExtensionParameters(parameters)
             .withConstraints(constraints)
             .withVoltageOffsetStep(Volts.of(0.5))
-            .withSysId(sysId)
+            .withCharacterization(sysId)
             .withHeightOffsetStep(Meters.of(0.01))
             .build();
 
@@ -70,12 +73,15 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     assertSame(constraints, constants.constraints);
     assertEquals(Volts.of(0.5), constants.voltageOffsetStep);
     assertEquals(Meters.of(0.01), constants.heightOffsetStep);
-    assertSame(sysId, constants.sysId);
+    assertSame(sysId, constants.characterization);
     assertTrue(constants.homing.isEmpty());
 
-    assertEquals(Kilograms.of(5.0), parameters.carriageMass());
+    assertEquals(
+        PlantCharacterization.ofElevator(
+                DCMotor.getNeo550(1), 10.0, Kilograms.of(5.0), Meters.of(0.02))
+            .build(),
+        parameters.plant());
     assertEquals(Meters.of(1.0), parameters.maxLength());
-    assertTrue(parameters.simulateGravity());
     assertEquals(
         edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.VOLTAGE,
         constants.closedLoopOutputType);

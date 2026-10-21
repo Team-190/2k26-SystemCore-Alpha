@@ -32,8 +32,9 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
-import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.robot.RobotMode;
 import java.util.List;
 import java.util.Locale;
@@ -43,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.simulation.DriverStationSim;
 import org.wpilib.simulation.RoboRioSim;
+import org.wpilib.units.measure.Current;
 
 public class MotorIOSimTest extends GompeiLibTestBase {
   private static final double GEAR_RATIO = 5.0;
@@ -55,8 +57,12 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     setEnabled(true);
     RoboRioSim.setVInVoltage(12.0);
     mechanism =
-        new DCMotorMechanismSim(
-            DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.001), GEAR_RATIO);
+        new PlantMechanismSim(
+            DCMotor.getKrakenX60(1),
+            GEAR_RATIO,
+            PlantCharacterization.ofInertia(
+                    DCMotor.getKrakenX60(1), GEAR_RATIO, KilogramSquareMeters.of(0.001))
+                .build());
     telemetry = new MotorTelemetryAutoLogged();
   }
 
@@ -71,6 +77,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     DriverStationSim.notifyNewData();
   }
 
+  // Limits far above anything the tests draw, so only the current-limit tests see them
   private MotorConfig.MotorConfigBuilder config() {
     return MotorConfig.builder()
         .withCanId(1)
@@ -78,8 +85,8 @@ public class MotorIOSimTest extends GompeiLibTestBase {
         .withGearRatio(GEAR_RATIO)
         .withCurrentLimits(
             CurrentLimits.fromDoubles()
-                .withSupplyCurrentLimit(40.0)
-                .withStatorCurrentLimit(80.0)
+                .withSupplyCurrentLimit(1000.0)
+                .withStatorCurrentLimit(1000.0)
                 .build());
   }
 
@@ -110,7 +117,12 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     MotorIOFactory factory = MotorIOSim.factory(mechanism);
     MotorIOFactory other =
         MotorIOSim.factory(
-            new DCMotorMechanismSim(DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.001), 1.0));
+            new PlantMechanismSim(
+                DCMotor.getKrakenX60(1),
+                1.0,
+                PlantCharacterization.ofInertia(
+                        DCMotor.getKrakenX60(1), 1.0, KilogramSquareMeters.of(0.001))
+                    .build()));
 
     assertTrue(factory.family().startsWith("Sim@"));
     assertNotEquals(factory.family(), other.family());
@@ -188,6 +200,54 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     assertFalse(telemetry.focActive);
     assertFalse(telemetry.robotEnabled);
     assertEquals(0.0, telemetry.velocity.in(RotationsPerSecond), 1e-9);
+  }
+
+  @Test
+  public void testStatorLimitCapsTheVoltageAboveTheBackEmf() {
+    MotorIOSim motor =
+        motor(config().withCurrentLimits(new CurrentLimits(Amps.of(1000), Amps.of(20))).build());
+    motor.setControl(new OpenLoopRequest.VoltageOutput(Volts.of(12.0)));
+
+    runOneStep(motor);
+    DCMotor gearbox = mechanism.gearbox();
+    // At rest there's no back-EMF, so 20 A takes 20·R volts
+    assertEquals(20.0 * gearbox.R, telemetry.appliedVoltage.in(Volts), 1e-9);
+
+    // Back-EMF grows with speed, so the limit eases off until the full 12 V gets through
+    run(motor, 50);
+    assertTrue(telemetry.rotorVelocity.in(RadiansPerSecond) > 0);
+    assertEquals(12.0, telemetry.appliedVoltage.in(Volts), 1e-9);
+  }
+
+  @Test
+  public void testSupplyLimitCapsTheDrivingPower() {
+    MotorIOSim motor =
+        motor(config().withCurrentLimits(new CurrentLimits(Amps.of(10), null)).build());
+    motor.setControl(new OpenLoopRequest.VoltageOutput(Volts.of(12.0)));
+
+    runOneStep(motor);
+    DCMotor gearbox = mechanism.gearbox();
+    // At rest, a motor's driving power V²/R can't pass 10 A from the 12 V supply
+    assertEquals(Math.sqrt(10.0 * 12.0 * gearbox.R), telemetry.appliedVoltage.in(Volts), 1e-9);
+
+    // Pushing against the motion regenerates, which the supply limit leaves alone
+    run(motor, 100);
+    motor.setControl(new OpenLoopRequest.VoltageOutput(Volts.of(-0.1)));
+    runOneStep(motor);
+    assertEquals(-0.1, telemetry.appliedVoltage.in(Volts), 1e-9);
+  }
+
+  @Test
+  public void testCurrentLimitsUpdateWhileRunning() {
+    MotorIOSim motor = motor(config().build());
+    motor.setControl(new OpenLoopRequest.VoltageOutput(Volts.of(12.0)));
+    motor.updateCurrentLimits(new CurrentLimits(Amps.of(1000), Amps.of(20)));
+    runOneStep(motor);
+    assertEquals(20.0 * mechanism.gearbox().R, telemetry.appliedVoltage.in(Volts), 1e-9);
+
+    motor.updateCurrentLimits(new CurrentLimits((Current) null, null));
+    runOneStep(motor);
+    assertEquals(12.0, telemetry.appliedVoltage.in(Volts), 1e-9);
   }
 
   @Test

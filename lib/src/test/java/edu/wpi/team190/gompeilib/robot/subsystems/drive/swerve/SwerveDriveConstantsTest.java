@@ -17,6 +17,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
@@ -79,8 +80,15 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
                 .build())
         .withEncoder(AbsoluteEncoderConfig.builder().withCanId(encoderId).withBus(bus).build())
         .withLocation(new Translation2d(x, y))
-        .withDriveInertia(KilogramSquareMeters.of(0.01))
-        .withTurnInertia(KilogramSquareMeters.of(0.01))
+        .withDrivePlant(
+            PlantCharacterization.ofInertia(
+                    DCMotor.getKrakenX60(1), 6.0, KilogramSquareMeters.of(0.01))
+                .build())
+        .withTurnPlant(
+            PlantCharacterization.ofInertia(
+                    DCMotor.getKrakenX44(1), 10.0, KilogramSquareMeters.of(0.01))
+                .withKS(Volts.of(0.1))
+                .build())
         .build();
   }
 

@@ -2,7 +2,9 @@ package edu.wpi.team190.gompeilib.robot.mechanisms;
 
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import java.util.Objects;
 import lombok.Getter;
@@ -11,7 +13,6 @@ import org.wpilib.command2.Commands;
 import org.wpilib.units.Measure;
 import org.wpilib.units.Unit;
 import org.wpilib.units.measure.Current;
-import org.wpilib.units.measure.Voltage;
 
 /**
  * Current-based homing: drives the mechanism into a hard stop until the leader's torque current
@@ -28,17 +29,20 @@ public final class CurrentHoming<P extends Unit> {
   /**
    * How a mechanism homes.
    *
-   * @param voltage the voltage that drives the mechanism into the hard stop; its sign picks the
-   *     direction
+   * @param output what drives the mechanism into the hard stop, in volts or in amps for torque
+   *     current; its sign picks the direction
    * @param currentThreshold the torque current that means the mechanism has reached the hard stop
    * @param currentEpsilon how close to {@code currentThreshold} counts as reaching it
    * @param position the mechanism's position at the hard stop
    * @param <P> the mechanism's position unit
    */
   public record Config<P extends Unit>(
-      Voltage voltage, Current currentThreshold, Current currentEpsilon, Measure<P> position) {
+      Measure<?> output, Current currentThreshold, Current currentEpsilon, Measure<P> position) {
     public Config {
-      Objects.requireNonNull(voltage, "voltage");
+      Objects.requireNonNull(output, "output");
+      if (OutputType.of(output.unit()).filter(type -> type != OutputType.DUTY_CYCLE).isEmpty()) {
+        throw new IllegalArgumentException("Home in volts or amps, not " + output.unit());
+      }
       Objects.requireNonNull(currentThreshold, "currentThreshold");
       Objects.requireNonNull(currentEpsilon, "currentEpsilon");
       Objects.requireNonNull(position, "position");
@@ -81,22 +85,24 @@ public final class CurrentHoming<P extends Unit> {
 
   /**
    * Idles the mechanism, drives it into the hard stop ignoring soft limits until {@link
-   * #atHardStop()}, then sends 0 V and resets its position to the stop.
+   * #atHardStop()}, then sends zero in the same output and resets its position to the stop.
    *
    * @return the homing command
    */
+  private MotorRequest request(double output, RequestOptions options) {
+    return OutputType.of(config.output().unit()).orElseThrow() == OutputType.CURRENT
+        ? new OpenLoopRequest.CurrentOutput(Amps.of(output), 1.0, Amps.zero(), options)
+        : new OpenLoopRequest.VoltageOutput(Volts.of(output), foc, options);
+  }
+
   public Command command() {
     return Commands.sequence(
         Commands.runOnce(core::idle),
-        Commands.run(
-                () ->
-                    core.setControl(
-                        new OpenLoopRequest.VoltageOutput(config.voltage(), foc, OPTIONS)))
+        Commands.run(() -> core.setControl(request(config.output().baseUnitMagnitude(), OPTIONS)))
             .until(this::atHardStop),
         Commands.runOnce(
             () -> {
-              core.setControl(
-                  new OpenLoopRequest.VoltageOutput(Volts.zero(), foc, RequestOptions.DEFAULT));
+              core.setControl(request(0.0, RequestOptions.DEFAULT));
               positionControl.setPosition(config.position());
             }));
   }

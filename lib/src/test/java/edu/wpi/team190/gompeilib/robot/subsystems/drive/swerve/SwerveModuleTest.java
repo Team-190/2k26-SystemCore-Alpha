@@ -170,7 +170,7 @@ public class SwerveModuleTest extends GompeiLibTestBase {
       assertEquals(10.0 * WHEEL_RADIUS, module.getPositionMeters(), 1e-9);
       assertEquals(4.0 * WHEEL_RADIUS, module.getVelocityMetersPerSec(), 1e-9);
       assertEquals(10.0, module.getWheelRadiusCharacterizationPosition(), 1e-9);
-      assertEquals(4.0 / (2 * Math.PI), module.getFFCharacterizationVelocity(), 1e-9);
+      assertEquals(4.0, module.getFFCharacterizationSample(OutputType.VOLTAGE).velocity(), 1e-9);
       assertEquals(
           new SwerveModulePosition(10.0 * WHEEL_RADIUS, Rotation2d.fromDegrees(30.0)),
           module.getPosition());

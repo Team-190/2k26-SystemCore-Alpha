@@ -4,6 +4,7 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.control.Gains;
+import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
@@ -42,6 +43,7 @@ import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularAcceleration;
 import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Per;
 
 /**
@@ -51,8 +53,11 @@ import org.wpilib.units.measure.Per;
  * rotation (or rotation per second) at the gearbox output, and {@code kS} takes the sign of the
  * velocity target. Like real hardware, the motor outputs nothing while the robot is disabled.
  *
- * <p>Soft limits, continuous wrap, and the torque-current peaks are applied; current limits are
- * not. Each cycle steps the loop and physics in 5 ms substeps, and reports one odometry sample.
+ * <p>Soft limits, continuous wrap, the torque-current peaks, and the stator and supply current
+ * limits are applied, so a loop that saturates on the robot saturates here too. The current limits
+ * cap each motor's stator current, and the supply current it draws while driving, by reducing the
+ * applied voltage. Each cycle steps the loop and physics in 5 ms substeps, and reports one odometry
+ * sample.
  *
  * <p>Simplifications: profile jerk and the exponential profile's velocity limit are ignored; coast
  * and brake both apply zero volts; differential requests are unsupported because a single {@link
@@ -81,6 +86,7 @@ public class MotorIOSim implements MotorIO {
   private double setpointPosition = 0.0;
   private double setpointVelocity = 0.0;
 
+  private CurrentLimits currentLimits;
   private double appliedVolts = 0.0;
   private double reference = 0.0;
   private double referenceSlope = 0.0;
@@ -102,6 +108,7 @@ public class MotorIOSim implements MotorIO {
   public MotorIOSim(MotorConfig config, MechanismSim mechanism) {
     this.config = config;
     this.mechanism = mechanism;
+    this.currentLimits = config.currentLimits;
     this.driver = mechanism.claimDriver(this);
     this.motionProfile = config.motionProfile;
     for (Map.Entry<GainSlot, SlotConfig> slot : config.slots.entrySet()) {
@@ -165,6 +172,11 @@ public class MotorIOSim implements MotorIO {
   @Override
   public void updateGains(SlotConfig gains, GainSlot gainSlot) {
     slots.put(gainSlot, SlotGains.of(gains));
+  }
+
+  @Override
+  public void updateCurrentLimits(CurrentLimits currentLimits) {
+    this.currentLimits = currentLimits;
   }
 
   @Override
@@ -384,7 +396,32 @@ public class MotorIOSim implements MotorIO {
                 gearbox.getTorque(amps * mechanism.motorCount()), rotorRadPerSec);
           }
         };
-    return Math.clamp(volts, -battery, battery);
+    return limitCurrent(Math.clamp(volts, -battery, battery), battery);
+  }
+
+  /**
+   * Reduces a voltage so each motor stays inside its stator and supply current limits. A motor's
+   * stator current is {@code (V - e)/R}, with {@code e} its back-EMF; while driving, it draws
+   * {@code I·V/battery} from the supply.
+   */
+  private double limitCurrent(double volts, double battery) {
+    DCMotor gearbox = mechanism.gearbox();
+    double resistance = gearbox.R * mechanism.motorCount();
+    double backEmf = mechanism.velocity().in(RadiansPerSecond) * config.gearRatio / gearbox.Kv;
+    Current stator = currentLimits.statorCurrentLimit();
+    if (stator != null) {
+      double headroom = stator.in(Amps) * resistance;
+      volts = Math.clamp(volts, backEmf - headroom, backEmf + headroom);
+    }
+    Current supply = currentLimits.supplyCurrentLimit();
+    if (supply != null) {
+      // Driving power I·V, per motor, can't exceed the supply limit times the battery voltage
+      double maxPower = supply.in(Amps) * battery * resistance;
+      if ((volts - backEmf) * volts > maxPower) {
+        volts = (backEmf + Math.signum(volts) * Math.sqrt(backEmf * backEmf + 4 * maxPower)) / 2;
+      }
+    }
+    return volts;
   }
 
   private void fill(MotorTelemetry telemetry, double battery, boolean enabled) {

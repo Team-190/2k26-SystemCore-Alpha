@@ -1,11 +1,11 @@
-package edu.wpi.team190.gompeilib.sysid;
+package edu.wpi.team190.gompeilib.characterization;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig.Leg;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig.Leg;
 import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.EnumSet;
 import java.util.Set;
@@ -17,7 +17,7 @@ import org.wpilib.tunable.TunableRegistry;
 import org.wpilib.units.CurrentUnit;
 import org.wpilib.units.VoltageUnit;
 
-public class SysIdConfigTest extends GompeiLibTestBase {
+public class CharacterizationConfigTest extends GompeiLibTestBase {
   private MockTunableBackend backend;
 
   @Override
@@ -37,8 +37,8 @@ public class SysIdConfigTest extends GompeiLibTestBase {
     TunableRegistry.reset();
   }
 
-  private static SysIdConfig.SysIdConfigBuilder<VoltageUnit> voltage() {
-    return SysIdConfig.voltage()
+  private static CharacterizationConfig.CharacterizationConfigBuilder<VoltageUnit> voltage() {
+    return CharacterizationConfig.voltage()
         .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.75))
         .withStepOutput(Volts.of(4.5))
         .withQuasistaticTimeout(Seconds.of(8))
@@ -47,9 +47,9 @@ public class SysIdConfigTest extends GompeiLibTestBase {
 
   @Test
   public void testEveryField() {
-    SysIdConfig<VoltageUnit> config =
+    CharacterizationConfig<VoltageUnit> config =
         voltage()
-            .withPrefix("Arm/SysId")
+            .withPrefix("Arm/Characterization")
             .withSettleTime(Seconds.of(0.5))
             .withLegs(Set.of(Leg.QUASISTATIC_FORWARD, Leg.DYNAMIC_FORWARD))
             .build();
@@ -65,18 +65,18 @@ public class SysIdConfigTest extends GompeiLibTestBase {
 
   @Test
   public void testDefaultsToEveryLegAndOneSecondSettle() {
-    SysIdConfig<VoltageUnit> config = voltage().build();
+    CharacterizationConfig<VoltageUnit> config = voltage().build();
     assertEquals(EnumSet.allOf(Leg.class), config.getLegs());
-    assertEquals(SysIdConfig.DEFAULT_SETTLE_TIME, config.settleTime().get());
-    assertEquals(1, SysIdConfig.DEFAULT_SETTLE_TIME.in(Seconds), 1e-9);
+    assertEquals(CharacterizationConfig.DEFAULT_SETTLE_TIME, config.settleTime().get());
+    assertEquals(1, CharacterizationConfig.DEFAULT_SETTLE_TIME.in(Seconds), 1e-9);
 
     assertEquals(EnumSet.allOf(Leg.class), voltage().withLegs(Set.of()).build().getLegs());
   }
 
   @Test
   public void testCurrentConfigUsesAmps() {
-    SysIdConfig<CurrentUnit> config =
-        SysIdConfig.current()
+    CharacterizationConfig<CurrentUnit> config =
+        CharacterizationConfig.current()
             .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
             .withStepOutput(Amps.of(40))
             .withQuasistaticTimeout(Seconds.of(10))
@@ -88,7 +88,7 @@ public class SysIdConfigTest extends GompeiLibTestBase {
 
   @Test
   public void testTimeoutPerLeg() {
-    SysIdConfig<VoltageUnit> config = voltage().build();
+    CharacterizationConfig<VoltageUnit> config = voltage().build();
     assertEquals(Seconds.of(8), config.timeout(Leg.QUASISTATIC_FORWARD));
     assertEquals(Seconds.of(8), config.timeout(Leg.QUASISTATIC_REVERSE));
     assertEquals(Seconds.of(2), config.timeout(Leg.DYNAMIC_FORWARD));
@@ -115,7 +115,7 @@ public class SysIdConfigTest extends GompeiLibTestBase {
 
   @Test
   public void testPublishesTunablesUnderThePrefix() {
-    SysIdConfig<VoltageUnit> config = voltage().withPrefix("Published").build();
+    CharacterizationConfig<VoltageUnit> config = voltage().withPrefix("Published").build();
     assertNotNull(backend.getTunable("/Published/Ramp Rate"));
     assertNotNull(backend.getTunable("/Published/Step Output"));
     assertNotNull(backend.getTunable("/Published/Quasistatic Timeout"));
@@ -140,7 +140,7 @@ public class SysIdConfigTest extends GompeiLibTestBase {
   public void shouldRequireTheUnitRampStepAndTimeouts() {
     assertThrows(
         NullPointerException.class,
-        () -> SysIdConfig.<VoltageUnit>builder().withStepOutput(Volts.of(1)).build());
+        () -> CharacterizationConfig.<VoltageUnit>builder().withStepOutput(Volts.of(1)).build());
     assertThrows(NullPointerException.class, () -> voltage().withRampRate(null).build());
     assertThrows(NullPointerException.class, () -> voltage().withStepOutput(null).build());
     assertThrows(NullPointerException.class, () -> voltage().withQuasistaticTimeout(null).build());

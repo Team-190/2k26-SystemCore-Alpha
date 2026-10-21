@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
@@ -28,13 +29,17 @@ public class GenericRollerConstantsTest {
         GenericRollerConstants.builder()
             .withMotor(motor)
             .withRollerGearbox(gearbox)
-            .withMomentOfInertia(Units.KilogramSquareMeters.of(0.001))
+            .withPlant(
+                PlantCharacterization.ofInertia(gearbox, 1.0, Units.KilogramSquareMeters.of(0.001))
+                    .build())
             .withVoltageOffsetStep(Units.Volts.of(0.5))
             .build();
 
     assertSame(motor, constants.motor);
     assertSame(gearbox, constants.rollerGearbox);
-    assertEquals(Units.KilogramSquareMeters.of(0.001), constants.momentOfInertia);
+    assertEquals(
+        PlantCharacterization.ofInertia(gearbox, 1.0, Units.KilogramSquareMeters.of(0.001)).build(),
+        constants.plant);
     assertEquals(Units.Volts.of(0.5), constants.voltageOffsetStep);
     assertEquals(Units.Amps.of(1.0), constants.currentOffsetStep);
     assertEquals(Units.Value.of(0.05), constants.dutyCycleOffsetStep);

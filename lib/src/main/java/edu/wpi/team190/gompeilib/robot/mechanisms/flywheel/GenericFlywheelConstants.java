@@ -4,10 +4,11 @@ import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Value;
 import static org.wpilib.units.Units.Volts;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.math.system.DCMotor;
@@ -17,7 +18,6 @@ import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Dimensionless;
-import org.wpilib.units.measure.MomentOfInertia;
 import org.wpilib.units.measure.Voltage;
 
 @Builder(setterPrefix = "with", toBuilder = true)
@@ -41,8 +41,12 @@ public class GenericFlywheelConstants {
   /** The motors driving the flywheel, for simulation. */
   @NonNull public final DCMotor flywheelGearbox;
 
-  /** The flywheel's moment of inertia, for simulation. */
-  @NonNull public final MomentOfInertia momentOfInertia;
+  /**
+   * How the flywheel responds to its motors, for simulation: what {@link
+   * GenericFlywheel#characterizeVoltage()} or {@link GenericFlywheel#characterizeTorque()}
+   * measured, or {@link PlantCharacterization#ofInertia} before the flywheel exists.
+   */
+  @NonNull public final PlantCharacterization<?> plant;
 
   /** The goal tolerance, and the profile limits for profiled velocity requests. */
   @NonNull public final AngularVelocityConstraints constraints;
@@ -60,8 +64,8 @@ public class GenericFlywheelConstants {
   @NonNull @Builder.Default public final Dimensionless dutyCycleOffsetStep = Value.of(0.05);
 
   /** How the flywheel is characterized in voltage. */
-  @NonNull public final SysIdConfig<VoltageUnit> voltageSysId;
+  @NonNull public final CharacterizationConfig<VoltageUnit> voltageCharacterization;
 
   /** How the flywheel is characterized in torque current. */
-  @NonNull public final SysIdConfig<CurrentUnit> currentSysId;
+  @NonNull public final CharacterizationConfig<CurrentUnit> currentCharacterization;
 }

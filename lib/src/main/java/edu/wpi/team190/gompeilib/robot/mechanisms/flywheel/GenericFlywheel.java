@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.flywheel;
 
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
@@ -12,8 +13,8 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.io.physics.FlywheelMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
@@ -29,7 +30,6 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.VelocityControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VelocityControllable;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.AngleUnit;
@@ -66,8 +66,8 @@ public class GenericFlywheel
   private final CurrentControl currentControl;
   private final DutyCycleControl dutyCycleControl;
 
-  private final SysIdConfig<VoltageUnit> voltageSysIdConfig;
-  private final SysIdConfig<CurrentUnit> currentSysIdConfig;
+  private final CharacterizationConfig<VoltageUnit> voltageCharacterizationConfig;
+  private final CharacterizationConfig<CurrentUnit> currentCharacterizationConfig;
 
   /**
    * Creates a flywheel. It starts idle.
@@ -117,8 +117,8 @@ public class GenericFlywheel
             new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
             foc);
 
-    voltageSysIdConfig = constants.voltageSysId;
-    currentSysIdConfig = constants.currentSysId;
+    voltageCharacterizationConfig = constants.voltageCharacterization;
+    currentCharacterizationConfig = constants.currentCharacterization;
 
     TuningBindings.bindGains(motors, config);
     TuningBindings.bindConstraints(motors, constants.constraints, GenericFlywheel::profile);
@@ -181,8 +181,8 @@ public class GenericFlywheel
    * @return the physics model
    */
   public static MechanismSim simMechanism(GenericFlywheelConstants constants) {
-    return new FlywheelMechanismSim(
-        constants.flywheelGearbox, constants.momentOfInertia, constants.motor.gearRatio);
+    return new PlantMechanismSim(
+        constants.flywheelGearbox, constants.motor.gearRatio, constants.plant);
   }
 
   private static MotionProfileConfig profile(AngularVelocityConstraints constraints) {
@@ -270,20 +270,21 @@ public class GenericFlywheel
   }
 
   /**
-   * Returns a command that characterizes the flywheel in voltage.
+   * Returns a command that characterizes the flywheel in voltage and prints its plant and gains.
    *
    * @return the command
    */
-  public Command sysIdRoutineVoltage() {
-    return characterize(voltageSysIdConfig, voltageControl::request);
+  public Command characterizeVoltage() {
+    return characterize(voltageCharacterizationConfig, voltageControl::request);
   }
 
   /**
-   * Returns a command that characterizes the flywheel in torque current.
+   * Returns a command that characterizes the flywheel in torque current and prints its plant and
+   * gains.
    *
    * @return the command
    */
-  public Command sysIdRoutineTorque() {
-    return characterize(currentSysIdConfig, currentControl::request);
+  public Command characterizeTorque() {
+    return characterize(currentCharacterizationConfig, currentControl::request);
   }
 }

@@ -15,8 +15,8 @@ public class SwerveModuleConfigTest extends GompeiLibTestBase {
     assertEquals(2, config.turnMotor().canId);
     assertEquals(3, config.encoder().canId);
     assertEquals(new Translation2d(0.5, -0.5), config.location());
-    assertNotNull(config.driveInertia());
-    assertNotNull(config.turnInertia());
+    assertEquals(0.0, config.drivePlant().kS());
+    assertEquals(0.1, config.turnPlant().kS(), 1e-12);
   }
 
   @Test

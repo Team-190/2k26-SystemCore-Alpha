@@ -267,6 +267,17 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             5));
 
     autoChooser.addDefault("Do Nothing", Commands.none());
+
+    // Characterizations of the closed-loop mechanisms print each one's plant and gains when they
+    // finish
+    autoChooser.add(
+        "Characterize: Drive",
+        SwerveDriveCommands.feedforwardCharacterization(
+            drive, V3_Horse_CV2_TRConstants.DRIVE_CHARACTERIZATION));
+    autoChooser.add("Characterize: Hood", shooter.characterizeHood());
+    autoChooser.add("Characterize: Flywheel (Torque)", shooter.characterizeFlywheel());
+    autoChooser.add("Characterize: Flywheel (Voltage)", shooter.characterizeFlywheelVoltage());
+    autoChooser.add("Characterize: Extensions", intake.characterizeExtensions());
   }
 
   private void configureButtonBindings() {

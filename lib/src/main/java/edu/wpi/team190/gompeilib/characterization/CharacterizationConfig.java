@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.sysid;
+package edu.wpi.team190.gompeilib.characterization;
 
 import static org.wpilib.units.Units.*;
 
@@ -29,11 +29,11 @@ import org.wpilib.units.measure.Time;
  *
  * @param <U> the output unit
  */
-public final class SysIdConfig<U extends Unit> {
+public final class CharacterizationConfig<U extends Unit> {
   /** The settle time used when none is set. */
   public static final Time DEFAULT_SETTLE_TIME = Seconds.of(1);
 
-  /** One leg of a SysId routine, in the order the routine runs them. */
+  /** One leg of a characterization routine, in the order the routine runs them. */
   public enum Leg {
     QUASISTATIC_FORWARD(true, true),
     QUASISTATIC_REVERSE(true, false),
@@ -76,7 +76,7 @@ public final class SysIdConfig<U extends Unit> {
   @Getter private final Set<Leg> legs;
 
   /**
-   * Creates a SysId config.
+   * Creates a characterization config.
    *
    * @param prefix where to publish the tunables, or null to leave them unpublished
    * @param outputUnit the output unit
@@ -89,7 +89,7 @@ public final class SysIdConfig<U extends Unit> {
    * @param legs which legs run, or null for all four
    */
   @Builder(setterPrefix = "with")
-  public SysIdConfig(
+  public CharacterizationConfig(
       String prefix,
       U outputUnit,
       Per<U, TimeUnit> rampRate,
@@ -135,8 +135,8 @@ public final class SysIdConfig<U extends Unit> {
    *
    * @return the builder
    */
-  public static SysIdConfigBuilder<VoltageUnit> voltage() {
-    return SysIdConfig.<VoltageUnit>builder().withOutputUnit(Volts);
+  public static CharacterizationConfigBuilder<VoltageUnit> voltage() {
+    return CharacterizationConfig.<VoltageUnit>builder().withOutputUnit(Volts);
   }
 
   /**
@@ -144,8 +144,8 @@ public final class SysIdConfig<U extends Unit> {
    *
    * @return the builder
    */
-  public static SysIdConfigBuilder<CurrentUnit> current() {
-    return SysIdConfig.<CurrentUnit>builder().withOutputUnit(Amps);
+  public static CharacterizationConfigBuilder<CurrentUnit> current() {
+    return CharacterizationConfig.<CurrentUnit>builder().withOutputUnit(Amps);
   }
 
   public Tunable<Per<U, TimeUnit>> rampRate() {

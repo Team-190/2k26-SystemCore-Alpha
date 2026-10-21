@@ -107,25 +107,25 @@ public class LinearConstraintsTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testSysIdMarginDefaultsToTheGoalTolerance() {
+  public void testCharacterizationMarginDefaultsToTheGoalTolerance() {
     LinearConstraints defaults =
         LinearConstraints.builder().withGoalTolerance(Units.Meters.of(0.05)).build();
-    assertEquals(0.05, defaults.sysIdMargin().get().in(Units.Meters), 1e-9);
+    assertEquals(0.05, defaults.characterizationMargin().get().in(Units.Meters), 1e-9);
 
     LinearConstraints c =
         LinearConstraints.builder()
             .withPrefix("Margin")
             .withGoalTolerance(Units.Meters.of(0.05))
-            .withSysIdMargin(Units.Meters.of(0.2))
+            .withCharacterizationMargin(Units.Meters.of(0.2))
             .build();
-    assertEquals(0.2, c.sysIdMargin().get().in(Units.Meters), 1e-9);
+    assertEquals(0.2, c.characterizationMargin().get().in(Units.Meters), 1e-9);
 
-    // Only SysId reads the margin, so editing it leaves the profile listeners alone.
+    // Only characterization reads the margin, so editing it leaves the profile listeners alone.
     AtomicInteger counter = new AtomicInteger(0);
     c.onChange(x -> counter.incrementAndGet());
-    backend.setDouble("/Margin/SysId Margin", 0.3);
+    backend.setDouble("/Margin/Characterization Margin", 0.3);
     TunableRegistry.update();
-    assertEquals(0.3, c.sysIdMargin().get().in(Units.Meters), 1e-9);
+    assertEquals(0.3, c.characterizationMargin().get().in(Units.Meters), 1e-9);
     assertEquals(0, counter.get());
   }
 }

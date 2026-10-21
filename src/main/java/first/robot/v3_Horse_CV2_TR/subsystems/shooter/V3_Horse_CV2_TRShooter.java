@@ -35,6 +35,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private final GenericFlywheel flywheel;
   private ShooterGoal shooterGoal;
+  private boolean characterizing = false;
   // Goal most recently pushed to the flywheel and hood in periodic
   private ShooterGoal appliedGoal;
 
@@ -133,37 +134,9 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   @Trace
   public void periodic() {
-    switch (shooterGoal) {
-      case STOW:
-        hood.setPositionGoal(
-            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.minAngle());
-        flywheel.stop();
-        break;
-      case SCORE:
-        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
-        flywheel.setVelocityGoal(
-            V3_Horse_CV2_TRRobotState.getScoreVelocity(), getCurrentFeedforward());
-        break;
-      case FEED:
-        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
-        flywheel.setVelocityGoal(
-            V3_Horse_CV2_TRRobotState.getFeedVelocity(), getCurrentFeedforward());
-        break;
-      case FIXED_SHOTS:
-        hood.setPositionGoal(fixedShotParameters.hoodAngle().get());
-        flywheel.setVelocityGoal(
-            fixedShotParameters.flywheelSpeed().get(), getCurrentFeedforward());
-        break;
-      case ZERO:
-        hood.setPositionGoal(Radians.of(0.0));
-        flywheel.stop();
-        break;
-      case STOP:
-        hood.setPositionGoal(Radians.of(0.0));
-        flywheel.stop();
-        break;
-      default:
-        break;
+    // A characterization drives the hood or flywheel itself
+    if (!characterizing) {
+      applyGoal();
     }
 
     hood.periodic();
@@ -236,12 +209,62 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
     return flywheel.waitUntilAtVelocityGoal();
   }
 
-  public Command hoodSysId() {
-    return hood.sysIdRoutine();
+  /** Characterizes the hood in voltage and prints its plant and gains. */
+  public Command characterizeHood() {
+    return characterizing(hood.characterize(), "Characterize Hood");
   }
 
-  public Command flywheelSysId() {
-    return flywheel.sysIdRoutineTorque();
+  /** Characterizes the flywheel in torque current and prints its plant and gains. */
+  public Command characterizeFlywheel() {
+    return characterizing(flywheel.characterizeTorque(), "Characterize Flywheel");
+  }
+
+  /** Characterizes the flywheel in voltage and prints its plant and gains. */
+  public Command characterizeFlywheelVoltage() {
+    return characterizing(flywheel.characterizeVoltage(), "Characterize Flywheel Voltage");
+  }
+
+  /** Runs a characterization while periodic leaves the hood and flywheel goals alone. */
+  private Command characterizing(Command characterization, String name) {
+    return Commands.runOnce(() -> characterizing = true)
+        .andThen(characterization)
+        .finallyDo(() -> characterizing = false)
+        .withName(name);
+  }
+
+  private void applyGoal() {
+    switch (shooterGoal) {
+      case STOW:
+        hood.setPositionGoal(
+            V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.armParameters.minAngle());
+        flywheel.stop();
+        break;
+      case SCORE:
+        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRRobotState.getScoreVelocity(), getCurrentFeedforward());
+        break;
+      case FEED:
+        hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRRobotState.getFeedVelocity(), getCurrentFeedforward());
+        break;
+      case FIXED_SHOTS:
+        hood.setPositionGoal(fixedShotParameters.hoodAngle().get());
+        flywheel.setVelocityGoal(
+            fixedShotParameters.flywheelSpeed().get(), getCurrentFeedforward());
+        break;
+      case ZERO:
+        hood.setPositionGoal(Radians.of(0.0));
+        flywheel.stop();
+        break;
+      case STOP:
+        hood.setPositionGoal(Radians.of(0.0));
+        flywheel.stop();
+        break;
+      default:
+        break;
+    }
   }
 
   public Command incrementFlywheelVelocity() {

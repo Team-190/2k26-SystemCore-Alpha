@@ -25,9 +25,11 @@ import edu.wpi.team190.gompeilib.io.motor.config.RemoteSensorMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleConfig;
 import java.util.Map;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.Measure;
@@ -54,6 +56,8 @@ public final class SwerveModuleConstantsConversions {
    * @param bus the bus the module's devices are on
    * @param odometryFrequency how often the odometry thread samples positions
    * @param closedLoopRampPeriod the torque-current closed-loop ramp period
+   * @param driveModel the drive motor, to derive the drive plant from the drive inertia
+   * @param turnModel the turn motor, to derive the turn plant from the steer inertia
    * @return the module config
    */
   public static SwerveModuleConfig toModuleConfig(
@@ -61,7 +65,9 @@ public final class SwerveModuleConstantsConversions {
           constants,
       CANBusId bus,
       Frequency odometryFrequency,
-      Time closedLoopRampPeriod) {
+      Time closedLoopRampPeriod,
+      DCMotor driveModel,
+      DCMotor turnModel) {
     ClosedLoopRamps ramps =
         new ClosedLoopRamps(Seconds.of(0.0), Seconds.of(0.0), closedLoopRampPeriod);
     SignalRates odometryRates =
@@ -140,8 +146,25 @@ public final class SwerveModuleConstantsConversions {
         .withTurnMotor(turn)
         .withEncoder(encoder.build())
         .withLocation(new Translation2d(constants.LocationX, constants.LocationY))
-        .withDriveInertia(KilogramSquareMeters.of(constants.DriveInertia))
-        .withTurnInertia(KilogramSquareMeters.of(constants.SteerInertia))
+        // Tuner X gives friction in volts; each plant is in the effort its closed loop outputs
+        .withDrivePlant(
+            PlantCharacterization.ofInertia(
+                    driveModel,
+                    constants.DriveMotorGearRatio,
+                    KilogramSquareMeters.of(constants.DriveInertia))
+                .withKS(Volts.of(constants.DriveFrictionVoltage))
+                .build()
+                .in(
+                    toOutputType(constants.DriveMotorClosedLoopOutput),
+                    driveModel,
+                    constants.DriveMotorGearRatio,
+                    1))
+        .withTurnPlant(
+            PlantCharacterization.ofInertia(
+                    turnModel, steerRatio, KilogramSquareMeters.of(constants.SteerInertia))
+                .withKS(Volts.of(constants.SteerFrictionVoltage))
+                .build()
+                .in(toOutputType(constants.SteerMotorClosedLoopOutput), turnModel, steerRatio, 1))
         .build();
   }
 

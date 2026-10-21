@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.TestGains;
@@ -25,10 +26,10 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.NeutralRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
-import edu.wpi.team190.gompeilib.io.physics.FlywheelMechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -99,7 +100,10 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
             .withVoltageGains(voltageGains)
             .withCurrentGains(torqueGains)
             .withFlywheelGearbox(DCMotor.getKrakenX60Foc(2))
-            .withMomentOfInertia(KilogramSquareMeters.of(0.01))
+            .withPlant(
+                PlantCharacterization.ofInertia(
+                        DCMotor.getKrakenX60(1), 1.0, KilogramSquareMeters.of(0.01))
+                    .build())
             .withConstraints(
                 AngularVelocityConstraints.builder()
                     .withPrefix("flywheel/constraints")
@@ -109,15 +113,15 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
                     .build())
             .withVelocityOffsetStep(RadiansPerSecond.of(5))
             .withVoltageOffsetStep(Volts.of(1))
-            .withVoltageSysId(
-                SysIdConfig.voltage()
+            .withVoltageCharacterization(
+                CharacterizationConfig.voltage()
                     .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.5))
                     .withStepOutput(Volts.of(8))
                     .withQuasistaticTimeout(Seconds.of(24))
                     .withDynamicTimeout(Seconds.of(10))
                     .build())
-            .withCurrentSysId(
-                SysIdConfig.current()
+            .withCurrentCharacterization(
+                CharacterizationConfig.current()
                     .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
                     .withStepOutput(Amps.of(40))
                     .withQuasistaticTimeout(Seconds.of(10))
@@ -346,12 +350,12 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
                     .withSlot(GainSlot.ZERO, SlotConfig.velocity(voltageGains))
                     .build())
             .withFlywheelGearbox(constants.flywheelGearbox)
-            .withMomentOfInertia(constants.momentOfInertia)
+            .withPlant(constants.plant)
             .withConstraints(constants.constraints)
             .withVelocityOffsetStep(constants.velocityOffsetStep)
             .withVoltageOffsetStep(constants.voltageOffsetStep)
-            .withVoltageSysId(constants.voltageSysId)
-            .withCurrentSysId(constants.currentSysId)
+            .withVoltageCharacterization(constants.voltageCharacterization)
+            .withCurrentCharacterization(constants.currentCharacterization)
             .build();
     assertThrows(
         IllegalArgumentException.class,
@@ -360,7 +364,7 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
 
   @Test
   public void testSimMechanism() {
-    assertInstanceOf(FlywheelMechanismSim.class, GenericFlywheel.simMechanism(constants));
+    assertInstanceOf(PlantMechanismSim.class, GenericFlywheel.simMechanism(constants));
   }
 
   @Test
@@ -368,9 +372,9 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
     try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       GenericFlywheel flywheel = new GenericFlywheel(factory, subsystem, constants, "Test");
       MotorIO leader = motors.get(0);
-      assertTrue(flywheel.sysIdConstraint().isEmpty());
+      assertTrue(flywheel.characterizationConstraint().isEmpty());
 
-      Command voltage = flywheel.sysIdRoutineVoltage();
+      Command voltage = flywheel.characterizeVoltage();
       voltage.initialize();
       voltage.execute();
       voltage.execute();
@@ -378,7 +382,7 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
       verify(leader, atLeastOnce()).setControl(isA(OpenLoopRequest.VoltageOutput.class));
       voltage.end(true);
 
-      Command torque = flywheel.sysIdRoutineTorque();
+      Command torque = flywheel.characterizeTorque();
       torque.initialize();
       torque.execute();
       torque.execute();

@@ -3,22 +3,20 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.arm;
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Value;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngleUnit;
-import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Dimensionless;
-import org.wpilib.units.measure.Distance;
-import org.wpilib.units.measure.MomentOfInertia;
 import org.wpilib.units.measure.Voltage;
 
 @Builder(setterPrefix = "with", toBuilder = true)
@@ -36,12 +34,13 @@ public class ArmConstants {
   @NonNull public final ArmParameters armParameters;
 
   /**
-   * The goal tolerance, profile limits, and how far short of the travel limits a SysId leg stops.
+   * The goal tolerance, profile limits, and how far short of the travel limits a characterization
+   * leg stops.
    */
   @NonNull public final AngularPositionConstraints constraints;
 
-  /** How the arm is characterized in voltage. */
-  @NonNull public final SysIdConfig<VoltageUnit> sysId;
+  /** How the arm is characterized: in volts, or in amps for torque current. */
+  @NonNull public final CharacterizationConfig<?> characterization;
 
   /** How far one increment or decrement moves the voltage goal. */
   @NonNull public final Voltage voltageOffsetStep;
@@ -63,21 +62,20 @@ public class ArmConstants {
   public final Optional<CurrentHoming.Config<AngleUnit>> homing = Optional.empty();
 
   /**
-   * The arm's travel and physical properties.
+   * The arm's travel and how it responds to its motors.
    *
    * @param armGearbox the motors driving the arm, for simulation
    * @param minAngle the lowest angle
    * @param maxAngle the highest angle
-   * @param length the arm's length, for simulation
-   * @param momentOfInertia the arm's moment of inertia, for simulation
-   * @param simulateGravity whether gravity pulls the arm down, for simulation
+   * @param plant how the arm responds to its motors at the joint, for simulation: what {@link
+   *     Arm#characterize()} measured, or {@link PlantCharacterization#ofArm} before the arm exists.
+   *     Gravity is a {@link edu.wpi.team190.gompeilib.io.motor.config.GravityType#COSINE} plant
+   *     with a nonzero {@code kG}, with zero degrees horizontal.
    */
   @Builder(setterPrefix = "with")
   public record ArmParameters(
       @NonNull DCMotor armGearbox,
       @NonNull Angle minAngle,
       @NonNull Angle maxAngle,
-      @NonNull Distance length,
-      @NonNull MomentOfInertia momentOfInertia,
-      @NonNull Boolean simulateGravity) {}
+      @NonNull PlantCharacterization<?> plant) {}
 }

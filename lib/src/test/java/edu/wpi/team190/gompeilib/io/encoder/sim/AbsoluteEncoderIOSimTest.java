@@ -9,8 +9,9 @@ import edu.wpi.team190.gompeilib.io.encoder.config.AbsoluteEncoderConfig;
 import edu.wpi.team190.gompeilib.io.encoder.config.SensorDirection;
 import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.encoder.inputs.MagnetHealth;
-import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
@@ -22,7 +23,12 @@ public class AbsoluteEncoderIOSimTest extends GompeiLibTestBase {
   @BeforeEach
   public void setUp() {
     mechanism =
-        new DCMotorMechanismSim(DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.001), 1.0);
+        new PlantMechanismSim(
+            DCMotor.getKrakenX60(1),
+            1.0,
+            PlantCharacterization.ofInertia(
+                    DCMotor.getKrakenX60(1), 1.0, KilogramSquareMeters.of(0.001))
+                .build());
     telemetry = new AbsoluteEncoderTelemetryAutoLogged();
   }
 

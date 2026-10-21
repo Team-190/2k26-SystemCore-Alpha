@@ -187,7 +187,6 @@ jacocoTestReport {
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
                 '**/LimelightHelpers*.class',
-                '**/*SysId*.class',
                 // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
                 '**/PhoenixOdometryThread*.class',
                 '**/PhoenixUtil*.class'
@@ -238,7 +237,6 @@ jacocoTestCoverageVerification {
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
                 '**/LimelightHelpers*.class',
-                '**/*SysId*.class',
                 // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
                 '**/PhoenixOdometryThread*.class',
                 '**/PhoenixUtil*.class'

@@ -1,16 +1,21 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands;
 
 import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.RotationsPerSecond;
 import static org.wpilib.units.Units.Volts;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig.Leg;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationRoutine;
+import edu.wpi.team190.gompeilib.characterization.FeedforwardFit.Sample;
+import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
-import edu.wpi.team190.gompeilib.sysid.KSCharacterization;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
@@ -18,7 +23,9 @@ import org.wpilib.math.filter.SlewRateLimiter;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.util.Units;
-import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.Measure;
+import org.wpilib.units.Unit;
+import org.wpilib.units.measure.Distance;
 
 /** Robot-agnostic swerve drive commands. */
 public final class SwerveDriveCommands {
@@ -61,27 +68,74 @@ public final class SwerveDriveCommands {
   }
 
   /**
-   * Measures the drive motors' static friction in the unit their closed loop outputs, so the result
-   * is the drive's kS: torque current for a current closed loop, voltage otherwise.
+   * Characterizes the drive motors with the modules facing forward, then prints the drive's plant
+   * and gains per wheel rotation. Characterize in the unit the drive's closed loop outputs: {@link
+   * CharacterizationConfig#current()} for a torque-current loop, {@link
+   * CharacterizationConfig#voltage()} otherwise. Every leg drives the robot straight until it times
+   * out, so give it room and keep the timeouts short.
+   *
+   * @param drive the drive
+   * @param config the ramp, step, timeouts, settle time and legs
+   * @param <U> the output unit
+   * @return the command
    */
-  public static Command feedforwardCharacterization(
-      SwerveDrive drive, SwerveDriveConstants constants) {
-    Supplier<AngularVelocity> velocity =
-        () -> RotationsPerSecond.of(drive.getFFCharacterizationVelocity());
-    if (constants.driveConfig.driveClosedLoopOutputType() == OutputType.CURRENT) {
-      return KSCharacterization.current(
-          drive,
-          current ->
-              drive.runCharacterization(
-                  new OpenLoopRequest.CurrentOutput(Amps.of(current.in(Amps)))),
-          velocity);
+  public static <U extends Unit> Command feedforwardCharacterization(
+      SwerveDrive drive, CharacterizationConfig<U> config) {
+    return new CharacterizationRoutine<>(
+            config,
+            drive,
+            List.of(new DriveTarget<U>(drive, OutputType.of(config.getOutputUnit()).orElse(null))))
+        .command();
+  }
+
+  /**
+   * The drive motors as one characterization target: the four modules driven together, sampled as
+   * their average.
+   *
+   * @param drive the drive
+   * @param output the output the motors are driven in
+   * @param <U> the output unit
+   */
+  record DriveTarget<U extends Unit>(SwerveDrive drive, OutputType output)
+      implements CharacterizationRoutine.Target<U> {
+    @Override
+    public String topic() {
+      return "Drive";
     }
-    return KSCharacterization.voltage(
-        drive,
-        voltage ->
-            drive.runCharacterization(
-                new OpenLoopRequest.VoltageOutput(Volts.of(voltage.in(Volts)))),
-        velocity);
+
+    @Override
+    public void idle() {
+      drive.stop();
+    }
+
+    @Override
+    public void drive(Measure<U> output) {
+      double value = output.baseUnitMagnitude();
+      drive.runCharacterization(
+          this.output == OutputType.CURRENT
+              ? new OpenLoopRequest.CurrentOutput(Amps.of(value))
+              : new OpenLoopRequest.VoltageOutput(Volts.of(value)));
+    }
+
+    @Override
+    public Sample sample(OutputType effort) {
+      return drive.getFFCharacterizationSample(effort);
+    }
+
+    @Override
+    public boolean atLimit(Leg leg) {
+      return false;
+    }
+
+    @Override
+    public Optional<GravityType> gravity() {
+      return Optional.empty();
+    }
+
+    @Override
+    public Optional<Distance> drumRadius() {
+      return Optional.empty();
+    }
   }
 
   /**

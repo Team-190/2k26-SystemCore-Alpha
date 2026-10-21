@@ -6,6 +6,9 @@ import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.configs.SlotConfigs;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConstraint;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationRoutine;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.TestGains;
@@ -13,6 +16,7 @@ import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
+import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
@@ -24,13 +28,11 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.phoenix.TalonFXConversions;
-import edu.wpi.team190.gompeilib.io.physics.ElevatorMechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
-import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
@@ -123,10 +125,13 @@ public class ExtensionTest extends GompeiLibTestBase {
         .withExtensionParameters(
             ExtensionConstants.ExtensionParameters.builder()
                 .withCarriageGearbox(DCMotor.getNeo550(1))
-                .withCarriageMass(Kilograms.of(15.0))
                 .withMinLength(Meters.of(0.0))
                 .withMaxLength(Meters.of(1.5))
-                .withSimulateGravity(false)
+                .withPlant(
+                    PlantCharacterization.ofElevator(
+                            DCMotor.getNeo550(1), 10.0, Kilograms.of(15.0), Meters.of(0.02))
+                        .withKG(Volts.of(0))
+                        .build())
                 .build())
         .withConstraints(
             LinearConstraints.builder()
@@ -137,8 +142,8 @@ public class ExtensionTest extends GompeiLibTestBase {
                 .build())
         .withVoltageOffsetStep(Volts.of(0.5))
         .withHeightOffsetStep(Meters.of(0.05))
-        .withSysId(
-            SysIdConfig.voltage()
+        .withCharacterization(
+            CharacterizationConfig.voltage()
                 .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(3))
                 .withQuasistaticTimeout(Seconds.of(3))
@@ -295,7 +300,7 @@ public class ExtensionTest extends GompeiLibTestBase {
 
   @Test
   public void testSimMechanism() {
-    assertInstanceOf(ElevatorMechanismSim.class, Extension.simMechanism(constants));
+    assertInstanceOf(PlantMechanismSim.class, Extension.simMechanism(constants));
   }
 
   @Test
@@ -335,7 +340,7 @@ public class ExtensionTest extends GompeiLibTestBase {
     extension.setPositionGoal(Meters.of(0.5));
     readAt(0.5, 0.0);
     extension.periodic();
-    Command sysId = extension.runSysIdRoutine();
+    Command sysId = extension.characterize();
     sysId.initialize();
     sysId.execute();
     sysId.execute();
@@ -349,18 +354,28 @@ public class ExtensionTest extends GompeiLibTestBase {
   @Test
   public void testSysIdIsConstrainedToTheTravel() {
     Extension extension = new Extension(factory, subsystem, "Extension", constants);
-    SysIdConstraint<?> constraint = extension.sysIdConstraint().orElseThrow();
+    CharacterizationConstraint<?> constraint = extension.characterizationConstraint().orElseThrow();
     assertSame(constants.extensionParameters.minLength(), constraint.lowerLimit());
     assertSame(constants.extensionParameters.maxLength(), constraint.upperLimit());
-    assertSame(constants.constraints.sysIdMargin(), constraint.margin());
+    assertSame(constants.constraints.characterizationMargin(), constraint.margin());
 
     readAt(1.5, 0.0);
     extension.periodic();
     assertEquals(1.5, constraint.position().get().baseUnitMagnitude(), 1e-9);
 
-    CustomSysIdRoutine.Target<VoltageUnit> target = extension.voltageSysIdTarget();
+    CharacterizationRoutine.MechanismTarget<VoltageUnit> target =
+        (CharacterizationRoutine.MechanismTarget<VoltageUnit>)
+            extension.characterizationTarget(
+                CharacterizationConfig.voltage()
+                    .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                    .withStepOutput(Volts.of(3))
+                    .withQuasistaticTimeout(Seconds.of(3))
+                    .withDynamicTimeout(Seconds.of(3))
+                    .build());
     assertSame(extension.core(), target.core());
     assertSame(constraint, target.constraint().orElseThrow());
+    assertEquals(Optional.of(GravityType.CONSTANT), target.gravity());
+    assertEquals(Optional.of(constants.drumRadius), target.drumRadius());
     assertEquals(
         new OpenLoopRequest.VoltageOutput(Volts.of(2), true, RequestOptions.DEFAULT),
         target.request().apply(Volts.of(2)));

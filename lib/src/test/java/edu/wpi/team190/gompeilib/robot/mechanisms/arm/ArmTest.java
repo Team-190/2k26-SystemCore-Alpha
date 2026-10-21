@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConstraint;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
@@ -23,12 +25,12 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
-import edu.wpi.team190.gompeilib.io.physics.ArmMechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.Inertia;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
-import edu.wpi.team190.gompeilib.sysid.SysIdConstraint;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
@@ -103,9 +105,14 @@ public class ArmTest extends GompeiLibTestBase {
                 .withArmGearbox(DCMotor.getKrakenX60(1))
                 .withMinAngle(Degrees.of(-90))
                 .withMaxAngle(Degrees.of(90))
-                .withLength(Meters.of(0.5))
-                .withMomentOfInertia(KilogramSquareMeters.of(0.1))
-                .withSimulateGravity(true)
+                .withPlant(
+                    PlantCharacterization.ofArm(
+                            DCMotor.getKrakenX60(1),
+                            50.0,
+                            Kilograms.of(2.0),
+                            Meters.of(0.5),
+                            Inertia.atOutput(KilogramSquareMeters.of(0.1)))
+                        .build())
                 .build())
         .withConstraints(
             AngularPositionConstraints.builder()
@@ -116,8 +123,8 @@ public class ArmTest extends GompeiLibTestBase {
                 .build())
         .withVoltageOffsetStep(Volts.of(0.5))
         .withPositionOffsetStep(Degrees.of(5))
-        .withSysId(
-            SysIdConfig.voltage()
+        .withCharacterization(
+            CharacterizationConfig.voltage()
                 .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(9))
                 .withQuasistaticTimeout(Seconds.of(12))
@@ -299,14 +306,14 @@ public class ArmTest extends GompeiLibTestBase {
 
   @Test
   public void testSimMechanism() {
-    assertInstanceOf(ArmMechanismSim.class, Arm.simMechanism(constants));
+    assertInstanceOf(PlantMechanismSim.class, Arm.simMechanism(constants));
   }
 
   @Test
   public void testSysIdIdlesAndRampsTheArm() {
     Arm arm = new Arm(factory, subsystem, "Arm", constants);
     arm.setPositionGoal(Degrees.of(10));
-    Command sysId = arm.sysIdRoutine();
+    Command sysId = arm.characterize();
     sysId.initialize();
     sysId.execute();
     sysId.execute();
@@ -320,10 +327,10 @@ public class ArmTest extends GompeiLibTestBase {
   @Test
   public void testSysIdIsConstrainedToTheTravel() {
     Arm arm = new Arm(factory, subsystem, "Arm", constants);
-    SysIdConstraint<?> constraint = arm.sysIdConstraint().orElseThrow();
+    CharacterizationConstraint<?> constraint = arm.characterizationConstraint().orElseThrow();
     assertSame(constants.armParameters.minAngle(), constraint.lowerLimit());
     assertSame(constants.armParameters.maxAngle(), constraint.upperLimit());
-    assertSame(constants.constraints.sysIdMargin(), constraint.margin());
+    assertSame(constants.constraints.characterizationMargin(), constraint.margin());
 
     reading = t -> t.position = Rotations.of(0.25);
     arm.periodic();

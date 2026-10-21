@@ -7,8 +7,8 @@ import static org.wpilib.units.Units.Volts;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
-import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
@@ -88,8 +88,8 @@ public class GenericRoller
    * @return the physics model
    */
   public static MechanismSim simMechanism(GenericRollerConstants constants) {
-    return new DCMotorMechanismSim(
-        constants.rollerGearbox, constants.momentOfInertia, constants.motor.gearRatio);
+    return new PlantMechanismSim(
+        constants.rollerGearbox, constants.motor.gearRatio, constants.plant);
   }
 
   @Override

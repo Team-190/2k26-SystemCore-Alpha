@@ -16,7 +16,8 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
-import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +66,10 @@ public class GenericRollerTest extends GompeiLibTestBase {
                     .withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED))
                     .build())
             .withRollerGearbox(DCMotor.getNeo550(2))
-            .withMomentOfInertia(KilogramSquareMeters.of(0.001))
+            .withPlant(
+                PlantCharacterization.ofInertia(
+                        DCMotor.getKrakenX60(1), 1.0, KilogramSquareMeters.of(0.001))
+                    .build())
             .withVoltageOffsetStep(Volts.of(0.5))
             .build();
   }
@@ -74,6 +78,7 @@ public class GenericRollerTest extends GompeiLibTestBase {
     return new OpenLoopRequest.VoltageOutput(Volts.of(volts), false, RequestOptions.DEFAULT);
   }
 
+  @SuppressWarnings("unused")
   @Test
   public void testPeriodicSendsTheVoltageGoal() {
     try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
@@ -181,6 +186,6 @@ public class GenericRollerTest extends GompeiLibTestBase {
 
   @Test
   public void testSimMechanism() {
-    assertInstanceOf(DCMotorMechanismSim.class, GenericRoller.simMechanism(constants));
+    assertInstanceOf(PlantMechanismSim.class, GenericRoller.simMechanism(constants));
   }
 }

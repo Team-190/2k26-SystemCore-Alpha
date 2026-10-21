@@ -3,13 +3,14 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.extension;
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Value;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
@@ -18,11 +19,9 @@ import lombok.Singular;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.LinearVelocityUnit;
-import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Dimensionless;
 import org.wpilib.units.measure.Distance;
-import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.Voltage;
 
 @Builder(setterPrefix = "with", toBuilder = true)
@@ -51,12 +50,13 @@ public class ExtensionConstants {
   @NonNull public final ExtensionParameters extensionParameters;
 
   /**
-   * The goal tolerance, profile limits, and how far short of the travel limits a SysId leg stops.
+   * The goal tolerance, profile limits, and how far short of the travel limits a characterization
+   * leg stops.
    */
   @NonNull public final LinearConstraints constraints;
 
-  /** How the extension is characterized in voltage. */
-  @NonNull public final SysIdConfig<VoltageUnit> sysId;
+  /** How the extension is characterized: in volts, or in amps for torque current. */
+  @NonNull public final CharacterizationConfig<?> characterization;
 
   /** How far one increment or decrement moves the voltage goal. */
   @NonNull public final Voltage voltageOffsetStep;
@@ -74,19 +74,19 @@ public class ExtensionConstants {
   @NonNull @Builder.Default public final Dimensionless dutyCycleOffsetStep = Value.of(0.05);
 
   /**
-   * The extension's travel and physical properties.
+   * The extension's travel and how it responds to its motors.
    *
    * @param carriageGearbox the motors driving the carriage, for simulation
-   * @param carriageMass the carriage's mass, for simulation
    * @param minLength the shortest extension
    * @param maxLength the longest extension
-   * @param simulateGravity whether gravity pulls the carriage back, for simulation
+   * @param plant how the extension responds to its motors at the drum, per drum radian, for
+   *     simulation: what {@link Extension#characterize()} measured, or {@link
+   *     PlantCharacterization#ofElevator} before the extension exists
    */
   @Builder(setterPrefix = "with")
   public record ExtensionParameters(
       @NonNull DCMotor carriageGearbox,
-      @NonNull Mass carriageMass,
       @NonNull Distance minLength,
       @NonNull Distance maxLength,
-      @NonNull Boolean simulateGravity) {}
+      @NonNull PlantCharacterization<?> plant) {}
 }

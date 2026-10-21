@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.sysid;
+package edu.wpi.team190.gompeilib.characterization;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -20,12 +20,12 @@ import org.wpilib.units.Unit;
  * @param margin how far short of a limit a leg stops
  * @param <P> the mechanism's position unit
  */
-public record SysIdConstraint<P extends Unit>(
+public record CharacterizationConstraint<P extends Unit>(
     Supplier<? extends Measure<P>> position,
     Measure<P> lowerLimit,
     Measure<P> upperLimit,
     Supplier<? extends Measure<P>> margin) {
-  public SysIdConstraint {
+  public CharacterizationConstraint {
     Objects.requireNonNull(position, "position");
     Objects.requireNonNull(lowerLimit, "lowerLimit");
     Objects.requireNonNull(upperLimit, "upperLimit");

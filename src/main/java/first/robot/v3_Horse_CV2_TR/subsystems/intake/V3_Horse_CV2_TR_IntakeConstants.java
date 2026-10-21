@@ -2,6 +2,7 @@ package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
@@ -14,12 +15,12 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants.ExtensionParameters;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRollerConstants;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Map;
 import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
@@ -114,7 +115,12 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                             .onBus(CANBusId.port(CANPort.CAN_S1)))
                     .build())
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+            .withPlant(
+                PlantCharacterization.ofInertia(
+                        DCMotor.getKrakenX60Foc(1),
+                        36.0 / 12,
+                        Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+                    .build())
             .withVoltageOffsetStep(Volts.of(1))
             .build();
     KICKER_ROLLER_CONSTANTS =
@@ -136,7 +142,12 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .withEnableFOC(false)
                     .build())
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+            .withPlant(
+                PlantCharacterization.ofInertia(
+                        DCMotor.getKrakenX60Foc(1),
+                        (58.0 / 26) * (24.0 / 18),
+                        Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+                    .build())
             .withVoltageOffsetStep(Volts.of(1))
             .build();
 
@@ -271,11 +282,18 @@ public class V3_Horse_CV2_TR_IntakeConstants {
         .withHeightOffsetStep(Meters.of(0.01))
         .withExtensionParameters(
             ExtensionParameters.builder()
-                .withCarriageMass(Kilograms.of(10.0))
                 .withCarriageGearbox(DCMotor.getKrakenX44Foc(1))
                 .withMaxLength(Meters.of(MAX_EXTENSION))
                 .withMinLength(Meters.of(MIN_EXTENSION))
-                .withSimulateGravity(false)
+                // From CAD; the extension is horizontal, so gravity doesn't load it
+                .withPlant(
+                    PlantCharacterization.ofElevator(
+                            DCMotor.getKrakenX44Foc(1),
+                            (52.0 / 30) * (52.0 / 16),
+                            Kilograms.of(10.0),
+                            EXTENSION_DRUM_RADIUS)
+                        .withKG(Volts.of(0))
+                        .build())
                 .build())
         .withConstraints(
             LinearConstraints.builder()
@@ -284,9 +302,9 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
                 .withMaxVelocity(MetersPerSecond.of(20))
                 .build())
-        .withSysId(
-            SysIdConfig.voltage()
-                .withPrefix("Intake/" + name + "/SysId")
+        .withCharacterization(
+            CharacterizationConfig.voltage()
+                .withPrefix("Intake/" + name + "/Characterization")
                 .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(3))
                 .withQuasistaticTimeout(Seconds.of(3))

@@ -4,13 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.physics.Inertia;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
@@ -18,8 +20,8 @@ import org.wpilib.units.AngleUnit;
 import org.wpilib.units.VoltageUnit;
 
 public class ArmConstantsTest extends GompeiLibTestBase {
-  private static SysIdConfig<VoltageUnit> sysId() {
-    return SysIdConfig.voltage()
+  private static CharacterizationConfig<VoltageUnit> sysId() {
+    return CharacterizationConfig.voltage()
         .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
         .withStepOutput(Volts.of(3))
         .withQuasistaticTimeout(Seconds.of(3))
@@ -44,12 +46,17 @@ public class ArmConstantsTest extends GompeiLibTestBase {
             .withArmGearbox(DCMotor.getKrakenX60(1))
             .withMinAngle(Degrees.of(-90))
             .withMaxAngle(Degrees.of(90))
-            .withLength(Meters.of(0.5))
-            .withMomentOfInertia(KilogramSquareMeters.of(0.1))
-            .withSimulateGravity(true)
+            .withPlant(
+                PlantCharacterization.ofArm(
+                        DCMotor.getKrakenX60(1),
+                        50.0,
+                        Kilograms.of(2.0),
+                        Meters.of(0.5),
+                        Inertia.atOutput(KilogramSquareMeters.of(0.1)))
+                    .build())
             .build();
     AngularPositionConstraints constraints = AngularPositionConstraints.builder().build();
-    SysIdConfig<VoltageUnit> sysId = sysId();
+    CharacterizationConfig<VoltageUnit> sysId = sysId();
 
     ArmConstants constants =
         ArmConstants.builder()
@@ -57,7 +64,7 @@ public class ArmConstantsTest extends GompeiLibTestBase {
             .withArmParameters(parameters)
             .withConstraints(constraints)
             .withVoltageOffsetStep(Volts.of(0.5))
-            .withSysId(sysId)
+            .withCharacterization(sysId)
             .withPositionOffsetStep(Degrees.of(5))
             .build();
 
@@ -66,12 +73,18 @@ public class ArmConstantsTest extends GompeiLibTestBase {
     assertSame(constraints, constants.constraints);
     assertEquals(Volts.of(0.5), constants.voltageOffsetStep);
     assertEquals(Degrees.of(5), constants.positionOffsetStep);
-    assertSame(sysId, constants.sysId);
-    assertEquals(Meters.of(0.5), parameters.length());
+    assertSame(sysId, constants.characterization);
     assertEquals(Degrees.of(-90), parameters.minAngle());
     assertEquals(Degrees.of(90), parameters.maxAngle());
-    assertEquals(KilogramSquareMeters.of(0.1), parameters.momentOfInertia());
-    assertTrue(parameters.simulateGravity());
+    assertEquals(
+        PlantCharacterization.ofArm(
+                DCMotor.getKrakenX60(1),
+                50.0,
+                Kilograms.of(2.0),
+                Meters.of(0.5),
+                Inertia.atOutput(KilogramSquareMeters.of(0.1)))
+            .build(),
+        parameters.plant());
     assertTrue(constants.homing.isEmpty());
     assertEquals(
         edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.VOLTAGE,
@@ -108,13 +121,14 @@ public class ArmConstantsTest extends GompeiLibTestBase {
                     .withArmGearbox(DCMotor.getKrakenX60(1))
                     .withMinAngle(Degrees.of(0))
                     .withMaxAngle(Degrees.of(30))
-                    .withLength(Meters.of(0.2))
-                    .withMomentOfInertia(KilogramSquareMeters.of(0.001))
-                    .withSimulateGravity(false)
+                    .withPlant(
+                        PlantCharacterization.ofInertia(
+                                DCMotor.getKrakenX60(1), 50.0, KilogramSquareMeters.of(0.001))
+                            .build())
                     .build())
             .withConstraints(AngularPositionConstraints.builder().build())
             .withVoltageOffsetStep(Volts.of(0.5))
-            .withSysId(sysId())
+            .withCharacterization(sysId())
             .withPositionOffsetStep(Degrees.of(1))
             .withHoming(Optional.of(homing))
             .build();

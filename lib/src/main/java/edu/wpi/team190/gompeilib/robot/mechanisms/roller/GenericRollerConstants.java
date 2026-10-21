@@ -4,12 +4,12 @@ import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Value;
 
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Dimensionless;
-import org.wpilib.units.measure.MomentOfInertia;
 import org.wpilib.units.measure.Voltage;
 
 @Builder(setterPrefix = "with", toBuilder = true)
@@ -20,8 +20,11 @@ public class GenericRollerConstants {
   /** The motors driving the roller, for simulation. */
   @NonNull public final DCMotor rollerGearbox;
 
-  /** The roller's moment of inertia, for simulation. */
-  @NonNull public final MomentOfInertia momentOfInertia;
+  /**
+   * How the roller responds to its motors, for simulation, such as {@link
+   * PlantCharacterization#ofInertia}. A roller runs open loop, so it isn't characterized.
+   */
+  @NonNull public final PlantCharacterization<?> plant;
 
   /** How far one increment or decrement moves the voltage goal. */
   @NonNull public final Voltage voltageOffsetStep;

@@ -1,5 +1,6 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Degrees;
 import static org.wpilib.units.Units.Hertz;
 import static org.wpilib.units.Units.Inches;
@@ -14,11 +15,13 @@ import static org.wpilib.units.Units.Seconds;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.phoenix.CANBuses;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants.DriveConfig;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleConfig;
@@ -32,6 +35,7 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularVelocityUnit;
+import org.wpilib.units.CurrentUnit;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.LinearVelocityUnit;
 
@@ -39,14 +43,17 @@ public class V3_Horse_CV2_TRConstants {
   public static final CANBusId DRIVE_BUS =
       CANBuses.toCANBusId(V3_Horse_CV2_TRTunerConstants.kCANBus);
 
+  private static final DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1);
+  private static final DCMotor TURN_MOTOR = DCMotor.getKrakenX44Foc(1);
+
   public static final DriveConfig DRIVE_CONFIG =
       new DriveConfig(
           DRIVE_BUS,
           V3_Horse_CV2_TRTunerConstants.DrivetrainConstants.Pigeon2Id,
           V3_Horse_CV2_TRTunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
           V3_Horse_CV2_TRTunerConstants.kWheelRadius.in(Meters),
-          DCMotor.getKrakenX60Foc(1),
-          DCMotor.getKrakenX44Foc(1),
+          DRIVE_MOTOR,
+          TURN_MOTOR,
           module(V3_Horse_CV2_TRTunerConstants.FrontLeft),
           module(V3_Horse_CV2_TRTunerConstants.FrontRight),
           module(V3_Horse_CV2_TRTunerConstants.BackLeft),
@@ -156,6 +163,19 @@ public class V3_Horse_CV2_TRConstants {
                   GompeiTunables.value("Drive/Auto Align/Angular Threshold", Radians.of(0.25)))
               .build();
 
+  // The drive closes its loop in torque current, so it's characterized in amps. Every leg drives
+  // the
+  // robot straight until it times out, so the timeouts are short: give it room.
+  public static final CharacterizationConfig<CurrentUnit> DRIVE_CHARACTERIZATION =
+      CharacterizationConfig.current()
+          .withPrefix("Drive/Characterization")
+          .withRampRate(CustomUnits.ampsPerSecond.ofNative(4))
+          .withStepOutput(Amps.of(20))
+          .withQuasistaticTimeout(Seconds.of(4))
+          .withDynamicTimeout(Seconds.of(1))
+          .withSettleTime(Seconds.of(2))
+          .build();
+
   public static final double ODOMETRY_FREQUENCY = 250.0;
   public static final double DRIVER_DEADBAND = 0.1;
   public static final double OPERATOR_DEADBAND = 0.1;
@@ -165,7 +185,12 @@ public class V3_Horse_CV2_TRConstants {
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
     return SwerveModuleConstantsConversions.toModuleConfig(
-        constants, DRIVE_BUS, Hertz.of(ODOMETRY_FREQUENCY), Seconds.of(0.02));
+        constants,
+        DRIVE_BUS,
+        Hertz.of(ODOMETRY_FREQUENCY),
+        Seconds.of(0.02),
+        DRIVE_MOTOR,
+        TURN_MOTOR);
   }
 
   public static final SwerveDriveConstants DRIVE_CONSTANTS = // TODO: Use Real Value

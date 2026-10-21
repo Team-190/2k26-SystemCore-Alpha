@@ -12,6 +12,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRollerConstants;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
@@ -49,7 +50,12 @@ public class V3_Horse_CV2_TRRollerFloorConstants {
                     .withFollower(new FollowerMotor(32, MotorAlignment.ALIGNED))
                     .build())
             .withRollerGearbox(DCMotor.getKrakenX60Foc(2))
-            .withMomentOfInertia(Units.KilogramSquareMeters.of(0.0001))
+            .withPlant(
+                PlantCharacterization.ofInertia(
+                        DCMotor.getKrakenX60Foc(2),
+                        84.0 / 16,
+                        Units.KilogramSquareMeters.of(0.0001))
+                    .build())
             .withVoltageOffsetStep(Volts.of(1))
             .build();
   }

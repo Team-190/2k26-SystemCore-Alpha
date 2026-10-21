@@ -8,12 +8,14 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.team190.gompeilib.GompeiLib;
+import edu.wpi.team190.gompeilib.characterization.FeedforwardFit.Sample;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
+import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixOdometryThread;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import java.util.List;
@@ -377,14 +379,28 @@ public class SwerveDrive extends SubsystemBase {
     return values;
   }
 
-  /** Returns the average velocity of the modules in rotations/sec (Phoenix native units). */
+  /**
+   * Returns the modules' average drive state at the wheel, for characterization.
+   *
+   * @param effort whether to report voltage or torque current as the effort
+   * @return the average sample
+   */
   @Trace
-  public double getFFCharacterizationVelocity() {
-    double output = 0.0;
-    for (int i = 0; i < 4; i++) {
-      output += modules[i].getFFCharacterizationVelocity() / 4.0;
+  public Sample getFFCharacterizationSample(OutputType effort) {
+    double applied = 0.0;
+    double position = 0.0;
+    double velocity = 0.0;
+    double acceleration = 0.0;
+    double backEmf = 0.0;
+    for (SwerveModule module : modules) {
+      Sample sample = module.getFFCharacterizationSample(effort);
+      applied += sample.effort() / modules.length;
+      position += sample.position() / modules.length;
+      velocity += sample.velocity() / modules.length;
+      acceleration += sample.acceleration() / modules.length;
+      backEmf += sample.backEmf() / modules.length;
     }
-    return output;
+    return new Sample(applied, position, velocity, acceleration, backEmf);
   }
 
   /** Returns the maximum linear speed in meters per sec. */

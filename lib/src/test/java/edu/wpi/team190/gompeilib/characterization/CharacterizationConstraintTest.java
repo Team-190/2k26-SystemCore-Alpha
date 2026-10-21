@@ -1,4 +1,4 @@
-package edu.wpi.team190.gompeilib.sysid;
+package edu.wpi.team190.gompeilib.characterization;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.measure.Distance;
 
-public class SysIdConstraintTest {
+public class CharacterizationConstraintTest {
   private final AtomicReference<Distance> position = new AtomicReference<>(Meters.of(0.5));
   private final AtomicReference<Distance> margin = new AtomicReference<>(Meters.of(0.1));
-  private final SysIdConstraint<DistanceUnit> constraint =
-      new SysIdConstraint<>(position::get, Meters.of(0), Meters.of(1), margin::get);
+  private final CharacterizationConstraint<DistanceUnit> constraint =
+      new CharacterizationConstraint<>(position::get, Meters.of(0), Meters.of(1), margin::get);
 
   @Test
   public void testAwayFromBothLimits() {
@@ -63,15 +63,17 @@ public class SysIdConstraintTest {
   public void shouldRequireEveryArgument() {
     assertThrows(
         NullPointerException.class,
-        () -> new SysIdConstraint<>(null, Meters.of(0), Meters.of(1), margin::get));
+        () -> new CharacterizationConstraint<>(null, Meters.of(0), Meters.of(1), margin::get));
     assertThrows(
         NullPointerException.class,
-        () -> new SysIdConstraint<>(position::get, null, Meters.of(1), margin::get));
+        () -> new CharacterizationConstraint<>(position::get, null, Meters.of(1), margin::get));
     assertThrows(
         NullPointerException.class,
-        () -> new SysIdConstraint<>(position::get, Meters.of(0), null, margin::get));
+        () -> new CharacterizationConstraint<>(position::get, Meters.of(0), null, margin::get));
     assertThrows(
         NullPointerException.class,
-        () -> new SysIdConstraint<DistanceUnit>(position::get, Meters.of(0), Meters.of(1), null));
+        () ->
+            new CharacterizationConstraint<DistanceUnit>(
+                position::get, Meters.of(0), Meters.of(1), null));
   }
 }

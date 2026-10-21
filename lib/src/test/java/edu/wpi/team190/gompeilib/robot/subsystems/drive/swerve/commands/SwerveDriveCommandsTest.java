@@ -4,14 +4,20 @@ import static edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands.D
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Percent;
+import static org.wpilib.units.Units.Second;
+import static org.wpilib.units.Units.Seconds;
 import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig.Leg;
+import edu.wpi.team190.gompeilib.characterization.FeedforwardFit.Sample;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
+import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
-import edu.wpi.team190.gompeilib.sysid.KSCharacterization;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +30,9 @@ import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.simulation.SimHooks;
+import org.wpilib.units.CurrentUnit;
+import org.wpilib.units.DimensionlessUnit;
+import org.wpilib.units.VoltageUnit;
 
 public class SwerveDriveCommandsTest extends GompeiLibTestBase {
   private static final double LOOP_SECONDS = 0.02;
@@ -84,27 +93,54 @@ public class SwerveDriveCommandsTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testFeedforwardCharacterizationRampsVoltageForAVoltageClosedLoop() {
-    Command command = SwerveDriveCommands.feedforwardCharacterization(drive, constants);
-    assertInstanceOf(KSCharacterization.class, command);
+  public void testFeedforwardCharacterizationRunsTheRoutineOnTheDrive() {
+    Command command =
+        SwerveDriveCommands.feedforwardCharacterization(
+            drive,
+            CharacterizationConfig.voltage()
+                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withStepOutput(Volts.of(4))
+                .withQuasistaticTimeout(Seconds.of(2))
+                .withDynamicTimeout(Seconds.of(1))
+                .build());
+    assertEquals("Characterization", command.getName());
     assertTrue(command.getRequirements().contains(drive));
 
-    when(drive.getFFCharacterizationVelocity()).thenReturn(0.2);
-    assertTrue(command.isFinished());
-    command.end(false);
-    verify(drive).runCharacterization(new OpenLoopRequest.VoltageOutput(Volts.of(0.0)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            SwerveDriveCommands.feedforwardCharacterization(
+                drive,
+                CharacterizationConfig.<DimensionlessUnit>builder()
+                    .withOutputUnit(Percent)
+                    .withRampRate(Percent.per(Second).ofNative(1))
+                    .withStepOutput(Percent.of(10))
+                    .withQuasistaticTimeout(Seconds.of(2))
+                    .withDynamicTimeout(Seconds.of(1))
+                    .build()));
   }
 
   @Test
-  public void testFeedforwardCharacterizationRampsCurrentForACurrentClosedLoop() {
-    SwerveDriveConstants currentConstants =
-        DriveCommandsTestSupport.constants(
-            DriveCommandsTestSupport.rotationGains("drive/rotation", 4.0), OutputType.CURRENT);
-    Command command = SwerveDriveCommands.feedforwardCharacterization(drive, currentConstants);
+  public void testDriveTargetDrivesEveryModuleInItsOutput() {
+    SwerveDriveCommands.DriveTarget<VoltageUnit> volts =
+        new SwerveDriveCommands.DriveTarget<>(drive, OutputType.VOLTAGE);
+    volts.drive(Volts.of(3));
+    verify(drive).runCharacterization(new OpenLoopRequest.VoltageOutput(Volts.of(3.0)));
 
-    assertFalse(command.isFinished());
-    command.end(false);
-    verify(drive).runCharacterization(new OpenLoopRequest.CurrentOutput(Amps.of(0.0)));
+    SwerveDriveCommands.DriveTarget<CurrentUnit> amps =
+        new SwerveDriveCommands.DriveTarget<>(drive, OutputType.CURRENT);
+    amps.drive(Amps.of(20));
+    verify(drive).runCharacterization(new OpenLoopRequest.CurrentOutput(Amps.of(20.0)));
+
+    assertEquals("Drive", volts.topic());
+    volts.idle();
+    verify(drive).stop();
+    Sample sample = new Sample(1, 2, 3, 4, 5);
+    when(drive.getFFCharacterizationSample(OutputType.CURRENT)).thenReturn(sample);
+    assertSame(sample, amps.sample(OutputType.CURRENT));
+    assertFalse(volts.atLimit(Leg.DYNAMIC_FORWARD));
+    assertTrue(volts.gravity().isEmpty());
+    assertTrue(volts.drumRadius().isEmpty());
   }
 
   @Test

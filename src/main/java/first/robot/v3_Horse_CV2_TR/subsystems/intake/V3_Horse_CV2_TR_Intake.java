@@ -3,12 +3,13 @@ package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.Volts;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
+import edu.wpi.team190.gompeilib.characterization.CharacterizationRoutine;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.Extension;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRoller;
-import edu.wpi.team190.gompeilib.sysid.CustomSysIdRoutine;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
 import java.util.List;
@@ -19,12 +20,14 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.units.DistanceUnit;
+import org.wpilib.units.Unit;
 import org.wpilib.units.measure.Distance;
 
 public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   @Getter private ExtensionState extensionState;
   @Getter private RollerState rollerState;
+  private boolean characterizing = false;
 
   private final GenericRoller intakeRoller;
 
@@ -104,6 +107,27 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   @Trace
   @Override
   public void periodic() {
+    // A characterization drives the extensions itself
+    if (!characterizing) {
+      applyExtensionGoals();
+    }
+    intakeRoller.setVoltageGoal(
+        V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
+    kickerRoller.setVoltageGoal(
+        V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
+    intakeRoller.periodic();
+    kickerRoller.periodic();
+    leftExtension.periodic();
+    rightExtension.periodic();
+
+    extensionPosition = Meters.of(leftExtension.getPosition().in(Meters));
+
+    Logger.recordOutput("Intake/Rollers/State", rollerState.toString());
+    Logger.recordOutput("Intake/Extension/State", extensionState.toString());
+    Logger.recordOutput("Intake/Extension/Trigger", triggerSupplier.getAsDouble());
+  }
+
+  private void applyExtensionGoals() {
     if (extensionState == ExtensionState.MANUAL_RELEASE) {
       extensionState =
           isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_STOW_THRESHOLD)
@@ -141,20 +165,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
     // if (extensionState != ExtensionState.OVERRIDE) {
     // updateGainSlots();
     // }
-    intakeRoller.setVoltageGoal(
-        V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
-    kickerRoller.setVoltageGoal(
-        V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
-    intakeRoller.periodic();
-    kickerRoller.periodic();
-    leftExtension.periodic();
-    rightExtension.periodic();
-
-    extensionPosition = Meters.of(leftExtension.getPosition().in(Meters));
-
-    Logger.recordOutput("Intake/Rollers/State", rollerState.toString());
-    Logger.recordOutput("Intake/Extension/State", extensionState.toString());
-    Logger.recordOutput("Intake/Extension/Trigger", triggerSupplier.getAsDouble());
   }
 
   private Distance linearExtensionMap() {
@@ -329,14 +339,31 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         && rightExtension.getPosition().in(Meters) <= threshold;
   }
 
-  public Command sysID() {
-    return setExtensionState(ExtensionState.OVERRIDE)
-        .andThen(
-            new CustomSysIdRoutine<>(
-                    leftExtension.getConstants().sysId,
-                    this,
-                    List.of(
-                        leftExtension.voltageSysIdTarget(), rightExtension.voltageSysIdTarget()))
-                .command());
+  /**
+   * Characterizes both extensions together in their config's unit and prints each one's plant and
+   * gains.
+   */
+  public Command characterizeExtensions() {
+    return characterizing(
+        extensionRoutine(leftExtension.getConstants().characterization).command(),
+        "Characterize Extensions");
+  }
+
+  private <U extends Unit> CharacterizationRoutine<U> extensionRoutine(
+      CharacterizationConfig<U> config) {
+    return new CharacterizationRoutine<>(
+        config,
+        this,
+        List.of(
+            leftExtension.characterizationTarget(config),
+            rightExtension.characterizationTarget(config)));
+  }
+
+  /** Runs a characterization while periodic leaves the extensions' goals alone. */
+  private Command characterizing(Command characterization, String name) {
+    return Commands.runOnce(() -> characterizing = true)
+        .andThen(characterization)
+        .finallyDo(() -> characterizing = false)
+        .withName(name);
   }
 }

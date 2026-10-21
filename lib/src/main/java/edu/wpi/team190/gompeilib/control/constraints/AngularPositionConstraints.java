@@ -23,15 +23,15 @@ import org.wpilib.units.measure.AngularVelocity;
  * Tunable angular position constraints, published under {@code prefix} (for example {@code
  * /Tunables/<prefix>/Goal Tolerance}). Constraints built without a prefix are not published. Each
  * value is published and edited in the unit it was declared in, with its unit next to it. Unset
- * values default to zero, published in rotations, except the SysId margin, which defaults to the
- * goal tolerance.
+ * values default to zero, published in rotations, except the characterization margin, which
+ * defaults to the goal tolerance.
  */
 public final class AngularPositionConstraints
     implements Constraints.PositionConstraints<AngularPositionConstraints> {
   private final Tunable<Angle> goalTolerance;
   private final Tunable<AngularVelocity> maxVelocity;
   private final Tunable<AngularAcceleration> maxAcceleration;
-  private final Tunable<Angle> sysIdMargin;
+  private final Tunable<Angle> characterizationMargin;
 
   private final List<Consumer<AngularPositionConstraints>> listeners = new ArrayList<>();
   private List<Double> lastNotifiedValues;
@@ -42,15 +42,18 @@ public final class AngularPositionConstraints
       Angle goalTolerance,
       AngularVelocity maxVelocity,
       AngularAcceleration maxAcceleration,
-      Angle sysIdMargin) {
+      Angle characterizationMargin) {
     TunableTable table = GompeiTunables.table(prefix);
     Runnable onTune = this::notifyListeners;
     Angle tolerance = Objects.requireNonNullElse(goalTolerance, Rotations.of(0));
     this.goalTolerance = GompeiTunables.value(table, "Goal Tolerance", tolerance, onTune);
-    // Only SysId reads the margin, so editing it doesn't notify the profile listeners.
-    this.sysIdMargin =
+    // Only characterization reads the margin, so editing it doesn't notify the profile listeners.
+    this.characterizationMargin =
         GompeiTunables.value(
-            table, "SysId Margin", Objects.requireNonNullElse(sysIdMargin, tolerance), null);
+            table,
+            "Characterization Margin",
+            Objects.requireNonNullElse(characterizationMargin, tolerance),
+            null);
     this.maxVelocity =
         GompeiTunables.value(
             table,
@@ -79,12 +82,12 @@ public final class AngularPositionConstraints
   }
 
   /**
-   * Returns how far short of a travel limit a SysId leg stops.
+   * Returns how far short of a travel limit a characterization leg stops.
    *
    * @return the margin
    */
-  public Tunable<Angle> sysIdMargin() {
-    return sysIdMargin;
+  public Tunable<Angle> characterizationMargin() {
+    return characterizationMargin;
   }
 
   public double getGoalTolerance(AngleUnit unit) {

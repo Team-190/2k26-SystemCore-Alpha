@@ -3,7 +3,6 @@ package first.robot.v3_Horse_CV2_TR.subsystems.shooter;
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Degrees;
 import static org.wpilib.units.Units.KilogramSquareMeters;
-import static org.wpilib.units.Units.Meters;
 import static org.wpilib.units.Units.Milliamps;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
@@ -13,6 +12,7 @@ import static org.wpilib.units.Units.RotationsPerSecondPerSecond;
 import static org.wpilib.units.Units.Seconds;
 import static org.wpilib.units.Units.Volts;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
@@ -27,11 +27,11 @@ import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
-import edu.wpi.team190.gompeilib.sysid.SysIdConfig;
 import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
@@ -80,7 +80,13 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0))
                   .build())
           .withFlywheelGearbox(DCMotor.getKrakenX60Foc(4))
-          .withMomentOfInertia(KilogramSquareMeters.of(0.09473883059))
+          // From CAD until the torque characterization runs; then paste its printed plant here
+          .withPlant(
+              PlantCharacterization.ofInertia(
+                      DCMotor.getKrakenX60Foc(4),
+                      30.0 / 18.0,
+                      KilogramSquareMeters.of(0.09473883059))
+                  .build())
           .withConstraints(
               AngularVelocityConstraints.builder()
                   .withPrefix("Shooter/Flywheel")
@@ -90,18 +96,18 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .build())
           .withVelocityOffsetStep(RadiansPerSecond.of(5))
           .withVoltageOffsetStep(Volts.of(1))
-          .withVoltageSysId(
-              SysIdConfig.voltage()
-                  .withPrefix("Shooter/Flywheel/SysId/Voltage")
+          .withVoltageCharacterization(
+              CharacterizationConfig.voltage()
+                  .withPrefix("Shooter/Flywheel/Characterization/Voltage")
                   .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.5))
                   .withStepOutput(Volts.of(8))
                   .withQuasistaticTimeout(Seconds.of(24))
                   .withDynamicTimeout(Seconds.of(10))
                   .withSettleTime(Seconds.of(6))
                   .build())
-          .withCurrentSysId(
-              SysIdConfig.current()
-                  .withPrefix("Shooter/Flywheel/SysId/Torque")
+          .withCurrentCharacterization(
+              CharacterizationConfig.current()
+                  .withPrefix("Shooter/Flywheel/Characterization/Torque")
                   .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
                   .withStepOutput(Amps.of(40))
                   .withQuasistaticTimeout(Seconds.of(10))
@@ -111,6 +117,8 @@ public class V3_Horse_CV2_TRShooterConstants {
           .build();
 
   private static final Angle HOOD_MIN_ANGLE = Degrees.of(0.5);
+  private static final double HOOD_GEAR_RATIO = (56.0 / 12.0) * (150.0 / 10.0);
+  private static final DCMotor HOOD_GEARBOX = DCMotor.getKrakenX44Foc(1);
   private static final Angle HOOD_MAX_ANGLE = Degrees.of(35.0);
 
   public static final ArmConstants HOOD_CONSTANTS =
@@ -122,7 +130,7 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withDirection(MotorDirection.CLOCKWISE_POSITIVE)
                   .withCurrentLimits(new CurrentLimits(40, 30))
                   .withSoftLimits(SoftLimits.between(HOOD_MIN_ANGLE, HOOD_MAX_ANGLE))
-                  .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
+                  .withGearRatio(HOOD_GEAR_RATIO)
                   .withSlot(
                       GainSlot.ZERO,
                       SlotConfig.position(
@@ -137,14 +145,19 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .build())
           .withArmParameters(
               ArmConstants.ArmParameters.builder()
-                  .withArmGearbox(DCMotor.getKrakenX44Foc(1))
+                  .withArmGearbox(HOOD_GEARBOX)
                   .withMinAngle(HOOD_MIN_ANGLE)
                   .withMaxAngle(HOOD_MAX_ANGLE)
-                  .withLength(Meters.of(0.211582))
-                  // Sim only. The effective inertia the characterized kA implies through the 70:1
-                  // reduction; much lower and the tuned kP/kD go unstable in sim
-                  .withMomentOfInertia(KilogramSquareMeters.of(0.5))
-                  .withSimulateGravity(false)
+                  // Measured kS and kA. kV is the motor model's: the hood's travel is too short for
+                  // the quasistatic legs to reach a steady speed, so its measured kV is unreliable
+                  .withPlant(
+                      PlantCharacterization.voltage()
+                          .withKS(Volts.of(0.60085))
+                          .withKV(
+                              Volts.per(RadiansPerSecond)
+                                  .ofNative(HOOD_GEAR_RATIO / HOOD_GEARBOX.Kv))
+                          .withKA(Volts.per(RotationsPerSecondPerSecond).ofNative(0.13428))
+                          .build())
                   .build())
           .withConstraints(
               AngularPositionConstraints.builder()
@@ -153,9 +166,9 @@ public class V3_Horse_CV2_TRShooterConstants {
                   .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
                   .withGoalTolerance(Degrees.of(1))
                   .build())
-          .withSysId(
-              SysIdConfig.voltage()
-                  .withPrefix("Shooter/Hood/SysId")
+          .withCharacterization(
+              CharacterizationConfig.voltage()
+                  .withPrefix("Shooter/Hood/Characterization")
                   .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.75))
                   .withStepOutput(Volts.of(4.5))
                   .withQuasistaticTimeout(Seconds.of(4))

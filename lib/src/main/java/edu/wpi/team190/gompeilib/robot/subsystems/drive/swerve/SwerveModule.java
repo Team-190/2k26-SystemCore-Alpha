@@ -2,6 +2,8 @@ package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve;
 
 import static org.wpilib.units.Units.*;
 
+import edu.wpi.team190.gompeilib.characterization.CharacterizationRoutine;
+import edu.wpi.team190.gompeilib.characterization.FeedforwardFit.Sample;
 import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetryAutoLogged;
 import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
@@ -268,10 +270,15 @@ public class SwerveModule {
     return drive.leader().position.in(Radians);
   }
 
-  /** Returns the module velocity in rotations/sec. */
+  /**
+   * Returns the drive axis's state at the wheel, for characterization.
+   *
+   * @param effort whether to report voltage or torque current as the effort
+   * @return the sample
+   */
   @Trace
-  public double getFFCharacterizationVelocity() {
-    return drive.leader().velocity.in(RotationsPerSecond);
+  public Sample getFFCharacterizationSample(OutputType effort) {
+    return CharacterizationRoutine.sample(drive.leader(), effort);
   }
 
   /**

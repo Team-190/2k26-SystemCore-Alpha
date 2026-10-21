@@ -72,6 +72,42 @@ public class CurrentHomingTest extends GompeiLibTestBase {
   }
 
   @Test
+  public void testHomesInTorqueCurrent() {
+    CurrentHoming.Config<DistanceUnit> amps =
+        new CurrentHoming.Config<>(Amps.of(-8.0), Amps.of(-20), Amps.of(1), Meters.of(0.1));
+    CurrentHoming<DistanceUnit> homing = new CurrentHoming<>(core, position, amps, true);
+
+    Command home = homing.command();
+    home.initialize();
+    home.execute();
+    home.execute();
+    verify(motors.motor, atLeastOnce())
+        .setControl(
+            new OpenLoopRequest.CurrentOutput(
+                Amps.of(-8.0), 1.0, Amps.zero(), CurrentHoming.OPTIONS));
+
+    motors.read(t -> t.torqueCurrent = Amps.of(-20.5));
+    for (int i = 0; i < 5 && !home.isFinished(); i++) {
+      home.execute();
+    }
+    assertTrue(home.isFinished());
+    verify(motors.motor)
+        .setControl(
+            new OpenLoopRequest.CurrentOutput(
+                Amps.zero(), 1.0, Amps.zero(), RequestOptions.DEFAULT));
+  }
+
+  @Test
+  public void shouldHomeOnlyInVoltsOrAmps() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CurrentHoming.Config<>(Percent.of(10), Amps.of(1), Amps.of(1), Meters.of(0)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CurrentHoming.Config<>(Meters.of(1), Amps.of(1), Amps.of(1), Meters.of(0)));
+  }
+
+  @Test
   public void testIsNotAtTheStopAwayFromTheThreshold() {
     CurrentHoming<DistanceUnit> homing = new CurrentHoming<>(core, position, config, true);
     motors.read(t -> t.torqueCurrent = Amps.of(-5));

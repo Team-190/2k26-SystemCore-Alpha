@@ -24,12 +24,16 @@ import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.motor.phoenix.TalonFXConversions;
+import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleConfig;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.system.DCMotor;
 
 public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
   private static final CANBusId BUS = CANBusId.named("drive");
+  private static final DCMotor DRIVE_MODEL = DCMotor.getKrakenX60Foc(1);
+  private static final DCMotor TURN_MODEL = DCMotor.getKrakenX44Foc(1);
 
   private static SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
@@ -51,6 +55,8 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     c.SlipCurrent = 90.0;
     c.DriveInertia = 0.02;
     c.SteerInertia = 0.03;
+    c.DriveFrictionVoltage = 0.2;
+    c.SteerFrictionVoltage = 0.3;
     c.FeedbackSource = SteerFeedbackType.FusedCANcoder;
     c.DriveMotorGains = new Slot0Configs().withKP(1.0).withKV(0.5);
     c.SteerMotorGains = new Slot0Configs().withKP(50.0).withKD(0.5);
@@ -61,7 +67,7 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
   public void testConvertsTheDriveMotor() {
     SwerveModuleConfig config =
         SwerveModuleConstantsConversions.toModuleConfig(
-            constants(false), BUS, Hertz.of(250.0), Seconds.of(0.02));
+            constants(false), BUS, Hertz.of(250.0), Seconds.of(0.02), DRIVE_MODEL, TURN_MODEL);
     MotorConfig drive = config.driveMotor();
 
     assertEquals(1, drive.canId);
@@ -86,7 +92,7 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
   public void testConvertsTheTurnMotor() {
     SwerveModuleConfig config =
         SwerveModuleConstantsConversions.toModuleConfig(
-            constants(true), BUS, Hertz.of(250.0), Seconds.of(0.02));
+            constants(true), BUS, Hertz.of(250.0), Seconds.of(0.02), DRIVE_MODEL, TURN_MODEL);
     MotorConfig turn = config.turnMotor();
 
     assertEquals(2, turn.canId);
@@ -113,7 +119,7 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     constants.EncoderInitialConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1.0;
     SwerveModuleConfig config =
         SwerveModuleConstantsConversions.toModuleConfig(
-            constants, BUS, Hertz.of(250.0), Seconds.of(0.02));
+            constants, BUS, Hertz.of(250.0), Seconds.of(0.02), DRIVE_MODEL, TURN_MODEL);
     AbsoluteEncoderConfig encoder = config.encoder();
 
     assertEquals(3, encoder.canId);
@@ -122,12 +128,20 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     assertEquals(Rotations.of(0.25), encoder.magnetOffset);
     assertEquals(Rotations.of(1.0), encoder.discontinuityPoint);
     assertEquals(new Translation2d(0.3, -0.4), config.location());
-    assertEquals(KilogramSquareMeters.of(0.02), config.driveInertia());
-    assertEquals(KilogramSquareMeters.of(0.03), config.turnInertia());
+    assertEquals(
+        PlantCharacterization.ofInertia(DRIVE_MODEL, 6.0, KilogramSquareMeters.of(0.02))
+            .withKS(Volts.of(0.2))
+            .build(),
+        config.drivePlant());
+    assertEquals(
+        PlantCharacterization.ofInertia(TURN_MODEL, 20.0, KilogramSquareMeters.of(0.03))
+            .withKS(Volts.of(0.3))
+            .build(),
+        config.turnPlant());
 
     SwerveModuleConfig withoutInitialConfigs =
         SwerveModuleConstantsConversions.toModuleConfig(
-            constants(false), BUS, Hertz.of(250.0), Seconds.of(0.02));
+            constants(false), BUS, Hertz.of(250.0), Seconds.of(0.02), DRIVE_MODEL, TURN_MODEL);
     assertEquals(
         SensorDirection.COUNTER_CLOCKWISE_POSITIVE, withoutInitialConfigs.encoder().direction);
     assertEquals(Rotations.of(0.5), withoutInitialConfigs.encoder().discontinuityPoint);
@@ -218,9 +232,19 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     c.DriveMotorClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
     c.SteerMotorClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
     SwerveModuleConfig config =
-        SwerveModuleConstantsConversions.toModuleConfig(c, BUS, Hertz.of(250.0), Seconds.of(0.02));
+        SwerveModuleConstantsConversions.toModuleConfig(
+            c, BUS, Hertz.of(250.0), Seconds.of(0.02), DRIVE_MODEL, TURN_MODEL);
 
     assertEquals(OutputType.CURRENT, config.driveMotor().slots.get(GainSlot.ZERO).outputType());
     assertEquals(OutputType.CURRENT, config.turnMotor().slots.get(GainSlot.ZERO).outputType());
+    // The plants follow their loops into torque current
+    assertEquals(
+        PlantCharacterization.ofInertia(DRIVE_MODEL, 6.0, KilogramSquareMeters.of(0.02))
+            .withKS(Volts.of(0.2))
+            .build()
+            .toCurrent(DRIVE_MODEL, 6.0, 1),
+        config.drivePlant());
+    assertEquals(OutputType.CURRENT, config.turnPlant().effort());
+    assertEquals(0.3 / TURN_MODEL.R, config.turnPlant().kS(), 1e-9);
   }
 }

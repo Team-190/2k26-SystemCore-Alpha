@@ -5,8 +5,8 @@ import edu.wpi.team190.gompeilib.io.encoder.sim.AbsoluteEncoderIOSim;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.sim.MotorIOSim;
-import edu.wpi.team190.gompeilib.io.physics.DCMotorMechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
+import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import java.util.Objects;
 import org.wpilib.math.system.DCMotor;
 
@@ -53,9 +53,9 @@ public record SwerveModuleHardware(
   public static SwerveModuleHardware sim(
       SwerveModuleConfig config, DCMotor driveModel, DCMotor turnModel) {
     MechanismSim drive =
-        new DCMotorMechanismSim(driveModel, config.driveInertia(), config.driveMotor().gearRatio);
+        new PlantMechanismSim(driveModel, config.driveMotor().gearRatio, config.drivePlant());
     MechanismSim turn =
-        new DCMotorMechanismSim(turnModel, config.turnInertia(), config.turnMotor().gearRatio);
+        new PlantMechanismSim(turnModel, config.turnMotor().gearRatio, config.turnPlant());
     return new SwerveModuleHardware(
         MotorIOSim.factory(drive),
         MotorIOSim.factory(turn),
