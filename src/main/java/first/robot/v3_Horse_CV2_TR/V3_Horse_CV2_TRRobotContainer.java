@@ -57,6 +57,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
 
+  @SuppressWarnings("unused")
   private final XKeysInput xkeys = new XKeysInput(1);
 
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
