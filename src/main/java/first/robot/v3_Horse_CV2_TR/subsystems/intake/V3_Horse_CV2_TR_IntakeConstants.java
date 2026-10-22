@@ -320,6 +320,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     ZERO,
     STOP,
     SLOW_MOVE,
+    SQUISH,
     SYSID
   }
 
