@@ -71,15 +71,15 @@ public class Planner {
                       int currentIndex = (int) exactIndex;
 
                       State target;
-                        // blend between states
-                        State before = states.get(currentIndex);
-                        State after = states.get(currentIndex + 1);
-                        double fraction = exactIndex - currentIndex;
-                        target =
-                            new State(
-                                before.pose().interpolate(after.pose(), fraction),
-                                before.velocity().interpolate(after.velocity(), fraction),
-                                0);
+                      // blend between states
+                      State before = states.get(currentIndex);
+                      State after = states.get(currentIndex + 1);
+                      double fraction = exactIndex - currentIndex;
+                      target =
+                          new State(
+                              before.pose().interpolate(after.pose(), fraction),
+                              before.velocity().interpolate(after.velocity(), fraction),
+                              0);
                       ChassisVelocities output = calculate(solver, pose, target);
                       driveCommand.accept(output);
                       logTarget(pose, target, output, path, pathIndex, planTime);

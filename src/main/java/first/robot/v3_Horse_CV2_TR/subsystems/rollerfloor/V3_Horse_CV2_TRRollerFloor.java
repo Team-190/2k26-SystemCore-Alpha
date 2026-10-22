@@ -5,6 +5,7 @@ import static org.wpilib.units.Units.Volts;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRoller;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
@@ -37,7 +38,7 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
             Volts.of(12));
     rollerFloorStopSetpoint =
         new Setpoint<>(
-            Volts.of(0),
+            Volts.of(-1.5),
             V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(0),
             Volts.of(0));
@@ -54,15 +55,20 @@ public class V3_Horse_CV2_TRRollerFloor extends SubsystemBase {
   public void periodic() {
     switch (rollerFloorGoal) {
       case RUN:
+        V3_Horse_CV2_TRRobotState.setHopperRunning(true);
         runRollerFloor(rollerFloorSetpoint);
         break;
       case OVERRIDE:
+        V3_Horse_CV2_TRRobotState.setHopperRunning(false);
         runRollerFloor(rollerFloorOverrideSetpoint);
         break;
       case STOP:
+        V3_Horse_CV2_TRRobotState.setHopperRunning(false);
+
         stopRollerFloor();
         break;
       default:
+        V3_Horse_CV2_TRRobotState.setHopperRunning(false);
         runRollerFloor(rollerFloorSetpoint);
         break;
     }

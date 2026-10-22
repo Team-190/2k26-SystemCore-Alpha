@@ -76,6 +76,7 @@ public class V3_Horse_CV2_TRCompositeCommands {
                     : ShooterGoal.FEED)),
         Commands.sequence(
             Commands.waitUntil(() -> shooter.atGoal() && isAimedForShot()),
+            Commands.waitSeconds(1),
             rollerFloor.setState(RollerFloorState.RUN)));
   }
 
@@ -103,6 +104,7 @@ public class V3_Horse_CV2_TRCompositeCommands {
         Commands.sequence(
             shooter.runFixedShot(fixedShot),
             Commands.waitUntil(() -> shooter.atGoal()),
+            Commands.waitSeconds(1),
             rollerFloor.setState(RollerFloorState.RUN)));
   }
 }

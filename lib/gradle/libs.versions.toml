@@ -10,7 +10,7 @@ quickbuf = "1.4"
 jackson = "2.22.3"
 # jackson-annotations dropped its patch digit at 2.20+ (2.22, not 2.22.x) while core/databind kept theirs.
 jackson-annotations = "2.22"
-pathplanner = "2027.0.0-alpha-4"
+pathplanner = "2027.0.0-alpha-4.1"
 # Runtime dependency of wpilib-tunables (TunableConfig properties); matches what GradleRIO resolves.
 avaje-jsonb = "3.14"
 
