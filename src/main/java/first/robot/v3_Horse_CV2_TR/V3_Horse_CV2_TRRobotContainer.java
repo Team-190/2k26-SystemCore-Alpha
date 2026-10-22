@@ -59,6 +59,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
 
+  @SuppressWarnings("unused")
   private final XKeysInput xkeys = new XKeysInput(1);
 
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
@@ -113,6 +114,14 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   new CameraStaticLimelight(
                       new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG),
                       V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG,
+                      V3_Horse_CV2_TRRobotState::getHeading,
+                      drive::getMeasuredChassisVelocities,
+                      V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
+                      List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                      List.of()),
+                  new CameraStaticLimelight(
+                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG),
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG,
                       V3_Horse_CV2_TRRobotState::getHeading,
                       drive::getMeasuredChassisVelocities,
                       V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
@@ -267,6 +276,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             true,
             7,
             5));
+
+    autoChooser.add("Shooter Flywheel Torque SysId", shooter.flywheelSysId());
 
     autoChooser.addDefault("Do Nothing", Commands.none());
   }

@@ -339,18 +339,19 @@ public class V3_Horse_CV2_TRRobotState {
         new FixedShotParameters(
             GompeiTunables.value(
                 "FixedShots/Front-Tower/Angle",
-                Rotation2d.fromRadians(0.2890658503988659).getMeasure()),
-            GompeiTunables.value("FixedShots/Bump/Speed", RadiansPerSecond.of(175.0)))),
+                Rotation2d.fromRadians(0.3490658503988659).getMeasure()),
+            GompeiTunables.value("FixedShots/Front-Tower/Speed", RadiansPerSecond.of(155.0)))),
     SIDE_TOWER(
         new FixedShotParameters(
             GompeiTunables.value(
-                "FixedShots/Side-Tower/Angle", Rotation2d.fromDegrees(20.0).getMeasure()),
-            GompeiTunables.value("FixedShots/Trench/Speed", RadiansPerSecond.of(185.0)))),
+                "FixedShots/Side-Tower/Angle",
+                Rotation2d.fromRadians(0.3490658503988659).getMeasure()),
+            GompeiTunables.value("FixedShots/Side-Tower/Speed", RadiansPerSecond.of(165.0)))),
     CORNER(
         new FixedShotParameters(
             GompeiTunables.value(
                 "FixedShots/Corner/Angle", Rotation2d.fromRadians(0.4517551306747923).getMeasure()),
-            GompeiTunables.value("FixedShots/Far/Speed", RadiansPerSecond.of(205.0))));
+            GompeiTunables.value("FixedShots/Corner/Speed", RadiansPerSecond.of(185))));
 
     @Getter private final FixedShotParameters parameters;
   }

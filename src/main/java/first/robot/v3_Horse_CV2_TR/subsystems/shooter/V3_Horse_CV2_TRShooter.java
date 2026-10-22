@@ -242,7 +242,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   }
 
   public Command flywheelSysId() {
-    return flywheel.sysIdRoutineTorque();
+    // IDLE keeps periodic() from overriding the routine's current requests with stop()
+    return setGoal(ShooterGoal.IDLE).andThen(flywheel.sysIdRoutineTorque());
   }
 
   public Command incrementFlywheelVelocity() {
