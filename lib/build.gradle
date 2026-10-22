@@ -70,6 +70,9 @@ repositories {
     maven {
         url = uri("https://3015rangerrobotics.github.io/pathplannerlib/repo")
     }
+    maven {
+        url = uri("https://limelightvision.github.io/limelightlib-public/maven/")
+    }
 }
 
 apply from: "gradle/native-utils.gradle"
@@ -87,6 +90,9 @@ dependencies {
 
     // CTRE
     compileOnly libs.phoenix6
+
+    // Limelight
+    compileOnly libs.limelight
 
     // Choreo (no WPILib 2027 alpha compatible release yet; see libs.versions.toml)
     // compileOnly libs.choreo
@@ -108,6 +114,7 @@ dependencies {
     testImplementation libs.bundles.aspectj
     testImplementation libs.bundles.advantagekit
     testImplementation libs.phoenix6
+    testImplementation libs.limelight
     testImplementation libs.pathplanner
     // testImplementation libs.choreo
     testImplementation "org.ejml:ejml-simple:0.44.0"
@@ -186,7 +193,6 @@ jacocoTestReport {
                 '**/*AutoLogged.class',
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
-                '**/LimelightHelpers*.class',
                 // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
                 '**/PhoenixOdometryThread*.class',
                 '**/PhoenixUtil*.class'
@@ -236,7 +242,6 @@ jacocoTestCoverageVerification {
                 '**/*AutoLogged.class',
                 '**/*AutoLogged$*.class',
                 '**/*Tracing*',
-                '**/LimelightHelpers*.class',
                 // Run a blocking sampling loop on their own thread and refresh signals on real CAN buses
                 '**/PhoenixOdometryThread*.class',
                 '**/PhoenixUtil*.class'

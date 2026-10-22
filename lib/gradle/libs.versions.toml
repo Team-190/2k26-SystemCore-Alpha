@@ -11,6 +11,7 @@ jackson = "2.22.3"
 # jackson-annotations dropped its patch digit at 2.20+ (2.22, not 2.22.x) while core/databind kept theirs.
 jackson-annotations = "2.22"
 pathplanner = "2027.0.0-alpha-4.1"
+limelight = "2.0.0-beta9-alpha7"
 # Runtime dependency of wpilib-tunables (TunableConfig properties); matches what GradleRIO resolves.
 avaje-jsonb = "3.14"
 
@@ -48,6 +49,9 @@ phoenix6 = { group = "com.ctre.phoenix6", name = "wpiapi-java", version.ref = "p
 
 # PathplannerLib
 pathplanner = { group = "com.pathplanner.lib", name = "PathplannerLib-java", version.ref = "pathplanner" }
+
+# LimelightLib
+limelight = { group = "com.limelightvision", name = "limelightlib-java", version.ref = "limelight" }
 
 # AspectJ
 aspectj-rt = { group = "org.aspectj", name = "aspectjrt", version.ref = "aspectj" }

@@ -63,7 +63,7 @@ public class CameraGompeiVision extends Camera {
     allTagPoses = new ArrayList<>();
     robotPose = Pose2d.ZERO;
 
-    currentCameraPose = config.robotRelativePose();
+    realTimeCameraPose = config.robotRelativePose();
   }
 
   @Override
@@ -97,7 +97,7 @@ public class CameraGompeiVision extends Camera {
       Pose2d robotPose = null;
       Pose3d robotPose3d = null;
       Transform3d cameraToRobot =
-          new Transform3d(currentCameraPose.getTranslation(), currentCameraPose.getRotation())
+          new Transform3d(realTimeCameraPose.getTranslation(), realTimeCameraPose.getRotation())
               .inverse();
 
       switch ((int) values[0]) {

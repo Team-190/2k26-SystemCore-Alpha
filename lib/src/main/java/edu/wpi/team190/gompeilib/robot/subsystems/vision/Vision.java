@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.robot.subsystems.vision;
 
 import edu.wpi.team190.gompeilib.robot.subsystems.VirtualSubsystem;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.camera.Camera;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.CameraIOLimelight;
 import java.util.function.Supplier;
 import lombok.Getter;
 import org.wpilib.fields.Field;
@@ -52,5 +53,6 @@ public class Vision extends VirtualSubsystem {
     for (Camera camera : cameras) {
       camera.periodic();
     }
+    CameraIOLimelight.flushNT();
   }
 }

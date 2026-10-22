@@ -36,7 +36,10 @@ public class CameraIOGompeiVision implements CameraIO {
         .getDoubleArrayTopic("distortion_coefficients")
         .publish()
         .set(config.distortionCoefficients().getData());
-    configTable.getDoubleTopic("exposure").publish().set(config.exposure());
+    configTable
+        .getDoubleTopic("exposure")
+        .publish()
+        .set(config.exposure().in(org.wpilib.units.Units.Milliseconds));
     configTable.getDoubleTopic("gain").publish().set(config.gain());
     configTable.getIntegerTopic("width").publish().set(config.width());
     configTable.getIntegerTopic("height").publish().set(config.height());

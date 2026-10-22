@@ -72,6 +72,7 @@ public class CameraGompeiVisionTest {
             List.of(txtyObserver));
 
     assertEquals("gompei", camera.getName());
+    assertEquals(cameraPoseRel, camera.getRealTimeCameraPose());
     assertEquals(cameraPoseRel, camera.getCurrentCameraPose());
 
     try (MockedStatic<Logger> _ = mockStatic(Logger.class);

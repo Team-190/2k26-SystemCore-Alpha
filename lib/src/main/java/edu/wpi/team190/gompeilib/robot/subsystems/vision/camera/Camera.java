@@ -25,7 +25,7 @@ public abstract class Camera {
   @Getter List<VisionMultiTxTyObservation> multiTxTyObservationList;
   @Getter List<VisionSingleTxTyObservation> singleTxTyObservationList;
 
-  @Getter protected Pose3d currentCameraPose;
+  @Getter protected Pose3d realTimeCameraPose;
   @Getter @Setter protected Supplier<Field> fieldLayoutSupplier;
 
   public Camera(
@@ -47,7 +47,15 @@ public abstract class Camera {
   public void periodic() {}
 
   public void setCameraPose(Pose3d cameraPose) {
-    currentCameraPose = cameraPose;
+    realTimeCameraPose = cameraPose;
+  }
+
+  /**
+   * @deprecated Use {@link #getRealTimeCameraPose()} instead.
+   */
+  @Deprecated
+  public Pose3d getCurrentCameraPose() {
+    return realTimeCameraPose;
   }
 
   public void sendObservers() {
@@ -72,6 +80,10 @@ public abstract class Camera {
 
   public boolean isValidTagCount(int tagCount) {
     return tagCount > 0;
+  }
+
+  public boolean isWithinFieldBounds(Pose2d pose, org.wpilib.units.measure.Distance margin) {
+    return isWithinFieldBounds(pose, margin.in(org.wpilib.units.Units.Meters));
   }
 
   public boolean isWithinFieldBounds(Pose2d pose, double margin) {
@@ -102,8 +114,18 @@ public abstract class Camera {
     return ambiguity >= 0 && ambiguity < VisionConstants.AMBIGUITY_THRESHOLD;
   }
 
+  public boolean isValidYawRate(org.wpilib.units.measure.AngularVelocity yawRate) {
+    return isValidYawRate(yawRate.in(org.wpilib.units.Units.RadiansPerSecond));
+  }
+
   public boolean isValidYawRate(double omegaRadPerSec) {
     return Math.abs(omegaRadPerSec) <= Math.toRadians(720);
+  }
+
+  public boolean isValidDistance(
+      org.wpilib.units.measure.Distance distance, org.wpilib.units.measure.Distance maxDistance) {
+    return isValidDistance(
+        distance.in(org.wpilib.units.Units.Meters), maxDistance.in(org.wpilib.units.Units.Meters));
   }
 
   public boolean isValidDistance(double distance, double maxDistance) {

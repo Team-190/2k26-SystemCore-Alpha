@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.fields.Field;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Rotation3d;
 import org.wpilib.math.linalg.VecBuilder;
 
@@ -48,6 +49,7 @@ public class CameraTest {
 
     Pose3d pose = new Pose3d();
     camera.setCameraPose(pose);
+    assertEquals(pose, camera.getRealTimeCameraPose());
     assertEquals(pose, camera.getCurrentCameraPose());
 
     // Call periodic (no-op in base class)
@@ -160,6 +162,8 @@ public class CameraTest {
     assertTrue(camera.isValidYawRate(Math.toRadians(720)));
     assertFalse(camera.isValidYawRate(Math.toRadians(730)));
     assertFalse(camera.isValidYawRate(-Math.toRadians(730)));
+    assertTrue(camera.isValidYawRate(org.wpilib.units.Units.DegreesPerSecond.of(180)));
+    assertFalse(camera.isValidYawRate(org.wpilib.units.Units.DegreesPerSecond.of(730)));
 
     // Distance
     assertTrue(camera.isValidDistance(5.0, 10.0));
@@ -167,5 +171,16 @@ public class CameraTest {
     assertFalse(camera.isValidDistance(0.0, 10.0));
     assertFalse(camera.isValidDistance(-1.0, 10.0));
     assertFalse(camera.isValidDistance(10.1, 10.0));
+    assertTrue(
+        camera.isValidDistance(
+            org.wpilib.units.Units.Meters.of(5.0), org.wpilib.units.Units.Meters.of(10.0)));
+    assertFalse(
+        camera.isValidDistance(
+            org.wpilib.units.Units.Meters.of(10.1), org.wpilib.units.Units.Meters.of(10.0)));
+
+    // Field bounds with measure
+    assertTrue(
+        camera.isWithinFieldBounds(
+            new Pose2d(5.0, 5.0, new Rotation2d()), org.wpilib.units.Units.Meters.of(0.5)));
   }
 }

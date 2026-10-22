@@ -39,9 +39,7 @@ public class TestContractEnforcerTest {
           // Shared motor fixture and all-capability test mechanism for the mechanism-layer tests
           "edu/wpi/team190/gompeilib/robot/mechanisms/MechanismTestSupport.java",
           // Shared drive constants and mocked drive for the swerve drive command tests
-          "edu/wpi/team190/gompeilib/robot/subsystems/drive/swerve/commands/DriveCommandsTestSupport.java",
-          // Joint test for StaticLimelight and MovingLimelight
-          "edu/wpi/team190/gompeilib/robot/subsystems/vision/camera/CameraLimelightTest.java");
+          "edu/wpi/team190/gompeilib/robot/subsystems/drive/swerve/commands/DriveCommandsTestSupport.java");
 
   private Path resolveDir(Path rel) {
     if (Files.exists(rel)) {

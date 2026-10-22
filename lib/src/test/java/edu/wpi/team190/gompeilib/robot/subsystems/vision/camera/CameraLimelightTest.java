@@ -2,7 +2,9 @@ package edu.wpi.team190.gompeilib.robot.subsystems.vision.camera;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.wpilib.units.Units.*;
 
+import com.limelightvision.IMUMode;
 import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionPoseObservation;
@@ -10,7 +12,6 @@ import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionSingleTxTyOb
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.CameraIO;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.CameraIOLimelight;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.LimelightIOInputsAutoLogged;
-import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.limelight.LimelightHelpers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -36,8 +37,8 @@ public class CameraLimelightTest {
         VisionConstants.StaticLimelightConfig.builder()
             .key("static")
             .cameraType(CameraType.LIMELIGHT_3)
-            .horizontalFOV(60.0)
-            .verticalFOV(40.0)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
             .megatagXYStdev(0.1)
             .metatagThetaStdev(0.2)
             .megatag2XYStdev(0.05)
@@ -54,8 +55,7 @@ public class CameraLimelightTest {
 
     ChassisVelocities[] staticChassisVelocities = {new ChassisVelocities()};
 
-    try (MockedStatic<LimelightHelpers> mockHelpers = mockStatic(LimelightHelpers.class);
-        MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
+    try (MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
         MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
         MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class);
         var _ = mockStatic(Logger.class)) {
@@ -72,8 +72,8 @@ public class CameraLimelightTest {
           VisionConstants.StaticLimelightConfig.builder()
               .key("static-tuning-probe")
               .cameraType(CameraType.LIMELIGHT_3)
-              .horizontalFOV(60.0)
-              .verticalFOV(40.0)
+              .horizontalFOV(Degrees.of(60.0))
+              .verticalFOV(Degrees.of(40.0))
               .megatagXYStdev(0.1)
               .metatagThetaStdev(0.2)
               .megatag2XYStdev(0.05)
@@ -86,7 +86,6 @@ public class CameraLimelightTest {
           tuningProbeConfig,
           () -> Rotation2d.fromDegrees(0),
           () -> new ChassisVelocities(),
-          () -> 1000L,
           List.of(poseObserver),
           List.of(singleObserver));
 
@@ -98,7 +97,6 @@ public class CameraLimelightTest {
               config,
               () -> Rotation2d.fromDegrees(0),
               () -> staticChassisVelocities[0],
-              () -> 1000L,
               List.of(poseObserver),
               List.of(singleObserver));
 
@@ -168,14 +166,18 @@ public class CameraLimelightTest {
       singleObs.clear();
       camera.periodic();
 
-      mockHelpers.verify(() -> LimelightHelpers.SetIMUMode("limelight-static", 0), times(1));
-      mockHelpers.verify(() -> LimelightHelpers.SetThrottle("limelight-static", 0), times(1));
+      verify(io, times(2))
+          .setIMUMode(IMUMode.EXTERNAL); // Once in constructor, once in enabled transition
+      verify(io, times(1)).setThrottle(0);
+      verify(io, atLeastOnce())
+          .setSharedRobotOrientation(
+              any(org.wpilib.units.measure.Angle.class),
+              any(org.wpilib.units.measure.AngularVelocity.class));
 
       // Rerun enabled periodic with time advance to trigger rewind
       mockTimer.when(Timer::getTimestamp).thenReturn(180.0); // > 165
       camera.periodic();
-      mockHelpers.verify(
-          () -> LimelightHelpers.triggerRewindCapture("limelight-static", 165), times(1));
+      verify(io, times(1)).triggerRewindCapture(VisionConstants.REWIND_CAPTURE_INTERVAL);
 
       // Transition to disabled while tuning
       mockDS.when(RobotState::isEnabled).thenReturn(false);
@@ -184,9 +186,7 @@ public class CameraLimelightTest {
       mockTimer.when(Timer::getTimestamp).thenReturn(185.0);
 
       camera.periodic();
-      mockHelpers.verify(
-          () -> LimelightHelpers.SetIMUMode("limelight-static", 1),
-          times(2)); // First in constructor/constructor states
+      verify(io, times(3)).setIMUMode(IMUMode.EXTERNAL); // Third time in disabled transition
 
       // Transition back to enabled, then to disabled while not tuning, to cover the
       // periodic() disabled-block's non-tuning branch
@@ -201,7 +201,7 @@ public class CameraLimelightTest {
       mockTimer.when(Timer::getTimestamp).thenReturn(201.0);
       camera.periodic();
       // Once from the constructor (also built with tuning=false), once from this periodic() call.
-      mockHelpers.verify(() -> LimelightHelpers.SetThrottle("limelight-static", 190), times(2));
+      verify(io, times(2)).setThrottle(190);
 
       // Multiple confident tags with a stationary chassis: covers the high-confidence
       // theta stdev branch (as opposed to the low-confidence Double.POSITIVE_INFINITY fallback).
@@ -314,8 +314,8 @@ public class CameraLimelightTest {
           VisionConstants.StaticLimelightConfig.builder()
               .key("static-no-rewind")
               .cameraType(CameraType.LIMELIGHT_3)
-              .horizontalFOV(60.0)
-              .verticalFOV(40.0)
+              .horizontalFOV(Degrees.of(60.0))
+              .verticalFOV(Degrees.of(40.0))
               .megatagXYStdev(0.1)
               .metatagThetaStdev(0.2)
               .megatag2XYStdev(0.05)
@@ -323,13 +323,13 @@ public class CameraLimelightTest {
                   new Transform3d(new Translation3d(0.5, 0.0, 0.5), new Rotation3d()))
               .enableRewind(false)
               .build();
+      CameraIOLimelight noRewindIo = mock(CameraIOLimelight.class);
       CameraStaticLimelight noRewindCamera =
           new CameraStaticLimelight(
-              mock(CameraIOLimelight.class),
+              noRewindIo,
               noRewindConfig,
               () -> Rotation2d.fromDegrees(0),
               () -> new ChassisVelocities(),
-              () -> 1000L,
               List.of(poseObserver),
               List.of(singleObserver));
 
@@ -340,16 +340,14 @@ public class CameraLimelightTest {
 
       mockTimer.when(Timer::getTimestamp).thenReturn(500.0); // elapsed > 165
       noRewindCamera.periodic();
-      mockHelpers.verify(
-          () -> LimelightHelpers.triggerRewindCapture(eq("static-no-rewind"), anyDouble()),
-          never());
+      verify(noRewindIo, never()).triggerRewindCapture(any(org.wpilib.units.measure.Time.class));
+      verify(noRewindIo, never()).triggerRewindCapture(anyDouble());
 
       mockDS.when(RobotState::isEnabled).thenReturn(false);
       mockDS.when(RobotState::isDisabled).thenReturn(true);
       noRewindCamera.periodic();
-      mockHelpers.verify(
-          () -> LimelightHelpers.triggerRewindCapture(eq("static-no-rewind"), anyDouble()),
-          never());
+      verify(noRewindIo, never()).triggerRewindCapture(any(org.wpilib.units.measure.Time.class));
+      verify(noRewindIo, never()).triggerRewindCapture(anyDouble());
     }
   }
 
@@ -360,8 +358,8 @@ public class CameraLimelightTest {
         VisionConstants.MovingLimelightConfig.builder()
             .key("moving")
             .cameraType(CameraType.LIMELIGHT_3G)
-            .horizontalFOV(80.0)
-            .verticalFOV(50.0)
+            .horizontalFOV(Degrees.of(80.0))
+            .verticalFOV(Degrees.of(50.0))
             .megatagXYStdev(0.1)
             .metatagThetaStdev(0.2)
             .megatag2XYStdev(0.05)
@@ -380,11 +378,11 @@ public class CameraLimelightTest {
 
     ChassisVelocities[] movingChassisVelocities = {new ChassisVelocities()};
 
-    try (MockedStatic<LimelightHelpers> mockHelpers = mockStatic(LimelightHelpers.class);
-        MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
+    try (MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
         MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
+        MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class);
         var _ = mockStatic(Logger.class)) {
-
+      mockLib.when(GompeiLib::isTuning).thenReturn(false);
       mockDS.when(RobotState::isEnabled).thenReturn(false);
       mockDS.when(RobotState::isDisabled).thenReturn(true);
       mockTimer.when(Timer::getTimestamp).thenReturn(10.0);
@@ -395,8 +393,8 @@ public class CameraLimelightTest {
               config,
               () -> Rotation2d.fromDegrees(0),
               () -> Rotation2d.fromDegrees(45), // rotated 45 degrees
+              () -> DegreesPerSecond.of(10.0),
               () -> movingChassisVelocities[0],
-              () -> 1000L,
               List.of(poseObserver),
               List.of(singleObserver));
 
@@ -455,14 +453,18 @@ public class CameraLimelightTest {
       mockTimer.when(Timer::getTimestamp).thenReturn(11.0);
 
       camera.periodic();
-      mockHelpers.verify(() -> LimelightHelpers.SetIMUMode("limelight-moving", 0), times(1));
-      mockHelpers.verify(() -> LimelightHelpers.SetThrottle("limelight-moving", 0), times(1));
+      verify(io, times(2))
+          .setIMUMode(IMUMode.EXTERNAL); // Once in constructor, once in enabled transition
+      verify(io, times(1)).setThrottle(0);
+      verify(io, atLeastOnce())
+          .setRobotOrientation(
+              any(org.wpilib.units.measure.Angle.class),
+              any(org.wpilib.units.measure.AngularVelocity.class));
 
       // Advance time to trigger rewind capture
       mockTimer.when(Timer::getTimestamp).thenReturn(180.0);
       camera.periodic();
-      mockHelpers.verify(
-          () -> LimelightHelpers.triggerRewindCapture("limelight-moving", 165), times(1));
+      verify(io, times(1)).triggerRewindCapture(VisionConstants.REWIND_CAPTURE_INTERVAL);
 
       // Transition back to disabled
       mockDS.when(RobotState::isEnabled).thenReturn(false);
@@ -470,7 +472,7 @@ public class CameraLimelightTest {
       mockTimer.when(Timer::getTimestamp).thenReturn(185.0);
 
       camera.periodic();
-      mockHelpers.verify(() -> LimelightHelpers.SetIMUMode("limelight-moving", 1), times(2));
+      verify(io, times(3)).setIMUMode(IMUMode.EXTERNAL); // Third time in disabled transition
 
       // Multiple confident tags with a stationary chassis: covers the high-confidence
       // theta stdev branch (as opposed to the low-confidence Double.POSITIVE_INFINITY fallback).
@@ -583,8 +585,8 @@ public class CameraLimelightTest {
           VisionConstants.MovingLimelightConfig.builder()
               .key("moving-no-rewind")
               .cameraType(CameraType.LIMELIGHT_3G)
-              .horizontalFOV(80.0)
-              .verticalFOV(50.0)
+              .horizontalFOV(Degrees.of(80.0))
+              .verticalFOV(Degrees.of(50.0))
               .megatagXYStdev(0.1)
               .metatagThetaStdev(0.2)
               .megatag2XYStdev(0.05)
@@ -594,14 +596,14 @@ public class CameraLimelightTest {
                   new Transform3d(new Translation3d(0.1, 0.0, 0.0), new Rotation3d()))
               .enableRewind(false)
               .build();
+      CameraIOLimelight noRewindIo = mock(CameraIOLimelight.class);
       CameraMovingLimelight noRewindCamera =
           new CameraMovingLimelight(
-              mock(CameraIOLimelight.class),
+              noRewindIo,
               noRewindConfig,
               () -> Rotation2d.fromDegrees(0),
               () -> Rotation2d.fromDegrees(45),
               () -> new ChassisVelocities(),
-              () -> 1000L,
               List.of(poseObserver),
               List.of(singleObserver));
 
@@ -612,16 +614,14 @@ public class CameraLimelightTest {
 
       mockTimer.when(Timer::getTimestamp).thenReturn(500.0); // elapsed > 165
       noRewindCamera.periodic();
-      mockHelpers.verify(
-          () -> LimelightHelpers.triggerRewindCapture(eq("moving-no-rewind"), anyDouble()),
-          never());
+      verify(noRewindIo, never()).triggerRewindCapture(any(org.wpilib.units.measure.Time.class));
+      verify(noRewindIo, never()).triggerRewindCapture(anyDouble());
 
       mockDS.when(RobotState::isEnabled).thenReturn(false);
       mockDS.when(RobotState::isDisabled).thenReturn(true);
       noRewindCamera.periodic();
-      mockHelpers.verify(
-          () -> LimelightHelpers.triggerRewindCapture(eq("moving-no-rewind"), anyDouble()),
-          never());
+      verify(noRewindIo, never()).triggerRewindCapture(any(org.wpilib.units.measure.Time.class));
+      verify(noRewindIo, never()).triggerRewindCapture(anyDouble());
     }
   }
 
@@ -632,8 +632,8 @@ public class CameraLimelightTest {
         VisionConstants.StaticLimelightConfig.builder()
             .key("static-stale")
             .cameraType(CameraType.LIMELIGHT_3)
-            .horizontalFOV(60.0)
-            .verticalFOV(40.0)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
             .megatagXYStdev(0.1)
             .metatagThetaStdev(0.2)
             .megatag2XYStdev(0.05)
@@ -644,8 +644,7 @@ public class CameraLimelightTest {
     List<VisionPoseObservation> poseObs = new ArrayList<>();
     LimelightIOInputsAutoLogged inputs = new LimelightIOInputsAutoLogged();
 
-    try (MockedStatic<LimelightHelpers> _ = mockStatic(LimelightHelpers.class);
-        MockedStatic<Logger> _ = mockStatic(Logger.class);
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
         MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
         MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class)) {
@@ -660,7 +659,6 @@ public class CameraLimelightTest {
               config,
               () -> Rotation2d.fromDegrees(0),
               () -> new ChassisVelocities(),
-              () -> 1000L,
               List.of(poseObs::addAll),
               List.of());
 
@@ -726,8 +724,8 @@ public class CameraLimelightTest {
         VisionConstants.MovingLimelightConfig.builder()
             .key("moving-turret-geom")
             .cameraType(CameraType.LIMELIGHT_3G)
-            .horizontalFOV(80.0)
-            .verticalFOV(50.0)
+            .horizontalFOV(Degrees.of(80.0))
+            .verticalFOV(Degrees.of(50.0))
             .megatagXYStdev(0.1)
             .metatagThetaStdev(0.2)
             .megatag2XYStdev(0.05)
@@ -743,9 +741,10 @@ public class CameraLimelightTest {
     double[] timestamp = {10.0};
     LimelightIOInputsAutoLogged inputs = new LimelightIOInputsAutoLogged();
 
-    try (MockedStatic<LimelightHelpers> _ = mockStatic(LimelightHelpers.class);
-        MockedStatic<Logger> _ = mockStatic(Logger.class);
-        MockedStatic<Timer> mockTimer = mockStatic(Timer.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class);
+        MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
+        MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class)) {
+      mockLib.when(GompeiLib::isTuning).thenReturn(false);
       mockTimer.when(Timer::getTimestamp).thenAnswer(_ -> timestamp[0]);
 
       CameraMovingLimelight camera =
@@ -755,7 +754,6 @@ public class CameraLimelightTest {
               () -> Rotation2d.fromDegrees(0),
               () -> turretAngle[0],
               () -> new ChassisVelocities(),
-              () -> 1000L,
               List.of(poseObs::addAll),
               List.of());
 
@@ -773,11 +771,11 @@ public class CameraLimelightTest {
       CameraIO.RawFiducial fid = new CameraIO.RawFiducial(1, 0.0, 0.0, 1.0, 2.0, 2.0, 0.05);
       inputs.rawFiducials = new CameraIO.RawFiducial[] {fid};
 
-      // Limelight was initialized believing lens is at (0.5, 0).
+      // Limelight was initialized believing lens is at (0.7, 0) (pivot 0.5 + lens 0.2 at 0 deg).
       // If true robot is at (0, 0, 0):
       // True camera field pose at 0 deg turret: (0.7, 0, 0).
-      // Limelight sees camera at (0.7, 0, 0), believes camera offset is (0.5, 0), so LL reports
-      // robot at (0.2, 0, 0).
+      // Limelight sees camera at (0.7, 0, 0), believes camera offset is (0.7, 0), so LL reports
+      // robot at (0.0, 0, 0).
       // Turret correction should recover true robot at (0, 0, 0)!
 
       // 1) Turret at 0 deg
@@ -785,7 +783,7 @@ public class CameraLimelightTest {
       timestamp[0] = 10.0;
       inputs.mt2PoseEstimate =
           new CameraIO.PoseEstimate(
-              new Pose2d(0.2, 0.0, new Rotation2d()),
+              new Pose2d(0.0, 0.0, new Rotation2d()),
               timestamp[0],
               5.0,
               1,
@@ -799,14 +797,15 @@ public class CameraLimelightTest {
       assertEquals(1, poseObs.size());
       assertEquals(0.0, poseObs.get(0).pose().getX(), 1e-4);
       assertEquals(0.0, poseObs.get(0).pose().getY(), 1e-4);
-      assertEquals(0.7, camera.getCurrentCameraPose().getX(), 1e-4);
-      assertEquals(0.0, camera.getCurrentCameraPose().getY(), 1e-4);
+      assertEquals(0.7, camera.getRealTimeCameraPose().getX(), 1e-4);
+      assertEquals(0.0, camera.getRealTimeCameraPose().getY(), 1e-4);
+      assertEquals(camera.getRealTimeCameraPose(), camera.getCurrentCameraPose());
 
       // Verify pivot does NOT drift over subsequent loops
       timestamp[0] = 10.02;
       inputs.mt2PoseEstimate =
           new CameraIO.PoseEstimate(
-              new Pose2d(0.2, 0.0, new Rotation2d()),
+              new Pose2d(0.0, 0.0, new Rotation2d()),
               timestamp[0],
               5.0,
               1,
@@ -817,15 +816,15 @@ public class CameraLimelightTest {
               true);
       poseObs.clear();
       camera.periodic();
-      assertEquals(0.7, camera.getCurrentCameraPose().getX(), 1e-4);
-      assertEquals(0.0, camera.getCurrentCameraPose().getY(), 1e-4);
+      assertEquals(0.7, camera.getRealTimeCameraPose().getX(), 1e-4);
+      assertEquals(0.0, camera.getRealTimeCameraPose().getY(), 1e-4);
 
       // 2) Turret at 90 deg:
       // Lens rotated 90 deg around axis (0.5, 0):
       // True lens position is (0.5, 0.2, 0), yaw = 90 deg.
-      // Believed camera is (0.5, 0, 0).
+      // Believed camera is (0.7, 0, 0).
       // If true robot is at (0, 0, 0), LL reports camera at (0.5, 0.2, 90 deg).
-      // Relative to believed (0.5, 0), LL reports believed robot at (0.5 - 0.5*cos(90) + ..., ...)
+      // Relative to believed (0.7, 0), LL reports believed robot.
       // With our exact transform formula: trueRobot = believedRobot ∘ robotToBelievedCam ∘
       // robotToTrueCam⁻¹
       // So if believedRobot ∘ robotToBelievedCam = trueCam, then trueCam ∘ robotToTrueCam⁻¹ =
@@ -833,7 +832,7 @@ public class CameraLimelightTest {
       turretAngle[0] = Rotation2d.fromDegrees(90);
       timestamp[0] = 10.04;
       Pose2d trueCam90 = new Pose2d(0.5, 0.2, Rotation2d.fromDegrees(90));
-      Pose2d believedCam = new Pose2d(0.5, 0.0, Rotation2d.fromDegrees(0));
+      Pose2d believedCam = new Pose2d(0.7, 0.0, Rotation2d.fromDegrees(0));
       Pose2d believedRobot90 =
           trueCam90.transformBy(
               new org.wpilib.math.geometry.Transform2d(Pose2d.ZERO, believedCam).inverse());
@@ -854,10 +853,10 @@ public class CameraLimelightTest {
       assertEquals(1, poseObs.size());
       assertEquals(0.0, poseObs.get(0).pose().getX(), 1e-4);
       assertEquals(0.0, poseObs.get(0).pose().getY(), 1e-4);
-      assertEquals(0.5, camera.getCurrentCameraPose().getX(), 1e-4);
-      assertEquals(0.2, camera.getCurrentCameraPose().getY(), 1e-4);
+      assertEquals(0.5, camera.getRealTimeCameraPose().getX(), 1e-4);
+      assertEquals(0.2, camera.getRealTimeCameraPose().getY(), 1e-4);
       assertEquals(
-          90.0, camera.getCurrentCameraPose().getRotation().getZ() * 180.0 / Math.PI, 1e-4);
+          90.0, camera.getRealTimeCameraPose().getRotation().getZ() * 180.0 / Math.PI, 1e-4);
 
       // 3) Turret at 180 deg:
       // Lens rotated 180 deg around axis (0.5, 0):
@@ -885,11 +884,11 @@ public class CameraLimelightTest {
       assertEquals(1, poseObs.size());
       assertEquals(0.0, poseObs.get(0).pose().getX(), 1e-4);
       assertEquals(0.0, poseObs.get(0).pose().getY(), 1e-4);
-      assertEquals(0.3, camera.getCurrentCameraPose().getX(), 1e-4);
-      assertEquals(0.0, camera.getCurrentCameraPose().getY(), 1e-4);
+      assertEquals(0.3, camera.getRealTimeCameraPose().getX(), 1e-4);
+      assertEquals(0.0, camera.getRealTimeCameraPose().getY(), 1e-4);
       assertEquals(
           180.0,
-          Math.abs(camera.getCurrentCameraPose().getRotation().getZ() * 180.0 / Math.PI),
+          Math.abs(camera.getRealTimeCameraPose().getRotation().getZ() * 180.0 / Math.PI),
           1e-4);
     }
   }
@@ -901,8 +900,8 @@ public class CameraLimelightTest {
         VisionConstants.StaticLimelightConfig.builder()
             .key("static-filter")
             .cameraType(CameraType.LIMELIGHT_3)
-            .horizontalFOV(60.0)
-            .verticalFOV(40.0)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
             .megatagXYStdev(0.1)
             .metatagThetaStdev(0.2)
             .megatag2XYStdev(0.05)
@@ -915,8 +914,7 @@ public class CameraLimelightTest {
     double[] timestamp = {1.0};
     LimelightIOInputsAutoLogged inputs = new LimelightIOInputsAutoLogged();
 
-    try (MockedStatic<LimelightHelpers> _ = mockStatic(LimelightHelpers.class);
-        MockedStatic<Logger> _ = mockStatic(Logger.class);
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
         MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
         MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class)) {
@@ -931,7 +929,6 @@ public class CameraLimelightTest {
               config,
               () -> Rotation2d.fromDegrees(0),
               () -> chassisVelocities[0],
-              () -> 1000L,
               List.of(poseObs::addAll),
               List.of());
 
@@ -1026,6 +1023,262 @@ public class CameraLimelightTest {
       poseObs.clear();
       camera.periodic();
       assertTrue(poseObs.isEmpty()); // Rejected because avgTagDist=12.0 > 10.0
+    }
+  }
+
+  @Test
+  public void testLimelight4IMUModeTransitionsStatic() {
+    CameraIO io = mock(CameraIO.class);
+    VisionConstants.StaticLimelightConfig ll4ConfigDefaultAlpha =
+        VisionConstants.StaticLimelightConfig.builder()
+            .key("ll4-static-default")
+            .cameraType(CameraType.LIMELIGHT_4)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
+            .megatagXYStdev(0.1)
+            .metatagThetaStdev(0.2)
+            .megatag2XYStdev(0.05)
+            .robotToCameraTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+            .build();
+
+    VisionConstants.StaticLimelightConfig ll4ConfigCustomAlpha =
+        VisionConstants.StaticLimelightConfig.builder()
+            .key("ll4-static-custom")
+            .cameraType(CameraType.LIMELIGHT_4)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
+            .megatagXYStdev(0.1)
+            .metatagThetaStdev(0.2)
+            .megatag2XYStdev(0.05)
+            .robotToCameraTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+            .imuAssistAlpha(0.005)
+            .build();
+
+    try (MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
+        MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
+        MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class);
+        var _ = mockStatic(Logger.class)) {
+      mockLib.when(GompeiLib::isTuning).thenReturn(false);
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(1.0);
+
+      // Constructor with default alpha: verifies EXTERNAL_SEED_INTERNAL and default 0.001 alpha
+      CameraStaticLimelight camera =
+          new CameraStaticLimelight(
+              io,
+              ll4ConfigDefaultAlpha,
+              () -> Rotation2d.fromDegrees(0),
+              ChassisVelocities::new,
+              List.of(),
+              List.of());
+
+      verify(io, times(1)).setIMUMode(IMUMode.EXTERNAL_SEED_INTERNAL);
+      verify(io, times(1)).setIMUAssistAlpha(0.001);
+
+      // Transition to enabled: verifies INTERNAL_EXTERNAL_ASSIST
+      mockDS.when(RobotState::isEnabled).thenReturn(true);
+      mockDS.when(RobotState::isDisabled).thenReturn(false);
+      mockTimer.when(Timer::getTimestamp).thenReturn(2.0);
+      camera.periodic();
+
+      verify(io, times(1)).setIMUMode(IMUMode.INTERNAL_EXTERNAL_ASSIST);
+      verify(io, times(2)).setIMUAssistAlpha(0.001);
+
+      // Transition back to disabled: verifies EXTERNAL_SEED_INTERNAL
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(3.0);
+      camera.periodic();
+
+      verify(io, times(2)).setIMUMode(IMUMode.EXTERNAL_SEED_INTERNAL);
+
+      // Constructor with custom alpha: verifies custom alpha passed
+      CameraIO ioCustom = mock(CameraIO.class);
+      new CameraStaticLimelight(
+          ioCustom,
+          ll4ConfigCustomAlpha,
+          () -> Rotation2d.fromDegrees(0),
+          ChassisVelocities::new,
+          List.of(),
+          List.of());
+      verify(ioCustom, times(1)).setIMUAssistAlpha(0.005);
+    }
+  }
+
+  @Test
+  public void testLimelight4IMUModeTransitionsMoving() {
+    CameraIO io = mock(CameraIO.class);
+    VisionConstants.MovingLimelightConfig ll4MovingConfig =
+        VisionConstants.MovingLimelightConfig.builder()
+            .key("ll4-moving")
+            .cameraType(CameraType.LIMELIGHT_4)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
+            .megatagXYStdev(0.1)
+            .metatagThetaStdev(0.2)
+            .megatag2XYStdev(0.05)
+            .robotToRotationAxisTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+            .rotationAxisToLensTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+            .imuAssistAlpha(0.002)
+            .build();
+
+    try (MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
+        MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
+        MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class);
+        var _ = mockStatic(Logger.class)) {
+      mockLib.when(GompeiLib::isTuning).thenReturn(false);
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(1.0);
+
+      CameraMovingLimelight camera =
+          new CameraMovingLimelight(
+              io,
+              ll4MovingConfig,
+              () -> Rotation2d.fromDegrees(0),
+              () -> Rotation2d.fromDegrees(0),
+              ChassisVelocities::new,
+              List.of(),
+              List.of());
+
+      verify(io, times(1)).setIMUMode(IMUMode.EXTERNAL_SEED_INTERNAL);
+      verify(io, times(1)).setIMUAssistAlpha(0.002);
+
+      // Transition to enabled
+      mockDS.when(RobotState::isEnabled).thenReturn(true);
+      mockDS.when(RobotState::isDisabled).thenReturn(false);
+      mockTimer.when(Timer::getTimestamp).thenReturn(2.0);
+      camera.periodic();
+
+      verify(io, times(1)).setIMUMode(IMUMode.INTERNAL_EXTERNAL_ASSIST);
+      verify(io, times(2)).setIMUAssistAlpha(0.002);
+
+      // Transition to disabled
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(3.0);
+      camera.periodic();
+
+      verify(io, times(2)).setIMUMode(IMUMode.EXTERNAL_SEED_INTERNAL);
+
+      // Constructor with default alpha (0.0): verifies 0.001 fallback on moving LL4
+      CameraIO ioDefault = mock(CameraIO.class);
+      VisionConstants.MovingLimelightConfig ll4DefaultMovingConfig =
+          VisionConstants.MovingLimelightConfig.builder()
+              .key("ll4-moving-default")
+              .cameraType(CameraType.LIMELIGHT_4)
+              .horizontalFOV(Degrees.of(60.0))
+              .verticalFOV(Degrees.of(40.0))
+              .megatagXYStdev(0.1)
+              .metatagThetaStdev(0.2)
+              .megatag2XYStdev(0.05)
+              .robotToRotationAxisTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+              .rotationAxisToLensTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+              .build();
+      new CameraMovingLimelight(
+          ioDefault,
+          ll4DefaultMovingConfig,
+          () -> Rotation2d.fromDegrees(0),
+          () -> Rotation2d.fromDegrees(0),
+          ChassisVelocities::new,
+          List.of(),
+          List.of());
+      verify(ioDefault, times(1)).setIMUAssistAlpha(0.001);
+    }
+  }
+
+  @Test
+  public void testNullCameraTypeIMUModeTransitions() {
+    CameraIO io = mock(CameraIO.class);
+    VisionConstants.StaticLimelightConfig nullTypeConfig =
+        VisionConstants.StaticLimelightConfig.builder()
+            .key("null-type")
+            .cameraType(null)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
+            .megatagXYStdev(0.1)
+            .metatagThetaStdev(0.2)
+            .megatag2XYStdev(0.05)
+            .robotToCameraTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+            .build();
+
+    VisionConstants.MovingLimelightConfig nullTypeMovingConfig =
+        VisionConstants.MovingLimelightConfig.builder()
+            .key("null-type-moving")
+            .cameraType(null)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
+            .megatagXYStdev(0.1)
+            .metatagThetaStdev(0.2)
+            .megatag2XYStdev(0.05)
+            .robotToRotationAxisTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+            .rotationAxisToLensTransform(new Transform3d(new Translation3d(), new Rotation3d()))
+            .build();
+
+    try (MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
+        MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
+        MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class);
+        var _ = mockStatic(Logger.class)) {
+      mockLib.when(GompeiLib::isTuning).thenReturn(false);
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(1.0);
+
+      CameraStaticLimelight camera =
+          new CameraStaticLimelight(
+              io,
+              nullTypeConfig,
+              () -> Rotation2d.fromDegrees(0),
+              ChassisVelocities::new,
+              List.of(),
+              List.of());
+
+      verify(io, times(1)).setIMUMode(IMUMode.EXTERNAL);
+
+      // Transition to enabled
+      mockDS.when(RobotState::isEnabled).thenReturn(true);
+      mockDS.when(RobotState::isDisabled).thenReturn(false);
+      mockTimer.when(Timer::getTimestamp).thenReturn(2.0);
+      camera.periodic();
+
+      verify(io, times(2)).setIMUMode(IMUMode.EXTERNAL);
+
+      // Transition to disabled
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(3.0);
+      camera.periodic();
+
+      verify(io, times(3)).setIMUMode(IMUMode.EXTERNAL);
+
+      // Moving camera with null cameraType
+      CameraIO ioMoving = mock(CameraIO.class);
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(1.0);
+      CameraMovingLimelight movingCam =
+          new CameraMovingLimelight(
+              ioMoving,
+              nullTypeMovingConfig,
+              () -> Rotation2d.fromDegrees(0),
+              () -> Rotation2d.fromDegrees(0),
+              ChassisVelocities::new,
+              List.of(),
+              List.of());
+      verify(ioMoving, times(1)).setIMUMode(IMUMode.EXTERNAL);
+
+      mockDS.when(RobotState::isEnabled).thenReturn(true);
+      mockDS.when(RobotState::isDisabled).thenReturn(false);
+      mockTimer.when(Timer::getTimestamp).thenReturn(2.0);
+      movingCam.periodic();
+      verify(ioMoving, times(2)).setIMUMode(IMUMode.EXTERNAL);
+
+      mockDS.when(RobotState::isEnabled).thenReturn(false);
+      mockDS.when(RobotState::isDisabled).thenReturn(true);
+      mockTimer.when(Timer::getTimestamp).thenReturn(3.0);
+      movingCam.periodic();
+      verify(ioMoving, times(3)).setIMUMode(IMUMode.EXTERNAL);
     }
   }
 }

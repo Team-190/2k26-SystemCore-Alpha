@@ -1,10 +1,12 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.vision.io;
 
+import com.limelightvision.FiducialTarget;
+import com.limelightvision.IMUMode;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.camera.Camera;
-import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.limelight.LimelightHelpers;
 import java.util.Arrays;
 import org.littletonrobotics.junction.AutoLog;
 import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Pose3d;
 
 /**
  * An interface for the hardware implementation of a {@link Camera Camera}. Contains the methods
@@ -36,6 +38,54 @@ public interface CameraIO {
     return "";
   }
 
+  public default void setCameraPose(Pose3d pose) {}
+
+  public default void setRobotOrientation(
+      org.wpilib.units.measure.Angle yaw, org.wpilib.units.measure.AngularVelocity yawRate) {
+    setRobotOrientation(
+        yaw.in(org.wpilib.units.Units.Degrees),
+        yawRate.in(org.wpilib.units.Units.DegreesPerSecond));
+  }
+
+  public default void setSharedRobotOrientation(
+      org.wpilib.units.measure.Angle yaw, org.wpilib.units.measure.AngularVelocity yawRate) {
+    setSharedRobotOrientation(
+        yaw.in(org.wpilib.units.Units.Degrees),
+        yawRate.in(org.wpilib.units.Units.DegreesPerSecond));
+  }
+
+  public default void setRobotOrientation(double yawDegrees, double yawRateDegreesPerSec) {}
+
+  public default void setSharedRobotOrientation(double yawDegrees, double yawRateDegreesPerSec) {}
+
+  public default void setThrottle(int throttle) {}
+
+  public default void setIMUMode(IMUMode mode) {}
+
+  public default void setIMUMode(int mode) {
+    setIMUMode(
+        switch (mode) {
+          case 0 -> IMUMode.EXTERNAL;
+          case 1 -> IMUMode.EXTERNAL_SEED_INTERNAL;
+          case 2 -> IMUMode.INTERNAL;
+          case 3 -> IMUMode.INTERNAL_MT1_ASSIST;
+          case 4 -> IMUMode.INTERNAL_EXTERNAL_ASSIST;
+          default -> IMUMode.UNKNOWN;
+        });
+  }
+
+  public default void setIMUAssistAlpha(double alpha) {}
+
+  public default void setRewindEnabled(boolean enabled) {}
+
+  public default void triggerRewindCapture(org.wpilib.units.measure.Time duration) {
+    triggerRewindCapture(duration.in(org.wpilib.units.Units.Seconds));
+  }
+
+  public default void triggerRewindCapture(double durationSeconds) {}
+
+  public default void flush() {}
+
   public record PoseEstimate(
       Pose2d pose,
       double timestampSeconds,
@@ -50,19 +100,21 @@ public interface CameraIO {
       this(Pose2d.ZERO, 0, 0, 0, 0, 0, 0, new RawFiducial[] {}, false);
     }
 
-    public PoseEstimate(LimelightHelpers.PoseEstimate poseEstimate) {
+    public PoseEstimate(com.limelightvision.PoseEstimate poseEstimate) {
       this(
-          poseEstimate.pose,
-          poseEstimate.timestampSeconds,
-          poseEstimate.latency,
-          poseEstimate.tagCount,
-          poseEstimate.tagSpan,
-          poseEstimate.avgTagDist,
-          poseEstimate.avgTagArea,
-          Arrays.stream(poseEstimate.rawFiducials)
-              .map(RawFiducial::new)
-              .toArray(RawFiducial[]::new),
-          poseEstimate.isMegaTag2);
+          poseEstimate != null && poseEstimate.pose != null ? poseEstimate.pose : Pose2d.ZERO,
+          poseEstimate != null ? poseEstimate.timestampSeconds : 0.0,
+          poseEstimate != null ? poseEstimate.latencyMillis : 0.0,
+          poseEstimate != null ? poseEstimate.reportedTagCount : 0,
+          poseEstimate != null ? poseEstimate.tagSpanMeters : 0.0,
+          poseEstimate != null ? poseEstimate.avgTagDistanceMeters : 0.0,
+          poseEstimate != null ? poseEstimate.avgTagAreaPercent : 0.0,
+          poseEstimate == null || poseEstimate.rawFiducials == null
+              ? new RawFiducial[] {}
+              : Arrays.stream(poseEstimate.rawFiducials)
+                  .map(RawFiducial::new)
+                  .toArray(RawFiducial[]::new),
+          poseEstimate != null && poseEstimate.isMT2());
     }
   }
 
@@ -78,15 +130,15 @@ public interface CameraIO {
       this(0, 0, 0, 0, 0, 0, 0);
     }
 
-    public RawFiducial(LimelightHelpers.RawFiducial rawFiducial) {
+    public RawFiducial(FiducialTarget target) {
       this(
-          rawFiducial.id,
-          rawFiducial.txnc,
-          rawFiducial.tync,
-          rawFiducial.ta,
-          rawFiducial.distToCamera,
-          rawFiducial.distToRobot,
-          rawFiducial.ambiguity);
+          target != null ? target.fiducialId : 0,
+          target != null ? target.txDegreesNoCrosshair : 0.0,
+          target != null ? target.tyDegreesNoCrosshair : 0.0,
+          target != null ? target.targetAreaPercent : 0.0,
+          target != null ? target.getDistanceToCamera() : 0.0,
+          target != null ? target.getDistanceToRobot() : 0.0,
+          target != null ? target.ambiguity : 0.0);
     }
   }
 

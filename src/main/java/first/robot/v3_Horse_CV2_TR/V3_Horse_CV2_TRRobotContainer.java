@@ -21,6 +21,7 @@ import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands.SwerveDr
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.phoenix.SwerveModuleHardwareTalonFX;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.Vision;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.camera.CameraStaticLimelight;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.CameraIO;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
 import first.robot.FieldConstants;
@@ -105,7 +106,13 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG,
                       V3_Horse_CV2_TRRobotState::getHeading,
                       drive::getMeasuredChassisVelocities,
-                      V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
+                      List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                      List.of()),
+                  new CameraStaticLimelight(
+                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG),
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG,
+                      V3_Horse_CV2_TRRobotState::getHeading,
+                      drive::getMeasuredChassisVelocities,
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
                       List.of()));
 
@@ -157,7 +164,23 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   MotorIOSim.factory(
                       GenericHood.simMechanism(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS)),
                   V3_Horse_CV2_TRRobotState::isHopperRunning);
-          vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
+          vision =
+              new Vision(
+                  () -> FieldConstants.tagLayoutType.getLayout(),
+                  new CameraStaticLimelight(
+                      new CameraIO() {},
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG,
+                      V3_Horse_CV2_TRRobotState::getHeading,
+                      drive::getMeasuredChassisVelocities,
+                      List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                      List.of()),
+                  new CameraStaticLimelight(
+                      new CameraIO() {},
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG,
+                      V3_Horse_CV2_TRRobotState::getHeading,
+                      drive::getMeasuredChassisVelocities,
+                      List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                      List.of()));
           break;
         default:
       }
@@ -197,7 +220,23 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     }
 
     if (vision == null) {
-      vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
+      vision =
+          new Vision(
+              () -> FieldConstants.tagLayoutType.getLayout(),
+              new CameraStaticLimelight(
+                  new CameraIO() {},
+                  V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG,
+                  V3_Horse_CV2_TRRobotState::getHeading,
+                  drive::getMeasuredChassisVelocities,
+                  List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                  List.of()),
+              new CameraStaticLimelight(
+                  new CameraIO() {},
+                  V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG,
+                  V3_Horse_CV2_TRRobotState::getHeading,
+                  drive::getMeasuredChassisVelocities,
+                  List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                  List.of()));
     }
 
     autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");

@@ -1,6 +1,7 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.vision;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.camera.CameraType;
 import org.ejml.simple.SimpleMatrix;
@@ -22,6 +23,13 @@ public class VisionConstantsTest {
     assertEquals(1.2, VisionConstants.XY_STDEV_DISTANCE_EXPONENT);
     assertEquals(2.0, VisionConstants.XY_STDEV_TAG_COUNT_EXPONENT);
 
+    assertEquals(Meters.of(0.5), VisionConstants.FIELD_BORDER_MARGIN);
+    assertEquals(Meters.of(10.0), VisionConstants.MAX_TAG_DISTANCE);
+    assertEquals(DegreesPerSecond.of(720.0), VisionConstants.MAX_MT2_YAW_RATE);
+    assertEquals(Seconds.of(165), VisionConstants.REWIND_CAPTURE_INTERVAL);
+    assertEquals(MetersPerSecond.of(0.15), VisionConstants.THETA_GATE_MAX_VELOCITY);
+    assertEquals(RadiansPerSecond.of(0.05), VisionConstants.THETA_GATE_MAX_ANGULAR_VELOCITY);
+
     assertNotNull(new VisionConstants());
   }
 
@@ -32,24 +40,26 @@ public class VisionConstantsTest {
         VisionConstants.StaticLimelightConfig.builder()
             .key("static-cam")
             .cameraType(CameraType.LIMELIGHT_3)
-            .horizontalFOV(60.0)
-            .verticalFOV(40.0)
+            .horizontalFOV(Degrees.of(60.0))
+            .verticalFOV(Degrees.of(40.0))
             .megatagXYStdev(0.1)
             .metatagThetaStdev(0.2)
             .megatag2XYStdev(0.05)
             .robotToCameraTransform(transform)
             .enableRewind(true)
+            .imuAssistAlpha(0.005)
             .build();
 
     assertEquals("static-cam", config.key());
     assertEquals(CameraType.LIMELIGHT_3, config.cameraType());
-    assertEquals(60.0, config.horizontalFOV());
-    assertEquals(40.0, config.verticalFOV());
+    assertEquals(Degrees.of(60.0), config.horizontalFOV());
+    assertEquals(Degrees.of(40.0), config.verticalFOV());
     assertEquals(0.1, config.megatagXYStdev());
     assertEquals(0.2, config.metatagThetaStdev());
     assertEquals(0.05, config.megatag2XYStdev());
     assertEquals(transform, config.robotToCameraTransform());
     assertTrue(config.enableRewind());
+    assertEquals(0.005, config.imuAssistAlpha());
 
     // For full record coverage, test toString, hashCode, equals
     assertNotNull(config.toString());
@@ -75,26 +85,28 @@ public class VisionConstantsTest {
         VisionConstants.MovingLimelightConfig.builder()
             .key("moving-cam")
             .cameraType(CameraType.LIMELIGHT_3G)
-            .horizontalFOV(80.0)
-            .verticalFOV(50.0)
+            .horizontalFOV(Degrees.of(80.0))
+            .verticalFOV(Degrees.of(50.0))
             .megatagXYStdev(0.15)
             .metatagThetaStdev(0.25)
             .megatag2XYStdev(0.06)
             .robotToRotationAxisTransform(t1)
             .rotationAxisToLensTransform(t2)
             .enableRewind(false)
+            .imuAssistAlpha(0.002)
             .build();
 
     assertEquals("moving-cam", config.key());
     assertEquals(CameraType.LIMELIGHT_3G, config.cameraType());
-    assertEquals(80.0, config.horizontalFOV());
-    assertEquals(50.0, config.verticalFOV());
+    assertEquals(Degrees.of(80.0), config.horizontalFOV());
+    assertEquals(Degrees.of(50.0), config.verticalFOV());
     assertEquals(0.15, config.megatagXYStdev());
     assertEquals(0.25, config.metatagThetaStdev());
     assertEquals(0.06, config.megatag2XYStdev());
     assertEquals(t1, config.robotToRotationAxisTransform());
     assertEquals(t2, config.rotationAxisToLensTransform());
     assertFalse(config.enableRewind());
+    assertEquals(0.002, config.imuAssistAlpha());
 
     // Record coverage
     assertNotNull(config.toString());
@@ -121,14 +133,14 @@ public class VisionConstantsTest {
             .key("gompei-cam")
             .hardwareID("HW123")
             .cameraType(CameraType.THRIFTYCAM)
-            .exposure(10.0)
+            .exposure(Milliseconds.of(10.0))
             .gain(5.0)
             .width(640)
             .height(480)
             .cameraMatrix(cameraMatrix)
             .distortionCoefficients(distortion)
-            .horizontalFOV(70.0)
-            .verticalFOV(45.0)
+            .horizontalFOV(Degrees.of(70.0))
+            .verticalFOV(Degrees.of(45.0))
             .singletagXYStdev(0.3)
             .thetaStdev(0.4)
             .multitagXYStdev(0.05)
@@ -138,14 +150,14 @@ public class VisionConstantsTest {
     assertEquals("gompei-cam", config.key());
     assertEquals("HW123", config.hardwareID());
     assertEquals(CameraType.THRIFTYCAM, config.cameraType());
-    assertEquals(10.0, config.exposure());
+    assertEquals(Milliseconds.of(10.0), config.exposure());
     assertEquals(5.0, config.gain());
     assertEquals(640, config.width());
     assertEquals(480, config.height());
     assertEquals(cameraMatrix, config.cameraMatrix());
     assertEquals(distortion, config.distortionCoefficients());
-    assertEquals(70.0, config.horizontalFOV());
-    assertEquals(45.0, config.verticalFOV());
+    assertEquals(Degrees.of(70.0), config.horizontalFOV());
+    assertEquals(Degrees.of(45.0), config.verticalFOV());
     assertEquals(0.3, config.singletagXYStdev());
     assertEquals(0.4, config.thetaStdev());
     assertEquals(0.05, config.multitagXYStdev());

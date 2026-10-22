@@ -2,9 +2,11 @@ package edu.wpi.team190.gompeilib.robot.subsystems.vision.io;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.limelight.LimelightHelpers;
+import com.limelightvision.FiducialTarget;
+import com.limelightvision.PoseEstimateType;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Pose3d;
 
 public class CameraIOTest {
 
@@ -21,6 +23,23 @@ public class CameraIOTest {
     // Default no-ops
     io.updateInputs(gompeiInputs);
     io.updateInputs(limelightInputs);
+    io.setCameraPose(new Pose3d());
+    io.setRobotOrientation(0, 0);
+    io.setSharedRobotOrientation(0, 0);
+    io.setRobotOrientation(
+        org.wpilib.units.Units.Degrees.of(0), org.wpilib.units.Units.DegreesPerSecond.of(0));
+    io.setSharedRobotOrientation(
+        org.wpilib.units.Units.Degrees.of(0), org.wpilib.units.Units.DegreesPerSecond.of(0));
+    io.setThrottle(0);
+    io.setIMUMode(com.limelightvision.IMUMode.INTERNAL_EXTERNAL_ASSIST);
+    for (int mode = -1; mode <= 5; mode++) {
+      io.setIMUMode(mode);
+    }
+    io.setIMUAssistAlpha(0.001);
+    io.setRewindEnabled(false);
+    io.triggerRewindCapture(0);
+    io.triggerRewindCapture(org.wpilib.units.Units.Seconds.of(0));
+    io.flush();
 
     assertNotNull(gompeiInputs);
     assertNotNull(limelightInputs);
@@ -56,20 +75,34 @@ public class CameraIOTest {
     assertSame(fids, customEst.rawFiducials());
     assertTrue(customEst.isMegaTag2());
 
-    // LimelightHelpers.PoseEstimate constructor
-    LimelightHelpers.RawFiducial rawFid =
-        new LimelightHelpers.RawFiducial(1, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6);
-    LimelightHelpers.PoseEstimate llEst =
-        new LimelightHelpers.PoseEstimate(
-            pose,
-            10.0,
-            20.0,
-            1,
-            30.0,
-            40.0,
-            50.0,
-            new LimelightHelpers.RawFiducial[] {rawFid},
-            true);
+    // com.limelightvision.PoseEstimate constructor
+    com.limelightvision.PoseEstimate emptyLlEst = new com.limelightvision.PoseEstimate();
+    emptyLlEst.pose = null;
+    emptyLlEst.rawFiducials = null;
+    CameraIO.PoseEstimate emptyConverted = new CameraIO.PoseEstimate(emptyLlEst);
+    assertEquals(Pose2d.ZERO, emptyConverted.pose());
+    assertEquals(0, emptyConverted.rawFiducials().length);
+
+    FiducialTarget rawFid = new FiducialTarget();
+    rawFid.fiducialId = 1;
+    rawFid.txDegreesNoCrosshair = 0.1;
+    rawFid.tyDegreesNoCrosshair = 0.2;
+    rawFid.targetAreaPercent = 0.3;
+    rawFid.ambiguity = 0.6;
+    rawFid.targetPoseCameraSpace = new double[] {0, 0, 0.4, 0, 0, 0};
+    rawFid.targetPoseRobotSpace = new double[] {0, 0, 0.5, 0, 0, 0};
+
+    com.limelightvision.PoseEstimate llEst = new com.limelightvision.PoseEstimate();
+    llEst.pose = pose;
+    llEst.timestampSeconds = 10.0;
+    llEst.latencyMillis = 20.0;
+    llEst.reportedTagCount = 1;
+    llEst.tagSpanMeters = 30.0;
+    llEst.avgTagDistanceMeters = 40.0;
+    llEst.avgTagAreaPercent = 50.0;
+    llEst.rawFiducials = new FiducialTarget[] {rawFid};
+    llEst.type = PoseEstimateType.MT2_WPIBLUE;
+
     CameraIO.PoseEstimate llConverted = new CameraIO.PoseEstimate(llEst);
 
     assertEquals(pose, llConverted.pose());
@@ -110,9 +143,16 @@ public class CameraIOTest {
     assertEquals(5.0, customFid.distToRobot());
     assertEquals(0.5, customFid.ambiguity());
 
-    // LimelightHelpers constructor
-    LimelightHelpers.RawFiducial llFid =
-        new LimelightHelpers.RawFiducial(3, 1.1, 2.2, 3.3, 4.4, 5.5, 0.6);
+    // Limelight constructor
+    FiducialTarget llFid = new FiducialTarget();
+    llFid.fiducialId = 3;
+    llFid.txDegreesNoCrosshair = 1.1;
+    llFid.tyDegreesNoCrosshair = 2.2;
+    llFid.targetAreaPercent = 3.3;
+    llFid.ambiguity = 0.6;
+    llFid.targetPoseCameraSpace = new double[] {0, 0, 4.4, 0, 0, 0};
+    llFid.targetPoseRobotSpace = new double[] {0, 0, 5.5, 0, 0, 0};
+
     CameraIO.RawFiducial converted = new CameraIO.RawFiducial(llFid);
     assertEquals(3, converted.id());
     assertEquals(1.1, converted.txnc());

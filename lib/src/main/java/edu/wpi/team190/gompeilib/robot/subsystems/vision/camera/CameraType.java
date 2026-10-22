@@ -1,6 +1,10 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.vision.camera;
 
-import org.wpilib.math.util.Units;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.Seconds;
+
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.Time;
 
 public enum CameraType {
   LIMELIGHT_2_PLUS(
@@ -35,8 +39,8 @@ public enum CameraType {
       ThriftyCamConstants.THETA_STANDARD_DEVIATION_COEFFICIENT),
   DEFAULT();
 
-  public final double horizontalFOV;
-  public final double verticalFOV;
+  public final Angle horizontalFOV;
+  public final Angle verticalFOV;
   public final double megatagXY;
   public final double megatag2XY;
   public final double theta;
@@ -46,7 +50,7 @@ public enum CameraType {
   @Deprecated public final double primaryThetaStandardDeviationCoefficient;
 
   private CameraType(
-      double horizontalFOV, double verticalFOV, double megatagXY, double megatag2XY, double theta) {
+      Angle horizontalFOV, Angle verticalFOV, double megatagXY, double megatag2XY, double theta) {
     this.horizontalFOV = horizontalFOV;
     this.verticalFOV = verticalFOV;
     this.megatagXY = megatagXY;
@@ -58,8 +62,8 @@ public enum CameraType {
   }
 
   private CameraType() {
-    this.horizontalFOV = 0.0;
-    this.verticalFOV = 0.0;
+    this.horizontalFOV = Degrees.of(0.0);
+    this.verticalFOV = Degrees.of(0.0);
     this.megatagXY = 0.0;
     this.megatag2XY = 0.0;
     this.theta = 0.0;
@@ -68,43 +72,47 @@ public enum CameraType {
     this.primaryThetaStandardDeviationCoefficient = 0.0;
   }
 
-  public static final double BLINK_TIME = 0.067;
+  public boolean hasIMU() {
+    return this == LIMELIGHT_4;
+  }
+
+  public static final Time BLINK_TIME = Seconds.of(0.067);
 
   private static class Limelight2PlusConstants {
-    private static final double HORIZONTAL_FOV = Units.degreesToRadians(62.5);
-    private static final double VERTICAL_FOV = Units.degreesToRadians(48.9);
+    private static final Angle HORIZONTAL_FOV = Degrees.of(62.5);
+    private static final Angle VERTICAL_FOV = Degrees.of(48.9);
     private static final double MEGATAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.1;
     private static final double MEGATAG_THETA_STANDARD_DEVIATION_COEFFICIENT = 0.1;
     private static final double MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT = 0.1;
   }
 
   private static class Limelight3Constants {
-    private static final double HORIZONTAL_FOV = Units.degreesToRadians(62.5);
-    private static final double VERTICAL_FOV = Units.degreesToRadians(48.9);
+    private static final Angle HORIZONTAL_FOV = Degrees.of(62.5);
+    private static final Angle VERTICAL_FOV = Degrees.of(48.9);
     private static final double MEGATAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.1;
     private static final double MEGATAG_THETA_STANDARD_DEVIATION_COEFFICIENT = 0.1;
     private static final double MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT = 0.1;
   }
 
   private static class Limelight3GConstants {
-    private static final double HORIZONTAL_FOV = Units.degreesToRadians(82.0);
-    private static final double VERTICAL_FOV = Units.degreesToRadians(46.2);
+    private static final Angle HORIZONTAL_FOV = Degrees.of(82.0);
+    private static final Angle VERTICAL_FOV = Degrees.of(46.2);
     private static final double MEGATAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.05;
     private static final double MEGATAG_THETA_STANDARD_DEVIATION_COEFFICIENT = 0.1;
     private static final double MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT = 0.00015;
   }
 
   private static class Limelight4Constants {
-    private static final double HORIZONTAL_FOV = Units.degreesToRadians(82.0);
-    private static final double VERTICAL_FOV = Units.degreesToRadians(46.2);
+    private static final Angle HORIZONTAL_FOV = Degrees.of(82.0);
+    private static final Angle VERTICAL_FOV = Degrees.of(46.2);
     private static final double MEGATAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.05;
     private static final double MEGATAG_THETA_STANDARD_DEVIATION_COEFFICIENT = 10;
     private static final double MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT = 0.00015;
   }
 
   private static class ThriftyCamConstants {
-    private static final double HORIZONTAL_FOV = Units.degreesToRadians(82.0);
-    private static final double VERTICAL_FOV = Units.degreesToRadians(46.2);
+    private static final Angle HORIZONTAL_FOV = Degrees.of(82.0);
+    private static final Angle VERTICAL_FOV = Degrees.of(46.2);
     private static final double SINGLETAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.05;
     private static final double THETA_STANDARD_DEVIATION_COEFFICIENT = 0.1;
     private static final double MULTITAG_XY_STANDARD_DEVIATION_COEFFICIENT = 0.00015;

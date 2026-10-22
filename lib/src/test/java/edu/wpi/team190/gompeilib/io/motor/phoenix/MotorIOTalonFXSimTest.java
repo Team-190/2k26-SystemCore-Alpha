@@ -117,6 +117,7 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
     withMockedTalonFX(
         talons -> {
           new MotorIOTalonFXSim(config(1, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
+          new MotorIOTalonFXSim(config(2, MotorDirection.COUNTER_CLOCKWISE_POSITIVE), mechanism);
 
           long deadline = System.nanoTime() + 2_000_000_000L;
           while (mechanism.velocity().in(RadiansPerSecond) <= 0 && System.nanoTime() < deadline) {
