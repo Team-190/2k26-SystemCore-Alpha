@@ -24,7 +24,7 @@ public class VisionConstants {
       double metatagThetaStdev,
       double megatag2XYStdev,
       Transform3d robotToCameraTransform,
-      Boolean enableRewind) {}
+      boolean enableRewind) {}
 
   @Builder
   public record MovingLimelightConfig(
@@ -37,7 +37,7 @@ public class VisionConstants {
       double megatag2XYStdev,
       Transform3d robotToRotationAxisTransform,
       Transform3d rotationAxisToLensTransform,
-      Boolean enableRewind) {}
+      boolean enableRewind) {}
 
   @Builder
   public record GompeiVisionConfig(

@@ -57,6 +57,14 @@ public class VisionConstantsTest {
     assertEquals(config, config);
     assertNotEquals(config, null);
     assertNotNull(VisionConstants.StaticLimelightConfig.builder().toString());
+
+    // Verify primitive boolean default avoids NPE when enableRewind is omitted (Tier 1 #9)
+    VisionConstants.StaticLimelightConfig defaultStaticConfig =
+        VisionConstants.StaticLimelightConfig.builder()
+            .key("default-rewind")
+            .robotToCameraTransform(transform)
+            .build();
+    assertFalse(defaultStaticConfig.enableRewind());
   }
 
   @Test
@@ -92,6 +100,15 @@ public class VisionConstantsTest {
     assertNotNull(config.toString());
     assertEquals(config.hashCode(), config.hashCode());
     assertEquals(config, config);
+
+    // Verify primitive boolean default avoids NPE when enableRewind is omitted (Tier 1 #9)
+    VisionConstants.MovingLimelightConfig defaultConfig =
+        VisionConstants.MovingLimelightConfig.builder()
+            .key("default-moving-rewind")
+            .robotToRotationAxisTransform(t1)
+            .rotationAxisToLensTransform(t2)
+            .build();
+    assertFalse(defaultConfig.enableRewind());
   }
 
   @Test

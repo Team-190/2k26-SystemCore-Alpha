@@ -21,6 +21,7 @@ public class VisionTest {
 
     Camera mockCamera1 = mock(Camera.class);
     Camera mockCamera2 = mock(Camera.class);
+    when(mockCamera2.getFieldLayoutSupplier()).thenReturn(() -> layout);
 
     Vision vision = new Vision(() -> layout, mockCamera1, mockCamera2);
 

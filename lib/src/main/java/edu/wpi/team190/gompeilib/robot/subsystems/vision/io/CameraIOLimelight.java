@@ -2,7 +2,6 @@ package edu.wpi.team190.gompeilib.robot.subsystems.vision.io;
 
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.io.limelight.LimelightHelpers;
-import java.util.Arrays;
 import lombok.Getter;
 
 public class CameraIOLimelight implements CameraIO {
@@ -22,8 +21,8 @@ public class CameraIOLimelight implements CameraIO {
     inputs.mt2PoseEstimate =
         new PoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name));
     inputs.rawFiducials =
-        Arrays.stream(LimelightHelpers.getRawFiducials(name))
-            .map(RawFiducial::new)
-            .toArray(RawFiducial[]::new);
+        inputs.mt1PoseEstimate.rawFiducials().length > 0
+            ? inputs.mt1PoseEstimate.rawFiducials()
+            : inputs.mt2PoseEstimate.rawFiducials();
   }
 }

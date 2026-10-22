@@ -12,20 +12,20 @@ public enum CameraType {
   LIMELIGHT_3(
       Limelight3Constants.HORIZONTAL_FOV,
       Limelight3Constants.VERTICAL_FOV,
-      Limelight3Constants.MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT,
       Limelight3Constants.MEGATAG_XY_STANDARD_DEVIATION_COEFFICIENT,
+      Limelight3Constants.MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT,
       Limelight3Constants.MEGATAG_THETA_STANDARD_DEVIATION_COEFFICIENT),
   LIMELIGHT_3G(
       Limelight3GConstants.HORIZONTAL_FOV,
       Limelight3GConstants.VERTICAL_FOV,
-      Limelight3GConstants.MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT,
       Limelight3GConstants.MEGATAG_XY_STANDARD_DEVIATION_COEFFICIENT,
+      Limelight3GConstants.MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT,
       Limelight3GConstants.MEGATAG_THETA_STANDARD_DEVIATION_COEFFICIENT),
   LIMELIGHT_4(
       Limelight4Constants.HORIZONTAL_FOV,
       Limelight4Constants.VERTICAL_FOV,
-      Limelight4Constants.MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT,
       Limelight4Constants.MEGATAG_XY_STANDARD_DEVIATION_COEFFICIENT,
+      Limelight4Constants.MEGATAG_2_XY_STANDARD_DEVIATION_COEFFICIENT,
       Limelight4Constants.MEGATAG_THETA_STANDARD_DEVIATION_COEFFICIENT),
   THRIFTYCAM(
       ThriftyCamConstants.HORIZONTAL_FOV,
@@ -37,26 +37,32 @@ public enum CameraType {
 
   public final double horizontalFOV;
   public final double verticalFOV;
-  public final double primaryXYStandardDeviationCoefficient;
-  public final double secondaryXYStandardDeviationCoefficient;
-  public final double primaryThetaStandardDeviationCoefficient;
+  public final double megatagXY;
+  public final double megatag2XY;
+  public final double theta;
+
+  @Deprecated public final double primaryXYStandardDeviationCoefficient;
+  @Deprecated public final double secondaryXYStandardDeviationCoefficient;
+  @Deprecated public final double primaryThetaStandardDeviationCoefficient;
 
   private CameraType(
-      double horizontalFOV,
-      double verticalFOV,
-      double primaryXYStandardDeviationCoefficient,
-      double secondaryXYStandardDeviationCoefficient,
-      double primaryThetaStandardDeviationCoefficient) {
+      double horizontalFOV, double verticalFOV, double megatagXY, double megatag2XY, double theta) {
     this.horizontalFOV = horizontalFOV;
     this.verticalFOV = verticalFOV;
-    this.primaryXYStandardDeviationCoefficient = primaryXYStandardDeviationCoefficient;
-    this.secondaryXYStandardDeviationCoefficient = secondaryXYStandardDeviationCoefficient;
-    this.primaryThetaStandardDeviationCoefficient = primaryThetaStandardDeviationCoefficient;
+    this.megatagXY = megatagXY;
+    this.megatag2XY = megatag2XY;
+    this.theta = theta;
+    this.primaryXYStandardDeviationCoefficient = megatag2XY;
+    this.secondaryXYStandardDeviationCoefficient = megatagXY;
+    this.primaryThetaStandardDeviationCoefficient = theta;
   }
 
   private CameraType() {
     this.horizontalFOV = 0.0;
     this.verticalFOV = 0.0;
+    this.megatagXY = 0.0;
+    this.megatag2XY = 0.0;
+    this.theta = 0.0;
     this.primaryXYStandardDeviationCoefficient = 0.0;
     this.secondaryXYStandardDeviationCoefficient = 0.0;
     this.primaryThetaStandardDeviationCoefficient = 0.0;

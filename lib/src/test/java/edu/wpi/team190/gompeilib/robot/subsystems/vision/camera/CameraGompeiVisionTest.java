@@ -25,6 +25,7 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.numbers.N5;
+import org.wpilib.system.Timer;
 
 public class CameraGompeiVisionTest {
 
@@ -453,8 +454,7 @@ public class CameraGompeiVisionTest {
 
       poses.clear();
       camera.periodic();
-      assertEquals(1, poses.size());
-      assertTrue(poses.get(0).tagIds().isEmpty());
+      assertEquals(0, poses.size()); // Tier 1 #6 fix: skip when totalTargets == 0
 
       // --- Test Case 1: Two valid tags, both present in the field layout (multi-tag branch) ---
       doAnswer(
@@ -564,6 +564,319 @@ public class CameraGompeiVisionTest {
       camera.periodic();
       assertFalse(poses.isEmpty());
       assertEquals(1, txtys.size());
+    }
+  }
+
+  @Test
+  public void testCornerParsingWithMultipleFrames() {
+    CameraIOGompeiVision io = mock(CameraIOGompeiVision.class);
+    Matrix<N3, N3> cameraMatrix = new Matrix<>(new SimpleMatrix(3, 3));
+    Matrix<N5, N1> distortion = new Matrix<>(new SimpleMatrix(5, 1));
+    Pose3d cameraPoseRel = new Pose3d(0.5, 0.0, 0.0, new org.wpilib.math.geometry.Rotation3d());
+
+    VisionConstants.GompeiVisionConfig config =
+        VisionConstants.GompeiVisionConfig.builder()
+            .key("gompei-multi")
+            .cameraType(CameraType.THRIFTYCAM)
+            .cameraMatrix(cameraMatrix)
+            .distortionCoefficients(distortion)
+            .singletagXYStdev(0.1)
+            .thetaStdev(0.2)
+            .multitagXYStdev(0.01)
+            .robotRelativePose(cameraPoseRel)
+            .build();
+
+    FieldTag tag1 =
+        new FieldTag(1, new Pose3d(1.0, 2.0, 0.0, new org.wpilib.math.geometry.Rotation3d()));
+    Field layout = new Field(null, null, null, null, 16.0, 8.0, null, List.of(tag1));
+
+    List<VisionPoseObservation> poses = new ArrayList<>();
+    List<VisionMultiTxTyObservation> txtys = new ArrayList<>();
+
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      CameraGompeiVision camera =
+          new CameraGompeiVision(
+              io,
+              config,
+              () -> layout,
+              0.5,
+              () -> Pose2d.ZERO,
+              List.of(poses::addAll),
+              List.of(txtys::addAll));
+
+      // Feed 5 frames. Before Bug #2 fix, when i >= 4, indexing tx[i] threw
+      // ArrayIndexOutOfBoundsException!
+      double[] frameTemplate =
+          new double[] {
+            1.0,
+            0.0,
+            1.0,
+            2.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0, // header
+            1.0, // tagId
+            10.0,
+            11.0,
+            20.0,
+            21.0,
+            30.0,
+            31.0,
+            40.0,
+            41.0, // 4 corner pairs: (10,11), (20,21), (30,31), (40,41)
+            2.0 // distance
+          };
+
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.robot.subsystems.vision.io
+                            .GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0, 2.0, 3.0, 4.0, 5.0};
+                inputs.frames =
+                    new double[][] {
+                      frameTemplate, frameTemplate, frameTemplate, frameTemplate, frameTemplate
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      assertDoesNotThrow(() -> camera.periodic());
+      assertEquals(5, poses.size());
+      assertEquals(5, txtys.size());
+
+      // Verify corner parsing indexes j correctly, not outer loop index i
+      VisionMultiTxTyObservation obs = txtys.get(4); // 5th frame (i=4)
+      assertArrayEquals(new double[] {10.0, 20.0, 30.0, 40.0}, obs.tx(), 1e-6);
+      assertArrayEquals(new double[] {11.0, 21.0, 31.0, 41.0}, obs.ty(), 1e-6);
+    }
+  }
+
+  @Test
+  public void testAmbiguityResolutionLogic() {
+    CameraIOGompeiVision io = mock(CameraIOGompeiVision.class);
+    Matrix<N3, N3> cameraMatrix = new Matrix<>(new SimpleMatrix(3, 3));
+    Matrix<N5, N1> distortion = new Matrix<>(new SimpleMatrix(5, 1));
+    Pose3d cameraPoseRel = new Pose3d(0.0, 0.0, 0.0, new org.wpilib.math.geometry.Rotation3d());
+
+    VisionConstants.GompeiVisionConfig config =
+        VisionConstants.GompeiVisionConfig.builder()
+            .key("gompei-ambiguity")
+            .cameraType(CameraType.THRIFTYCAM)
+            .cameraMatrix(cameraMatrix)
+            .distortionCoefficients(distortion)
+            .singletagXYStdev(0.1)
+            .thetaStdev(0.2)
+            .multitagXYStdev(0.01)
+            .robotRelativePose(cameraPoseRel)
+            .build();
+
+    FieldTag tag1 =
+        new FieldTag(1, new Pose3d(5.0, 5.0, 0.0, new org.wpilib.math.geometry.Rotation3d()));
+    Field layout = new Field(null, null, null, null, 16.0, 8.0, null, List.of(tag1));
+
+    List<VisionPoseObservation> poses = new ArrayList<>();
+    Pose2d[] robotHeadingSupplier = {
+      new Pose2d(0, 0, Rotation2d.fromDegrees(180))
+    }; // Heading near 180 deg (closer to pose 1)
+    double[] currentTimestamp = {1.0};
+
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class);
+        MockedStatic<Timer> mockTimer = mockStatic(Timer.class)) {
+      mockTimer.when(Timer::getTimestamp).thenAnswer(_ -> currentTimestamp[0]);
+      CameraGompeiVision camera =
+          new CameraGompeiVision(
+              io,
+              config,
+              () -> layout,
+              0.5,
+              () -> robotHeadingSupplier[0],
+              List.of(poses::addAll),
+              List.of());
+
+      // Case 1: error0=0.01, error1=1.0 (error0 < 0.4 * error1 -> unambiguous pose 0)
+      // Even though robotHeading is 180 deg (closer to pose 1 rotation of 180 deg than pose 0
+      // rotation of 0 deg),
+      // Bug #4 fix ensures pose 0 is selected because error0 is unambiguously better.
+      currentTimestamp[0] = 1.0;
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.robot.subsystems.vision.io
+                            .GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        2.0, 0.01, // values[0]=2, error0=0.01
+                        2.0, 3.0, 0.0, // pose0 at (2, 3), rot 0
+                        1.0, 0.0, 0.0, 0.0, 1.0, // error1=1.0
+                        8.0, 8.0, 0.0, // pose1 at (8, 8), rot 180
+                        0.0, 0.0, 0.0, 1.0, // rot 180 deg
+                        1.0, 0, 0, 0, 0, 0, 0, 0, 0, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertEquals(1, poses.size());
+      assertEquals(2.0, poses.get(0).pose().getX(), 0.01);
+      assertEquals(3.0, poses.get(0).pose().getY(), 0.01);
+
+      // Case 2: error1=0.01, error0=1.0 (error1 < 0.4 * error0 -> unambiguous pose 1)
+      currentTimestamp[0] = 2.0;
+      robotHeadingSupplier[0] =
+          new Pose2d(0, 0, Rotation2d.fromDegrees(0)); // heading closer to pose 0
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.robot.subsystems.vision.io
+                            .GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {2.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        2.0, 1.0, // error0=1.0
+                        2.0, 3.0, 0.0, // pose0
+                        1.0, 0.0, 0.0, 0.0, 0.01, // error1=0.01
+                        8.0, 7.0, 0.0, // pose1
+                        0.0, 0.0, 0.0, 1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertEquals(1, poses.size());
+      assertEquals(8.0, poses.get(0).pose().getX(), 0.01);
+      assertEquals(7.0, poses.get(0).pose().getY(), 0.01);
+
+      // Case 3: Ambiguous frame (error0=0.5, error1=0.5) -> disambiguate using robot gyro heading
+      currentTimestamp[0] = 3.0;
+      robotHeadingSupplier[0] =
+          new Pose2d(0, 0, Rotation2d.fromDegrees(10)); // closer to pose 0 (0 deg)
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.robot.subsystems.vision.io
+                            .GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {3.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        2.0, 0.5, // error0=0.5
+                        2.0, 3.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.5, // error1=0.5
+                        8.0, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, // 180 deg
+                        1.0, 0, 0, 0, 0, 0, 0, 0, 0, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertEquals(1, poses.size());
+      assertEquals(2.0, poses.get(0).pose().getX(), 0.01); // Pose 0 chosen
+
+      currentTimestamp[0] = 4.0;
+      robotHeadingSupplier[0] =
+          new Pose2d(0, 0, Rotation2d.fromDegrees(170)); // closer to pose 1 (180 deg)
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.robot.subsystems.vision.io
+                            .GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {4.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        2.0, 0.5, // error0=0.5
+                        2.0, 3.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.5, // error1=0.5
+                        8.0, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, // 180 deg
+                        1.0, 0, 0, 0, 0, 0, 0, 0, 0, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+      poses.clear();
+      camera.periodic();
+      assertEquals(1, poses.size());
+      assertEquals(8.0, poses.get(0).pose().getX(), 0.01); // Pose 1 chosen
+    }
+  }
+
+  @Test
+  public void testFlyingRobotPoseRejection() {
+    CameraIOGompeiVision io = mock(CameraIOGompeiVision.class);
+    Matrix<N3, N3> cameraMatrix = new Matrix<>(new SimpleMatrix(3, 3));
+    Matrix<N5, N1> distortion = new Matrix<>(new SimpleMatrix(5, 1));
+    Pose3d cameraPoseRel = new Pose3d(0.0, 0.0, 0.0, new org.wpilib.math.geometry.Rotation3d());
+
+    VisionConstants.GompeiVisionConfig config =
+        VisionConstants.GompeiVisionConfig.builder()
+            .key("gompei-flying")
+            .cameraType(CameraType.THRIFTYCAM)
+            .cameraMatrix(cameraMatrix)
+            .distortionCoefficients(distortion)
+            .singletagXYStdev(0.1)
+            .thetaStdev(0.2)
+            .multitagXYStdev(0.01)
+            .robotRelativePose(cameraPoseRel)
+            .build();
+
+    FieldTag tag1 =
+        new FieldTag(1, new Pose3d(5.0, 5.0, 0.0, new org.wpilib.math.geometry.Rotation3d()));
+    Field layout = new Field(null, null, null, null, 16.0, 8.0, null, List.of(tag1));
+
+    List<VisionPoseObservation> poses = new ArrayList<>();
+
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
+      CameraGompeiVision camera =
+          new CameraGompeiVision(
+              io, config, () -> layout, 0.5, () -> Pose2d.ZERO, List.of(poses::addAll), List.of());
+
+      // Flying robot: Z = 4.0 meters
+      doAnswer(
+              invocation -> {
+                var inputs =
+                    (edu.wpi.team190.gompeilib.robot.subsystems.vision.io
+                            .GompeiVisionIOInputsAutoLogged)
+                        invocation.getArgument(0);
+                inputs.timestamps = new double[] {1.0};
+                inputs.frames =
+                    new double[][] {
+                      new double[] {
+                        1.0, 0.0, 2.0, 3.0, 4.0, // Z = 4.0 (flying)
+                        1.0, 0.0, 0.0, 0.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 2.0
+                      }
+                    };
+                return null;
+              })
+          .when(io)
+          .updateInputs(any(CameraIO.GompeiVisionIOInputs.class));
+
+      poses.clear();
+      camera.periodic();
+      assertTrue(poses.isEmpty());
     }
   }
 }

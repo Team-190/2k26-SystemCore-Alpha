@@ -73,8 +73,19 @@ public class CameraIOLimelightTest {
       assertEquals(1.0, inputs.mt1PoseEstimate.pose().getX());
       assertEquals(3.0, inputs.mt2PoseEstimate.pose().getX());
       assertEquals(1, inputs.rawFiducials.length);
-      assertEquals(7, inputs.rawFiducials[0].id());
-      assertEquals(0.6, inputs.rawFiducials[0].ambiguity());
+      assertEquals(5, inputs.rawFiducials[0].id());
+
+      // Test fallback to MT2 fiducials when MT1 has no fiducials
+      LimelightHelpers.PoseEstimate emptyMT1 =
+          new LimelightHelpers.PoseEstimate(
+              new Pose2d(), 0.0, 0.0, 0, 0.0, 0.0, 0.0, new LimelightHelpers.RawFiducial[0], false);
+      mockHelpers
+          .when(() -> LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-static_ll"))
+          .thenReturn(emptyMT1);
+      CameraIO.LimelightIOInputs fallbackInputs = new CameraIO.LimelightIOInputs();
+      io.updateInputs(fallbackInputs);
+      assertEquals(1, fallbackInputs.rawFiducials.length);
+      assertEquals(6, fallbackInputs.rawFiducials[0].id());
     }
   }
 

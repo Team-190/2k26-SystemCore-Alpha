@@ -22,6 +22,12 @@ public class Vision extends VirtualSubsystem {
     this.cameras = cameras;
     this.fieldLayoutSupplier = fieldLayoutSupplier;
 
+    for (Camera camera : cameras) {
+      if (camera.getFieldLayoutSupplier() == null) {
+        camera.setFieldLayoutSupplier(fieldLayoutSupplier);
+      }
+    }
+
     NetworkTable fieldTable = NetworkTableInstance.getDefault().getTable("field");
 
     for (FieldTag tag : fieldLayoutSupplier.get().getTags()) {

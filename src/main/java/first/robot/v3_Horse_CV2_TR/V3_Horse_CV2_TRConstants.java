@@ -212,9 +212,9 @@ public class V3_Horse_CV2_TRConstants {
           .cameraType(CameraType.LIMELIGHT_4)
           .horizontalFOV(CameraType.LIMELIGHT_4.horizontalFOV)
           .verticalFOV(CameraType.LIMELIGHT_4.verticalFOV)
-          .megatagXYStdev(CameraType.LIMELIGHT_4.secondaryXYStandardDeviationCoefficient)
-          .metatagThetaStdev(CameraType.LIMELIGHT_4.primaryThetaStandardDeviationCoefficient)
-          .megatag2XYStdev(CameraType.LIMELIGHT_4.primaryXYStandardDeviationCoefficient)
+          .megatagXYStdev(CameraType.LIMELIGHT_4.megatagXY)
+          .metatagThetaStdev(CameraType.LIMELIGHT_4.theta)
+          .megatag2XYStdev(CameraType.LIMELIGHT_4.megatag2XY)
           .robotToCameraTransform(
               new Transform3d(
                   -0.321,
@@ -233,9 +233,9 @@ public class V3_Horse_CV2_TRConstants {
           .cameraType(CameraType.LIMELIGHT_4)
           .horizontalFOV(CameraType.LIMELIGHT_4.horizontalFOV)
           .verticalFOV(CameraType.LIMELIGHT_4.verticalFOV)
-          .megatagXYStdev(CameraType.LIMELIGHT_4.secondaryXYStandardDeviationCoefficient)
-          .metatagThetaStdev(CameraType.LIMELIGHT_4.primaryThetaStandardDeviationCoefficient)
-          .megatag2XYStdev(CameraType.LIMELIGHT_4.primaryXYStandardDeviationCoefficient)
+          .megatagXYStdev(CameraType.LIMELIGHT_4.megatagXY)
+          .metatagThetaStdev(CameraType.LIMELIGHT_4.theta)
+          .megatag2XYStdev(CameraType.LIMELIGHT_4.megatag2XY)
           .robotToCameraTransform(
               new Transform3d(
                   -0.060142,
@@ -254,9 +254,9 @@ public class V3_Horse_CV2_TRConstants {
           .cameraType(CameraType.LIMELIGHT_4)
           .horizontalFOV(CameraType.LIMELIGHT_4.horizontalFOV)
           .verticalFOV(CameraType.LIMELIGHT_4.verticalFOV)
-          .megatagXYStdev(CameraType.LIMELIGHT_4.secondaryXYStandardDeviationCoefficient)
-          .metatagThetaStdev(CameraType.LIMELIGHT_4.primaryThetaStandardDeviationCoefficient)
-          .megatag2XYStdev(CameraType.LIMELIGHT_4.primaryXYStandardDeviationCoefficient)
+          .megatagXYStdev(CameraType.LIMELIGHT_4.megatagXY)
+          .metatagThetaStdev(CameraType.LIMELIGHT_4.theta)
+          .megatag2XYStdev(CameraType.LIMELIGHT_4.megatag2XY)
           .robotToCameraTransform(new Transform3d(0.0, 0.0, 0.0, new Rotation3d(0.0, 0.0, 0.0)))
           .enableRewind(true)
           .build();

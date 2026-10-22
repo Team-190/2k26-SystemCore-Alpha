@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.vision.camera;
 
+import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.math.GeometryUtil;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.VisionConstants.GompeiVisionConfig;
@@ -16,7 +17,9 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.fields.Field;
 import org.wpilib.math.geometry.*;
+import org.wpilib.math.interpolation.TimeInterpolatableBuffer;
 import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.system.Timer;
 
 @ExtensionMethod(GeometryUtil.class)
 public class CameraGompeiVision extends Camera {
@@ -32,6 +35,9 @@ public class CameraGompeiVision extends Camera {
 
   @Getter private final List<Pose3d> allTagPoses;
   @Getter private Pose2d robotPose;
+
+  private final TimeInterpolatableBuffer<Rotation2d> robotRotationBuffer =
+      TimeInterpolatableBuffer.createBuffer(1.5);
 
   public CameraGompeiVision(
       CameraIOGompeiVision io,
@@ -50,6 +56,7 @@ public class CameraGompeiVision extends Camera {
     this.aprilTagFieldLayoutSupplier = aprilTagFieldLayoutSupplier;
     this.fieldBorderMarginMeters = fieldBorderMarginMeters;
     this.currentRobotPoseSupplier = currentRobotPoseSupplier;
+    setFieldLayoutSupplier(aprilTagFieldLayoutSupplier);
 
     this.name = this.config.key();
 
@@ -60,9 +67,13 @@ public class CameraGompeiVision extends Camera {
   }
 
   @Override
+  @Trace
   public void periodic() {
     poseObservationList.clear();
     multiTxTyObservationList.clear();
+
+    Rotation2d liveRotation = currentRobotPoseSupplier.get().getRotation();
+    robotRotationBuffer.addSample(Timer.getTimestamp(), liveRotation);
 
     io.updateInputs(inputs);
     Logger.processInputs("Vision/Cameras/" + this.name, inputs);
@@ -72,8 +83,10 @@ public class CameraGompeiVision extends Camera {
 
     for (int i = 0; i < inputs.frames.length; i++) {
       double timestamp = inputs.timestamps[i];
-      int totalTargets;
-      double averageDistance = 0.0;
+      if (timestamp <= 0.0) {
+        continue;
+      }
+
       double[] values = inputs.frames[i];
 
       if (values.length == 0 || values[0] == 0) {
@@ -82,6 +95,10 @@ public class CameraGompeiVision extends Camera {
 
       Pose3d cameraPose = null;
       Pose2d robotPose = null;
+      Pose3d robotPose3d = null;
+      Transform3d cameraToRobot =
+          new Transform3d(currentCameraPose.getTranslation(), currentCameraPose.getRotation())
+              .inverse();
 
       switch ((int) values[0]) {
         case 1:
@@ -92,10 +109,8 @@ public class CameraGompeiVision extends Camera {
                   values[3],
                   values[4],
                   new Rotation3d(new Quaternion(values[5], values[6], values[7], values[8])));
-          robotPose =
-              cameraPose
-                  .toPose2d()
-                  .transformBy(GeometryUtil.toTransform2d(currentCameraPose.toPose2d()).inverse());
+          robotPose3d = cameraPose.transformBy(cameraToRobot);
+          robotPose = robotPose3d.toPose2d();
           break;
 
         case 2:
@@ -115,23 +130,32 @@ public class CameraGompeiVision extends Camera {
                   values[11],
                   values[12],
                   new Rotation3d(new Quaternion(values[13], values[14], values[15], values[16])));
-          Transform2d cameraToRobot =
-              GeometryUtil.toTransform2d(currentCameraPose.toPose2d()).inverse();
-          Pose2d robotPose0 = cameraPose0.toPose2d().transformBy(cameraToRobot);
-          Pose2d robotPose1 = cameraPose1.toPose2d().transformBy(cameraToRobot);
 
-          if (error0 < error1 * VisionConstants.AMBIGUITY_THRESHOLD
-              || error1 < error0 * VisionConstants.AMBIGUITY_THRESHOLD) {
-            Rotation2d currentRotation = currentRobotPoseSupplier.get().getRotation();
-            Rotation2d visionRotation0 = robotPose0.getRotation();
-            Rotation2d visionRotation1 = robotPose1.getRotation();
-            if (Math.abs(currentRotation.minus(visionRotation0).getRadians())
-                < Math.abs(currentRotation.minus(visionRotation1).getRadians())) {
+          Pose3d robotPose0_3d = cameraPose0.transformBy(cameraToRobot);
+          Pose3d robotPose1_3d = cameraPose1.transformBy(cameraToRobot);
+          Pose2d robotPose0 = robotPose0_3d.toPose2d();
+          Pose2d robotPose1 = robotPose1_3d.toPose2d();
+
+          if (error0 < error1 * VisionConstants.AMBIGUITY_THRESHOLD) {
+            robotPose = robotPose0;
+            cameraPose = cameraPose0;
+            robotPose3d = robotPose0_3d;
+          } else if (error1 < error0 * VisionConstants.AMBIGUITY_THRESHOLD) {
+            robotPose = robotPose1;
+            cameraPose = cameraPose1;
+            robotPose3d = robotPose1_3d;
+          } else {
+            Rotation2d currentRotation =
+                robotRotationBuffer.getSample(timestamp).orElse(liveRotation);
+            if (Math.abs(currentRotation.minus(robotPose0.getRotation()).getRadians())
+                < Math.abs(currentRotation.minus(robotPose1.getRotation()).getRadians())) {
               robotPose = robotPose0;
               cameraPose = cameraPose0;
+              robotPose3d = robotPose0_3d;
             } else {
               robotPose = robotPose1;
               cameraPose = cameraPose1;
+              robotPose3d = robotPose1_3d;
             }
           }
 
@@ -141,17 +165,15 @@ public class CameraGompeiVision extends Camera {
           continue;
       }
 
-      // cameraPose and robotPose are always assigned together by the switch above.
-      if (cameraPose == null) continue;
+      // Reject null or physically invalid 3D robot pose
+      if (cameraPose == null || robotPose3d == null || !isValid3DPose(robotPose3d)) {
+        continue;
+      }
 
       // Exit if robot pose is off the field
-      double fieldLength = aprilTagFieldLayoutSupplier.get().getFieldLength();
-      double fieldWidth = aprilTagFieldLayoutSupplier.get().getFieldWidth();
-
-      if (robotPose.getX() < -fieldBorderMarginMeters
-          || robotPose.getX() > fieldLength + fieldBorderMarginMeters
-          || robotPose.getY() < -fieldBorderMarginMeters
-          || robotPose.getY() > fieldWidth + fieldBorderMarginMeters) continue;
+      if (!isWithinFieldBounds(robotPose, fieldBorderMarginMeters)) {
+        continue;
+      }
 
       // Get tag poses and update last detection times
       List<Pose3d> tagPoses = new ArrayList<>();
@@ -161,73 +183,78 @@ public class CameraGompeiVision extends Camera {
         tagPose.ifPresent(tagPoses::add);
       }
 
-      // Prepare arrays
-      totalTargets = tagPoses.size();
+      // Skip observation if no tags resolve
+      if (tagPoses.isEmpty()) {
+        continue;
+      }
+
+      int totalTargets = tagPoses.size();
       Set<Integer> tagIds = new HashSet<>();
 
-      if (!tagPoses.isEmpty()) {
-        // Calculate average distance
-        double totalDistance = 0.0;
-        for (Pose3d tagPose : tagPoses) {
-          totalDistance += tagPose.getTranslation().getDistance(currentCameraPose.getTranslation());
-        }
-        averageDistance = totalDistance / tagPoses.size();
+      // Calculate average distance to solved field-space cameraPose
+      double totalDistance = 0.0;
+      for (Pose3d tagPose : tagPoses) {
+        totalDistance += tagPose.getTranslation().getDistance(cameraPose.getTranslation());
+      }
+      double averageDistance = totalDistance / tagPoses.size();
 
-        // --- Parse tag angle + distance data ---
-        // values[0] is already constrained to 1 or 2 by the switch above (any other value
-        // continues the outer loop before reaching here).
-        int tagEstimationDataEndIndex = (int) values[0] == 1 ? 8 : 16;
+      // --- Parse tag angle + distance data ---
+      int tagEstimationDataEndIndex = (int) values[0] == 1 ? 8 : 16;
+      int indexCounter = 0;
 
-        int indexCounter = 0;
+      // Step through each 10-value chunk safely
+      for (int index = tagEstimationDataEndIndex + 1; index + 9 < values.length; index += 10) {
+        int tagId = (int) values[index];
+        double[] tx = new double[4];
+        double[] ty = new double[4];
 
-        // Step through each 10-value chunk safely
-        for (int index = tagEstimationDataEndIndex + 1; index + 9 < values.length; index += 10) {
-          int tagId = (int) values[index];
-          double[] tx = new double[4];
-          double[] ty = new double[4];
-
-          // Read 4 corner pairs
-          for (int j = 0; j < 4; j++) {
-            tx[i] = values[index + 1 + (2 * i)];
-            ty[i] = values[index + 1 + (2 * i) + 1];
-          }
-
-          double distance = values[index + 9];
-
-          // Store data
-          if (indexCounter < totalTargets) {
-            indexCounter++;
-            multiTxTyObservationList.add(
-                new VisionMultiTxTyObservation(tagId, tx, ty, distance, timestamp, cameraPose));
-            tagIds.add(tagId);
-          } else {
-            System.out.println("[WARN] More tag data than expected: indexCounter=" + indexCounter);
-          }
+        // Read 4 corner pairs using corner index j
+        for (int j = 0; j < 4; j++) {
+          tx[j] = values[index + 1 + (2 * j)];
+          ty[j] = values[index + 1 + (2 * j) + 1];
         }
 
-        // Optional debug check
-        if ((values.length - (tagEstimationDataEndIndex + 1)) % 10 != 0) {
-          System.out.println(
-              "[WARN] Observation array not multiple of 10! Length="
-                  + values.length
-                  + " start="
-                  + (tagEstimationDataEndIndex + 1));
+        double distance = values[index + 9];
+
+        // Store data
+        if (indexCounter < totalTargets) {
+          indexCounter++;
+          multiTxTyObservationList.add(
+              new VisionMultiTxTyObservation(tagId, tx, ty, distance, timestamp, cameraPose));
+          tagIds.add(tagId);
+        } else {
+          System.out.println("[WARN] More tag data than expected: indexCounter=" + indexCounter);
         }
       }
+
+      // Optional debug check
+      if ((values.length - (tagEstimationDataEndIndex + 1)) % 10 != 0) {
+        System.out.println(
+            "[WARN] Observation array not multiple of 10! Length="
+                + values.length
+                + " start="
+                + (tagEstimationDataEndIndex + 1));
+      }
+
       double xyStdevCoeff;
       double thetaStdev;
 
       if (totalTargets > 1) {
         xyStdevCoeff = config.multitagXYStdev();
         thetaStdev =
-            config.thetaStdev() * Math.pow(averageDistance, 1.2) / Math.pow(totalTargets, 2.0);
+            config.thetaStdev()
+                * Math.pow(averageDistance, VisionConstants.XY_STDEV_DISTANCE_EXPONENT)
+                / Math.pow(totalTargets, VisionConstants.XY_STDEV_TAG_COUNT_EXPONENT);
       } else {
         xyStdevCoeff = config.singletagXYStdev();
         thetaStdev = Double.POSITIVE_INFINITY;
       }
 
       // Add observation to list
-      double xyStdDev = xyStdevCoeff * Math.pow(averageDistance, 1.2) / Math.pow(totalTargets, 2.0);
+      double xyStdDev =
+          xyStdevCoeff
+              * Math.pow(averageDistance, VisionConstants.XY_STDEV_DISTANCE_EXPONENT)
+              / Math.pow(totalTargets, VisionConstants.XY_STDEV_TAG_COUNT_EXPONENT);
 
       poseObservationList.add(
           new VisionPoseObservation(

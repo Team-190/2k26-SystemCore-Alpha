@@ -126,6 +126,14 @@ public class MotorIOTalonFXSimTest extends GompeiLibTestBase {
           assertEquals(6.0, mechanism.inputVoltage().in(Volts), 1e-9);
           assertTrue(mechanism.velocity().in(RadiansPerSecond) > 0);
         });
+
+    java.lang.reflect.Method m = MotorIOTalonFXSim.class.getDeclaredMethod("simulateAll");
+    m.setAccessible(true);
+    java.lang.reflect.Field lastSimTimeField =
+        MotorIOTalonFXSim.class.getDeclaredField("lastSimTimeSeconds");
+    lastSimTimeField.setAccessible(true);
+    lastSimTimeField.set(null, Double.POSITIVE_INFINITY);
+    m.invoke(null);
   }
 
   @Test

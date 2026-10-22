@@ -1,13 +1,18 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.vision.camera;
 
 import edu.wpi.team190.gompeilib.logging.Trace;
+import edu.wpi.team190.gompeilib.robot.subsystems.vision.VisionConstants;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionMultiTxTyObservation;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionPoseObservation;
 import edu.wpi.team190.gompeilib.robot.subsystems.vision.data.VisionSingleTxTyObservation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import lombok.Getter;
+import lombok.Setter;
+import org.wpilib.fields.Field;
+import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Pose3d;
 
 public abstract class Camera {
@@ -21,6 +26,7 @@ public abstract class Camera {
   @Getter List<VisionSingleTxTyObservation> singleTxTyObservationList;
 
   @Getter protected Pose3d currentCameraPose;
+  @Getter @Setter protected Supplier<Field> fieldLayoutSupplier;
 
   public Camera(
       String name,
@@ -28,9 +34,9 @@ public abstract class Camera {
       List<Consumer<List<VisionMultiTxTyObservation>>> multiTxTyObservers,
       List<Consumer<List<VisionSingleTxTyObservation>>> singleTxTyObservers) {
     this.name = name;
-    this.poseObservers = poseObservers;
-    this.multiTxTyObservers = multiTxTyObservers;
-    this.singleTxTyObservers = singleTxTyObservers;
+    this.poseObservers = new ArrayList<>(poseObservers);
+    this.multiTxTyObservers = new ArrayList<>(multiTxTyObservers);
+    this.singleTxTyObservers = new ArrayList<>(singleTxTyObservers);
 
     poseObservationList = new ArrayList<>();
     multiTxTyObservationList = new ArrayList<>();
@@ -45,14 +51,62 @@ public abstract class Camera {
   }
 
   public void sendObservers() {
+    List<VisionPoseObservation> immutablePoseObs = List.copyOf(poseObservationList);
     for (Consumer<List<VisionPoseObservation>> observer : poseObservers) {
-      observer.accept(poseObservationList);
+      observer.accept(immutablePoseObs);
     }
+    List<VisionMultiTxTyObservation> immutableMultiTxTyObs = List.copyOf(multiTxTyObservationList);
     for (Consumer<List<VisionMultiTxTyObservation>> observer : multiTxTyObservers) {
-      observer.accept(multiTxTyObservationList);
+      observer.accept(immutableMultiTxTyObs);
     }
+    List<VisionSingleTxTyObservation> immutableSingleTxTyObs =
+        List.copyOf(singleTxTyObservationList);
     for (Consumer<List<VisionSingleTxTyObservation>> observer : singleTxTyObservers) {
-      observer.accept(singleTxTyObservationList);
+      observer.accept(immutableSingleTxTyObs);
     }
+  }
+
+  public boolean isStaleFrame(double timestamp, double lastTimestamp) {
+    return timestamp <= 0.0 || timestamp <= lastTimestamp;
+  }
+
+  public boolean isValidTagCount(int tagCount) {
+    return tagCount > 0;
+  }
+
+  public boolean isWithinFieldBounds(Pose2d pose, double margin) {
+    if (pose == null) {
+      return false;
+    }
+    if (fieldLayoutSupplier == null || fieldLayoutSupplier.get() == null) {
+      return true;
+    }
+    Field field = fieldLayoutSupplier.get();
+    return pose.getX() >= -margin
+        && pose.getX() <= field.getFieldLength() + margin
+        && pose.getY() >= -margin
+        && pose.getY() <= field.getFieldWidth() + margin;
+  }
+
+  public boolean isValid3DPose(Pose3d pose3d) {
+    if (pose3d == null) {
+      return false;
+    }
+    double z = pose3d.getZ();
+    double roll = Math.abs(pose3d.getRotation().getX());
+    double pitch = Math.abs(pose3d.getRotation().getY());
+    return z >= -0.8 && z <= 1.0 && roll <= Math.toRadians(35) && pitch <= Math.toRadians(35);
+  }
+
+  public boolean isValidAmbiguity(double ambiguity) {
+    return ambiguity >= 0 && ambiguity < VisionConstants.AMBIGUITY_THRESHOLD;
+  }
+
+  public boolean isValidYawRate(double omegaRadPerSec) {
+    return Math.abs(omegaRadPerSec) <= Math.toRadians(720);
+  }
+
+  public boolean isValidDistance(double distance, double maxDistance) {
+    return distance > 0 && distance <= maxDistance;
   }
 }
