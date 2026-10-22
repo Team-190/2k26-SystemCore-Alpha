@@ -51,7 +51,6 @@ public class V3_Horse_CV2_TRAutoDoubleDip {
           V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(
               drive, rollerFloor, shooter, intake, shot1Seconds),
           V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter),
-          Commands.waitSeconds(V3_Horse_CV2_TRShooterConstants.SHOOTER_CALM_DOWN_TIME),
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
           AutoBuilder.followPath(DOUBLE_DIP_2),
           drive.runOnce(drive::stop),
