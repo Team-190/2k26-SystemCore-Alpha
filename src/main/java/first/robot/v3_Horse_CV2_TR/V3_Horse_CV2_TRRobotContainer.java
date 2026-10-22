@@ -4,6 +4,9 @@ import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.planner.Path;
+import edu.wpi.team190.gompeilib.planner.Plan;
+import edu.wpi.team190.gompeilib.planner.Planner;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIO;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOSim;
@@ -46,6 +49,9 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandNiDsXboxController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -61,6 +67,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private final XKeysInput xkeys = new XKeysInput(1);
 
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
+
+  private final Plan autoPath = new Plan(new Path(new Pose2d(new Translation2d(3.5264897280092597,3.981658637152778), new Rotation2d()), new Pose2d(new Translation2d( 1.8835363859953707,3.981658637152778), new Rotation2d(180)), 2, 2));
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -215,6 +223,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   }
 
   private void configureAutos() {
+    Planner.setDriveCommand(drive::runVelocity);
     autoChooser.add(
         "Back up and shoot",
         V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor));
@@ -389,6 +398,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   @Override
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    return Planner.followPath(autoPath, V3_Horse_CV2_TRRobotState::getGlobalPose);
   }
 }
