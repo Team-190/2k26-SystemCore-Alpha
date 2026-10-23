@@ -27,6 +27,7 @@ import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
 import first.robot.util.AllianceFlipUtil;
+import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
 import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoDoubleDip;
@@ -59,6 +60,9 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private final LoggedNetworkChooser<Command> autoChooser;
 
   private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
+
+  @SuppressWarnings("unused")
+  private final XKeysInput xkeys = new XKeysInput(1);
 
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
@@ -109,8 +113,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
                       List.of()),
                   new CameraStaticLimelight(
-                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG),
-                      V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG,
+                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG),
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG,
                       V3_Horse_CV2_TRRobotState::getHeading,
                       drive::getMeasuredChassisVelocities,
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
@@ -176,7 +180,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                       List.of()),
                   new CameraStaticLimelight(
                       new CameraIO() {},
-                      V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG,
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG,
                       V3_Horse_CV2_TRRobotState::getHeading,
                       drive::getMeasuredChassisVelocities,
                       List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
@@ -232,7 +236,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                   List.of()),
               new CameraStaticLimelight(
                   new CameraIO() {},
-                  V3_Horse_CV2_TRConstants.LIMELIGHT_CLIMBER_CONFIG,
+                  V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG,
                   V3_Horse_CV2_TRRobotState::getHeading,
                   drive::getMeasuredChassisVelocities,
                   List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
@@ -263,7 +267,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_CHEESY",
             false,
-            7,
+            4,
             5));
 
     autoChooser.add(
@@ -276,7 +280,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_CHEESY",
             true,
-            7,
+            4,
             5));
 
     autoChooser.add(
@@ -289,7 +293,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_OUTLIERS",
             false,
-            7,
+            4,
             5));
 
     autoChooser.add(
@@ -302,7 +306,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_OUTLIERS",
             true,
-            7,
+            4,
             5));
 
     autoChooser.addDefault("Do Nothing", Commands.none());

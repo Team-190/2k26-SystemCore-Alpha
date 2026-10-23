@@ -58,9 +58,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final double EXTENSION_INTAKE_POSITION = 0.3;
 
-  // Releasing agitate within this distance of stow stows the intake
-  public static final double AGITATE_STOW_THRESHOLD = 0.05; // TODO: tune
-
   // While agitating, reaching within this distance of stow latches the intake to stow
   public static final double AGITATE_AUTO_STOW_THRESHOLD = 0.01;
 
@@ -85,12 +82,15 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final Voltage IDLE_ROLLER_VOLTAGE;
 
+  public static final Voltage EXTENSION_SLOW_MOVE_VOLTAGE;
+
   static {
     INTAKE_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     INTAKE_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
     KICKER_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     KICKER_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
-    IDLE_ROLLER_VOLTAGE = Volts.of(4.0); // TODO: tune
+    IDLE_ROLLER_VOLTAGE = Volts.of(5.0); // TODO: tune
+    EXTENSION_SLOW_MOVE_VOLTAGE = Volts.of(1.0);
 
     // The right roller is on another bus, so it mirrors the left roller instead of following it.
     INTAKE_ROLLER_CONSTANTS =
@@ -318,8 +318,11 @@ public class V3_Horse_CV2_TR_IntakeConstants {
     STOW,
     INTAKE,
     MANUAL_EXTEND,
-    MANUAL_RELEASE,
-    OVERRIDE
+    ZERO,
+    STOP,
+    SLOW_MOVE,
+    SQUISH,
+    SYSID
   }
 
   public enum RollerState {

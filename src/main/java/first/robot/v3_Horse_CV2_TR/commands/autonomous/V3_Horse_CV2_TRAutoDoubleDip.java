@@ -1,5 +1,7 @@
 package first.robot.v3_Horse_CV2_TR.commands.autonomous;
 
+import static org.wpilib.units.Units.RadiansPerSecond;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
@@ -41,6 +43,7 @@ public class V3_Horse_CV2_TRAutoDoubleDip {
 
       return Commands.sequence(
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
+          shooter.setFlywheelVelocity(RadiansPerSecond.of(165)),
           Commands.runOnce(
               () ->
                   V3_Horse_CV2_TRRobotState.resetPose(
@@ -51,6 +54,7 @@ public class V3_Horse_CV2_TRAutoDoubleDip {
               drive, rollerFloor, shooter, intake, shot1Seconds),
           V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter),
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
+          shooter.setFlywheelVelocity(RadiansPerSecond.of(165)),
           AutoBuilder.followPath(DOUBLE_DIP_2),
           drive.runOnce(drive::stop),
           V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(

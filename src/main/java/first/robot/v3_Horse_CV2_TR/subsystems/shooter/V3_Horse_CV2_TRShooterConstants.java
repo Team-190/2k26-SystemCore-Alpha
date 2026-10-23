@@ -64,10 +64,10 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withCurrentGains(
               Gains.angularVelocity(Amps) // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(AmpsPerRotationPerSecond.ofNative(20))
-                  .withKS(Amps.of(4))
-                  .withKV(AmpsPerRotationPerSecond.ofNative(0))
-                  .withKA(AmpsPerRadianPerSecondSquared.ofNative(0))
+                  .withKP(AmpsPerRotationPerSecond.ofNative(10))
+                  .withKS(Amps.of(3.6715))
+                  .withKV(AmpsPerRadianPerSecond.ofNative(0.011621))
+                  .withKA(AmpsPerRadianPerSecondSquared.ofNative(0.31749))
                   .build())
           .withFlywheelGearbox(DCMotor.getKrakenX60Foc(4))
           // From CAD until the torque characterization runs; then paste its printed plant here

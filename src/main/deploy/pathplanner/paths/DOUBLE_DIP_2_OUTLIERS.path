@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.893,
-        "y": 5.276
+        "x": 2.386,
+        "y": 5.566
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.7759187411731465,
-        "y": 7.222863645387442
+        "x": 0.7602840711805565,
+        "y": 8.081267144097222
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.378447982875125,
-        "y": 7.420039614225719
+        "x": 4.29708543113426,
+        "y": 7.454292896412037
       },
       "prevControl": {
-        "x": 3.8797503962694053,
-        "y": 7.422604617940281
+        "x": 3.7983878445285404,
+        "y": 7.456857900126598
       },
       "nextControl": {
-        "x": 5.488536590749419,
-        "y": 7.414329978809053
+        "x": 5.407174039008554,
+        "y": 7.44858326099537
       },
       "isLocked": false,
       "linkedName": null
@@ -80,12 +80,12 @@
     },
     {
       "anchor": {
-        "x": 2.893,
-        "y": 5.276
+        "x": 2.386,
+        "y": 5.566
       },
       "prevControl": {
-        "x": 4.003524870790843,
-        "y": 5.660761710066196
+        "x": 3.496524870790843,
+        "y": 5.950761710066196
       },
       "nextControl": null,
       "isLocked": false,
@@ -93,6 +93,10 @@
     }
   ],
   "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0.0
+    },
     {
       "waypointRelativePos": 0.922923823995772,
       "rotationDegrees": 0.0
@@ -111,24 +115,10 @@
     },
     {
       "waypointRelativePos": 3.8,
-      "rotationDegrees": 128.08695450736556
+      "rotationDegrees": -177.65556698082983
     }
   ],
-  "constraintZones": [
-    {
-      "name": "INTAKING",
-      "minWaypointRelativePos": 2.01139431063123,
-      "maxWaypointRelativePos": 3.0779692691029874,
-      "constraints": {
-        "maxVelocity": 2.0,
-        "maxAcceleration": 3.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
@@ -170,7 +160,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0.0,
-    "rotation": 136.671
+    "rotation": 141.99350292858378
   },
   "useDefaultConstraints": true
 }
