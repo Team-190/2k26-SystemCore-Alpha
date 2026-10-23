@@ -8,7 +8,7 @@ import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.core.utility.VirtualSubsystem;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixUtil;
-import first.robot.v3_Horse_CV2_TR.subsystems.V3_Horse_CV2_TRRobotContainer;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotContainer;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;

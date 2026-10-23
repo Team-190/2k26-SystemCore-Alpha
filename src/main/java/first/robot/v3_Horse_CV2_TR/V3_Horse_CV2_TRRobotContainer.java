@@ -29,6 +29,7 @@ import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
+import first.robot.util.AllianceFlipUtil;
 import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
@@ -68,7 +69,15 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
-  private final Plan autoPath = new Plan(new Path(new Pose2d(new Translation2d(3.5264897280092597,3.981658637152778), new Rotation2d()), new Pose2d(new Translation2d( 1.8835363859953707,3.981658637152778), new Rotation2d(180)), 2, 2));
+  private Pose2d midpoint =
+      AllianceFlipUtil.apply(
+          new Pose2d(
+              new Translation2d(1.8835363859953707, 3.981658637152778), new Rotation2d(Math.PI)));
+  private Pose2d startPoint =
+      AllianceFlipUtil.apply(
+          new Pose2d(new Translation2d(3.5264897280092597, 3.981658637152778), new Rotation2d(0)));
+  private final Plan autoPath =
+      new Plan(new Path(startPoint, midpoint, 2, 2), new Path(midpoint, midpoint, 2, 2));
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -223,14 +232,29 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   }
 
   private void configureAutos() {
-    Planner.setDriveCommand(drive::runVelocity);
     autoChooser.add(
         "Back up and shoot",
         V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor));
 
     autoChooser.add("Shooter Flywheel Torque SysId", shooter.flywheelSysId());
 
-    autoChooser.addDefault("Do Nothing", Commands.none());
+    autoChooser.add("Do Nothing", Commands.none());
+
+    autoChooser.addDefault(
+        "Back up and Shoot(Gompei Planner)",
+        Commands.runOnce(
+                () -> {
+                  V3_Horse_CV2_TRRobotState.resetPose(startPoint);
+                })
+            .andThen(
+                Planner.followPath(
+                        autoPath, V3_Horse_CV2_TRRobotState::getGlobalPose, drive::runVelocity)
+                    .andThen(
+                        V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                            drive,
+                            rollerFloor,
+                            shooter,
+                            V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER))));
   }
 
   private void configureButtonBindings() {
@@ -398,6 +422,10 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
   @Override
   public Command getAutonomousCommand() {
-    return Planner.followPath(autoPath, V3_Horse_CV2_TRRobotState::getGlobalPose);
+    return autoChooser.get();
+  }
+
+  public Pose2d getPose() {
+    return V3_Horse_CV2_TRRobotState.getGlobalPose();
   }
 }

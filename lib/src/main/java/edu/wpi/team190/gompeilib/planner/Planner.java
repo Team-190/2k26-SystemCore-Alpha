@@ -18,13 +18,8 @@ public class Planner {
 
   private static final int RADIUS_CIRCLE_POINTS = 67;
 
-  private static Consumer<ChassisVelocities> driveCommand;
-
-  public static void setDriveCommand(Consumer<ChassisVelocities> newDriveCommand) {
-    driveCommand = newDriveCommand;
-  }
-
-  public static Command followPath(Plan plan, Supplier<Pose2d> robotPose) {
+  public static Command followPath(
+      Plan plan, Supplier<Pose2d> robotPose, Consumer<ChassisVelocities> driveCommand) {
     if (driveCommand == null) {
       DriverStationErrors.reportError(
           "GompeiPlanner drive command not set, call Planner.setDriveCommand()", false);
@@ -77,56 +72,65 @@ public class Planner {
                       }
 
                       // each state is 1 / RATE seconds after the last, so find where we are
-                      double exactIndex = planTime * Path.RATE;
-                      int currentIndex = (int) exactIndex;
-                      State before = states.get(currentIndex);
-                      State after = states.get(currentIndex + 1);
-                      double fraction = exactIndex - currentIndex;
-                      State target =
-                          new State(
-                              before.pose().interpolate(after.pose(), fraction),
-                              before.velocity().interpolate(after.velocity(), fraction),
-                              0);
-                      Logger.recordOutput("GompeiPlanner/Timing/Elapsed", time);
-                      Logger.recordOutput("GompeiPlanner/Timing/Skipped", skippedTime[0]);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Timing/LoopDelta",
-                          lastTime[0] < 0 ? 0 : previousPlanTime - lastTime[0]);
-                      Logger.recordOutput("GompeiPlanner/Timing/Jump", planTime - previousPlanTime);
-                      Logger.recordOutput("GompeiPlanner/Target/InsideEndRadius", insideEndRadius);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/DistanceToPathEnd", distanceToPathEnd);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/StateIndex",
-                          Math.min(planTime * Path.RATE, lastIndex));
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/AtFinalSample", planTime * Path.RATE >= lastIndex);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/SampledPathIndex", plan.pathIndexAt(planTime));
-                      ChassisVelocities output = calculate(solver, pose, target);
-                      driveCommand.accept(output);
-                      logTarget(pose, target, output, path, pathIndex, planTime);
+                      try {
+                        double exactIndex = planTime * Path.RATE;
+                        int currentIndex = (int) exactIndex;
+                        State before = states.get(currentIndex);
+                        State target;
+                        State after;
+                        after = states.get(currentIndex + 1);
+                        double fraction = exactIndex - currentIndex;
+                        target =
+                            new State(
+                                before.pose().interpolate(after.pose(), fraction),
+                                before.velocity().interpolate(after.velocity(), fraction),
+                                0);
+                        Logger.recordOutput("GompeiPlanner/Timing/Elapsed", time);
+                        Logger.recordOutput("GompeiPlanner/Timing/Skipped", skippedTime[0]);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Timing/LoopDelta",
+                            lastTime[0] < 0 ? 0 : previousPlanTime - lastTime[0]);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Timing/Jump", planTime - previousPlanTime);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/InsideEndRadius", insideEndRadius);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/DistanceToPathEnd", distanceToPathEnd);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/StateIndex",
+                            Math.min(planTime * Path.RATE, lastIndex));
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/AtFinalSample",
+                            planTime * Path.RATE >= lastIndex);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/SampledPathIndex", plan.pathIndexAt(planTime));
+                        ChassisVelocities output = target.velocity();
+                        driveCommand.accept(output);
+                        logTarget(pose, target, output, path, pathIndex, planTime);
 
-                      // run any command whose time we passed since the last loop
-                      for (var entry : plan.getCommandMap().entrySet()) {
-                        if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
-                          CommandScheduler.getInstance().schedule(entry.getValue());
-                          triggeredCommands[0]++;
-                          Logger.recordOutput(
-                              "GompeiPlanner/Commands/LastName", entry.getValue().getName());
-                          Logger.recordOutput("GompeiPlanner/Commands/LastTime", entry.getKey());
+                        // run any command whose time we passed since the last loop
+                        for (var entry : plan.getCommandMap().entrySet()) {
+                          if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
+                            CommandScheduler.getInstance().schedule(entry.getValue());
+                            triggeredCommands[0]++;
+                            Logger.recordOutput(
+                                "GompeiPlanner/Commands/LastName", entry.getValue().getName());
+                            Logger.recordOutput("GompeiPlanner/Commands/LastTime", entry.getKey());
+                          }
                         }
+                        Logger.recordOutput(
+                            "GompeiPlanner/Commands/TriggeredCount", triggeredCommands[0]);
+                        lastTime[0] = planTime;
+                      } catch (Exception e) {
+                        System.out.println(e);
                       }
-                      Logger.recordOutput(
-                          "GompeiPlanner/Commands/TriggeredCount", triggeredCommands[0]);
-                      lastTime[0] = planTime;
                     })
                 .until(
                     () -> {
                       // only done once the plan time is over AAND we actually got to the end
                       boolean planTimeOver =
                           (timer.get() + skippedTime[0]) * Path.RATE >= lastIndex;
-                      boolean atEnd = atReference(solver, robotPose.get(), finalState);
+                      boolean atEnd = true;
                       Logger.recordOutput("GompeiPlanner/Completion/PlanTimeOver", planTimeOver);
                       Logger.recordOutput("GompeiPlanner/Completion/AtReference", atEnd);
                       Logger.recordOutput(
@@ -286,7 +290,7 @@ public class Planner {
             solved[1] - goal.velocity().vy,
             solved[2] - goal.velocity().omega));
     return new ChassisVelocities(solved[0], solved[1], solved[2])
-        .toRobotRelative(robotPose.getRotation());
+        .toFieldRelative(robotPose.getRotation());
   }
 
   private static boolean atReference(Solver solver, Pose2d robotPose, State goal) {
