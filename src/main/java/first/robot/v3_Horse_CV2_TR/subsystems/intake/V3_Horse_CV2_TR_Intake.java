@@ -373,7 +373,6 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   public Command squishIntake() {
     return Commands.sequence(
-            Commands.waitSeconds(1.5),
             Commands.runOnce(
                 () -> {
                   if (extensionState == ExtensionState.MANUAL_EXTEND
