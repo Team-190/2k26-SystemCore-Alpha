@@ -96,7 +96,6 @@ public class V3_Horse_CV2_TRCompositeCommands {
                     : ShooterGoal.FEED)),
         Commands.sequence(
             Commands.waitUntil(() -> shooter.atGoal() && isAimedForShot()),
-            Commands.waitSeconds(1),
             rollerFloor.setState(RollerFloorState.RUN),
             intake.squishIntake()));
   }

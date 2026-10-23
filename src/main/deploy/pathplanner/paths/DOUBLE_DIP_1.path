@@ -20,28 +20,28 @@
         "y": 6.89568482349537
       },
       "prevControl": {
-        "x": 7.826669632523149,
-        "y": 7.545491536458334
+        "x": 7.883798810601482,
+        "y": 7.547999561677421
       },
       "nextControl": {
-        "x": 8.074872909173619,
-        "y": 4.7232122575303235
+        "x": 7.88390724932124,
+        "y": 3.527904763064764
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.557827546296296,
-        "y": 4.578320818865741
+        "x": 6.394386637305192,
+        "y": 5.5660217737268525
       },
       "prevControl": {
-        "x": 7.353092809606482,
-        "y": 4.404452907986111
+        "x": 7.1199832323800365,
+        "y": 5.340389611859057
       },
       "nextControl": {
-        "x": 5.528064137521535,
-        "y": 4.803456783988513
+        "x": 5.98674839945797,
+        "y": 5.692781322337964
       },
       "isLocked": false,
       "linkedName": null
@@ -68,8 +68,8 @@
         "y": 5.5660217737268525
       },
       "prevControl": {
-        "x": 3.496703545559361,
-        "y": 5.950783483793049
+        "x": 3.4963088831018525,
+        "y": 5.6344535590277784
       },
       "nextControl": null,
       "isLocked": false,
@@ -82,37 +82,23 @@
       "rotationDegrees": 0.0
     },
     {
-      "waypointRelativePos": 1,
-      "rotationDegrees": -104.62655681242298
+      "waypointRelativePos": 0.9913651315789476,
+      "rotationDegrees": -91.04620235380358
     },
     {
-      "waypointRelativePos": 1.3642166940789475,
-      "rotationDegrees": -113.619
+      "waypointRelativePos": 1.2753700657894733,
+      "rotationDegrees": -105.71204057134895
     },
     {
-      "waypointRelativePos": 2.8,
-      "rotationDegrees": 90.0
+      "waypointRelativePos": 2.0740953947368426,
+      "rotationDegrees": 179.04869238152125
     },
     {
       "waypointRelativePos": 3.0988075657894742,
-      "rotationDegrees": 90.0
+      "rotationDegrees": -179.90978582399796
     }
   ],
-  "constraintZones": [
-    {
-      "name": "INTAKING",
-      "minWaypointRelativePos": 1.0113943106312302,
-      "maxWaypointRelativePos": 2.0779692691029874,
-      "constraints": {
-        "maxVelocity": 2.0,
-        "maxAcceleration": 3.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {

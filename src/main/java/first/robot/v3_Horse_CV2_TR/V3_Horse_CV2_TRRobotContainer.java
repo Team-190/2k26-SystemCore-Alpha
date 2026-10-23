@@ -235,7 +235,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_CHEESY",
             false,
-            6,
+            4,
             5));
 
     autoChooser.add(
@@ -248,7 +248,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_CHEESY",
             true,
-            6,
+            4,
             5));
 
     autoChooser.add(
@@ -261,7 +261,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_OUTLIERS",
             false,
-            6,
+            4,
             5));
 
     autoChooser.add(
@@ -274,7 +274,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
             "DOUBLE_DIP_1",
             "DOUBLE_DIP_2_OUTLIERS",
             true,
-            6,
+            4,
             5));
 
     autoChooser.add("Shooter Flywheel Torque SysId", shooter.flywheelSysId());

@@ -1,12 +1,13 @@
 package first.robot.v3_Horse_CV2_TR.commands.autonomous;
 
+import static org.wpilib.units.Units.RadiansPerSecond;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import first.robot.util.AllianceFlipUtil;
 import first.robot.util.Elastic;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
-import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
@@ -42,7 +43,7 @@ public class V3_Horse_CV2_TRAutoDoubleDip {
 
       return Commands.sequence(
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
-          shooter.setFlywheelVelocity(FixedShots.FRONT_TOWER.getParameters().flywheelSpeed().get()),
+          shooter.setFlywheelVelocity(RadiansPerSecond.of(165)),
           Commands.runOnce(
               () ->
                   V3_Horse_CV2_TRRobotState.resetPose(
@@ -53,7 +54,7 @@ public class V3_Horse_CV2_TRAutoDoubleDip {
               drive, rollerFloor, shooter, intake, shot1Seconds),
           V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter),
           V3_Horse_CV2_TRCompositeCommands.deployIntake(intake),
-          shooter.setFlywheelVelocity(FixedShots.FRONT_TOWER.getParameters().flywheelSpeed().get()),
+          shooter.setFlywheelVelocity(RadiansPerSecond.of(165)),
           AutoBuilder.followPath(DOUBLE_DIP_2),
           drive.runOnce(drive::stop),
           V3_Horse_CV2_TRCompositeCommands.autoScoreOrFeed(

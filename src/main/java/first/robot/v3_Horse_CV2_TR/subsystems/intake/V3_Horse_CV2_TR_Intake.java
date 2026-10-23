@@ -373,6 +373,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   public Command squishIntake() {
     return Commands.sequence(
+            Commands.waitSeconds(1.5),
             Commands.runOnce(
                 () -> {
                   if (extensionState == ExtensionState.MANUAL_EXTEND
@@ -380,8 +381,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
                     return;
                   }
                   extensionState = ExtensionState.SQUISH;
-                  leftExtension.setVoltageGoal(Volts.of(-2.5));
-                  rightExtension.setVoltageGoal(Volts.of(-2.5));
+                  leftExtension.setVoltageGoal(Volts.of(-1));
+                  rightExtension.setVoltageGoal(Volts.of(-1));
                 }),
             Commands.waitUntil(() -> extensionState != ExtensionState.SQUISH || isNearStow(0.01))
                 .withTimeout(5))
