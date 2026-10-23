@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.characterization;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
@@ -25,7 +26,6 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.sim.MotorIOSim;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMotors;
 import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
@@ -93,7 +93,7 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
 
   private static CharacterizationConfig.CharacterizationConfigBuilder<VoltageUnit> config() {
     return CharacterizationConfig.voltage()
-        .withRampRate(CustomUnits.voltsPerSecond.ofNative(2))
+        .withRampRate(VoltsPerSecond.ofNative(2))
         .withStepOutput(Volts.of(6))
         .withQuasistaticTimeout(Seconds.of(4))
         .withDynamicTimeout(Seconds.of(1))
@@ -322,7 +322,7 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
   public void testDrivesTorqueCurrent() {
     CharacterizationConfig<CurrentUnit> config =
         CharacterizationConfig.current()
-            .withRampRate(CustomUnits.ampsPerSecond.ofNative(4))
+            .withRampRate(AmpsPerSecond.ofNative(4))
             .withStepOutput(Amps.of(30))
             .withQuasistaticTimeout(Seconds.of(5))
             .withDynamicTimeout(Seconds.of(5))
@@ -369,7 +369,7 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
     verify(motors.motor).setControl(volts(3.0));
     assertTrue(loop(second, 0.1));
 
-    config.rampRate().set(CustomUnits.voltsPerSecond.ofNative(8));
+    config.rampRate().set(VoltsPerSecond.ofNative(8));
     Command ramp = routine.leg(Leg.QUASISTATIC_FORWARD);
     ramp.initialize();
     loop(ramp, 0.5);
@@ -445,7 +445,7 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
     CharacterizationConfig<DimensionlessUnit> dutyCycle =
         CharacterizationConfig.<DimensionlessUnit>builder()
             .withOutputUnit(Percent)
-            .withRampRate(Percent.per(Second).ofNative(1))
+            .withRampRate(PercentPerSecond.ofNative(1))
             .withStepOutput(Percent.of(10))
             .withQuasistaticTimeout(Seconds.of(1))
             .withDynamicTimeout(Seconds.of(1))
@@ -495,7 +495,7 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
           t.velocity = RadiansPerSecond.of(2);
           t.acceleration = RadiansPerSecondPerSecond.of(3);
           t.rotorVelocity = RadiansPerSecond.of(20);
-          t.motorKV = RadiansPerSecond.per(Volt).ofNative(40);
+          t.motorKV = RadiansPerSecondPerVolt.ofNative(40);
         });
     assertEquals(new Sample(4, 1, 2, 3, 0.5), target.sample(OutputType.VOLTAGE));
     assertEquals(12, target.sample(OutputType.CURRENT).effort());
@@ -630,15 +630,15 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
     PlantCharacterization<VoltageUnit> plant =
         PlantCharacterization.voltage()
             .withKS(Volts.of(0.3))
-            .withKV(Volts.per(RadiansPerSecond).ofNative(0.2))
-            .withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(0.05))
+            .withKV(VoltsPerRadianPerSecond.ofNative(0.2))
+            .withKA(VoltsPerRadianPerSecondSquared.ofNative(0.05))
             .build();
 
     Result result =
         roundTrip(
             plant,
             config()
-                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withRampRate(VoltsPerSecond.ofNative(1))
                 .withQuasistaticTimeout(Seconds.of(4))
                 .withDynamicTimeout(Seconds.of(1))
                 .build(),
@@ -656,15 +656,15 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
     PlantCharacterization<CurrentUnit> plant =
         PlantCharacterization.current()
             .withKS(Amps.of(2.0))
-            .withKV(Amps.per(RadiansPerSecond).ofNative(0.1))
-            .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0.5))
+            .withKV(AmpsPerRadianPerSecond.ofNative(0.1))
+            .withKA(AmpsPerRadianPerSecondSquared.ofNative(0.5))
             .build();
 
     Result result =
         roundTrip(
             plant,
             CharacterizationConfig.current()
-                .withRampRate(CustomUnits.ampsPerSecond.ofNative(4))
+                .withRampRate(AmpsPerSecond.ofNative(4))
                 .withStepOutput(Amps.of(20))
                 .withQuasistaticTimeout(Seconds.of(4))
                 .withDynamicTimeout(Seconds.of(1))

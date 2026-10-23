@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.motor.outputs;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -37,7 +38,7 @@ public class DifferentialTest {
             Rotations.of(1.0),
             RotationsPerSecond.of(1.0),
             RotationsPerSecondPerSecond.of(1.0),
-            RotationsPerSecondPerSecond.per(Second).of(1.0));
+            RotationsPerSecondCubed.of(1.0));
 
     assertThrows(IllegalArgumentException.class, () -> new Differential(dynamic, VOLTAGE));
   }

@@ -1,5 +1,6 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.intake;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
@@ -16,7 +17,6 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants.ExtensionParameters;
@@ -262,15 +262,15 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             GainSlot.ZERO,
             Gains.linearPosition(Volts)
                 .withPrefix("Intake/" + name + "/Slot0")
-                .withKP(Volts.per(Meters).ofNative(10))
+                .withKP(VoltsPerMeter.ofNative(10))
                 .withKS(Volts.of(0.42002))
-                .withKV(Volts.per(MetersPerSecond).ofNative(6.3697))
+                .withKV(VoltsPerMeterPerSecond.ofNative(6.3697))
                 .build())
         .withSlot(
             GainSlot.ONE,
             Gains.linearPosition(Volts)
                 .withPrefix("Intake/" + name + "/Slot1")
-                .withKP(Volts.per(Meters).ofNative(1.0))
+                .withKP(VoltsPerMeter.ofNative(1.0))
                 .build())
         .withDrumRadius(EXTENSION_DRUM_RADIUS)
         // Drive back into the hard stop at 1 V until the torque current reaches -20 A
@@ -305,7 +305,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
         .withCharacterization(
             CharacterizationConfig.voltage()
                 .withPrefix("Intake/" + name + "/Characterization")
-                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withRampRate(VoltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(3))
                 .withQuasistaticTimeout(Seconds.of(3))
                 .withDynamicTimeout(Seconds.of(3))

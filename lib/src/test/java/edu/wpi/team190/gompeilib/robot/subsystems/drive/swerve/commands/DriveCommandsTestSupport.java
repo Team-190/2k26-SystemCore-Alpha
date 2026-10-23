@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
@@ -34,7 +35,7 @@ final class DriveCommandsTestSupport {
       String prefix, double kP) {
     return Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
         .withPrefix(prefix)
-        .withKP(RadiansPerSecond.per(Radians).ofNative(kP))
+        .withKP(RadiansPerSecondPerRadian.ofNative(kP))
         .build();
   }
 

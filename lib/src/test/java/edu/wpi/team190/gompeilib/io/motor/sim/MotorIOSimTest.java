@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.motor.sim;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -173,8 +174,8 @@ public class MotorIOSimTest extends GompeiLibTestBase {
         Math.abs(telemetry.outputCurrent.in(Amps) * 0.5), telemetry.supplyCurrent.in(Amps), 1e-9);
     assertEquals(RotorPolarity.COUNTER_CLOCKWISE_POSITIVE, telemetry.rotorPolarity);
     DCMotor gearbox = mechanism.gearbox();
-    assertEquals(gearbox.Kt, telemetry.motorKT.in(NewtonMeters.per(Amp)), 1e-9);
-    assertEquals(gearbox.Kv, telemetry.motorKV.in(RadiansPerSecond.per(Volt)), 1e-9);
+    assertEquals(gearbox.Kt, telemetry.motorKT.in(NewtonMetersPerAmp), 1e-9);
+    assertEquals(gearbox.Kv, telemetry.motorKV.in(RadiansPerSecondPerVolt), 1e-9);
     assertEquals(gearbox.stallCurrent, telemetry.motorStallCurrent.in(Amps), 1e-9);
   }
 
@@ -344,8 +345,8 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     // 8 V per rotation, declared per radian
     var perRadian =
         Gains.angularPosition(Volts)
-            .withKP(Volts.per(Radians).ofNative(8.0 / (2 * Math.PI)))
-            .withKV(Volts.per(RadiansPerSecond).ofNative(2.0 / (2 * Math.PI)))
+            .withKP(VoltsPerRadian.ofNative(8.0 / (2 * Math.PI)))
+            .withKV(VoltsPerRadianPerSecond.ofNative(2.0 / (2 * Math.PI)))
             .build();
     MotorIOSim motor =
         motor(config().withSlot(GainSlot.ZERO, SlotConfig.position(perRadian)).build());
@@ -410,9 +411,9 @@ public class MotorIOSimTest extends GompeiLibTestBase {
                     new MotionProfileConfig(
                         RotationsPerSecond.of(2.0),
                         RotationsPerSecondPerSecond.of(4.0),
-                        RotationsPerSecondPerSecond.per(Second).of(0.0),
-                        Volts.per(RotationsPerSecond).ofNative(0.0),
-                        Volts.per(RotationsPerSecondPerSecond).ofNative(0.0)))
+                        RotationsPerSecondCubed.of(0.0),
+                        VoltsPerRotationPerSecond.ofNative(0.0),
+                        VoltsPerRotationPerSecondSquared.ofNative(0.0)))
                 .build());
     motor.setControl(new PositionRequest.ProfiledPositionVoltage(Rotations.of(1.0)));
 
@@ -455,9 +456,9 @@ public class MotorIOSimTest extends GompeiLibTestBase {
                     new MotionProfileConfig(
                         RotationsPerSecond.of(0.0),
                         RotationsPerSecondPerSecond.of(0.0),
-                        RotationsPerSecondPerSecond.per(Second).of(0.0),
-                        Volts.per(RotationsPerSecond).ofNative(0.5),
-                        Volts.per(RotationsPerSecondPerSecond).ofNative(0.1)))
+                        RotationsPerSecondCubed.of(0.0),
+                        VoltsPerRotationPerSecond.ofNative(0.5),
+                        VoltsPerRotationPerSecondSquared.ofNative(0.1)))
                 .build());
     motor.setControl(new PositionRequest.ExponentialProfiledPositionVoltage(Rotations.of(10.0)));
 
@@ -477,7 +478,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
             Rotations.of(1.0),
             RotationsPerSecond.of(1.0),
             RotationsPerSecondPerSecond.of(2.0),
-            RotationsPerSecondPerSecond.per(Second).of(0.0)));
+            RotationsPerSecondCubed.of(0.0)));
     run(motor, 1);
     assertEquals(
         2.0 * GompeiLib.LOOP_PERIOD_SECS,
@@ -489,8 +490,8 @@ public class MotorIOSimTest extends GompeiLibTestBase {
         new PositionRequest.DynamicExponentialProfiledPositionVoltage(
             Rotations.of(10.0),
             RotationsPerSecond.of(0.0),
-            Volts.per(RotationsPerSecond).ofNative(0.5),
-            Volts.per(RotationsPerSecondPerSecond).ofNative(0.1)));
+            VoltsPerRotationPerSecond.ofNative(0.5),
+            VoltsPerRotationPerSecondSquared.ofNative(0.1)));
     run(motor, 1);
     double reference = telemetry.closedLoopPositionReference.in(Rotations);
     assertTrue(reference > 0 && reference < 10.0);
@@ -552,9 +553,9 @@ public class MotorIOSimTest extends GompeiLibTestBase {
                     new MotionProfileConfig(
                         RotationsPerSecond.of(0.0),
                         RotationsPerSecondPerSecond.of(5.0),
-                        RotationsPerSecondPerSecond.per(Second).of(0.0),
-                        Volts.per(RotationsPerSecond).ofNative(0.0),
-                        Volts.per(RotationsPerSecondPerSecond).ofNative(0.0)))
+                        RotationsPerSecondCubed.of(0.0),
+                        VoltsPerRotationPerSecond.ofNative(0.0),
+                        VoltsPerRotationPerSecondSquared.ofNative(0.0)))
                 .build());
     motor.setControl(new VelocityRequest.ProfiledVelocityVoltage(RotationsPerSecond.of(1.0)));
 
@@ -647,9 +648,9 @@ public class MotorIOSimTest extends GompeiLibTestBase {
                     new MotionProfileConfig(
                         RotationsPerSecond.of(2.0),
                         RotationsPerSecondPerSecond.of(0.0),
-                        RotationsPerSecondPerSecond.per(Second).of(0.0),
-                        Volts.per(RotationsPerSecond).ofNative(0.5),
-                        Volts.per(RotationsPerSecondPerSecond).ofNative(0.0)))
+                        RotationsPerSecondCubed.of(0.0),
+                        VoltsPerRotationPerSecond.ofNative(0.5),
+                        VoltsPerRotationPerSecondSquared.ofNative(0.0)))
                 .build());
 
     motor.setControl(new PositionRequest.ProfiledPositionVoltage(Rotations.of(2.0)));

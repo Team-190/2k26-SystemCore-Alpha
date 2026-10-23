@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.control;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -44,12 +45,12 @@ public class GainsTest extends GompeiLibTestBase {
   private static Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> perRotation(String prefix) {
     return Gains.angularPosition(Volts)
         .withPrefix(prefix)
-        .withKP(Volts.per(Rotations).ofNative(1.0))
-        .withKI(Volts.per(MultUnit.combine(Rotations, Seconds)).ofNative(2.0))
-        .withKD(Volts.per(RotationsPerSecond).ofNative(3.0))
+        .withKP(VoltsPerRotation.ofNative(1.0))
+        .withKI(VoltsPerRotationSecond.ofNative(2.0))
+        .withKD(VoltsPerRotationPerSecond.ofNative(3.0))
         .withKS(Volts.of(4.0))
-        .withKV(Volts.per(RotationsPerSecond).ofNative(5.0))
-        .withKA(Volts.per(RotationsPerSecondPerSecond).ofNative(6.0))
+        .withKV(VoltsPerRotationPerSecond.ofNative(5.0))
+        .withKA(VoltsPerRotationPerSecondSquared.ofNative(6.0))
         .withKG(Volts.of(7.0))
         .build();
   }
@@ -59,12 +60,12 @@ public class GainsTest extends GompeiLibTestBase {
     configureTuning(true);
     Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> gains = perRotation("Test");
 
-    assertEquals(1.0, gains.getKP(Volts.per(Rotations)), EPSILON);
-    assertEquals(2.0, gains.getKI(Volts.per(MultUnit.combine(Rotations, Seconds))), EPSILON);
-    assertEquals(3.0, gains.getKD(Volts.per(RotationsPerSecond)), EPSILON);
+    assertEquals(1.0, gains.getKP(VoltsPerRotation), EPSILON);
+    assertEquals(2.0, gains.getKI(VoltsPerRotationSecond), EPSILON);
+    assertEquals(3.0, gains.getKD(VoltsPerRotationPerSecond), EPSILON);
     assertEquals(4.0, gains.getKS(Volts), EPSILON);
-    assertEquals(5.0, gains.getKV(Volts.per(RotationsPerSecond)), EPSILON);
-    assertEquals(6.0, gains.getKA(Volts.per(RotationsPerSecondPerSecond)), EPSILON);
+    assertEquals(5.0, gains.getKV(VoltsPerRotationPerSecond), EPSILON);
+    assertEquals(6.0, gains.getKA(VoltsPerRotationPerSecondSquared), EPSILON);
     assertEquals(7.0, gains.getKG(Volts), EPSILON);
   }
 
@@ -74,15 +75,11 @@ public class GainsTest extends GompeiLibTestBase {
     Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> gains = perRotation(null);
     double radiansPerRotation = 2.0 * Math.PI;
 
-    assertEquals(1.0 / radiansPerRotation, gains.getKP(Volts.per(Radians)), EPSILON);
-    assertEquals(
-        2.0 / radiansPerRotation,
-        gains.getKI(Volts.per(MultUnit.combine(Radians, Seconds))),
-        EPSILON);
-    assertEquals(3.0 / radiansPerRotation, gains.getKD(Volts.per(RadiansPerSecond)), EPSILON);
-    assertEquals(5.0 / radiansPerRotation, gains.getKV(Volts.per(RadiansPerSecond)), EPSILON);
-    assertEquals(
-        6.0 / radiansPerRotation, gains.getKA(Volts.per(RadiansPerSecondPerSecond)), EPSILON);
+    assertEquals(1.0 / radiansPerRotation, gains.getKP(VoltsPerRadian), EPSILON);
+    assertEquals(2.0 / radiansPerRotation, gains.getKI(VoltsPerRadianSecond), EPSILON);
+    assertEquals(3.0 / radiansPerRotation, gains.getKD(VoltsPerRadianPerSecond), EPSILON);
+    assertEquals(5.0 / radiansPerRotation, gains.getKV(VoltsPerRadianPerSecond), EPSILON);
+    assertEquals(6.0 / radiansPerRotation, gains.getKA(VoltsPerRadianPerSecondSquared), EPSILON);
     // kS and kG are plain output, so the controlled unit doesn't scale them
     assertEquals(4.0, gains.getKS(Volts), EPSILON);
     assertEquals(7.0, gains.getKG(Volts), EPSILON);
@@ -107,8 +104,8 @@ public class GainsTest extends GompeiLibTestBase {
     configureTuning(false);
     Gains<VoltageUnit, DistanceUnit, LinearVelocityUnit> gains =
         Gains.linearPosition(Volts)
-            .withKP(Volts.per(Meters).ofNative(10.0))
-            .withKV(Volts.per(MetersPerSecond).ofNative(2.0))
+            .withKP(VoltsPerMeter.ofNative(10.0))
+            .withKV(VoltsPerMeterPerSecond.ofNative(2.0))
             .build();
 
     assertEquals(0.1, gains.getKP(Volts.per(Centimeters)), EPSILON);
@@ -121,12 +118,12 @@ public class GainsTest extends GompeiLibTestBase {
     Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> gains =
         Gains.angularPosition(Volts).withPrefix("Unset").build();
 
-    assertEquals(0.0, gains.getKP(Volts.per(Radians)));
-    assertEquals(0.0, gains.getKI(Volts.per(MultUnit.combine(Radians, Seconds))));
-    assertEquals(0.0, gains.getKD(Volts.per(RadiansPerSecond)));
+    assertEquals(0.0, gains.getKP(VoltsPerRadian));
+    assertEquals(0.0, gains.getKI(VoltsPerRadianSecond));
+    assertEquals(0.0, gains.getKD(VoltsPerRadianPerSecond));
     assertEquals(0.0, gains.getKS(Volts));
-    assertEquals(0.0, gains.getKV(Volts.per(RadiansPerSecond)));
-    assertEquals(0.0, gains.getKA(Volts.per(RadiansPerSecondPerSecond)));
+    assertEquals(0.0, gains.getKV(VoltsPerRadianPerSecond));
+    assertEquals(0.0, gains.getKA(VoltsPerRadianPerSecondSquared));
     assertEquals(0.0, gains.getKG(Volts));
 
     // Unset gains are published in the builder's default unit: volts per rotation
@@ -185,9 +182,9 @@ public class GainsTest extends GompeiLibTestBase {
     backend.setDouble("/Edit/kA", 1.0);
     TunableRegistry.update();
 
-    assertEquals(2.0, gains.getKP(Volts.per(Rotations)), EPSILON);
-    assertEquals(2.0 / (2.0 * Math.PI), gains.getKP(Volts.per(Radians)), EPSILON);
-    assertEquals(1.0, gains.getKA(Volts.per(RotationsPerSecondPerSecond)), EPSILON);
+    assertEquals(2.0, gains.getKP(VoltsPerRotation), EPSILON);
+    assertEquals(2.0 / (2.0 * Math.PI), gains.getKP(VoltsPerRadian), EPSILON);
+    assertEquals(1.0, gains.getKA(VoltsPerRotationPerSecondSquared), EPSILON);
   }
 
   @Test
@@ -196,17 +193,17 @@ public class GainsTest extends GompeiLibTestBase {
     Gains<VoltageUnit, DistanceUnit, LinearVelocityUnit> perMeter =
         Gains.linearPosition(Volts)
             .withPrefix("Drum")
-            .withKP(Volts.per(Meters).ofNative(10.0))
+            .withKP(VoltsPerMeter.ofNative(10.0))
             .withKS(Volts.of(0.5))
-            .withKV(Volts.per(MetersPerSecond).ofNative(4.0))
+            .withKV(VoltsPerMeterPerSecond.ofNative(4.0))
             .build();
     // A drum of radius 0.05 m: one radian moves 0.05 m
     Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> perRadian =
         perMeter.view(Radians, RadiansPerSecond, 0.05);
 
-    assertEquals(0.5, perRadian.getKP(Volts.per(Radians)), EPSILON);
+    assertEquals(0.5, perRadian.getKP(VoltsPerRadian), EPSILON);
     assertEquals(0.5, perRadian.getKS(Volts), EPSILON);
-    assertEquals(0.2, perRadian.getKV(Volts.per(RadiansPerSecond)), EPSILON);
+    assertEquals(0.2, perRadian.getKV(VoltsPerRadianPerSecond), EPSILON);
     assertSame(Radians, perRadian.controlledUnit());
     assertSame(RadiansPerSecond, perRadian.derivativeUnit());
     assertSame(Volts, perRadian.outputUnit());
@@ -221,7 +218,7 @@ public class GainsTest extends GompeiLibTestBase {
     backend.setDouble("/Drum/kP", 20.0);
     TunableRegistry.update();
     assertEquals(1, counter.get());
-    assertEquals(1.0, perRadian.getKP(Volts.per(Radians)), EPSILON);
+    assertEquals(1.0, perRadian.getKP(VoltsPerRadian), EPSILON);
   }
 
   @Test
@@ -271,8 +268,8 @@ public class GainsTest extends GompeiLibTestBase {
     Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> gains =
         Gains.angularPosition(Volts)
             .withPrefix("Tuned")
-            .withKP(Volts.per(Rotations).ofNative(1.0))
-            .withKD(Volts.per(RotationsPerSecond).ofNative(0.1))
+            .withKP(VoltsPerRotation.ofNative(1.0))
+            .withKD(VoltsPerRotationPerSecond.ofNative(0.1))
             .build();
     AtomicInteger counter = new AtomicInteger(0);
     gains.onChange(g -> counter.incrementAndGet());
@@ -286,8 +283,8 @@ public class GainsTest extends GompeiLibTestBase {
     backend.setDouble("/Tuned/kD", 0.2);
     TunableRegistry.update();
     assertEquals(1, counter.get());
-    assertEquals(2.0, gains.getKP(Volts.per(Rotations)), EPSILON);
-    assertEquals(0.2, gains.getKD(Volts.per(RotationsPerSecond)), EPSILON);
+    assertEquals(2.0, gains.getKP(VoltsPerRotation), EPSILON);
+    assertEquals(0.2, gains.getKD(VoltsPerRotationPerSecond), EPSILON);
 
     // Setting the same value again is not a change
     backend.setDouble("/Tuned/kP", 2.0);
@@ -301,14 +298,14 @@ public class GainsTest extends GompeiLibTestBase {
     Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> gains =
         Gains.angularPosition(Volts)
             .withPrefix("Locked")
-            .withKP(Volts.per(Rotations).ofNative(1.0))
+            .withKP(VoltsPerRotation.ofNative(1.0))
             .build();
     AtomicInteger counter = new AtomicInteger(0);
     gains.onChange(g -> counter.incrementAndGet());
 
     backend.setDouble("/Locked/kP", 5.0);
     TunableRegistry.update();
-    assertEquals(1.0, gains.getKP(Volts.per(Rotations)), EPSILON);
+    assertEquals(1.0, gains.getKP(VoltsPerRotation), EPSILON);
     assertEquals(0, counter.get());
   }
 

@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.physics;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -17,8 +18,8 @@ public class PlantCharacterizationTest {
   private static PlantCharacterization<VoltageUnit> plant() {
     return PlantCharacterization.voltage()
         .withKS(Volts.of(0.25))
-        .withKV(Volts.per(RotationsPerSecond).ofNative(2 * Math.PI))
-        .withKA(Volts.per(RotationsPerSecondPerSecond).ofNative(Math.PI))
+        .withKV(VoltsPerRotationPerSecond.ofNative(2 * Math.PI))
+        .withKA(VoltsPerRotationPerSecondSquared.ofNative(Math.PI))
         .withKG(Volts.of(0.75))
         .withGravityType(GravityType.COSINE)
         .build();
@@ -40,9 +41,7 @@ public class PlantCharacterizationTest {
   @Test
   public void testCurrentPlant() {
     PlantCharacterization<CurrentUnit> plant =
-        PlantCharacterization.current()
-            .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0.1))
-            .build();
+        PlantCharacterization.current().withKA(AmpsPerRadianPerSecondSquared.ofNative(0.1)).build();
 
     assertEquals(Amps, plant.effortUnit());
     assertEquals(OutputType.CURRENT, plant.effort());
@@ -125,7 +124,7 @@ public class PlantCharacterizationTest {
             .withKS(Volts.of(0.3))
             .build()
             .toBuilder()
-            .withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(0.05))
+            .withKA(VoltsPerRadianPerSecondSquared.ofNative(0.05))
             .build();
 
     assertEquals(0.3, measured.kS(), EPSILON);
@@ -142,8 +141,8 @@ public class PlantCharacterizationTest {
     PlantCharacterization<VoltageUnit> voltage =
         PlantCharacterization.voltage()
             .withKS(Volts.of(0.4))
-            .withKV(Volts.per(RadiansPerSecond).ofNative(backEmf + 0.1))
-            .withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(0.05))
+            .withKV(VoltsPerRadianPerSecond.ofNative(backEmf + 0.1))
+            .withKA(VoltsPerRadianPerSecondSquared.ofNative(0.05))
             .withKG(Volts.of(0.2))
             .withGravityType(GravityType.COSINE)
             .build();
@@ -198,18 +197,18 @@ public class PlantCharacterizationTest {
         () -> plant().toBuilder().withKS(Volts.of(Double.POSITIVE_INFINITY)).build());
     assertThrows(
         IllegalArgumentException.class,
-        () -> plant().toBuilder().withKV(Volts.per(RadiansPerSecond).ofNative(-1)).build());
+        () -> plant().toBuilder().withKV(VoltsPerRadianPerSecond.ofNative(-1)).build());
     assertThrows(
         IllegalArgumentException.class,
-        () -> plant().toBuilder().withKV(Volts.per(RadiansPerSecond).ofNative(Double.NaN)).build());
+        () -> plant().toBuilder().withKV(VoltsPerRadianPerSecond.ofNative(Double.NaN)).build());
     assertThrows(
         IllegalArgumentException.class,
-        () -> plant().toBuilder().withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(0)).build());
+        () -> plant().toBuilder().withKA(VoltsPerRadianPerSecondSquared.ofNative(0)).build());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             plant().toBuilder()
-                .withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(Double.POSITIVE_INFINITY))
+                .withKA(VoltsPerRadianPerSecondSquared.ofNative(Double.POSITIVE_INFINITY))
                 .build());
     assertThrows(
         IllegalArgumentException.class,
@@ -234,17 +233,15 @@ public class PlantCharacterizationTest {
         plant,
         PlantCharacterization.current()
             .withKS(Amps.of(0.25))
-            .withKV(Amps.per(RadiansPerSecond).ofNative(1.0))
-            .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0.5))
+            .withKV(AmpsPerRadianPerSecond.ofNative(1.0))
+            .withKA(AmpsPerRadianPerSecondSquared.ofNative(0.5))
             .withKG(Amps.of(0.75))
             .withGravityType(GravityType.COSINE)
             .build());
     assertNotEquals(plant, plant.toBuilder().withKS(Volts.of(0.3)).build());
+    assertNotEquals(plant, plant.toBuilder().withKV(VoltsPerRadianPerSecond.ofNative(1.1)).build());
     assertNotEquals(
-        plant, plant.toBuilder().withKV(Volts.per(RadiansPerSecond).ofNative(1.1)).build());
-    assertNotEquals(
-        plant,
-        plant.toBuilder().withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(0.6)).build());
+        plant, plant.toBuilder().withKA(VoltsPerRadianPerSecondSquared.ofNative(0.6)).build());
     assertNotEquals(plant, plant.toBuilder().withKG(Volts.of(0.8)).build());
     assertNotEquals(plant, plant.toBuilder().withGravityType(GravityType.CONSTANT).build());
   }

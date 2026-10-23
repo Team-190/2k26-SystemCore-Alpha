@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.tuning;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -97,12 +98,12 @@ public class GompeiTunablesTest extends GompeiLibTestBase {
   @Test
   public void shouldPublishUnitsWithSlashesAsValues() {
     TunableTable table = GompeiTunables.table("Units");
-    GompeiTunables.measure(table, "Gain", Volts.per(Rotations).ofNative(2.0), null);
+    GompeiTunables.measure(table, "Gain", VoltsPerRotation.ofNative(2.0), null);
 
     // The slash stays inside the value, so it never splits the key into a subtable
     assertEquals(2.0, backend.getDouble("/Units/Gain"));
     String symbol = backend.getValue("/Units/Gain" + GompeiTunables.UNIT_SUFFIX, String.class);
-    assertEquals(Volts.per(Rotations).symbol(), symbol);
+    assertEquals(VoltsPerRotation.symbol(), symbol);
     assertTrue(symbol.contains("/"));
   }
 

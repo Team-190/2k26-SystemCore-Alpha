@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
@@ -22,12 +23,12 @@ public class TuningBindingsTest extends GompeiLibTestBase {
     Gains<VoltageUnit, AngleUnit, AngularVelocityUnit> gains0 =
         Gains.angularPosition(Volts)
             .withPrefix("bindings/slot0")
-            .withKP(Volts.per(Rotations).ofNative(1.0))
+            .withKP(VoltsPerRotation.ofNative(1.0))
             .build();
     Gains<VoltageUnit, AngularVelocityUnit, AngularVelocityUnit> gains1 =
         Gains.angularVelocity(Volts)
             .withPrefix("bindings/slot1")
-            .withKP(Volts.per(RotationsPerSecond).ofNative(2.0))
+            .withKP(VoltsPerRotationPerSecond.ofNative(2.0))
             .build();
     SlotConfig slot0 = SlotConfig.position(gains0);
     SlotConfig slot1 = SlotConfig.velocity(gains1);

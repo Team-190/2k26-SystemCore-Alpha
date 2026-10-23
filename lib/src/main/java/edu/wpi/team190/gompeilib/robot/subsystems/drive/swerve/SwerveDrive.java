@@ -1,6 +1,7 @@
 // Copyright 2021-2024 FRC 6328
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -46,7 +47,6 @@ import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.LinearVelocityUnit;
-import org.wpilib.units.MultUnit;
 
 public class SwerveDrive extends SubsystemBase {
   private final SwerveDriveConstants driveConstants;
@@ -483,9 +483,9 @@ public class SwerveDrive extends SubsystemBase {
   public static PIDConstants translationConstants(
       Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> gains) {
     return new PIDConstants(
-        gains.getKP(MetersPerSecond.per(Meters)),
-        gains.getKI(MetersPerSecond.per(MultUnit.combine(Meters, Seconds))),
-        gains.getKD(MetersPerSecond.per(MetersPerSecond)));
+        gains.getKP(MetersPerSecondPerMeter),
+        gains.getKI(MetersPerSecondPerMeterSecond),
+        gains.getKD(MetersPerSecondPerMetersPerSecond));
   }
 
   /**
@@ -498,9 +498,9 @@ public class SwerveDrive extends SubsystemBase {
   public static PIDConstants rotationConstants(
       Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit> gains) {
     return new PIDConstants(
-        gains.getKP(RadiansPerSecond.per(Radians)),
-        gains.getKI(RadiansPerSecond.per(MultUnit.combine(Radians, Seconds))),
-        gains.getKD(RadiansPerSecond.per(RadiansPerSecond)));
+        gains.getKP(RadiansPerSecondPerRadian),
+        gains.getKI(RadiansPerSecondPerRadianSecond),
+        gains.getKD(RadiansPerSecondPerRadiansPerSecond));
   }
 
   /**

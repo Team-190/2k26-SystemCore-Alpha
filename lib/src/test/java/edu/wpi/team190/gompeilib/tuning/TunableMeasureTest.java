@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.tuning;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -99,13 +100,13 @@ public class TunableMeasureTest extends GompeiLibTestBase {
     // Volts.per(Second) is a velocity unit, whose of() would build a Velocity, not a Per
     TunableMeasure<Per<VoltageUnit, TimeUnit>> rate =
         GompeiTunables.measure(
-            GompeiTunables.table("Measure"), "Rate", Volts.per(Second).ofNative(1.0), null);
+            GompeiTunables.table("Measure"), "Rate", VoltsPerSecond.ofNative(1.0), null);
 
     backend.setDouble("/Measure/Rate", 2.0);
     TunableRegistry.update();
 
     Per<VoltageUnit, TimeUnit> edited = rate.get();
-    assertEquals(2.0, edited.in(Volts.per(Second)), 1e-9);
+    assertEquals(2.0, edited.in(VoltsPerSecond), 1e-9);
   }
 
   @Test

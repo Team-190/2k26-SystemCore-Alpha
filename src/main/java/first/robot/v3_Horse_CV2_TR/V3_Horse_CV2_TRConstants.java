@@ -1,5 +1,6 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Degrees;
 import static org.wpilib.units.Units.Hertz;
@@ -21,7 +22,6 @@ import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.phoenix.CANBuses;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants.DriveConfig;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleConfig;
@@ -87,24 +87,24 @@ public class V3_Horse_CV2_TRConstants {
       TRANSLATION_AUTO_GAINS = // TODO: Use Real Value
       Gains.linearPosition(MetersPerSecond)
               .withPrefix("Drive/Auto/Translation")
-              .withKP(MetersPerSecond.per(Meters).ofNative(5.0))
-              .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.0))
+              .withKP(MetersPerSecondPerMeter.ofNative(5.0))
+              .withKD(MetersPerSecondPerMetersPerSecond.ofNative(0.0))
               .build();
 
   public static final Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit>
       ROTATION_AUTO_GAINS = // TODO: Use Real Value
       Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
               .withPrefix("Drive/Auto/Rotation")
-              .withKP(RadiansPerSecond.per(Radians).ofNative(5.0))
-              .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(0.0))
+              .withKP(RadiansPerSecondPerRadian.ofNative(5.0))
+              .withKD(RadiansPerSecondPerRadiansPerSecond.ofNative(0.0))
               .build();
 
   public static final Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit>
       AUTO_ALIGN_X_GAINS = // TODO: Use Real Value
       Gains.linearPosition(MetersPerSecond)
               .withPrefix("Drive/Auto Align/X")
-              .withKP(MetersPerSecond.per(Meters).ofNative(3.0))
-              .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.15))
+              .withKP(MetersPerSecondPerMeter.ofNative(3.0))
+              .withKD(MetersPerSecondPerMetersPerSecond.ofNative(0.15))
               .build();
 
   public static final LinearConstraints AUTO_ALIGN_X_CONSTRAINTS = // TODO: Use Real Value
@@ -119,8 +119,8 @@ public class V3_Horse_CV2_TRConstants {
       AUTO_ALIGN_Y_GAINS = // TODO: Use Real Value
       Gains.linearPosition(MetersPerSecond)
               .withPrefix("Drive/Auto Align/Y")
-              .withKP(MetersPerSecond.per(Meters).ofNative(3.0))
-              .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.15))
+              .withKP(MetersPerSecondPerMeter.ofNative(3.0))
+              .withKD(MetersPerSecondPerMetersPerSecond.ofNative(0.15))
               .build();
 
   public static final LinearConstraints AUTO_ALIGN_Y_CONSTRAINTS = // TODO: Use Real Value
@@ -135,8 +135,8 @@ public class V3_Horse_CV2_TRConstants {
       AUTO_ALIGN_THETA_GAINS = // TODO: Use Real Value
       Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
               .withPrefix("Drive/Auto Align/Theta")
-              .withKP(RadiansPerSecond.per(Radians).ofNative(6.5))
-              .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(0.2))
+              .withKP(RadiansPerSecondPerRadian.ofNative(6.5))
+              .withKD(RadiansPerSecondPerRadiansPerSecond.ofNative(0.2))
               .build();
 
   public static final AngularPositionConstraints
@@ -169,7 +169,7 @@ public class V3_Horse_CV2_TRConstants {
   public static final CharacterizationConfig<CurrentUnit> DRIVE_CHARACTERIZATION =
       CharacterizationConfig.current()
           .withPrefix("Drive/Characterization")
-          .withRampRate(CustomUnits.ampsPerSecond.ofNative(4))
+          .withRampRate(AmpsPerSecond.ofNative(4))
           .withStepOutput(Amps.of(20))
           .withQuasistaticTimeout(Seconds.of(4))
           .withDynamicTimeout(Seconds.of(1))

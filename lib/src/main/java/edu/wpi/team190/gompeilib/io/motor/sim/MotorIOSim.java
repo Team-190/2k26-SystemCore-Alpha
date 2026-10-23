@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.motor.sim;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLib;
@@ -448,8 +449,8 @@ public class MotorIOSim implements MotorIO {
         config.direction == MotorDirection.CLOCKWISE_POSITIVE
             ? RotorPolarity.CLOCKWISE_POSITIVE
             : RotorPolarity.COUNTER_CLOCKWISE_POSITIVE;
-    telemetry.motorKT = NewtonMeters.per(Amp).ofNative(gearbox.Kt);
-    telemetry.motorKV = RadiansPerSecond.per(Volt).ofNative(gearbox.Kv);
+    telemetry.motorKT = NewtonMetersPerAmp.ofNative(gearbox.Kt);
+    telemetry.motorKV = RadiansPerSecondPerVolt.ofNative(gearbox.Kv);
     telemetry.motorStallCurrent = Amps.of(gearbox.stallCurrent / mechanism.motorCount());
     telemetry.robotEnabled = enabled;
     telemetry.deviceEnabled = enabled;
@@ -481,8 +482,8 @@ public class MotorIOSim implements MotorIO {
   private Command translate(MotorRequest request) {
     double cruise = motionProfile.cruiseVelocity().in(RotationsPerSecond);
     double accel = motionProfile.acceleration().in(RotationsPerSecondPerSecond);
-    double expoKV = motionProfile.exponentialKV().in(Volts.per(RotationsPerSecond));
-    double expoKA = motionProfile.exponentialKA().in(Volts.per(RotationsPerSecondPerSecond));
+    double expoKV = motionProfile.exponentialKV().in(VoltsPerRotationPerSecond);
+    double expoKA = motionProfile.exponentialKA().in(VoltsPerRotationPerSecondSquared);
     Profile trapezoid = new Profile.Trapezoid(cruise, accel);
     Profile exponential = new Profile.Exponential(expoKV, expoKA);
 
@@ -661,7 +662,7 @@ public class MotorIOSim implements MotorIO {
   private static Profile exponential(
       Per<VoltageUnit, AngularVelocityUnit> kV, Per<VoltageUnit, AngularAccelerationUnit> kA) {
     return new Profile.Exponential(
-        kV.in(Volts.per(RotationsPerSecond)), kA.in(Volts.per(RotationsPerSecondPerSecond)));
+        kV.in(VoltsPerRotationPerSecond), kA.in(VoltsPerRotationPerSecondSquared));
   }
 
   /** A slot's gains as plain numbers. */

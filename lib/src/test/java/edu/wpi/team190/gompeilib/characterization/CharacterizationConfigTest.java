@@ -1,11 +1,11 @@
 package edu.wpi.team190.gompeilib.characterization;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig.Leg;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
 import java.util.EnumSet;
 import java.util.Set;
@@ -39,7 +39,7 @@ public class CharacterizationConfigTest extends GompeiLibTestBase {
 
   private static CharacterizationConfig.CharacterizationConfigBuilder<VoltageUnit> voltage() {
     return CharacterizationConfig.voltage()
-        .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.75))
+        .withRampRate(VoltsPerSecond.ofNative(0.75))
         .withStepOutput(Volts.of(4.5))
         .withQuasistaticTimeout(Seconds.of(8))
         .withDynamicTimeout(Seconds.of(2));
@@ -77,7 +77,7 @@ public class CharacterizationConfigTest extends GompeiLibTestBase {
   public void testCurrentConfigUsesAmps() {
     CharacterizationConfig<CurrentUnit> config =
         CharacterizationConfig.current()
-            .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
+            .withRampRate(AmpsPerSecond.ofNative(5))
             .withStepOutput(Amps.of(40))
             .withQuasistaticTimeout(Seconds.of(10))
             .withDynamicTimeout(Seconds.of(10))

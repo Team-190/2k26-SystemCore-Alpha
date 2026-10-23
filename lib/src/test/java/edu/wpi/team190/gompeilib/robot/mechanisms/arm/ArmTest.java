@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms.arm;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
@@ -28,7 +29,6 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.Inertia;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
 import java.util.Optional;
@@ -125,7 +125,7 @@ public class ArmTest extends GompeiLibTestBase {
         .withPositionOffsetStep(Degrees.of(5))
         .withCharacterization(
             CharacterizationConfig.voltage()
-                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withRampRate(VoltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(9))
                 .withQuasistaticTimeout(Seconds.of(12))
                 .withDynamicTimeout(Seconds.of(12))

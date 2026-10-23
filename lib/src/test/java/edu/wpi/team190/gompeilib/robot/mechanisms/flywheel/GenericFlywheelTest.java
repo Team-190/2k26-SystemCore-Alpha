@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms.flywheel;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
@@ -28,7 +29,6 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,14 +115,14 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
             .withVoltageOffsetStep(Volts.of(1))
             .withVoltageCharacterization(
                 CharacterizationConfig.voltage()
-                    .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.5))
+                    .withRampRate(VoltsPerSecond.ofNative(0.5))
                     .withStepOutput(Volts.of(8))
                     .withQuasistaticTimeout(Seconds.of(24))
                     .withDynamicTimeout(Seconds.of(10))
                     .build())
             .withCurrentCharacterization(
                 CharacterizationConfig.current()
-                    .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
+                    .withRampRate(AmpsPerSecond.ofNative(5))
                     .withStepOutput(Amps.of(40))
                     .withQuasistaticTimeout(Seconds.of(10))
                     .withDynamicTimeout(Seconds.of(10))

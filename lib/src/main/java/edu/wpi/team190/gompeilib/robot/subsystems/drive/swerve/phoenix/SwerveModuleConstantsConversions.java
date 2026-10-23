@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.phoenix;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -119,9 +120,9 @@ public final class SwerveModuleConstantsConversions {
                 new MotionProfileConfig(
                     RotationsPerSecond.of(cruiseRotationsPerSecond),
                     RotationsPerSecondPerSecond.of(cruiseRotationsPerSecond / 0.100),
-                    RotationsPerSecondPerSecond.per(Second).of(0.0),
-                    Volts.per(RotationsPerSecond).ofNative(0.12 * steerRatio),
-                    Volts.per(RotationsPerSecondPerSecond).ofNative(0.1)))
+                    RotationsPerSecondCubed.of(0.0),
+                    VoltsPerRotationPerSecond.ofNative(0.12 * steerRatio),
+                    VoltsPerRotationPerSecondSquared.ofNative(0.1)))
             .withClosedLoopRamps(ramps)
             .withSignalRates(odometryRates)
             .build();

@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.physics;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
@@ -103,10 +104,10 @@ public final class PlantCharacterization<U extends Unit> {
       DCMotor gearbox, double gearRatio, MomentOfInertia momentOfInertia) {
     double inertia = momentOfInertia.in(KilogramSquareMeters);
     return voltage()
-        .withKV(Volts.per(RadiansPerSecond).ofNative(gearRatio / gearbox.Kv))
+        .withKV(VoltsPerRadianPerSecond.ofNative(gearRatio / gearbox.Kv))
         .withKA(
-            Volts.per(RadiansPerSecondPerSecond)
-                .ofNative(gearbox.R * inertia / (gearRatio * gearbox.Kt)));
+            VoltsPerRadianPerSecondSquared.ofNative(
+                gearbox.R * inertia / (gearRatio * gearbox.Kt)));
   }
 
   /**

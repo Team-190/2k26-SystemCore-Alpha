@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.motor.phoenix;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -87,9 +88,9 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
                 new MotionProfileConfig(
                     RotationsPerSecond.of(1.0),
                     RotationsPerSecondPerSecond.of(2.0),
-                    RotationsPerSecondPerSecond.per(Second).of(3.0),
-                    Volts.per(RotationsPerSecond).ofNative(0.12),
-                    Volts.per(RotationsPerSecondPerSecond).ofNative(0.01)))
+                    RotationsPerSecondCubed.of(3.0),
+                    VoltsPerRotationPerSecond.ofNative(0.12),
+                    VoltsPerRotationPerSecondSquared.ofNative(0.01)))
             .withSlot(GainSlot.ZERO, SlotConfig.position(slot0, GravityType.COSINE))
             .withSlot(GainSlot.ONE, SlotConfig.position(slot1))
             .withSlot(GainSlot.TWO, SlotConfig.position(slot2))
@@ -228,12 +229,12 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
         TalonFXConversions.toSlotConfigs(
             SlotConfig.position(
                 Gains.angularPosition(Volts)
-                    .withKP(Volts.per(Radians).ofNative(1))
-                    .withKI(Volts.per(MultUnit.combine(Radians, Seconds)).ofNative(2))
-                    .withKD(Volts.per(RadiansPerSecond).ofNative(3))
+                    .withKP(VoltsPerRadian.ofNative(1))
+                    .withKI(VoltsPerRadianSecond.ofNative(2))
+                    .withKD(VoltsPerRadianPerSecond.ofNative(3))
                     .withKS(Millivolts.of(400))
-                    .withKV(Volts.per(RadiansPerSecond).ofNative(5))
-                    .withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(6))
+                    .withKV(VoltsPerRadianPerSecond.ofNative(5))
+                    .withKA(VoltsPerRadianPerSecondSquared.ofNative(6))
                     .withKG(Volts.of(7))
                     .build(),
                 GravityType.COSINE),
@@ -256,12 +257,12 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
         TalonFXConversions.toSlotConfigs(
             SlotConfig.velocity(
                 Gains.angularVelocity(Amps)
-                    .withKP(Amps.per(RadiansPerSecond).ofNative(1))
+                    .withKP(AmpsPerRadianPerSecond.ofNative(1))
                     .withKI(Amps.per(MultUnit.combine(RadiansPerSecond, Seconds)).ofNative(2))
-                    .withKD(Amps.per(RadiansPerSecondPerSecond).ofNative(3))
+                    .withKD(AmpsPerRadianPerSecondSquared.ofNative(3))
                     .withKS(Amps.of(4))
-                    .withKV(Amps.per(RadiansPerSecond).ofNative(5))
-                    .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(6))
+                    .withKV(AmpsPerRadianPerSecond.ofNative(5))
+                    .withKA(AmpsPerRadianPerSecondSquared.ofNative(6))
                     .build()),
             GainSlot.ONE);
 
@@ -282,7 +283,7 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
         TalonFXConversions.toSlotConfigs(
             SlotConfig.position(
                 Gains.angularPosition(Percent)
-                    .withKP(Percent.per(Rotations).ofNative(50))
+                    .withKP(PercentPerRotation.ofNative(50))
                     .withKS(Percent.of(5))
                     .build()),
             GainSlot.ZERO);
@@ -296,8 +297,8 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
     // 10 V/m through a drum of radius 0.05 m: one rotation moves 2 pi 0.05 m
     var perMeter =
         Gains.linearPosition(Volts)
-            .withKP(Volts.per(Meters).ofNative(10))
-            .withKV(Volts.per(MetersPerSecond).ofNative(4))
+            .withKP(VoltsPerMeter.ofNative(10))
+            .withKV(VoltsPerMeterPerSecond.ofNative(4))
             .build();
     SlotConfigs slot =
         TalonFXConversions.toSlotConfigs(

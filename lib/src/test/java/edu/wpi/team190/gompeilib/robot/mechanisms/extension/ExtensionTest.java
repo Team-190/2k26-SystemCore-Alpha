@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms.extension;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
@@ -30,7 +31,6 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.phoenix.TalonFXConversions;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
 import java.util.Optional;
@@ -85,9 +85,9 @@ public class ExtensionTest extends GompeiLibTestBase {
     slot0 =
         Gains.linearPosition(Volts)
             .withPrefix("slot0")
-            .withKP(Volts.per(Meters).ofNative(10.0))
+            .withKP(VoltsPerMeter.ofNative(10.0))
             .withKS(Volts.of(0.4))
-            .withKV(Volts.per(MetersPerSecond).ofNative(6.0))
+            .withKV(VoltsPerMeterPerSecond.ofNative(6.0))
             .build();
     slot1 = Gains.linearPosition(Volts).withPrefix("slot1").build();
     constants = constants(Optional.empty());
@@ -144,7 +144,7 @@ public class ExtensionTest extends GompeiLibTestBase {
         .withHeightOffsetStep(Meters.of(0.05))
         .withCharacterization(
             CharacterizationConfig.voltage()
-                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withRampRate(VoltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(3))
                 .withQuasistaticTimeout(Seconds.of(3))
                 .withDynamicTimeout(Seconds.of(3))
@@ -367,7 +367,7 @@ public class ExtensionTest extends GompeiLibTestBase {
         (CharacterizationRoutine.MechanismTarget<VoltageUnit>)
             extension.characterizationTarget(
                 CharacterizationConfig.voltage()
-                    .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                    .withRampRate(VoltsPerSecond.ofNative(1))
                     .withStepOutput(Volts.of(3))
                     .withQuasistaticTimeout(Seconds.of(3))
                     .withDynamicTimeout(Seconds.of(3))

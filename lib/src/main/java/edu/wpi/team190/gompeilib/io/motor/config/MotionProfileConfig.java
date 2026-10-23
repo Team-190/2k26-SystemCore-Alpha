@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.motor.config;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import org.wpilib.units.AngularAccelerationUnit;
@@ -32,9 +33,9 @@ public record MotionProfileConfig(
       new MotionProfileConfig(
           RotationsPerSecond.of(0.0),
           RotationsPerSecondPerSecond.of(0.0),
-          RotationsPerSecondPerSecond.per(Second).of(0.0),
-          Volts.per(RotationsPerSecond).ofNative(0.0),
-          Volts.per(RotationsPerSecondPerSecond).ofNative(0.0));
+          RotationsPerSecondCubed.of(0.0),
+          VoltsPerRotationPerSecond.ofNative(0.0),
+          VoltsPerRotationPerSecondSquared.ofNative(0.0));
 
   /**
    * Returns a trapezoidal profile with no jerk limit and no exponential profile.

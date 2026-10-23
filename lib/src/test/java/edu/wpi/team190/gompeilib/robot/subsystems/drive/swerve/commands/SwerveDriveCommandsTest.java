@@ -1,11 +1,11 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.commands.DriveCommandsTestSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Percent;
-import static org.wpilib.units.Units.Second;
 import static org.wpilib.units.Units.Seconds;
 import static org.wpilib.units.Units.Volts;
 
@@ -15,7 +15,6 @@ import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig.Leg;
 import edu.wpi.team190.gompeilib.characterization.FeedforwardFit.Sample;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDrive;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveDriveConstants;
 import java.io.ByteArrayOutputStream;
@@ -98,7 +97,7 @@ public class SwerveDriveCommandsTest extends GompeiLibTestBase {
         SwerveDriveCommands.feedforwardCharacterization(
             drive,
             CharacterizationConfig.voltage()
-                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withRampRate(VoltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(4))
                 .withQuasistaticTimeout(Seconds.of(2))
                 .withDynamicTimeout(Seconds.of(1))
@@ -113,7 +112,7 @@ public class SwerveDriveCommandsTest extends GompeiLibTestBase {
                 drive,
                 CharacterizationConfig.<DimensionlessUnit>builder()
                     .withOutputUnit(Percent)
-                    .withRampRate(Percent.per(Second).ofNative(1))
+                    .withRampRate(PercentPerSecond.ofNative(1))
                     .withStepOutput(Percent.of(10))
                     .withQuasistaticTimeout(Seconds.of(2))
                     .withDynamicTimeout(Seconds.of(1))

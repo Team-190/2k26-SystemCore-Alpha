@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.motor.inputs;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
@@ -81,10 +82,10 @@ public class MotorTelemetry {
   public ConnectedMotor connectedMotor = ConnectedMotor.UNKNOWN;
 
   /** The motor's torque constant. */
-  public Per<TorqueUnit, CurrentUnit> motorKT = NewtonMeters.per(Amp).ofNative(0.0);
+  public Per<TorqueUnit, CurrentUnit> motorKT = NewtonMetersPerAmp.ofNative(0.0);
 
   /** The motor's velocity constant. */
-  public Per<AngularVelocityUnit, VoltageUnit> motorKV = RadiansPerSecond.per(Volt).ofNative(0.0);
+  public Per<AngularVelocityUnit, VoltageUnit> motorKV = RadiansPerSecondPerVolt.ofNative(0.0);
 
   /** The motor's stall current at the current supply voltage. */
   public Current motorStallCurrent = Amps.of(0.0);

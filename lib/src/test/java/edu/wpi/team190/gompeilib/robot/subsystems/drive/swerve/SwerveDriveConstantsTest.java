@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -34,8 +35,8 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
   public static Gains<LinearVelocityUnit, DistanceUnit, LinearVelocityUnit> translationGains(
       double kP, double kD) {
     return Gains.linearPosition(MetersPerSecond)
-        .withKP(MetersPerSecond.per(Meters).ofNative(kP))
-        .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(kD))
+        .withKP(MetersPerSecondPerMeter.ofNative(kP))
+        .withKD(MetersPerSecondPerMetersPerSecond.ofNative(kD))
         .build();
   }
 
@@ -43,8 +44,8 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
   public static Gains<AngularVelocityUnit, AngleUnit, AngularVelocityUnit> rotationGains(
       double kP, double kD) {
     return Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
-        .withKP(RadiansPerSecond.per(Radians).ofNative(kP))
-        .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(kD))
+        .withKP(RadiansPerSecondPerRadian.ofNative(kP))
+        .withKD(RadiansPerSecondPerRadiansPerSecond.ofNative(kD))
         .build();
   }
 

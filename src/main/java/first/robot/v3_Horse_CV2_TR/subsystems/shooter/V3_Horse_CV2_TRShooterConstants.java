@@ -1,16 +1,7 @@
 package first.robot.v3_Horse_CV2_TR.subsystems.shooter;
 
-import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Degrees;
-import static org.wpilib.units.Units.KilogramSquareMeters;
-import static org.wpilib.units.Units.Milliamps;
-import static org.wpilib.units.Units.RadiansPerSecond;
-import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
-import static org.wpilib.units.Units.Rotations;
-import static org.wpilib.units.Units.RotationsPerSecond;
-import static org.wpilib.units.Units.RotationsPerSecondPerSecond;
-import static org.wpilib.units.Units.Seconds;
-import static org.wpilib.units.Units.Volts;
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
+import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.control.Gains;
@@ -28,7 +19,6 @@ import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
@@ -74,10 +64,10 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withCurrentGains(
               Gains.angularVelocity(Amps) // TODO: Use Real Value
                   .withPrefix("Shooter/Flywheel/Torque")
-                  .withKP(Amps.per(RotationsPerSecond).ofNative(20))
+                  .withKP(AmpsPerRotationPerSecond.ofNative(20))
                   .withKS(Amps.of(4))
-                  .withKV(Amps.per(RotationsPerSecond).ofNative(0))
-                  .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0))
+                  .withKV(AmpsPerRotationPerSecond.ofNative(0))
+                  .withKA(AmpsPerRadianPerSecondSquared.ofNative(0))
                   .build())
           .withFlywheelGearbox(DCMotor.getKrakenX60Foc(4))
           // From CAD until the torque characterization runs; then paste its printed plant here
@@ -99,7 +89,7 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withVoltageCharacterization(
               CharacterizationConfig.voltage()
                   .withPrefix("Shooter/Flywheel/Characterization/Voltage")
-                  .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.5))
+                  .withRampRate(VoltsPerSecond.ofNative(0.5))
                   .withStepOutput(Volts.of(8))
                   .withQuasistaticTimeout(Seconds.of(24))
                   .withDynamicTimeout(Seconds.of(10))
@@ -108,7 +98,7 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withCurrentCharacterization(
               CharacterizationConfig.current()
                   .withPrefix("Shooter/Flywheel/Characterization/Torque")
-                  .withRampRate(CustomUnits.ampsPerSecond.ofNative(5))
+                  .withRampRate(AmpsPerSecond.ofNative(5))
                   .withStepOutput(Amps.of(40))
                   .withQuasistaticTimeout(Seconds.of(10))
                   .withDynamicTimeout(Seconds.of(10))
@@ -136,11 +126,11 @@ public class V3_Horse_CV2_TRShooterConstants {
                       SlotConfig.position(
                           Gains.angularPosition(Volts)
                               .withPrefix("Shooter/Hood")
-                              .withKP(Volts.per(Rotations).ofNative(1152))
-                              .withKD(Volts.per(RotationsPerSecond).ofNative(20))
+                              .withKP(VoltsPerRotation.ofNative(1152))
+                              .withKD(VoltsPerRotationPerSecond.ofNative(20))
                               .withKS(Volts.of(0.60085))
-                              .withKV(Volts.per(RotationsPerSecond).ofNative(0.15846))
-                              .withKA(Volts.per(RotationsPerSecondPerSecond).ofNative(0.13428))
+                              .withKV(VoltsPerRotationPerSecond.ofNative(0.15846))
+                              .withKA(VoltsPerRotationPerSecondSquared.ofNative(0.13428))
                               .build()))
                   .build())
           .withArmParameters(
@@ -154,9 +144,8 @@ public class V3_Horse_CV2_TRShooterConstants {
                       PlantCharacterization.voltage()
                           .withKS(Volts.of(0.60085))
                           .withKV(
-                              Volts.per(RadiansPerSecond)
-                                  .ofNative(HOOD_GEAR_RATIO / HOOD_GEARBOX.Kv))
-                          .withKA(Volts.per(RotationsPerSecondPerSecond).ofNative(0.13428))
+                              VoltsPerRadianPerSecond.ofNative(HOOD_GEAR_RATIO / HOOD_GEARBOX.Kv))
+                          .withKA(VoltsPerRotationPerSecondSquared.ofNative(0.13428))
                           .build())
                   .build())
           .withConstraints(
@@ -169,7 +158,7 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withCharacterization(
               CharacterizationConfig.voltage()
                   .withPrefix("Shooter/Hood/Characterization")
-                  .withRampRate(CustomUnits.voltsPerSecond.ofNative(0.75))
+                  .withRampRate(VoltsPerSecond.ofNative(0.75))
                   .withStepOutput(Volts.of(4.5))
                   .withQuasistaticTimeout(Seconds.of(4))
                   .withDynamicTimeout(Seconds.of(4))

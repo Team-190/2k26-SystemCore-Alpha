@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.motor.phoenix;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -167,9 +168,9 @@ public final class TalonFXConversions {
     MotionMagicConfigs configs = new MotionMagicConfigs();
     configs.MotionMagicCruiseVelocity = profile.cruiseVelocity().in(RotationsPerSecond);
     configs.MotionMagicAcceleration = profile.acceleration().in(RotationsPerSecondPerSecond);
-    configs.MotionMagicJerk = profile.jerk().in(RotationsPerSecondPerSecond.per(Second));
-    configs.MotionMagicExpo_kV = profile.exponentialKV().in(Volts.per(RotationsPerSecond));
-    configs.MotionMagicExpo_kA = profile.exponentialKA().in(Volts.per(RotationsPerSecondPerSecond));
+    configs.MotionMagicJerk = profile.jerk().in(RotationsPerSecondCubed);
+    configs.MotionMagicExpo_kV = profile.exponentialKV().in(VoltsPerRotationPerSecond);
+    configs.MotionMagicExpo_kA = profile.exponentialKA().in(VoltsPerRotationPerSecondSquared);
     return configs;
   }
 

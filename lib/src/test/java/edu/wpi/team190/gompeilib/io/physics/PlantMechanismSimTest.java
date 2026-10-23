@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.io.physics;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -19,8 +20,8 @@ public class PlantMechanismSimTest extends GompeiLibTestBase {
   private static PlantCharacterization.Builder<VoltageUnit> volts(double kS, double kV, double kA) {
     return PlantCharacterization.voltage()
         .withKS(Volts.of(kS))
-        .withKV(Volts.per(RadiansPerSecond).ofNative(kV))
-        .withKA(Volts.per(RadiansPerSecondPerSecond).ofNative(kA));
+        .withKV(VoltsPerRadianPerSecond.ofNative(kV))
+        .withKA(VoltsPerRadianPerSecondSquared.ofNative(kA));
   }
 
   private static PlantMechanismSim sim(PlantCharacterization<?> plant) {
@@ -139,8 +140,8 @@ public class PlantMechanismSimTest extends GompeiLibTestBase {
     PlantCharacterization<CurrentUnit> current =
         PlantCharacterization.current()
             .withKS(Amps.of(2.0))
-            .withKV(Amps.per(RadiansPerSecond).ofNative(0.5))
-            .withKA(Amps.per(RadiansPerSecondPerSecond).ofNative(0.1))
+            .withKV(AmpsPerRadianPerSecond.ofNative(0.5))
+            .withKA(AmpsPerRadianPerSecondSquared.ofNative(0.1))
             .build();
     PlantCharacterization<VoltageUnit> voltage =
         volts(2.0 * resistance, 0.5 * resistance + backEmf, 0.1 * resistance).build();

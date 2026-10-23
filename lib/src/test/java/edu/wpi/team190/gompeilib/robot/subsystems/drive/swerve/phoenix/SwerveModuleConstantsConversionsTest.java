@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.phoenix;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -107,9 +108,9 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     assertEquals(0.5, TalonFXConversions.toSlotConfigs(turnSlot, GainSlot.ZERO).kD, 1e-9);
     assertEquals(5.0, turn.motionProfile.cruiseVelocity().in(RotationsPerSecond), 1e-9);
     assertEquals(50.0, turn.motionProfile.acceleration().in(RotationsPerSecondPerSecond), 1e-9);
-    assertEquals(2.4, turn.motionProfile.exponentialKV().in(Volts.per(RotationsPerSecond)), 1e-9);
+    assertEquals(2.4, turn.motionProfile.exponentialKV().in(VoltsPerRotationPerSecond), 1e-9);
     assertEquals(
-        0.1, turn.motionProfile.exponentialKA().in(Volts.per(RotationsPerSecondPerSecond)), 1e-9);
+        0.1, turn.motionProfile.exponentialKA().in(VoltsPerRotationPerSecondSquared), 1e-9);
   }
 
   @Test

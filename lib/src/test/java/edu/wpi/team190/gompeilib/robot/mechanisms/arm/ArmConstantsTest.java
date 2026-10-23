@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms.arm;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
@@ -11,7 +12,6 @@ import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.physics.Inertia;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import org.wpilib.units.VoltageUnit;
 public class ArmConstantsTest extends GompeiLibTestBase {
   private static CharacterizationConfig<VoltageUnit> sysId() {
     return CharacterizationConfig.voltage()
-        .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+        .withRampRate(VoltsPerSecond.ofNative(1))
         .withStepOutput(Volts.of(3))
         .withQuasistaticTimeout(Seconds.of(3))
         .withDynamicTimeout(Seconds.of(3))

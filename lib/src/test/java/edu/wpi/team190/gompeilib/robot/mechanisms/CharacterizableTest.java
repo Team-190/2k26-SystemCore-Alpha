@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
@@ -9,7 +10,6 @@ import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
 import edu.wpi.team190.gompeilib.characterization.CharacterizationRoutine;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
-import edu.wpi.team190.gompeilib.math.CustomUnits;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMechanism;
 import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMotors;
 import org.junit.jupiter.api.AfterEach;
@@ -66,7 +66,7 @@ public class CharacterizableTest extends GompeiLibTestBase {
   public void testCharacterizesInTorqueCurrent() {
     CharacterizationConfig<CurrentUnit> config =
         CharacterizationConfig.current()
-            .withRampRate(CustomUnits.ampsPerSecond.ofNative(2))
+            .withRampRate(AmpsPerSecond.ofNative(2))
             .withStepOutput(Amps.of(20))
             .withQuasistaticTimeout(Seconds.of(3))
             .withDynamicTimeout(Seconds.of(3))
@@ -107,7 +107,7 @@ public class CharacterizableTest extends GompeiLibTestBase {
     Command command =
         mechanism.characterize(
             CharacterizationConfig.voltage()
-                .withRampRate(CustomUnits.voltsPerSecond.ofNative(1))
+                .withRampRate(VoltsPerSecond.ofNative(1))
                 .withStepOutput(Volts.of(3))
                 .withQuasistaticTimeout(Seconds.of(3))
                 .withDynamicTimeout(Seconds.of(3))

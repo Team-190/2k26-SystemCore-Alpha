@@ -1,5 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve;
 
+import static edu.wpi.team190.gompeilib.math.CustomUnits.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
@@ -53,7 +54,6 @@ import org.wpilib.math.linalg.Vector;
 import org.wpilib.math.numbers.N2;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
-import org.wpilib.units.MultUnit;
 import org.wpilib.units.measure.Angle;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
@@ -623,8 +623,8 @@ public class SwerveDriveTest extends GompeiLibTestBase {
     var translation =
         Gains.linearPosition(MetersPerSecond)
             .withKP(MetersPerSecond.per(Centimeters).ofNative(0.02))
-            .withKI(MetersPerSecond.per(MultUnit.combine(Meters, Seconds)).ofNative(0.5))
-            .withKD(MetersPerSecond.per(MetersPerSecond).ofNative(0.1))
+            .withKI(MetersPerSecondPerMeterSecond.ofNative(0.5))
+            .withKD(MetersPerSecondPerMetersPerSecond.ofNative(0.1))
             .build();
     PIDConstants linear = SwerveDrive.translationConstants(translation);
     assertEquals(2.0, linear.kP, 1e-9);
@@ -633,8 +633,8 @@ public class SwerveDriveTest extends GompeiLibTestBase {
 
     var rotation =
         Gains.builder(RadiansPerSecond, Radians, RadiansPerSecond)
-            .withKP(DegreesPerSecond.per(Degrees).ofNative(3.0))
-            .withKD(RadiansPerSecond.per(RadiansPerSecond).ofNative(0.2))
+            .withKP(DegreesPerSecondPerDegree.ofNative(3.0))
+            .withKD(RadiansPerSecondPerRadiansPerSecond.ofNative(0.2))
             .build();
     PIDConstants angular = SwerveDrive.rotationConstants(rotation);
     assertEquals(3.0, angular.kP, 1e-9);
