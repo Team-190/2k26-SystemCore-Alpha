@@ -104,7 +104,8 @@ public class Planner {
                             planTime * Path.RATE >= lastIndex);
                         Logger.recordOutput(
                             "GompeiPlanner/Target/SampledPathIndex", plan.pathIndexAt(planTime));
-                        ChassisVelocities output = target.velocity();
+                        ChassisVelocities output =
+                            target.velocity().toRobotRelative(pose.getRotation());
                         driveCommand.accept(output);
                         logTarget(pose, target, output, path, pathIndex, planTime);
 
@@ -290,7 +291,7 @@ public class Planner {
             solved[1] - goal.velocity().vy,
             solved[2] - goal.velocity().omega));
     return new ChassisVelocities(solved[0], solved[1], solved[2])
-        .toFieldRelative(robotPose.getRotation());
+        .toRobotRelative(robotPose.getRotation());
   }
 
   private static boolean atReference(Solver solver, Pose2d robotPose, State goal) {
