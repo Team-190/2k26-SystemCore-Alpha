@@ -50,7 +50,7 @@ public class AbsoluteEncoderIOCANcoderTest extends GompeiLibTestBase {
               .verify(
                   () ->
                       BaseStatusSignal.setUpdateFrequencyForAll(
-                          eq(1.0 / GompeiLib.LOOP_PERIOD_SECS), any(BaseStatusSignal[].class)));
+                          eq(1.0 / GompeiLib.getLoopPeriod()), any(BaseStatusSignal[].class)));
           mocks
               .phoenix()
               .verify(

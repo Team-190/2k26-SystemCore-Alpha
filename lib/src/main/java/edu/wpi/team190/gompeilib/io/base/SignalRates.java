@@ -29,7 +29,7 @@ public record SignalRates(
 
   /** Loop-rate control signals and slow diagnostics. */
   public static final SignalRates DEFAULT =
-      new SignalRates(Hertz.of(1.0 / GompeiLib.LOOP_PERIOD_SECS), Hertz.of(4.0), Map.of());
+      new SignalRates(Hertz.of(1.0 / GompeiLib.getLoopPeriod()), Hertz.of(4.0), Map.of());
 
   public SignalRates {
     if (control.lt(MIN_CONTROL_RATE)) {

@@ -69,10 +69,10 @@ public abstract class GompeiLibTestBase {
   /**
    * Override to customize loop period during test setup.
    *
-   * @return loop period in seconds (default: {@link GompeiLib#LOOP_PERIOD_SECS})
+   * @return loop period in seconds (default: 0.005)
    */
   protected double loopPeriodSecs() {
-    return GompeiLib.LOOP_PERIOD_SECS;
+    return 0.005;
   }
 
   /**

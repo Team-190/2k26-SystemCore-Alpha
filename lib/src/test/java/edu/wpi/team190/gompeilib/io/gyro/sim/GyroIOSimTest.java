@@ -16,7 +16,7 @@ public class GyroIOSimTest extends GompeiLibTestBase {
     GyroTelemetryAutoLogged telemetry = new GyroTelemetryAutoLogged();
     gyro.setYawVelocity(RadiansPerSecond.of(1.0));
 
-    for (int i = 0; i < Math.round(1.0 / GompeiLib.LOOP_PERIOD_SECS); i++) {
+    for (int i = 0; i < Math.round(1.0 / GompeiLib.getLoopPeriod()); i++) {
       gyro.updateInputs(telemetry);
     }
 

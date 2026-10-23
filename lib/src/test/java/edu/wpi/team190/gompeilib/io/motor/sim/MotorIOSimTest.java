@@ -103,7 +103,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
 
   /** Returns how many loops cover {@code seconds} at the target loop period. */
   private static int loopsFor(double seconds) {
-    return (int) Math.round(seconds / GompeiLib.LOOP_PERIOD_SECS);
+    return (int) Math.round(seconds / GompeiLib.getLoopPeriod());
   }
 
   /** Runs one cycle as a single 5 ms control step, so the loop terms reflect the start state. */
@@ -481,7 +481,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
             RotationsPerSecondCubed.of(0.0)));
     run(motor, 1);
     assertEquals(
-        2.0 * GompeiLib.LOOP_PERIOD_SECS,
+        2.0 * GompeiLib.getLoopPeriod(),
         telemetry.closedLoopPositionReferenceSlope.in(RotationsPerSecond),
         1e-6);
     assertEquals(MotorControlMode.PROFILED_POSITION_VOLTAGE, telemetry.controlMode);
@@ -531,7 +531,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
 
     run(motor, 1);
     assertEquals(
-        10.0 * GompeiLib.LOOP_PERIOD_SECS,
+        10.0 * GompeiLib.getLoopPeriod(),
         telemetry.closedLoopVelocityReference.in(RotationsPerSecond),
         1e-9);
     assertEquals(
@@ -562,7 +562,7 @@ public class MotorIOSimTest extends GompeiLibTestBase {
     run(motor, 1);
 
     assertEquals(
-        5.0 * GompeiLib.LOOP_PERIOD_SECS,
+        5.0 * GompeiLib.getLoopPeriod(),
         telemetry.closedLoopVelocityReference.in(RotationsPerSecond),
         1e-9);
   }

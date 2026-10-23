@@ -4,9 +4,6 @@ import edu.wpi.team190.gompeilib.robot.RobotMode;
 
 /** Main class for the GompeiLib library. Must be initialized by calling init() in robotInit(). */
 public final class GompeiLib {
-  /** The main loop period every robot targets, in seconds. */
-  public static final double LOOP_PERIOD_SECS = 0.005;
-
   private static boolean initialized = false;
   private static RobotMode currentMode;
   private static boolean tuningMode;
