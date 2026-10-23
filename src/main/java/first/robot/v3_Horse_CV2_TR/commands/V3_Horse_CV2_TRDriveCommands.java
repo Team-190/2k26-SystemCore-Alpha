@@ -321,18 +321,27 @@ public final class V3_Horse_CV2_TRDriveCommands {
   public static Command aimAtHub(SwerveDrive drive, SwerveDriveConstants driveConstants) {
     ProfiledPIDController omegaController = createOmegaController(driveConstants);
 
-    return Commands.run(
-        () ->
-            drive.runVelocity(
-                new ChassisVelocities(
-                        0.0,
-                        0.0,
-                        V3_Horse_CV2_TRAutoAlignCommands.calculate(
-                            omegaController,
-                            V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
-                            V3_Horse_CV2_TRRobotState.getHeading().getRadians(),
-                            drive.getMeasuredChassisVelocities().omega))
-                    .toRobotRelative(V3_Horse_CV2_TRRobotState.getHeading())));
+    return Commands.sequence(
+        Commands.runOnce(
+            () ->
+                omegaController.reset(
+                    V3_Horse_CV2_TRRobotState.getHeading().getRadians(),
+                    drive.getMeasuredChassisVelocities().omega),
+            drive), // plan the turn from the robot's actual heading and spin rate, not 0° like it
+        // was done previously
+        Commands.run(
+            () ->
+                drive.runVelocity(
+                    new ChassisVelocities(
+                            0.0,
+                            0.0,
+                            V3_Horse_CV2_TRAutoAlignCommands.calculate(
+                                omegaController,
+                                V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
+                                V3_Horse_CV2_TRRobotState.getHeading().getRadians(),
+                                drive.getMeasuredChassisVelocities().omega))
+                        .toRobotRelative(V3_Horse_CV2_TRRobotState.getHeading())),
+            drive));
   }
 
   public static Command wheelRadiusCharacterization(

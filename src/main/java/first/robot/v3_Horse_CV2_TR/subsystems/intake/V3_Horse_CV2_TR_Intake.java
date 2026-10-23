@@ -163,7 +163,7 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         leftExtension.setPositionGoal(leftManualPositionGoal);
         rightExtension.setPositionGoal(rightManualPositionGoal);
         break;
-      case ZERO, STOP, SLOW_MOVE, SYSID:
+      case ZERO, STOP, SLOW_MOVE, SQUISH, SYSID:
         // Open loop; the command that entered the state owns the extension output.
         break;
     }
@@ -369,6 +369,30 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
           leftExtension.setVoltageGoal(Volts.zero());
           rightExtension.setVoltageGoal(Volts.zero());
         });
+  }
+
+  public Command squishIntake() {
+    return Commands.sequence(
+            Commands.runOnce(
+                () -> {
+                  if (extensionState == ExtensionState.MANUAL_EXTEND
+                      || extensionState == ExtensionState.STOW) {
+                    return;
+                  }
+                  extensionState = ExtensionState.SQUISH;
+                  leftExtension.setVoltageGoal(Volts.of(-1));
+                  rightExtension.setVoltageGoal(Volts.of(-1));
+                }),
+            Commands.waitUntil(() -> extensionState != ExtensionState.SQUISH || isNearStow(0.01))
+                .withTimeout(5))
+        .finallyDo(
+            () -> {
+              if (extensionState == ExtensionState.SQUISH) {
+                leftExtension.setVoltageGoal(Volts.zero());
+                rightExtension.setVoltageGoal(Volts.zero());
+                extensionState = ExtensionState.STOW;
+              }
+            });
   }
 
   private boolean isNearStow(double tolerance) {

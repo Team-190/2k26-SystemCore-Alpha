@@ -74,13 +74,16 @@ public class V3_Horse_CV2_TRShooterConstants {
           .withVoltageOffsetStep(Volts.of(1))
           .build();
 
+  public static final double SHOOTER_CALM_DOWN_TIME =
+      0; // TODO: now that we don't have an inertia wheel its fine
+
   public static final GenericHoodConstants HOOD_CONSTANTS =
       GenericHoodConstants.builder()
           .withMotorCanId(45)
           .withCanBus(new CANBus(CANPort.CAN_S4))
           .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
           .withCurrentLimits(new CurrentLimits(40, 30))
-          .withMomentOfInertia(0.0001)
+          .withMomentOfInertia(0.02)
           .withInvertedValue(InvertedValue.Clockwise_Positive)
           .withMotorConfig(DCMotor.getKrakenX44Foc(1))
           .withLengthMeters(0.211582)
