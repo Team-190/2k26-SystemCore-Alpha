@@ -248,7 +248,10 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 })
             .andThen(
                 Planner.followPath(
-                        autoPath, V3_Horse_CV2_TRRobotState::getGlobalPose, drive::runVelocity)
+                        autoPath,
+                        V3_Horse_CV2_TRRobotState::getGlobalPose,
+                        drive::runVelocity,
+                        drive)
                     .andThen(
                         V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
                             drive,

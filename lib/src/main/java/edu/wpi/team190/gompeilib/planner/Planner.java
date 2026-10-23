@@ -8,6 +8,7 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.Commands;
+import org.wpilib.command2.Subsystem;
 import org.wpilib.driverstation.DriverStationErrors;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
@@ -19,7 +20,10 @@ public class Planner {
   private static final int RADIUS_CIRCLE_POINTS = 67;
 
   public static Command followPath(
-      Plan plan, Supplier<Pose2d> robotPose, Consumer<ChassisVelocities> driveCommand) {
+      Plan plan,
+      Supplier<Pose2d> robotPose,
+      Consumer<ChassisVelocities> driveCommand,
+      Subsystem... requirements) {
     if (driveCommand == null) {
       DriverStationErrors.reportError(
           "GompeiPlanner drive command not set, call Planner.setDriveCommand()", false);
@@ -125,13 +129,14 @@ public class Planner {
                       } catch (Exception e) {
                         System.out.println(e);
                       }
-                    })
+                    },
+                    requirements)
                 .until(
                     () -> {
                       // only done once the plan time is over AAND we actually got to the end
                       boolean planTimeOver =
                           (timer.get() + skippedTime[0]) * Path.RATE >= lastIndex;
-                      boolean atEnd = true;
+                      boolean atEnd = true; // TODO: check if actually at the end of path
                       Logger.recordOutput("GompeiPlanner/Completion/PlanTimeOver", planTimeOver);
                       Logger.recordOutput("GompeiPlanner/Completion/AtReference", atEnd);
                       Logger.recordOutput(
