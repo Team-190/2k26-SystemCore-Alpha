@@ -1,6 +1,7 @@
 package edu.wpi.team190.gompeilib.core.utility;
 
 import org.wpilib.math.geometry.*;
+import org.wpilib.math.shape.Rectangle2d;
 
 public class GeometryUtil {
   /**

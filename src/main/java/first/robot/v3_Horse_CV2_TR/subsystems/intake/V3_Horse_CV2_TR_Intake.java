@@ -29,7 +29,8 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
   @Getter private ExtensionState extensionState;
   @Getter private RollerState rollerState;
 
-  private final GenericRoller intakeRoller;
+  private final GenericRoller leftIntakeRoller;
+  private final GenericRoller rightIntakeRoller;
 
   public final Extension leftExtension;
 
@@ -37,16 +38,25 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
   private final GenericRoller kickerRoller;
 
-  private boolean agitateIn;
-
   private DoubleSupplier triggerSupplier;
 
   private final Setpoint<DistanceUnit> leftManualPositionGoal;
 
   private final Setpoint<DistanceUnit> rightManualPositionGoal;
 
+  @Getter private Distance extensionPosition;
+
+  private boolean manualReachedStow;
+
+  private ExtensionState previousExtensionState;
+  private boolean leftCompliant;
+  private boolean rightCompliant;
+  private GainSlot leftGainSlot;
+  private GainSlot rightGainSlot;
+
   public V3_Horse_CV2_TR_Intake(
-      GenericRollerIO intakeRollerIO,
+      GenericRollerIO leftIntakeRollerIO,
+      GenericRollerIO rightIntakeRollerIO,
       GenericRollerIO kickerRollerIO,
       ExtensionIO leftExtensionIO,
       ExtensionIO rightExtensionIO,
@@ -55,15 +65,21 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
 
     extensionState = ExtensionState.STOW;
     rollerState = RollerState.STOP;
-    agitateIn = false;
     this.triggerSupplier = triggerSupplier;
 
-    intakeRoller =
+    leftIntakeRoller =
         new GenericRoller(
-            intakeRollerIO,
+            leftIntakeRollerIO,
             this,
-            V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_CONSTANTS,
-            "Intake Roller",
+            V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS,
+            "Left Intake Roller",
+            V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
+    rightIntakeRoller =
+        new GenericRoller(
+            rightIntakeRollerIO,
+            this,
+            V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS,
+            "Right Intake Roller",
             V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
 
     kickerRoller =
@@ -101,11 +117,39 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
             Meters.of(0.01),
             Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION),
             Meters.of(V3_Horse_CV2_TR_IntakeConstants.MAX_EXTENSION));
+
+    extensionPosition = Meters.zero();
+
+    manualReachedStow = false;
+    previousExtensionState = extensionState;
+    leftCompliant = false;
+    rightCompliant = false;
+    leftGainSlot = GainSlot.ZERO;
+    rightGainSlot = GainSlot.ZERO;
   }
 
   @Trace
   @Override
   public void periodic() {
+    boolean triggerAtStow =
+        linearExtensionMap().in(Meters)
+            <= V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION
+                + V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD;
+    // Remembers whether this press reached the stow point, so release can stow even if the
+    // intake hasn't physically gotten there yet.
+    manualReachedStow =
+        extensionState == ExtensionState.MANUAL_EXTEND && (manualReachedStow || triggerAtStow);
+
+    if (extensionState == ExtensionState.MANUAL_EXTEND
+        && triggerAtStow
+        && isNearStow(V3_Horse_CV2_TR_IntakeConstants.AGITATE_AUTO_STOW_THRESHOLD)) {
+      // Pulled in to stow: latch so releasing the trigger doesn't drive it back out.
+      // The goal
+      // check keeps a light press from an already-stowed intake from latching
+      // immediately.
+      extensionState = ExtensionState.STOW;
+    }
+
     switch (extensionState) {
       case INTAKE, STOW:
         leftExtension.setPositionGoal(
@@ -113,121 +157,84 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         rightExtension.setPositionGoal(
             V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
         break;
-      case AGITATE:
-        if (switchDirection(agitateIn)) {
-          agitateIn = !agitateIn;
-        }
-        setAgitateGoals(agitateIn);
-        break;
       case MANUAL_EXTEND:
-        if (triggerSupplier.getAsDouble() < 0.9) {
-          leftManualPositionGoal.setSetpoint(linearExtensionMap());
-          rightManualPositionGoal.setSetpoint(linearExtensionMap());
-          leftExtension.setPositionGoal(leftManualPositionGoal);
-          rightExtension.setPositionGoal(rightManualPositionGoal);
-        } else {
-          extensionState = ExtensionState.STOW;
-        }
+        leftManualPositionGoal.setSetpoint(linearExtensionMap());
+        rightManualPositionGoal.setSetpoint(linearExtensionMap());
+        leftExtension.setPositionGoal(leftManualPositionGoal);
+        rightExtension.setPositionGoal(rightManualPositionGoal);
         break;
-      case OVERRIDE:
+      case ZERO, STOP, SLOW_MOVE, SQUISH, SYSID:
+        // Open loop; the command that entered the state owns the extension output.
         break;
     }
-    if (extensionState != ExtensionState.OVERRIDE) {
-      updateGainSlots();
-    }
-    intakeRoller.setVoltageGoal(
+    updateGainSlots();
+    leftIntakeRoller.setVoltageGoal(
+        V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
+    rightIntakeRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_STATES.get(rollerState));
     kickerRoller.setVoltageGoal(
         V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
-    intakeRoller.periodic();
+    leftIntakeRoller.periodic();
+    rightIntakeRoller.periodic();
     kickerRoller.periodic();
     leftExtension.periodic();
     rightExtension.periodic();
+
+    extensionPosition = leftExtension.getExtensionPosition();
+
     Logger.recordOutput("Intake/Rollers/State", rollerState.toString());
     Logger.recordOutput("Intake/Extension/State", extensionState.toString());
+    Logger.recordOutput("Intake/Extension/Trigger", triggerSupplier.getAsDouble());
   }
 
   private Distance linearExtensionMap() {
+    // Blend linear with smoothstep so the ends of the trigger are finer than the
+    // middle.
+    // Slope is (1 - k) at the ends and (1 + k/2) in the middle.
+    double t = Math.clamp(triggerSupplier.getAsDouble(), 0.0, 1.0);
+    double k = V3_Horse_CV2_TR_IntakeConstants.TRIGGER_CURVE;
+    double shaped = (1 - k) * t + k * t * t * (3 - 2 * t);
     Distance position =
         Meters.of(
-            (1 - triggerSupplier.getAsDouble())
+            (1 - shaped)
                     * (V3_Horse_CV2_TR_IntakeConstants.EXTENSION_INTAKE_POSITION
                         - V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION)
                 + V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION);
     return position;
   }
 
-  private boolean switchDirection(boolean agitateIn) {
-    ExtensionState agitateGoal;
-    if (agitateIn) {
-      agitateGoal = ExtensionState.AGITATE;
-    } else {
-      agitateGoal = ExtensionState.INTAKE;
-    }
-    return ((leftExtension
-                    .getPositionGoal()
-                    .getNewSetpoint()
-                    .matchesSetpoint(
-                        V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(agitateGoal))
-                && leftExtension.atPositionGoal())
-            && (rightExtension
-                    .getPositionGoal()
-                    .getNewSetpoint()
-                    .matchesSetpoint(
-                        V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal))
-                && rightExtension.atPositionGoal()))
-        || (leftExtension
-            .getTorqueCurrent()
-            .abs()
-            .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT))
-        || rightExtension
-            .getTorqueCurrent()
-            .abs()
-            .gte(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SWITCH_CURRENT);
-  }
-
-  private void setAgitateGoals(boolean agitateIn) {
-    ExtensionState agitateGoal;
-    if (agitateIn) {
-      agitateGoal = ExtensionState.AGITATE;
-    } else {
-      agitateGoal = ExtensionState.INTAKE;
-    }
-
-    leftExtension.setPositionGoal(
-        V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_STATES.get(agitateGoal));
-    rightExtension.setPositionGoal(
-        V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_STATES.get(agitateGoal));
-  }
-
-  // Compliant (ZERO) at rest, firmer (ONE) while driving to a new goal.
+  // Firm (ZERO) while driving to a new goal, then compliant (ONE) until the state changes, so
+  // getting pushed off the goal doesn't make it fight back.
   private void updateGainSlots() {
-    leftExtension.setGainSlot(leftExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
-    rightExtension.setGainSlot(rightExtension.atPositionGoal() ? GainSlot.ZERO : GainSlot.ONE);
-  }
+    boolean holdingGoal = extensionState == ExtensionState.INTAKE;
+    if (!holdingGoal || extensionState != previousExtensionState) {
+      leftCompliant = false;
+      rightCompliant = false;
+    } else {
+      leftCompliant |= leftExtension.atPositionGoal();
+      rightCompliant |= rightExtension.atPositionGoal();
+    }
+    previousExtensionState = extensionState;
 
-  public Command setIntakeVoltage(double voltage) {
-    return Commands.runOnce(() -> intakeRoller.setVoltageGoal(Volts.of(voltage)));
-  }
+    // setGainSlot sends a position request, so only touch it in closed loop states. STOW and
+    // MANUAL_EXTEND still need it so a compliant slot left over from INTAKE gets cleared.
+    if (holdingGoal
+        || extensionState == ExtensionState.STOW
+        || extensionState == ExtensionState.MANUAL_EXTEND) {
+      GainSlot leftSlot = leftCompliant ? GainSlot.ONE : GainSlot.ZERO;
+      GainSlot rightSlot = rightCompliant ? GainSlot.ONE : GainSlot.ZERO;
+      if (leftSlot != leftGainSlot) {
+        leftExtension.setGainSlot(leftSlot);
+        leftGainSlot = leftSlot;
+      }
+      if (rightSlot != rightGainSlot) {
+        rightExtension.setGainSlot(rightSlot);
+        rightGainSlot = rightSlot;
+      }
+    }
 
-  public Command setKickerVoltage(double voltage) {
-    return Commands.runOnce(() -> kickerRoller.setVoltageGoal(Volts.of(voltage)));
-  }
-
-  public Command deploy() {
-    return Commands.runOnce(
-        () -> {
-          extensionState = ExtensionState.INTAKE;
-          rollerState = RollerState.INTAKE;
-        });
-  }
-
-  public Command stowAndStop() {
-    return Commands.runOnce(
-        () -> {
-          extensionState = ExtensionState.STOW;
-          rollerState = RollerState.STOP;
-        });
+    Logger.recordOutput("Intake/Extension/Left Compliant", leftCompliant);
+    Logger.recordOutput("Intake/Extension/Right Compliant", rightCompliant);
   }
 
   public Command stopRollers() {
@@ -258,6 +265,13 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
+  public Command retract() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.STOW;
+        });
+  }
+
   public Command stowExtension() {
     return Commands.runOnce(
         () -> {
@@ -279,18 +293,116 @@ public class V3_Horse_CV2_TR_Intake extends SubsystemBase {
         });
   }
 
-  public Command setIntakeState(ExtensionState e_state, RollerState r_state) {
-    return Commands.runOnce(
-        () -> {
-          extensionState = e_state;
-          rollerState = r_state;
-        });
-  }
-
   public Command setManualExtendState() {
     return Commands.runOnce(
         () -> {
           extensionState = ExtensionState.MANUAL_EXTEND;
         });
+  }
+
+  /**
+   * Releases manual control, unless it already latched to stow. Stows only if the trigger reached
+   * the stow point during this press, otherwise goes back out to intake.
+   */
+  public Command releaseManualExtend() {
+    return Commands.runOnce(
+        () -> {
+          if (extensionState == ExtensionState.MANUAL_EXTEND) {
+            extensionState = manualReachedStow ? ExtensionState.STOW : ExtensionState.INTAKE;
+          }
+        });
+  }
+
+  public Command zeroExtensions() {
+    return Commands.sequence(
+            Commands.runOnce(() -> rollerState = RollerState.STOP),
+            Commands.runOnce(() -> extensionState = ExtensionState.ZERO),
+            Commands.parallel(
+                leftExtension.resetExtensionZero(), rightExtension.resetExtensionZero()),
+            Commands.runOnce(() -> extensionState = ExtensionState.STOW))
+        .finallyDo(
+            interrupted -> {
+              // Not zeroed, so don't trust position control; stop driving into the hard stop.
+              if (interrupted) {
+                extensionState = ExtensionState.STOP;
+                leftExtension.setVoltageGoal(Volts.zero());
+                rightExtension.setVoltageGoal(Volts.zero());
+              }
+            });
+  }
+
+  public Command resetIntakeZeroPosition() {
+    return Commands.runOnce(
+            () -> {
+              leftExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              rightExtension.setPosition(Meters.of(V3_Horse_CV2_TR_IntakeConstants.MIN_EXTENSION));
+              extensionState = ExtensionState.STOW;
+            })
+        .ignoringDisable(true);
+  }
+
+  public Command slowMoveIn() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.SLOW_MOVE;
+          leftExtension.setVoltageGoal(
+              V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE.times(-1));
+          rightExtension.setVoltageGoal(
+              V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE.times(-1));
+        });
+  }
+
+  public Command slowMoveOut() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.SLOW_MOVE;
+          leftExtension.setVoltageGoal(V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE);
+          rightExtension.setVoltageGoal(
+              V3_Horse_CV2_TR_IntakeConstants.EXTENSION_SLOW_MOVE_VOLTAGE);
+        });
+  }
+
+  public Command stopExtensions() {
+    return Commands.runOnce(
+        () -> {
+          extensionState = ExtensionState.STOP;
+          leftExtension.setVoltageGoal(Volts.zero());
+          rightExtension.setVoltageGoal(Volts.zero());
+        });
+  }
+
+  public Command squishIntake() {
+    return Commands.sequence(
+            Commands.runOnce(
+                () -> {
+                  if (extensionState == ExtensionState.MANUAL_EXTEND
+                      || extensionState == ExtensionState.STOW) {
+                    return;
+                  }
+                  extensionState = ExtensionState.SQUISH;
+                  leftExtension.setVoltageGoal(Volts.of(-1));
+                  rightExtension.setVoltageGoal(Volts.of(-1));
+                }),
+            Commands.waitUntil(() -> extensionState != ExtensionState.SQUISH || isNearStow(0.01))
+                .withTimeout(5))
+        .finallyDo(
+            () -> {
+              if (extensionState == ExtensionState.SQUISH) {
+                leftExtension.setVoltageGoal(Volts.zero());
+                rightExtension.setVoltageGoal(Volts.zero());
+                extensionState = ExtensionState.STOW;
+              }
+            });
+  }
+
+  private boolean isNearStow(double tolerance) {
+    double threshold = V3_Horse_CV2_TR_IntakeConstants.EXTENSION_STOW_POSITION + tolerance;
+    return leftExtension.getExtensionPosition().in(Meters) <= threshold
+        && rightExtension.getExtensionPosition().in(Meters) <= threshold;
+  }
+
+  public Command sysID() {
+    return setExtensionState(ExtensionState.SYSID)
+        .andThen(Extension.runSysIdRoutine(this, leftExtension, rightExtension));
   }
 }

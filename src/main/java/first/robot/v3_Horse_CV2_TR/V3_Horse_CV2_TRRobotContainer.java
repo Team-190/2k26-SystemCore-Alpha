@@ -1,64 +1,513 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import static org.wpilib.units.Units.RadiansPerSecond;
+
+import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
+import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
+import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
+import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIO;
+import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOSim;
+import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIO;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOSim;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIO;
+import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIOTalonFXSim;
+import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
+import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOSim;
+import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOSim;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerIOTalonFX;
+import edu.wpi.team190.gompeilib.subsystems.vision.Vision;
+import edu.wpi.team190.gompeilib.subsystems.vision.camera.CameraStaticLimelight;
+import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
+import first.robot.FieldConstants;
 import first.robot.RobotConfig;
+import first.robot.util.AllianceFlipUtil;
+import first.robot.util.CV2_input.XKeysInput;
+import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
+import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoBackUpShoot;
+import first.robot.v3_Horse_CV2_TR.commands.autonomous.V3_Horse_CV2_TRAutoDoubleDip;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants;
-import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloor;
-import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TR_RollerFloorConstants;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.ExtensionState;
+import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_IntakeConstants.RollerState;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants;
+import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloorConstants.RollerFloorState;
+import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
+import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
+import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandNiDsXboxController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.networktables.StringSubscriber;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
-  private V3_Horse_CV2_TR_RollerFloor rollerFloor;
+  private SwerveDrive drive;
+  private V3_Horse_CV2_TRRollerFloor rollerFloor;
   private V3_Horse_CV2_TR_Intake intake;
-  private final LoggedDashboardChooser<Command> autoChooser;
-  private final CommandNiDsXboxController driver;
+  private V3_Horse_CV2_TRShooter shooter;
+  private Vision vision;
+  private final LoggedNetworkChooser<Command> autoChooser;
+
+  private final StringSubscriber selectedAutoName =
+      NetworkTableInstance.getDefault()
+          .getStringTopic("/Autonomous Modes/selected/value")
+          .subscribe("");
+
+  private final Map<String, Pose2d[]> autoTrajectories =
+      Map.of(
+          "Back up and shoot",
+          V3_Horse_CV2_TRAutoBackUpShoot.getTrajectory(),
+          "Left Cheesy",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory("DOUBLE_DIP_1", "DOUBLE_DIP_2_CHEESY", false),
+          "Right Cheesy",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory("DOUBLE_DIP_1", "DOUBLE_DIP_2_CHEESY", true),
+          "Left Outliers",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory(
+              "DOUBLE_DIP_1", "DOUBLE_DIP_2_OUTLIERS", false),
+          "Right Outliers",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory(
+              "DOUBLE_DIP_1", "DOUBLE_DIP_2_OUTLIERS", true));
+
+  private String lastPublishedAuto = null;
+  private boolean lastPublishedFlipped = false;
+
+  private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
+
+  @SuppressWarnings("unused")
+  private final XKeysInput xkeys = new XKeysInput(1);
+
+  private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
   public V3_Horse_CV2_TRRobotContainer() {
-    driver = new CommandNiDsXboxController(0);
     if (Constants.getMode() != RobotMode.REPLAY) {
       switch (RobotConfig.ROBOT) {
         case V3_Horse_CV2_TR:
+          drive =
+              new SwerveDrive(
+                  V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                  new GyroIOPigeon2(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRRobotState::setHeadingUpdateTimestamp),
+                  new SwerveModuleIOTalonFX(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontLeft()),
+                  new SwerveModuleIOTalonFX(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontRight()),
+                  new SwerveModuleIOTalonFX(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backLeft()),
+                  new SwerveModuleIOTalonFX(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backRight()),
+                  V3_Horse_CV2_TRRobotState::getGlobalPose,
+                  V3_Horse_CV2_TRRobotState::resetPose);
           rollerFloor =
-              new V3_Horse_CV2_TR_RollerFloor(
+              new V3_Horse_CV2_TRRollerFloor(
                   new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
           intake =
               new V3_Horse_CV2_TR_Intake(
                   new GenericRollerIOTalonFX(
-                      V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_CONSTANTS),
+                      V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS),
+                  new GenericRollerIOTalonFX(
+                      V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS),
                   new GenericRollerIOTalonFX(
                       V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOTalonFX(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
                   () -> driver.getRightTriggerAxis());
+          shooter =
+              new V3_Horse_CV2_TRShooter(
+                  new GenericFlywheelIOTalonFX(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+                  new GenericHoodIOTalonFX(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS),
+                  V3_Horse_CV2_TRRobotState::isHopperRunning);
+          vision =
+              new Vision(
+                  () -> FieldConstants.tagLayoutType.getLayout(),
+                  new CameraStaticLimelight(
+                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG),
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_SHOOTER_CONFIG,
+                      V3_Horse_CV2_TRRobotState::getHeading,
+                      drive::getMeasuredChassisVelocities,
+                      V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
+                      List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                      List.of()),
+                  new CameraStaticLimelight(
+                      new CameraIOLimelight(V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG),
+                      V3_Horse_CV2_TRConstants.LIMELIGHT_LEFT_CONFIG,
+                      V3_Horse_CV2_TRRobotState::getHeading,
+                      drive::getMeasuredChassisVelocities,
+                      V3_Horse_CV2_TRRobotState::getHeadingUpdateTimestamp,
+                      List.of(V3_Horse_CV2_TRRobotState::addLocalizerVisionMeasurement),
+                      List.of()));
+
           break;
         case V3_Horse_CV2_TR_SIM:
+          drive =
+              new SwerveDrive(
+                  V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                  new GyroIO() {},
+                  new SwerveModuleIOSim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontLeft()),
+                  new SwerveModuleIOSim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.frontRight()),
+                  new SwerveModuleIOSim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backLeft()),
+                  new SwerveModuleIOSim(
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                      V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS.driveConfig.backRight()),
+                  V3_Horse_CV2_TRRobotState::getGlobalPose,
+                  V3_Horse_CV2_TRRobotState::resetPose);
           rollerFloor =
-              new V3_Horse_CV2_TR_RollerFloor(
+              new V3_Horse_CV2_TRRollerFloor(
                   new GenericRollerIOSim(
-                      V3_Horse_CV2_TR_RollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
+                      V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_CONSTANTS));
           intake =
               new V3_Horse_CV2_TR_Intake(
-                  new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.INTAKE_ROLLER_CONSTANTS),
+                  new GenericRollerIOSim(
+                      V3_Horse_CV2_TR_IntakeConstants.LEFT_INTAKE_ROLLER_CONSTANTS),
+                  new GenericRollerIOSim(
+                      V3_Horse_CV2_TR_IntakeConstants.RIGHT_INTAKE_ROLLER_CONSTANTS),
                   new GenericRollerIOSim(V3_Horse_CV2_TR_IntakeConstants.KICKER_ROLLER_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.LEFT_EXTENSION_CONSTANTS),
                   new ExtensionIOSim(V3_Horse_CV2_TR_IntakeConstants.RIGHT_EXTENSION_CONSTANTS),
                   () -> driver.getRightTriggerAxis());
+          shooter =
+              new V3_Horse_CV2_TRShooter(
+                  new GenericFlywheelIOTalonFXSim(V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS),
+                  new GenericHoodIOSim(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS),
+                  V3_Horse_CV2_TRRobotState::isHopperRunning);
+          vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
           break;
         default:
-          break;
       }
     }
-    autoChooser = new LoggedDashboardChooser<>("Autonomous Modes");
+
+    // Fall back to no-op IOs (e.g. in replay) so every subsystem always exists
+    if (drive == null) {
+      drive =
+          new SwerveDrive(
+              V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+              new GyroIO() {},
+              new SwerveModuleIO() {},
+              new SwerveModuleIO() {},
+              new SwerveModuleIO() {},
+              new SwerveModuleIO() {},
+              V3_Horse_CV2_TRRobotState::getGlobalPose,
+              V3_Horse_CV2_TRRobotState::resetPose);
+    }
+    if (rollerFloor == null) {
+      rollerFloor = new V3_Horse_CV2_TRRollerFloor(new GenericRollerIO() {});
+    }
+    if (intake == null) {
+      intake =
+          new V3_Horse_CV2_TR_Intake(
+              new GenericRollerIO() {},
+              new GenericRollerIO() {},
+              new GenericRollerIO() {},
+              new ExtensionIO() {},
+              new ExtensionIO() {},
+              () -> driver.getRightTriggerAxis());
+    }
+    if (shooter == null) {
+      shooter =
+          new V3_Horse_CV2_TRShooter(
+              new GenericFlywheelIO() {},
+              new GenericHoodIO() {},
+              V3_Horse_CV2_TRRobotState::isHopperRunning);
+    }
+
+    if (vision == null) {
+      vision = new Vision(() -> FieldConstants.tagLayoutType.getLayout());
+    }
+
+    autoChooser = new LoggedNetworkChooser<>("Autonomous Modes");
+    configureButtonBindings();
+    configureAutos();
+  }
+
+  private void configureAutos() {
+
+    NamedCommands.registerCommand("INTAKE", V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake));
+    NamedCommands.registerCommand("STOP_INTAKE", intake.setRollerState(RollerState.IDLE));
+
+    autoChooser.add(
+        "Back up and shoot",
+        V3_Horse_CV2_TRAutoBackUpShoot.getAutoRoutine(drive, shooter, rollerFloor, intake));
+
+    autoChooser.add(
+        "Left Cheesy",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_CHEESY",
+            false,
+            4,
+            5));
+
+    autoChooser.add(
+        "Right Cheesy",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_CHEESY",
+            true,
+            4,
+            5));
+
+    autoChooser.add(
+        "Left Outliers",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_OUTLIERS",
+            false,
+            4,
+            5));
+
+    autoChooser.add(
+        "Right Outliers",
+        V3_Horse_CV2_TRAutoDoubleDip.getAutoRoutine(
+            drive,
+            shooter,
+            rollerFloor,
+            intake,
+            "DOUBLE_DIP_1",
+            "DOUBLE_DIP_2_OUTLIERS",
+            true,
+            4,
+            5));
+
+    autoChooser.add("Shooter Flywheel Torque SysId", shooter.flywheelSysId());
+
+    autoChooser.addDefault("Do Nothing", Commands.none());
+  }
+
+  private void configureButtonBindings() {
+    drive.setDefaultCommand(
+        V3_Horse_CV2_TRDriveCommands.joystickDriveRotationLock(
+                drive,
+                V3_Horse_CV2_TRConstants.DRIVE_CONSTANTS,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX(),
+                V3_Horse_CV2_TRRobotState::getHeading,
+                () -> driver.rightBumper().getAsBoolean(), // Aim at hub or feed point
+                () -> V3_Horse_CV2_TRRobotState.getAimAngle().getRadians(),
+                () -> 0.0,
+                driver.leftTrigger(),
+                () -> V3_Horse_CV2_TRRobotState.getCardinalDirection())
+            .withName("joystickDriveRotationLock"));
+
+    driver.leftTrigger().onTrue(Commands.runOnce(() -> {}).withName("cardinal-direction-set"));
+
+    driver
+        .leftBumper()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
+                .withName("driver-leftBumper-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("driver-leftBumper-false"));
+
+    driver
+        .rightBumper()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.scoreOrFeedCommand(rollerFloor, shooter, intake)
+                .withName("driver-rightBumper-true"))
+        .onFalse(stopShooter("driver-rightBumper-false"));
+
+    driver
+        .rightTrigger(0.0)
+        .onTrue(
+            intake
+                .setExtensionState(ExtensionState.MANUAL_EXTEND)
+                .withName("driver-rightTrigger-true"))
+        .onFalse(intake.releaseManualExtend().withName("driver-rightTrigger-false"));
+
+    driver
+        .getHID()
+        .povDown()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.resetHeading(
+                    drive,
+                    V3_Horse_CV2_TRRobotState::resetPose,
+                    () -> V3_Horse_CV2_TRRobotState.getGlobalPose().getTranslation())
+                .withName("driver-dpadDown-true"));
+
+    driver
+        .y()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                    drive,
+                    rollerFloor,
+                    shooter,
+                    intake,
+                    V3_Horse_CV2_TRRobotState.FixedShots.CORNER)
+                .withName("driver-Y-true"))
+        .onFalse(stopShooter("driver-Y-false"));
+
+    driver
+        .a()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                    drive,
+                    rollerFloor,
+                    shooter,
+                    intake,
+                    V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER)
+                .withName("driver-A-true"))
+        .onFalse(stopShooter("driver-A-false"));
+
+    driver
+        .x()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                    drive,
+                    rollerFloor,
+                    shooter,
+                    intake,
+                    V3_Horse_CV2_TRRobotState.FixedShots.SIDE_TOWER)
+                .withName("driver-X-true"))
+        .onFalse(stopShooter("driver-X-false"));
+
+    driver
+        .start()
+        .onTrue(
+            shooter
+                .setFlywheelVelocity(RadiansPerSecond.of(165))
+                .withName("driver-top-right-true"));
+
+    driver
+        .b()
+        .onTrue(V3_Horse_CV2_TRCompositeCommands.intakeStow(intake).withName("driver-B-true"));
+
+    operator
+        .leftBumper()
+        .onTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeStow(intake)
+                .withName("operator-leftBumper-true"));
+
+    operator
+        .rightBumper()
+        .whileTrue(
+            V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
+                .withName("operator-rightBumper-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftBumper-false"));
+
+    operator
+        .leftTrigger()
+        .whileTrue(intake.intakeRollers().withName("operator-leftTrigger-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+
+    operator
+        .rightTrigger()
+        .whileTrue(intake.extakeRollers().withName("operator-rightTrigger-true"))
+        .onFalse(intake.setRollerState(RollerState.IDLE).withName("operator-leftTrigger-false"));
+    operator
+        .getHID()
+        .povUp()
+        .whileTrue(
+            Commands.runOnce(
+                    () ->
+                        rollerFloor.setOverrideRollerFloorVoltage(
+                            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_SLOW_VOLTAGE))
+                .andThen(rollerFloor.setState(RollerFloorState.OVERRIDE))
+                .withName("operator-dPadUp-true"))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadUp-false"));
+
+    operator
+        .getHID()
+        .povDown()
+        .whileTrue(
+            Commands.runOnce(
+                    () ->
+                        rollerFloor.setOverrideRollerFloorVoltage(
+                            V3_Horse_CV2_TRRollerFloorConstants.ROLLER_FLOOR_RUN_VOLTAGE.times(-1)))
+                .andThen(rollerFloor.setState(RollerFloorState.OVERRIDE))
+                .withName("operator-dPadDown-true"))
+        .onFalse(rollerFloor.setState(RollerFloorState.STOP).withName("operator-dPadDown-false"));
+
+    operator.getHID().povLeft().onTrue(shooter.resetHoodZero().withName("operator-dPadLeft-true"));
+
+    operator
+        .getHID()
+        .povRight()
+        .onTrue(intake.zeroExtensions().withName("operator-dPadRight-true"));
+
+    operator.y().onTrue(shooter.incrementFlywheelVelocity().withName("operator-Y-true"));
+    operator.x().onTrue(shooter.decrementFlywheelVelocity().withName("operator-X-true"));
+    operator.b().onTrue(shooter.incrementHoodAngle().withName("operator-B-true"));
+    operator.a().onTrue(shooter.decrementHoodAngle().withName("operator-A-true"));
+
+    operator.back().onTrue(shooter.setGoal(ShooterGoal.STOW).withName("operator-back-true"));
+    operator.start().onTrue(intake.resetIntakeZeroPosition().withName("operator-start-true"));
+
+    operator
+        .leftStick()
+        .whileTrue(intake.slowMoveIn().withName("operator-leftStick-true"))
+        .onFalse(intake.stopExtensions().withName("operator-leftStick-false"));
+    operator
+        .rightStick()
+        .whileTrue(intake.slowMoveOut().withName("operator-rightStick-true"))
+        .onFalse(intake.stopExtensions().withName("operator-rightStick-false"));
+  }
+
+  private Command stopShooter(String name) {
+    return V3_Horse_CV2_TRCompositeCommands.stopShooter(rollerFloor, shooter).withName(name);
+  }
+
+  @Override
+  public void robotPeriodic() {
+    V3_Horse_CV2_TRRobotState.periodic(
+        drive.getRawGyroRotation(), drive.getYawVelocity(), drive.getModulePositions(), drive);
+
+    Logger.recordOutput(
+        "Mechanism3D",
+        V3_Horse_CV2_TRMechanism3D.getPoses(
+            intake.getExtensionPosition(), shooter.getHoodAngle().getMeasure()));
+
+    String autoName = selectedAutoName.get();
+    boolean flipped = AllianceFlipUtil.shouldFlip();
+
+    if (!autoName.equals(lastPublishedAuto) || flipped != lastPublishedFlipped) {
+      Pose2d[] trajectory = autoTrajectories.getOrDefault(autoName, new Pose2d[0]);
+      if (flipped) {
+        trajectory = Arrays.stream(trajectory).map(AllianceFlipUtil::apply).toArray(Pose2d[]::new);
+      }
+      V3_Horse_CV2_TRRobotState.setAutoTrajectory(trajectory);
+
+      lastPublishedAuto = autoName;
+      lastPublishedFlipped = flipped;
+    }
   }
 
   @Override

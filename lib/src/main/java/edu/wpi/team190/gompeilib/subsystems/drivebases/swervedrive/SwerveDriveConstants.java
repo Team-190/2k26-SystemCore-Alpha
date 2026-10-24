@@ -7,15 +7,15 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableMeasure;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.system.DCMotor;
-import org.wpilib.units.AngleUnit;
-import org.wpilib.units.DistanceUnit;
+import org.wpilib.tunable.Tunable;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.Distance;
 
 @Builder(setterPrefix = "with")
 public class SwerveDriveConstants {
@@ -96,6 +96,6 @@ public class SwerveDriveConstants {
       @NonNull LinearConstraints yConstraints,
       @NonNull Gains rotationGains,
       @NonNull AngularPositionConstraints rotationConstraints,
-      @NonNull LoggedTunableMeasure<DistanceUnit> linearThreshold,
-      @NonNull LoggedTunableMeasure<AngleUnit> angularThreshold) {}
+      @NonNull Tunable<Distance> linearThreshold,
+      @NonNull Tunable<Angle> angularThreshold) {}
 }

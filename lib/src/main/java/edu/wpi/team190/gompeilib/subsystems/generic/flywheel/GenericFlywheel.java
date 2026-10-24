@@ -35,6 +35,11 @@ public class GenericFlywheel {
   private final CustomSysIdRoutine<VoltageUnit> voltageCharacterizationRoutine;
   private final CustomSysIdRoutine<CurrentUnit> torqueCharacterizationRoutine;
 
+  // Torque current has no back-EMF to cap speed, so torque tests end here before the current loop
+  // saturates near free speed and corrupts the data.
+  private final AngularVelocity torqueSysIdVelocityLimit;
+  private final boolean torqueSysIdReverseEnabled;
+
   public GenericFlywheel(
       GenericFlywheelIO io,
       Subsystem subsystem,
@@ -68,15 +73,25 @@ public class GenericFlywheel {
     torqueCharacterizationRoutine =
         new CustomSysIdRoutine<>(
             new CustomSysIdRoutine.Config<CurrentUnit>(
-                CustomUnits.ampsPerSecond.ofNative(0.5),
-                Amps.of(3.5),
-                Seconds.of(10),
+                CustomUnits.ampsPerSecond.ofNative(2.0),
+                Amps.of(20),
+                Seconds.of(30),
                 (state) ->
                     Logger.recordOutput(
                         aKitTopic + "/Torque Current SysID State", state.toString()),
                 Amp),
             new CustomSysIdRoutine.Mechanism<>(
                 (amps) -> io.setCurrentGoal(Amps.of(amps.in(Amps))), subsystem));
+
+    torqueSysIdVelocityLimit =
+        RadiansPerSecond.of(0.8 * constants.motorConfig.freeSpeed / constants.gearRatio);
+    torqueSysIdReverseEnabled =
+        constants.peakReverseTorqueCurrent == null
+            || constants.peakReverseTorqueCurrent.lt(Amps.zero());
+
+    constants.voltageGains.onChange(gains -> io.updateGains(gains, GainSlot.ZERO));
+    constants.torqueGains.onChange(gains -> io.updateGains(gains, GainSlot.ONE));
+    constants.constraints.onChange(io::updateConstraints);
   }
 
   public GenericFlywheel(
@@ -250,14 +265,34 @@ public class GenericFlywheel {
   }
 
   public Command sysIdRoutineTorque() {
-    return Commands.sequence(
-        Commands.runOnce(() -> currentState = GenericFlywheelState.IDLE),
-        torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(5.0),
-        torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kReverse),
-        Commands.waitSeconds(5.0),
-        torqueCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(5.0),
-        torqueCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kReverse));
+    Command routine =
+        Commands.sequence(
+            Commands.runOnce(() -> currentState = GenericFlywheelState.IDLE),
+            torqueSysIdTest(
+                torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kForward)),
+            torqueSysIdTest(
+                torqueCharacterizationRoutine.quasistatic(CustomSysIdRoutine.Direction.kForward)));
+    // A zero peak reverse torque current clamps reverse requests to 0 A, so skip those tests
+    if (torqueSysIdReverseEnabled) {
+      routine =
+          routine.andThen(
+              torqueSysIdTest(
+                  torqueCharacterizationRoutine.dynamic(CustomSysIdRoutine.Direction.kReverse)),
+              torqueSysIdTest(
+                  torqueCharacterizationRoutine.quasistatic(
+                      CustomSysIdRoutine.Direction.kReverse)));
+    }
+    return routine;
+  }
+
+  /** Runs a torque test until the velocity limit, then waits for the flywheel to coast down. */
+  private Command torqueSysIdTest(Command test) {
+    return test.until(
+            () ->
+                Math.abs(inputs.velocity.in(RadiansPerSecond))
+                    >= torqueSysIdVelocityLimit.in(RadiansPerSecond))
+        .andThen(
+            Commands.waitUntil(() -> Math.abs(inputs.velocity.in(RadiansPerSecond)) < 1.0)
+                .withTimeout(30.0));
   }
 }

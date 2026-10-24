@@ -37,7 +37,7 @@ public class ExtensionIOSim implements ExtensionIO {
             constants.extensionParameters.EXTENSION_MOTOR_CONFIG(),
             constants.extensionParameters.MIN_LENGTH().in(Meters),
             constants.extensionParameters.MAX_LENGTH().in(Meters),
-            true,
+            constants.verticalGravity,
             constants.extensionParameters.MIN_LENGTH().in(Meters));
 
     appliedVolts = Volts.of(0.0);
@@ -108,6 +108,9 @@ public class ExtensionIOSim implements ExtensionIO {
 
   @Override
   public void setPositionGoal(Distance position) {
+    if (!isClosedLoop) {
+      feedback.reset(sim.getPosition(), sim.getVelocity());
+    }
     isClosedLoop = true;
     feedback.setGoal(position.in(Meters));
   }

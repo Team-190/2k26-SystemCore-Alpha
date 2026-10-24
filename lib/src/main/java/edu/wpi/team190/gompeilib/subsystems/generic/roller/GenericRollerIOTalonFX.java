@@ -33,6 +33,7 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
 
   protected GenericRollerConstants constants;
 
+  @SuppressWarnings("resource") // Followers are retained in followerTalonFX
   public GenericRollerIOTalonFX(GenericRollerConstants constants) {
     talonFX = new TalonFX(constants.leaderCANID, constants.canBus);
     followerTalonFX =
@@ -117,7 +118,7 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(1 / GompeiLib.getLoopPeriod(), statusSignals);
 
-    PhoenixUtil.registerSignals(constants.canBus.isNetworkFD(), statusSignals);
+    PhoenixUtil.registerSignals(constants.canBus, statusSignals);
 
     talonFX.optimizeBusUtilization();
     for (TalonFX follower : followerTalonFX) {

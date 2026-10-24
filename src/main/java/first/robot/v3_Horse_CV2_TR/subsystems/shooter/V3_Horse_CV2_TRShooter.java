@@ -13,24 +13,30 @@ import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelIO;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHood;
 import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodIO;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShotParameters;
+import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotState.FixedShots;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.Trigger;
-import org.wpilib.math.filter.Debouncer;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Current;
 
 public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private final GenericFlywheel flywheel;
   private ShooterGoal shooterGoal;
+  // Goal most recently pushed to the flywheel and hood in periodic
+  private ShooterGoal appliedGoal;
 
   private final GenericHood hood;
 
@@ -39,7 +45,12 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   private final Trigger hoodFeedingTrigger;
 
-  public V3_Horse_CV2_TRShooter(GenericFlywheelIO flywheelIO, GenericHoodIO hoodIO) {
+  private FixedShotParameters fixedShotParameters;
+
+  private BooleanSupplier isHopperRunning;
+
+  public V3_Horse_CV2_TRShooter(
+      GenericFlywheelIO flywheelIO, GenericHoodIO hoodIO, BooleanSupplier isHopperRunning) {
 
     Setpoint<AngularVelocityUnit> flywheelVelocitySetpoint =
         new Setpoint<AngularVelocityUnit>(
@@ -73,20 +84,21 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
     this.shooterGoal = ShooterGoal.STOW;
+    this.fixedShotParameters = FixedShots.FRONT_TOWER.getParameters();
 
     flywheelShootingTrigger =
         new Trigger(
-                () ->
-                    Math.abs(
-                            flywheel
-                                .getFlywheelVelocity()
-                                .minus(flywheel.getVelocityGoal().getNewSetpoint())
-                                .in(RadiansPerSecond))
-                        <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
-                            .constraints
-                            .goalTolerance()
-                            .get(RadiansPerSecond))
-            .debounce(.75, Debouncer.DebounceType.kFalling);
+            () ->
+                Math.abs(
+                        flywheel
+                            .getFlywheelVelocity()
+                            .minus(flywheel.getVelocityGoal().getNewSetpoint())
+                            .in(RadiansPerSecond))
+                    <= V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
+                        .constraints
+                        .goalTolerance()
+                        .get()
+                        .in(RadiansPerSecond));
     flywheelFeedingTrigger =
         new Trigger(
             () ->
@@ -98,7 +110,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
                     <= (V3_Horse_CV2_TRShooterConstants.SHOOT_CONSTANTS
                             .constraints
                             .goalTolerance()
-                            .get(RadiansPerSecond)
+                            .get()
+                            .in(RadiansPerSecond)
                         + 35));
 
     hoodFeedingTrigger =
@@ -112,13 +125,15 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
                     <= (V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS
                             .constraints
                             .goalTolerance()
-                            .get(Radians)
+                            .get()
+                            .in(Radians)
                         + Units.degreesToRadians(5)));
+
+    this.isHopperRunning = isHopperRunning;
   }
 
   @Trace
   public void periodic() {
-
     switch (shooterGoal) {
       case STOW:
         hood.setPositionGoal(V3_Horse_CV2_TRShooterConstants.HOOD_CONSTANTS.minAngle);
@@ -126,18 +141,26 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         break;
       case SCORE:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getScoreAngle());
-        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getScoreVelocity());
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRRobotState.getScoreVelocity(), getCurrentFeedforward());
         break;
       case FEED:
         hood.setPositionGoal(V3_Horse_CV2_TRRobotState.getFeedAngle());
-        flywheel.setVelocityGoal(V3_Horse_CV2_TRRobotState.getFeedVelocity());
+        flywheel.setVelocityGoal(
+            V3_Horse_CV2_TRRobotState.getFeedVelocity(), getCurrentFeedforward());
+        break;
+      case FIXED_SHOTS:
+        hood.setPositionGoal(
+            Rotation2d.fromDegrees(fixedShotParameters.hoodAngle().get().in(Degree)));
+        flywheel.setVelocityGoal(
+            fixedShotParameters.flywheelSpeed().get(), getCurrentFeedforward());
         break;
       case ZERO:
-        hood.setPositionGoal(Rotation2d.kZero);
+        hood.setPositionGoal(Rotation2d.ZERO);
         flywheel.stop();
         break;
       case STOP:
-        hood.setVoltageGoal(Volts.of(0.0));
+        hood.setPositionGoal(Rotation2d.ZERO);
         flywheel.stop();
         break;
       default:
@@ -146,6 +169,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
     hood.periodic();
     flywheel.periodic();
+    appliedGoal = shooterGoal;
 
     Logger.recordOutput("Shooter/Goal", shooterGoal);
 
@@ -162,11 +186,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
         "Shooter/Flywheel/Velocity Magnitude",
         (int) Math.abs(flywheel.getVelocityGoal().getSetpoint().in(RadiansPerSecond)));
 
-    Logger.recordOutput(
-        "Shooter/Flywheel Ready",
-        V3_Horse_CV2_TRRobotState.isInAllianceZone()
-            ? flywheelShootingTrigger.getAsBoolean()
-            : flywheelFeedingTrigger.getAsBoolean());
+    Logger.recordOutput("Shooter/Flywheel At Goal", atGoal());
 
     Logger.recordOutput(
         "Shooter/Hood At Goal",
@@ -175,14 +195,34 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
             : hoodFeedingTrigger.getAsBoolean());
   }
 
+  private Current getCurrentFeedforward() {
+    return isHopperRunning.getAsBoolean()
+        ? (flywheel
+                .getFlywheelVelocity()
+                .lt(flywheel.getVelocityGoal().getSetpoint().minus(RadiansPerSecond.of(5)))
+            ? V3_Horse_CV2_TRShooterConstants.SHOOTER_FEEDFORWARD.get()
+            : Amps.zero())
+        : Amps.zero();
+  }
+
   public Command setGoal(ShooterGoal shooterGoal) {
     return this.runOnce(() -> this.shooterGoal = shooterGoal);
   }
 
+  public Command setGoal(Supplier<ShooterGoal> goalSupplier) {
+    return this.run(() -> this.shooterGoal = goalSupplier.get());
+  }
+
+  public Command runFixedShot(FixedShots shot) {
+    return Commands.runOnce(() -> fixedShotParameters = shot.getParameters())
+        .andThen(setGoal(ShooterGoal.FIXED_SHOTS));
+  }
+
   public boolean atGoal() {
-    return (V3_Horse_CV2_TRRobotState.isInAllianceZone()
-        ? (flywheelShootingTrigger.getAsBoolean() && hood.atPositionGoal())
-        : (flywheelFeedingTrigger.getAsBoolean() && hoodFeedingTrigger.getAsBoolean()));
+    return shooterGoal == appliedGoal
+        && (V3_Horse_CV2_TRRobotState.isInAllianceZone()
+            ? (flywheelShootingTrigger.getAsBoolean() && hood.atPositionGoal())
+            : (flywheelFeedingTrigger.getAsBoolean() && hoodFeedingTrigger.getAsBoolean()));
   }
 
   public Command waitUntilAtGoal() {
@@ -202,7 +242,8 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
   }
 
   public Command flywheelSysId() {
-    return flywheel.sysIdRoutineTorque();
+    // IDLE keeps periodic() from overriding the routine's current requests with stop()
+    return setGoal(ShooterGoal.IDLE).andThen(flywheel.sysIdRoutineTorque());
   }
 
   public Command incrementFlywheelVelocity() {
@@ -243,7 +284,7 @@ public class V3_Horse_CV2_TRShooter extends SubsystemBase {
 
   public Command setFlywheelVelocity(AngularVelocity velocity) {
     return setGoal(ShooterGoal.IDLE)
-        .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity)));
+        .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity, Amps.of(0))));
   }
 
   public Command resetHoodZero() {

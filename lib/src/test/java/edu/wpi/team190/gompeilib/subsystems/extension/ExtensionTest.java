@@ -3,6 +3,8 @@ package edu.wpi.team190.gompeilib.subsystems.extension;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
@@ -27,7 +29,7 @@ public class ExtensionTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -51,14 +53,16 @@ public class ExtensionTest {
     constants =
         ExtensionConstants.builder()
             .withLeaderCANID(5)
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withCanBus(new CANBus("rio"))
             .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
             .withExtensionParameters(params)
-            .withSlot0Gains(Gains.fromDoubles().withPrefix("slot0").build())
+            .withSlot0Gains(Gains.builder().withPrefix("slot0").build())
             .withConstraints(
-                LinearConstraints.fromMeasures()
+                LinearConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.MetersPerSecond.of(2.0))
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
@@ -72,10 +76,10 @@ public class ExtensionTest {
 
   @Test
   public void testExtension() throws Exception {
-    try (MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+    try (MockedStatic<Logger> _ = mockStatic(Logger.class)) {
       Extension extension = new Extension(constants, subsystem, 0, io);
 
-      Extension extension2 =
+      Extension _ =
           new Extension(
               constants,
               subsystem,
@@ -125,11 +129,11 @@ public class ExtensionTest {
       extension.setGainSlot(GainSlot.ONE);
       verify(io).setGainSlot(GainSlot.ONE);
 
-      extension.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
+      extension.updateGains(Gains.builder().withPrefix("slot0").build(), GainSlot.ZERO);
       verify(io).updateGains(any(), eq(GainSlot.ZERO));
 
       extension.updateConstraints(
-          LinearConstraints.fromMeasures()
+          LinearConstraints.builder()
               .withPrefix("constraints")
               .withGoalTolerance(Units.Meters.of(0.01))
               .withMaxVelocity(Units.MetersPerSecond.of(1.0))

@@ -11,6 +11,7 @@ import lombok.NonNull;
 import lombok.Singular;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Voltage;
 
 @Builder(setterPrefix = "with")
@@ -23,6 +24,8 @@ public class GenericFlywheelConstants {
   @NonNull public final Boolean enableFOC;
 
   @NonNull public final CurrentLimits currentLimit;
+  public final Current peakForwardTorqueCurrent;
+  public final Current peakReverseTorqueCurrent;
   @NonNull public final Double momentOfInertia;
   @NonNull public final Double gearRatio;
 

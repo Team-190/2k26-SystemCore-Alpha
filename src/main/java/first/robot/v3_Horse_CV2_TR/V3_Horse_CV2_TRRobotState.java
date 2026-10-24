@@ -5,6 +5,7 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.core.logging.Trace;
 import edu.wpi.team190.gompeilib.core.state.localization.FieldZone;
 import edu.wpi.team190.gompeilib.core.state.localization.Localization;
+import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import first.robot.FieldConstants;
@@ -19,24 +20,29 @@ import lombok.*;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.MatchState;
+import org.wpilib.fields.Field;
 import org.wpilib.math.geometry.*;
 import org.wpilib.math.interpolation.InterpolatingTreeMap;
 import org.wpilib.math.interpolation.Interpolator;
 import org.wpilib.math.interpolation.InverseInterpolator;
 import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.shape.Rectangle2d;
 import org.wpilib.math.util.Units;
+import org.wpilib.networktables.DoubleArrayPublisher;
+import org.wpilib.networktables.NetworkTable;
+import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.networktables.NetworkTablesJNI;
-import org.wpilib.smartdashboard.Field2d;
-import org.wpilib.smartdashboard.SmartDashboard;
+import org.wpilib.networktables.StringPublisher;
+import org.wpilib.networktables.StructArrayPublisher;
 import org.wpilib.system.Timer;
+import org.wpilib.tunable.Tunable;
+import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class V3_Horse_CV2_TRRobotState {
-  private static final AprilTagFieldLayout fieldLayout;
-
-  private static final Field2d field;
+  @Getter private static final Field fieldLayout;
+  @Getter private static Rotation2d cardinalDirection;
 
   private static double robotYawVelocity;
 
@@ -49,8 +55,10 @@ public class V3_Horse_CV2_TRRobotState {
   private static final Localization localization;
 
   @Getter private static Distance distanceToHub;
-  @Getter private static Rotation2d robotToHubAngle;
   @Getter private static Distance distanceToFeedTranslation;
+
+  /** Field heading that points the shooter at the hub (in alliance zone) or nearest feed point. */
+  @Getter private static Rotation2d aimAngle;
 
   @Getter private static boolean inAllianceZone;
 
@@ -68,10 +76,19 @@ public class V3_Horse_CV2_TRRobotState {
 
   @Setter @Getter private static long headingUpdateTimestamp;
 
+  @Setter @Getter private static boolean isHopperRunning;
+
+  private static final NetworkTable dashboardField =
+      NetworkTableInstance.getDefault().getTable("DashboardField");
+  private static final StringPublisher dashboardFieldType =
+      dashboardField.getStringTopic(".type").publish();
+  private static final DoubleArrayPublisher dashboardRobot =
+      dashboardField.getDoubleArrayTopic("Robot").publish();
+  private static final StructArrayPublisher<Pose2d> dashboardTrajectory =
+      dashboardField.getStructArrayTopic("trajectory", Pose2d.struct).publish();
+
   static {
     fieldLayout = FieldConstants.tagLayoutType.getLayout();
-
-    field = new Field2d();
 
     globalZone = new FieldZone(new HashSet<>(FieldConstants.AprilTags.globalTags));
     blueHubZone = new FieldZone(new HashSet<>(FieldConstants.AprilTags.blueHubTags));
@@ -101,7 +118,7 @@ public class V3_Horse_CV2_TRRobotState {
                 .getNorm(),
             Meters);
 
-    robotToHubAngle = Rotation2d.fromDegrees(0);
+    aimAngle = Rotation2d.fromDegrees(0);
 
     ledStates = new LEDStates(false, false, false, false, false);
 
@@ -139,11 +156,32 @@ public class V3_Horse_CV2_TRRobotState {
                         .interpolate(start.in(RadiansPerSecond), end.in(RadiansPerSecond), t),
                     RadiansPerSecond));
 
-    shootAngleTree.put(Meters.of(1.1038981214244048), Rotation2d.fromDegrees(5.0));
-    shootSpeedTree.put(Meters.of(1.1038981214244048), RadiansPerSecond.of(340.0));
+    shootAngleTree.put(Meters.of(1.090), Rotation2d.fromDegrees(0.17));
+    shootSpeedTree.put(Meters.of(1.090), RadiansPerSecond.of(140.0));
 
-    shootAngleTree.put(Meters.of(1.491203295344588), Rotation2d.fromDegrees(6.0));
-    shootSpeedTree.put(Meters.of(1.491203295344588), RadiansPerSecond.of(345.0));
+    shootAngleTree.put(Meters.of(1.348), Rotation2d.fromDegrees(4.0));
+    shootSpeedTree.put(Meters.of(1.348), RadiansPerSecond.of(140.0));
+
+    shootAngleTree.put(Meters.of(1.661), Rotation2d.fromDegrees(8.0));
+    shootSpeedTree.put(Meters.of(1.661), RadiansPerSecond.of(145.0));
+
+    shootAngleTree.put(Meters.of(2.0), Rotation2d.fromDegrees(10.0));
+    shootSpeedTree.put(Meters.of(2.0), RadiansPerSecond.of(160.0));
+
+    shootAngleTree.put(Meters.of(2.49), Rotation2d.fromDegrees(14.0));
+    shootSpeedTree.put(Meters.of(2.49), RadiansPerSecond.of(165.0));
+
+    shootAngleTree.put(Meters.of(3), Rotation2d.fromDegrees(18.0));
+    shootSpeedTree.put(Meters.of(3), RadiansPerSecond.of(165.0));
+
+    shootAngleTree.put(Meters.of(3.5), Rotation2d.fromDegrees(22.0));
+    shootSpeedTree.put(Meters.of(3.5), RadiansPerSecond.of(165.0));
+
+    shootAngleTree.put(Meters.of(4.0), Rotation2d.fromDegrees(21.3));
+    shootSpeedTree.put(Meters.of(4.0), RadiansPerSecond.of(185.0));
+
+    shootAngleTree.put(Meters.of(4.5), Rotation2d.fromDegrees(21.3));
+    shootSpeedTree.put(Meters.of(4.5), RadiansPerSecond.of(190.0));
 
     feedAngleTree.put(
         Meters.of(0.0),
@@ -158,10 +196,9 @@ public class V3_Horse_CV2_TRRobotState {
     feedAngle = new Rotation2d();
     feedVelocity = AngularVelocity.ofBaseUnits(0, RadiansPerSecond);
 
-    field.setRobotPose(getGlobalPose());
-    SmartDashboard.putData("Field", field);
-
     headingUpdateTimestamp = NetworkTablesJNI.now();
+
+    dashboardFieldType.set("Field2d");
   }
 
   @Trace
@@ -174,10 +211,10 @@ public class V3_Horse_CV2_TRRobotState {
 
     localization.addOdometryObservation(Timer.getTimestamp(), robotHeading, modulePositions);
 
-    Pose2d hubPose = getHubZonePose();
+    Pose2d robotHubZonePose = getHubZonePose();
 
     Logger.recordOutput(NTPrefixes.POSE_DATA + "Global Pose", getGlobalPose());
-    Logger.recordOutput(NTPrefixes.POSE_DATA + "Hub Zone Pose", hubPose);
+    Logger.recordOutput(NTPrefixes.POSE_DATA + "Hub Zone Pose", robotHubZonePose);
     Logger.recordOutput(NTPrefixes.POSE_DATA + "Tower Zone Pose", getTowerZonePose());
     Translation2d hubTranslation =
         AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
@@ -189,15 +226,19 @@ public class V3_Horse_CV2_TRRobotState {
                 .minus(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))
                 .getNorm(),
             Meters);
+    cardinalDirection =
+        Rotation2d.fromRadians(
+            Math.round(V3_Horse_CV2_TRRobotState.getHeading().getRadians() / (Math.PI / 2.0))
+                * (Math.PI / 2.0));
+    Translation2d globalTranslation = getGlobalPose().getTranslation();
+    Translation2d feedTranslation =
+        globalTranslation.nearest(
+            List.of(
+                AllianceFlipUtil.apply(FieldConstants.Depot.BLUE_FEED_TRANSLATION),
+                AllianceFlipUtil.apply(FieldConstants.Outpost.BLUE_FEED_TRANSLATION)));
 
     distanceToFeedTranslation =
-        Distance.ofBaseUnits(
-            getGlobalPose()
-                .getTranslation()
-                .getDistance(AllianceFlipUtil.apply(FieldConstants.Outpost.BLUE_FEED_TRANSLATION)),
-            Meters);
-
-    robotToHubAngle = hubTranslation.minus(hubPose.getTranslation()).getAngle();
+        Distance.ofBaseUnits(globalTranslation.getDistance(feedTranslation), Meters);
 
     scoreAngle = shootAngleTree.get(distanceToHub);
     scoreVelocity = shootSpeedTree.get(distanceToHub);
@@ -215,7 +256,10 @@ public class V3_Horse_CV2_TRRobotState {
 
     inAllianceZone = allianceZone.contains(getGlobalPose().getTranslation());
 
-    field.setRobotPose(getGlobalPose());
+    Translation2d aimFrom = inAllianceZone ? robotHubZonePose.getTranslation() : globalTranslation;
+    Translation2d aimTarget = inAllianceZone ? hubTranslation : feedTranslation;
+    // Shooter fires out the back of the robot, so face the rear toward the target
+    aimAngle = aimTarget.minus(aimFrom).getAngle().orElse(Rotation2d.ZERO).plus(Rotation2d.PI);
 
     Logger.recordOutput(NTPrefixes.POSE_DATA + "Distance To Hub", distanceToHub);
     Logger.recordOutput(
@@ -230,6 +274,9 @@ public class V3_Horse_CV2_TRRobotState {
         (int) HubActivePeriod.getShiftTimeRemaining());
     Logger.recordOutput(
         NTPrefixes.ROBOT_STATE + "Shift Period/Current Shift", HubActivePeriod.getCurrentShift());
+
+    Pose2d robot = getGlobalPose();
+    dashboardRobot.set(new double[] {robot.getX(), robot.getY(), robot.getRotation().getDegrees()});
   }
 
   public static void addLocalizerVisionMeasurement(List<VisionPoseObservation> observations) {
@@ -291,32 +338,34 @@ public class V3_Horse_CV2_TRRobotState {
   }
 
   public record FixedShotParameters(
-      Rotation2d robotAngle, Rotation2d hoodAngle, AngularVelocity flywheelSpeed) {}
+      Tunable<Angle> hoodAngle, Tunable<AngularVelocity> flywheelSpeed) {}
 
+  /** Robot angles are blue-alliance field headings; they are alliance-flipped at use time. */
   @RequiredArgsConstructor
   public enum FixedShots {
-    LEFT_TRENCH(
+    FRONT_TOWER(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(-80.0 + 180),
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED)),
-    RIGHT_TRENCH(
+            GompeiTunables.value(
+                "FixedShots/Front-Tower/Angle",
+                Rotation2d.fromRadians(0.3490658503988659).getMeasure()),
+            GompeiTunables.value("FixedShots/Front-Tower/Speed", RadiansPerSecond.of(155.0)))),
+    SIDE_TOWER(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(80 + 180),
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.TRENCH_SHOT_FLYWHEEL_SPEED)),
-    HUB(
+            GompeiTunables.value(
+                "FixedShots/Side-Tower/Angle",
+                Rotation2d.fromRadians(0.3490658503988659).getMeasure()),
+            GompeiTunables.value("FixedShots/Side-Tower/Speed", RadiansPerSecond.of(165.0)))),
+    CORNER(
         new FixedShotParameters(
-            Rotation2d.fromDegrees(180),
-            V3_Horse_CV2_TRShooterConstants.HUB_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.HUB_SHOT_FLYWHEEL_SPEED)),
-    TOWER(
-        new FixedShotParameters(
-            Rotation2d.fromDegrees(180),
-            V3_Horse_CV2_TRShooterConstants.TOWER_SHOT_HOOD_ANGLE,
-            V3_Horse_CV2_TRShooterConstants.TOWER_SHOT_FLYWHEEL_SPEED));
+            GompeiTunables.value(
+                "FixedShots/Corner/Angle", Rotation2d.fromRadians(0.4517551306747923).getMeasure()),
+            GompeiTunables.value("FixedShots/Corner/Speed", RadiansPerSecond.of(185))));
 
     @Getter private final FixedShotParameters parameters;
+  }
+
+  public static void setAutoTrajectory(Pose2d... trajectory) {
+    dashboardTrajectory.set(trajectory);
   }
 
   @Data

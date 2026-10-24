@@ -8,21 +8,22 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.team190.gompeilib.core.utility.Setpoint;
 import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
+import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants;
+import edu.wpi.team190.gompeilib.subsystems.extension.ExtensionConstants.ExtensionParameters;
 import edu.wpi.team190.gompeilib.subsystems.generic.roller.GenericRollerConstants;
 import java.util.Map;
+import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.Units;
 import org.wpilib.units.VoltageUnit;
-import org.wpilib.units.measure.Current;
-import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Voltage;
 
 public class V3_Horse_CV2_TR_IntakeConstants {
 
-  public static final GenericRollerConstants INTAKE_ROLLER_CONSTANTS;
+  public static final GenericRollerConstants LEFT_INTAKE_ROLLER_CONSTANTS;
+  public static final GenericRollerConstants RIGHT_INTAKE_ROLLER_CONSTANTS;
   public static final GenericRollerConstants KICKER_ROLLER_CONSTANTS;
   public static final ExtensionConstants LEFT_EXTENSION_CONSTANTS;
   public static final ExtensionConstants RIGHT_EXTENSION_CONSTANTS;
@@ -36,14 +37,20 @@ public class V3_Horse_CV2_TR_IntakeConstants {
   public static final double MOMENT_OF_INERTIA = 0.0004;
   public static final DCMotor MOTOR_CONFIG = DCMotor.getKrakenX60Foc(1);
 
-  public static final double MAX_EXTENSION = 0.5;
+  public static final double MAX_EXTENSION = 0.3;
   public static final double MIN_EXTENSION = 0.0;
 
   public static final double EXTENSION_INCREMENT = 0.0;
 
   public static final double EXTENSION_STOW_POSITION = 0.0;
 
-  public static final double EXTENSION_INTAKE_POSITION = 0.25;
+  public static final double EXTENSION_INTAKE_POSITION = 0.3;
+
+  // While agitating, reaching within this distance of stow latches the intake to stow
+  public static final double AGITATE_AUTO_STOW_THRESHOLD = 0.01;
+
+  // Trigger-to-extension curve, 0 = linear, 1 = full S-curve (flat at the ends)
+  public static final double TRIGGER_CURVE = 0;
 
   public static final Map<ExtensionState, Setpoint<DistanceUnit>> LEFT_EXTENSION_STATES;
 
@@ -61,22 +68,21 @@ public class V3_Horse_CV2_TR_IntakeConstants {
 
   public static final Voltage KICKER_OUT_ROLLER_VOLTAGE;
 
-  public static final Current EXTENSION_SWITCH_CURRENT;
+  public static final Voltage IDLE_ROLLER_VOLTAGE;
 
-  public static final LinearVelocity EXTENSION_SWITCH_VELOCITY;
+  public static final Voltage EXTENSION_SLOW_MOVE_VOLTAGE;
 
   static {
-    INTAKE_IN_ROLLER_VOLTAGE = Volts.of(12.0);
+    INTAKE_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     INTAKE_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
-    KICKER_IN_ROLLER_VOLTAGE = Volts.of(12.0);
+    KICKER_IN_ROLLER_VOLTAGE = Volts.of(11.0);
     KICKER_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
+    IDLE_ROLLER_VOLTAGE = Volts.of(5.0); // TODO: tune
+    EXTENSION_SLOW_MOVE_VOLTAGE = Volts.of(1.0);
 
-    EXTENSION_SWITCH_CURRENT = Amps.of(35);
-    EXTENSION_SWITCH_VELOCITY = MetersPerSecond.of(0.001);
-
-    INTAKE_ROLLER_CONSTANTS =
+    LEFT_INTAKE_ROLLER_CONSTANTS =
         GenericRollerConstants.builder()
-            .withLeaderCANID(40) // not sure if these are taken or not
+            .withLeaderCANID(23)
             .withCurrentLimits(
                 CurrentLimits.builder()
                     .withSupplyCurrentLimit(Amps.of(40.0))
@@ -84,17 +90,33 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio((1.0 / 2.0)) // please god someone change this
+            .withRollerMotorGearRatio(36.0 / 12)
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withOpposedFollowerCANID(41)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(CANBus.systemcore(0))
+            .withCanBus(new CANBus(CANPort.CAN_S2))
+            .withEnableFOC(false)
+            .build();
+    RIGHT_INTAKE_ROLLER_CONSTANTS =
+        GenericRollerConstants.builder()
+            .withLeaderCANID(24)
+            .withCurrentLimits(
+                CurrentLimits.builder()
+                    .withSupplyCurrentLimit(Amps.of(40.0))
+                    .withStatorCurrentLimit(Amps.of(40.0))
+                    .build())
+            .withNeutralMode(NeutralModeValue.Coast)
+            .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
+            .withRollerMotorGearRatio(36 / 12.0)
+            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
+            .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
+            .withVoltageOffsetStep(Volts.of(1))
+            .withCanBus(new CANBus(CANPort.CAN_S1))
             .withEnableFOC(false)
             .build();
     KICKER_ROLLER_CONSTANTS =
         GenericRollerConstants.builder()
-            .withLeaderCANID(42) // not sure if these are taken or not
+            .withLeaderCANID(25)
             .withCurrentLimits(
                 CurrentLimits.builder()
                     .withSupplyCurrentLimit(Amps.of(40.0))
@@ -102,73 +124,108 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                     .build())
             .withNeutralMode(NeutralModeValue.Coast)
             .withRollerGearbox(DCMotor.getKrakenX60Foc(1))
-            .withRollerMotorGearRatio((1.0 / 2.0)) // same here, please change this
+            .withRollerMotorGearRatio(((58.0 / 26) * (24.0 / 18)))
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
-            .withOpposedFollowerCANID(43)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(CANBus.systemcore(0))
+            .withCanBus(new CANBus("Extension"))
             .withEnableFOC(false)
             .build();
 
     LEFT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
-            .withLeaderCANID(44)
-            .withExtensionGearRatio(null) // and here
-            .withDrumRadius(0.025)
+            .withLeaderCANID(21)
+            .withExtensionGearRatio((52.0 / 30) * (52.0 / 16))
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
             .withSlot0Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Left Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Left Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Left Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Left Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Left Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Left Extension/Slot0")
+                    .withKP(10)
+                    .withKD(0.0)
+                    .withKS(0.42002)
+                    .withKV(6.3697)
+                    .withKA(0.0)
                     .build())
             .withSlot1Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Left Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Left Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Left Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Left Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Left Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Left Extension/Slot1")
+                    .withKP(0.1)
+                    .withKD(0.0)
+                    .withKS(0.0)
+                    .withKV(0.0)
+                    .withKA(0.0)
                     .build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)
-            .withOpposedFollowerCANID(46)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
+            .withCanBus(new CANBus("Extension"))
+            .withExtensionParameters(
+                ExtensionParameters.builder()
+                    .withCARRIAGE_MASS_KG(10.0)
+                    .withEXTENSION_MOTOR_CONFIG(DCMotor.getKrakenX44Foc(1))
+                    .withMAX_LENGTH(Meters.of(MAX_EXTENSION))
+                    .withMIN_LENGTH(Meters.of(MIN_EXTENSION))
+                    .withNUM_MOTORS(1)
+                    .build())
+            .withConstraints(
+                LinearConstraints.builder()
+                    .withPrefix("Intake/Left Extension/Constraints")
+                    .withGoalTolerance(Meters.of(0.01))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
+                    .withMaxVelocity(MetersPerSecond.of(20))
+                    .build())
             .build();
 
     RIGHT_EXTENSION_CONSTANTS =
         ExtensionConstants.builder()
-            .withLeaderCANID(45)
-            .withExtensionGearRatio(null) // and here
-            .withDrumRadius(0.025)
+            .withLeaderCANID(22)
+            .withExtensionGearRatio((52.0 / 30) * (52.0 / 16))
+            .withLeaderInvertedValue(InvertedValue.Clockwise_Positive)
+            .withDrumRadius(0.0127)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
             .withSlot0Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Right Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Right Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Right Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Right Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Right Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Right Extension/Slot0")
+                    .withKP(10)
+                    .withKD(0.0)
+                    .withKS(0.42002)
+                    .withKV(6.3697)
+                    .withKA(0.0)
                     .build())
             .withSlot1Gains(
                 Gains.builder()
-                    .withKP(new LoggedTunableNumber("Intake/Right Extension/VoltageKp", 1.0))
-                    .withKD(new LoggedTunableNumber("Intake/Right Extension/VoltageKd", 0.0))
-                    .withKS(new LoggedTunableNumber("Intake/Right Extension/VoltageKs", 0.0))
-                    .withKV(new LoggedTunableNumber("Intake/Right Extension/VoltageKv", 0.0))
-                    .withKA(new LoggedTunableNumber("Intake/Right Extension/VoltageKa", 0.0))
+                    .withPrefix("Intake/Right Extension/Slot1")
+                    .withKP(0.1)
+                    .withKD(0.0)
+                    .withKS(0)
+                    .withKV(0)
+                    .withKA(0.0)
                     .build())
             .withSlot2Gains(Gains.builder().build())
             .withVerticalGravity(false)
-            .withOpposedFollowerCANID(47)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
+            .withCanBus(new CANBus("Extension"))
+            .withExtensionParameters(
+                ExtensionParameters.builder()
+                    .withCARRIAGE_MASS_KG(10.0)
+                    .withEXTENSION_MOTOR_CONFIG(DCMotor.getKrakenX44Foc(1))
+                    .withMAX_LENGTH(Meters.of(MAX_EXTENSION))
+                    .withMIN_LENGTH(Meters.of(MIN_EXTENSION))
+                    .withNUM_MOTORS(1)
+                    .build())
+            .withConstraints(
+                LinearConstraints.builder()
+                    .withPrefix("Intake/Right Extension/Constraints")
+                    .withGoalTolerance(Meters.of(0.01))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(10))
+                    .withMaxVelocity(MetersPerSecond.of(20))
+                    .build())
             .build();
 
     LEFT_EXTENSION_STATES =
@@ -182,12 +239,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             ExtensionState.INTAKE,
             new Setpoint<>(
                 Meters.of(EXTENSION_INTAKE_POSITION),
-                Meters.of(0.01),
-                Meters.of(MIN_EXTENSION),
-                Meters.of(MAX_EXTENSION)),
-            ExtensionState.AGITATE,
-            new Setpoint<>(
-                Meters.of(0.25),
                 Meters.of(0.01),
                 Meters.of(MIN_EXTENSION),
                 Meters.of(MAX_EXTENSION)));
@@ -205,12 +256,6 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 Meters.of(EXTENSION_INTAKE_POSITION),
                 Meters.of(0.01),
                 Meters.of(MIN_EXTENSION),
-                Meters.of(MAX_EXTENSION)),
-            ExtensionState.AGITATE,
-            new Setpoint<>(
-                Meters.of(0.25),
-                Meters.of(0.01),
-                Meters.of(MIN_EXTENSION),
                 Meters.of(MAX_EXTENSION)));
 
     INTAKE_ROLLER_STATES =
@@ -218,19 +263,25 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             RollerState.INTAKE,
             new Setpoint<>(
                 INTAKE_IN_ROLLER_VOLTAGE,
-                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
             RollerState.EXTAKE,
             new Setpoint<>(
                 INTAKE_OUT_ROLLER_VOLTAGE,
-                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                Volts.of(-12.0),
+                Volts.of(12.0)),
+            RollerState.IDLE,
+            new Setpoint<>(
+                IDLE_ROLLER_VOLTAGE,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
             RollerState.STOP,
             new Setpoint<>(
                 Volts.of(0),
-                INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
+                LEFT_INTAKE_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)));
 
@@ -248,6 +299,12 @@ public class V3_Horse_CV2_TR_IntakeConstants {
                 KICKER_ROLLER_CONSTANTS.voltageOffsetStep,
                 Volts.of(-12.0),
                 Volts.of(12.0)),
+            RollerState.IDLE,
+            new Setpoint<>(
+                IDLE_ROLLER_VOLTAGE,
+                KICKER_ROLLER_CONSTANTS.voltageOffsetStep,
+                Volts.of(-12.0),
+                Volts.of(12.0)),
             RollerState.STOP,
             new Setpoint<>(
                 Volts.of(0),
@@ -259,13 +316,17 @@ public class V3_Horse_CV2_TR_IntakeConstants {
   public enum ExtensionState {
     STOW,
     INTAKE,
-    AGITATE,
     MANUAL_EXTEND,
-    OVERRIDE
+    ZERO,
+    STOP,
+    SLOW_MOVE,
+    SQUISH,
+    SYSID
   }
 
   public enum RollerState {
     INTAKE,
+    IDLE,
     EXTAKE,
     STOP
   }
