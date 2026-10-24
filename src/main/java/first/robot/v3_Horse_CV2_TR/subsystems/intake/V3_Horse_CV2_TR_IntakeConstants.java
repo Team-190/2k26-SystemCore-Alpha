@@ -128,7 +128,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
             .withMomentOfInertia(Units.KilogramSquareMeters.of(MOMENT_OF_INERTIA))
             .withVoltageOffsetStep(Volts.of(1))
-            .withCanBus(new CANBus("Extension"))
+            .withCanBus(new CANBus(CANPort.CAN_S0))
             .withEnableFOC(false)
             .build();
 
@@ -162,7 +162,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withVerticalGravity(false)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
-            .withCanBus(new CANBus("Extension"))
+            .withCanBus(new CANBus(CANPort.CAN_S0))
             .withExtensionParameters(
                 ExtensionParameters.builder()
                     .withCARRIAGE_MASS_KG(10.0)
@@ -210,7 +210,7 @@ public class V3_Horse_CV2_TR_IntakeConstants {
             .withVerticalGravity(false)
             .withVoltageOffsetStep(Volts.of(1))
             .withHeightOffsetStep(Meters.of(0.01))
-            .withCanBus(new CANBus("Extension"))
+            .withCanBus(new CANBus(CANPort.CAN_S0))
             .withExtensionParameters(
                 ExtensionParameters.builder()
                     .withCARRIAGE_MASS_KG(10.0)
