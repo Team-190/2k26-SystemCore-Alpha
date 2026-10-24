@@ -1,5 +1,7 @@
 package first.robot.v3_Horse_CV2_TR;
 
+import static org.wpilib.units.Units.RadiansPerSecond;
+
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
@@ -367,6 +369,13 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                     V3_Horse_CV2_TRRobotState.FixedShots.SIDE_TOWER)
                 .withName("driver-X-true"))
         .onFalse(stopShooter("driver-X-false"));
+
+    driver
+        .start()
+        .onTrue(
+            shooter
+                .setFlywheelVelocity(RadiansPerSecond.of(165))
+                .withName("driver-top-right-true"));
 
     driver
         .b()
