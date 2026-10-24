@@ -29,6 +29,7 @@ import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
+import first.robot.util.AllianceFlipUtil;
 import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
@@ -44,12 +45,17 @@ import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerF
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants.ShooterGoal;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandNiDsXboxController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.networktables.StringSubscriber;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -58,6 +64,29 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private V3_Horse_CV2_TRShooter shooter;
   private Vision vision;
   private final LoggedNetworkChooser<Command> autoChooser;
+
+  private final StringSubscriber selectedAutoName =
+      NetworkTableInstance.getDefault()
+          .getStringTopic("/Autonomous Modes/selected/value")
+          .subscribe("");
+
+  private final Map<String, Pose2d[]> autoTrajectories =
+      Map.of(
+          "Back up and shoot",
+          V3_Horse_CV2_TRAutoBackUpShoot.getTrajectory(),
+          "Left Cheesy",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory("DOUBLE_DIP_1", "DOUBLE_DIP_2_CHEESY", false),
+          "Right Cheesy",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory("DOUBLE_DIP_1", "DOUBLE_DIP_2_CHEESY", true),
+          "Left Outliers",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory(
+              "DOUBLE_DIP_1", "DOUBLE_DIP_2_OUTLIERS", false),
+          "Right Outliers",
+          V3_Horse_CV2_TRAutoDoubleDip.getTrajectory(
+              "DOUBLE_DIP_1", "DOUBLE_DIP_2_OUTLIERS", true));
+
+  private String lastPublishedAuto = null;
+  private boolean lastPublishedFlipped = false;
 
   private final CommandNiDsXboxController driver = new CommandNiDsXboxController(0);
 
@@ -460,10 +489,25 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   public void robotPeriodic() {
     V3_Horse_CV2_TRRobotState.periodic(
         drive.getRawGyroRotation(), drive.getYawVelocity(), drive.getModulePositions(), drive);
+
     Logger.recordOutput(
         "Mechanism3D",
         V3_Horse_CV2_TRMechanism3D.getPoses(
             intake.getExtensionPosition(), shooter.getHoodAngle().getMeasure()));
+
+    String autoName = selectedAutoName.get();
+    boolean flipped = AllianceFlipUtil.shouldFlip();
+
+    if (!autoName.equals(lastPublishedAuto) || flipped != lastPublishedFlipped) {
+      Pose2d[] trajectory = autoTrajectories.getOrDefault(autoName, new Pose2d[0]);
+      if (flipped) {
+        trajectory = Arrays.stream(trajectory).map(AllianceFlipUtil::apply).toArray(Pose2d[]::new);
+      }
+      V3_Horse_CV2_TRRobotState.setAutoTrajectory(trajectory);
+
+      lastPublishedAuto = autoName;
+      lastPublishedFlipped = flipped;
+    }
   }
 
   @Override

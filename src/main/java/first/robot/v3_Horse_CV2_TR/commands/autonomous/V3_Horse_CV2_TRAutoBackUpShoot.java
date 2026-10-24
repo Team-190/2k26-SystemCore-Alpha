@@ -12,6 +12,7 @@ import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerF
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
+import org.wpilib.math.geometry.Pose2d;
 
 public class V3_Horse_CV2_TRAutoBackUpShoot {
   public static Command getAutoRoutine(
@@ -44,6 +45,14 @@ public class V3_Horse_CV2_TRAutoBackUpShoot {
                           "Failed to load auto path",
                           e.getMessage())))
           .ignoringDisable(true);
+    }
+  }
+
+  public static Pose2d[] getTrajectory() {
+    try {
+      return PathPlannerPath.fromPathFile("BACK_UP_SHOOT").getPathPoses().toArray(new Pose2d[0]);
+    } catch (Exception e) {
+      return new Pose2d[0];
     }
   }
 }

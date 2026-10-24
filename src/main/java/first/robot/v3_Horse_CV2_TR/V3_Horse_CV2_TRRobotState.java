@@ -10,6 +10,7 @@ import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.vision.data.VisionPoseObservation;
 import first.robot.FieldConstants;
 import first.robot.util.AllianceFlipUtil;
+import first.robot.util.HubActivePeriod;
 import first.robot.util.NTPrefixes;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooterConstants;
 import java.util.HashSet;
@@ -27,11 +28,14 @@ import org.wpilib.math.interpolation.InverseInterpolator;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.shape.Rectangle2d;
 import org.wpilib.math.util.Units;
+import org.wpilib.networktables.DoubleArrayPublisher;
+import org.wpilib.networktables.NetworkTable;
+import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.networktables.NetworkTablesJNI;
-import org.wpilib.smartdashboard.Field2d;
+import org.wpilib.networktables.StringPublisher;
+import org.wpilib.networktables.StructArrayPublisher;
 import org.wpilib.system.Timer;
 import org.wpilib.tunable.Tunable;
-import org.wpilib.tunable.Tunables;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
@@ -39,8 +43,6 @@ import org.wpilib.units.measure.Distance;
 public class V3_Horse_CV2_TRRobotState {
   @Getter private static final Field fieldLayout;
   @Getter private static Rotation2d cardinalDirection;
-
-  private static final Field2d field;
 
   private static double robotYawVelocity;
 
@@ -76,10 +78,17 @@ public class V3_Horse_CV2_TRRobotState {
 
   @Setter @Getter private static boolean isHopperRunning;
 
+  private static final NetworkTable dashboardField =
+      NetworkTableInstance.getDefault().getTable("DashboardField");
+  private static final StringPublisher dashboardFieldType =
+      dashboardField.getStringTopic(".type").publish();
+  private static final DoubleArrayPublisher dashboardRobot =
+      dashboardField.getDoubleArrayTopic("Robot").publish();
+  private static final StructArrayPublisher<Pose2d> dashboardTrajectory =
+      dashboardField.getStructArrayTopic("trajectory", Pose2d.struct).publish();
+
   static {
     fieldLayout = FieldConstants.tagLayoutType.getLayout();
-
-    field = new Field2d();
 
     globalZone = new FieldZone(new HashSet<>(FieldConstants.AprilTags.globalTags));
     blueHubZone = new FieldZone(new HashSet<>(FieldConstants.AprilTags.blueHubTags));
@@ -187,10 +196,9 @@ public class V3_Horse_CV2_TRRobotState {
     feedAngle = new Rotation2d();
     feedVelocity = AngularVelocity.ofBaseUnits(0, RadiansPerSecond);
 
-    field.setRobotPose(getGlobalPose());
-    Tunables.publish("Field", field);
-
     headingUpdateTimestamp = NetworkTablesJNI.now();
+
+    dashboardFieldType.set("Field2d");
   }
 
   @Trace
@@ -253,22 +261,22 @@ public class V3_Horse_CV2_TRRobotState {
     // Shooter fires out the back of the robot, so face the rear toward the target
     aimAngle = aimTarget.minus(aimFrom).getAngle().orElse(Rotation2d.ZERO).plus(Rotation2d.PI);
 
-    field.setRobotPose(getGlobalPose());
-
     Logger.recordOutput(NTPrefixes.POSE_DATA + "Distance To Hub", distanceToHub);
     Logger.recordOutput(
         NTPrefixes.POSE_DATA + "Hub Translation", new Pose2d(hubTranslation, new Rotation2d()));
     Logger.recordOutput(NTPrefixes.ROBOT_STATE + "Hood/Feed Angle", feedAngle);
     Logger.recordOutput(NTPrefixes.ROBOT_STATE + "Shooter/Feed Velocity", feedVelocity);
 
-    // Logger.recordOutput(
-    //     NTPrefixes.ROBOT_STATE + "Shift Period/Active", HubActivePeriod.isHubActive());
-    // Logger.recordOutput(
-    //     NTPrefixes.ROBOT_STATE + "Shift Period/Time Remaining",
-    //     (int) HubActivePeriod.getShiftTimeRemaining());
-    // Logger.recordOutput(
-    //     NTPrefixes.ROBOT_STATE + "Shift Period/Current Shift",
-    // HubActivePeriod.getCurrentShift());
+    Logger.recordOutput(
+        NTPrefixes.ROBOT_STATE + "Shift Period/Active", HubActivePeriod.isHubActive());
+    Logger.recordOutput(
+        NTPrefixes.ROBOT_STATE + "Shift Period/Time Remaining",
+        (int) HubActivePeriod.getShiftTimeRemaining());
+    Logger.recordOutput(
+        NTPrefixes.ROBOT_STATE + "Shift Period/Current Shift", HubActivePeriod.getCurrentShift());
+
+    Pose2d robot = getGlobalPose();
+    dashboardRobot.set(new double[] {robot.getX(), robot.getY(), robot.getRotation().getDegrees()});
   }
 
   public static void addLocalizerVisionMeasurement(List<VisionPoseObservation> observations) {
@@ -354,6 +362,10 @@ public class V3_Horse_CV2_TRRobotState {
             GompeiTunables.value("FixedShots/Corner/Speed", RadiansPerSecond.of(185))));
 
     @Getter private final FixedShotParameters parameters;
+  }
+
+  public static void setAutoTrajectory(Pose2d... trajectory) {
+    dashboardTrajectory.set(trajectory);
   }
 
   @Data

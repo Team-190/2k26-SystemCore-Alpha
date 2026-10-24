@@ -7,6 +7,8 @@ package first.robot;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.utility.VirtualSubsystem;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixUtil;
+import first.robot.util.Elastic;
+import first.robot.util.HubActivePeriod;
 import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotContainer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -64,7 +66,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    Elastic.selectTab("Autonomous");
+  }
 
   @Override
   public void disabledPeriodic() {}
@@ -74,6 +78,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousInit() {
+    Elastic.selectTab("Autonomous");
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
@@ -89,6 +94,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopInit() {
+    Elastic.selectTab("Teleoperated");
+    HubActivePeriod.initialize();
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }

@@ -12,8 +12,11 @@ import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.subsystems.intake.V3_Horse_CV2_TR_Intake;
 import first.robot.v3_Horse_CV2_TR.subsystems.rollerfloor.V3_Horse_CV2_TRRollerFloor;
 import first.robot.v3_Horse_CV2_TR.subsystems.shooter.V3_Horse_CV2_TRShooter;
+import java.util.ArrayList;
+import java.util.List;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
+import org.wpilib.math.geometry.Pose2d;
 
 public class V3_Horse_CV2_TRAutoDoubleDip {
   public static Command getAutoRoutine(
@@ -70,6 +73,25 @@ public class V3_Horse_CV2_TRAutoDoubleDip {
                           "Failed to load auto path",
                           e.getMessage())))
           .ignoringDisable(true);
+    }
+  }
+
+  public static Pose2d[] getTrajectory(String path1Name, String path2Name, boolean mirror) {
+    try {
+      PathPlannerPath DOUBLE_DIP_1 =
+          mirror
+              ? PathPlannerPath.fromPathFile(path1Name).mirrorPath()
+              : PathPlannerPath.fromPathFile(path1Name);
+      PathPlannerPath DOUBLE_DIP_2 =
+          mirror
+              ? PathPlannerPath.fromPathFile(path2Name).mirrorPath()
+              : PathPlannerPath.fromPathFile(path2Name);
+
+      List<Pose2d> poses = new ArrayList<>(DOUBLE_DIP_1.getPathPoses());
+      poses.addAll(DOUBLE_DIP_2.getPathPoses());
+      return poses.toArray(new Pose2d[0]);
+    } catch (Exception e) {
+      return new Pose2d[0];
     }
   }
 }
