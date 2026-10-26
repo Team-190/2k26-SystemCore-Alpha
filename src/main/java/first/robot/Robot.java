@@ -9,7 +9,7 @@ import edu.wpi.team190.gompeilib.core.utility.VirtualSubsystem;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixUtil;
 import first.robot.util.Elastic;
 import first.robot.util.HubActivePeriod;
-import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotContainer;
+import first.robot.v3_Horse.V3_HorseRobotContainer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -22,7 +22,7 @@ import org.wpilib.command2.CommandScheduler;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
 
-  private final V3_Horse_CV2_TRRobotContainer robotContainer;
+  private final V3_HorseRobotContainer robotContainer;
 
   public Robot() {
 
@@ -53,7 +53,7 @@ public class Robot extends LoggedRobot {
     // Start AdvantageKit logger
     Logger.start();
     GompeiLib.init(Constants.getMode(), Constants.TUNING_MODE, Constants.LOOP_PERIOD_SECONDS);
-    robotContainer = new V3_Horse_CV2_TRRobotContainer();
+    robotContainer = new V3_HorseRobotContainer();
   }
 
   @Override
