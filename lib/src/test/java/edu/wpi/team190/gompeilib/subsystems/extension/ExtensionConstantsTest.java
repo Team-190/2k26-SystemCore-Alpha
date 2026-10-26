@@ -2,6 +2,8 @@ package edu.wpi.team190.gompeilib.subsystems.extension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
@@ -24,7 +26,7 @@ public class ExtensionConstantsTest {
             .build();
 
     Gains slot0 =
-        Gains.fromDoubles()
+        Gains.builder()
             .withPrefix("slot0")
             .withKP(1.0)
             .withKI(0.0)
@@ -35,7 +37,7 @@ public class ExtensionConstantsTest {
             .withKG(0.1)
             .build();
     LinearConstraints constraints =
-        LinearConstraints.fromMeasures()
+        LinearConstraints.builder()
             .withPrefix("test")
             .withMaxVelocity(Units.MetersPerSecond.of(1.0))
             .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(1.0))
@@ -45,6 +47,8 @@ public class ExtensionConstantsTest {
     ExtensionConstants constants =
         ExtensionConstants.builder()
             .withLeaderCANID(5)
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withCanBus(new CANBus("rio"))
             .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
             .withExtensionSupplyCurrentLimit(40.0)

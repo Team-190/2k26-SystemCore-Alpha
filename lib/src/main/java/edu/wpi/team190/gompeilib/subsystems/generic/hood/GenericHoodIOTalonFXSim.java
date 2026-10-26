@@ -3,6 +3,8 @@ package edu.wpi.team190.gompeilib.subsystems.generic.hood;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.logging.Trace;
@@ -31,6 +33,11 @@ public class GenericHoodIOTalonFXSim extends GenericHoodIOTalonFX {
             constants.minAngle.getRadians());
 
     hoodController = super.hoodMotor.getSimState();
+    // Sim state reports in the chassis frame, so it must match the motor's inversion
+    hoodController.Orientation =
+        constants.invertedValue == InvertedValue.Clockwise_Positive
+            ? ChassisReference.Clockwise_Positive
+            : ChassisReference.CounterClockwise_Positive;
   }
 
   @Override

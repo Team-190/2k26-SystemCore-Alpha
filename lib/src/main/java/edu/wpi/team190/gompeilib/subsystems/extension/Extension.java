@@ -33,7 +33,7 @@ public class Extension {
 
   private final SysIdRoutine characterizationRoutine;
 
-  public final ExtensionConstants constants;
+  @Getter public final ExtensionConstants constants;
 
   public Extension(
       ExtensionConstants constants,
@@ -52,16 +52,14 @@ public class Extension {
     this.positionGoal = positionGoal;
     this.voltageGoal = voltageGoal;
 
-    characterizationRoutine =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                Volts.of(1).per(Second),
-                Volts.of(3),
-                Seconds.of(3),
-                (state) -> Logger.recordOutput(aKitTopic + "/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(io::setVoltageGoal, null, subsystem));
+    characterizationRoutine = createCharacterizationRoutine(subsystem, this);
 
     this.constants = constants;
+
+    constants.slot0Gains.onChange(gains -> io.updateGains(gains, GainSlot.ZERO));
+    constants.slot1Gains.onChange(gains -> io.updateGains(gains, GainSlot.ONE));
+    constants.slot2Gains.onChange(gains -> io.updateGains(gains, GainSlot.TWO));
+    constants.constraints.onChange(io::updateConstraints);
   }
 
   public Extension(ExtensionConstants constants, Subsystem subsystem, int index, ExtensionIO io) {
@@ -110,6 +108,7 @@ public class Extension {
       case OPEN_LOOP_VOLTAGE_CONTROL -> io.setVoltageGoal((Voltage) voltageGoal.getNewSetpoint());
       case CLOSED_LOOP_POSITION_CONTROL ->
           io.setPositionGoal((Distance) positionGoal.getNewSetpoint());
+      case IDLE -> {}
     }
   }
 
@@ -186,14 +185,91 @@ public class Extension {
   }
 
   public Command runSysIdRoutine() {
+    return runSysIdRoutine(characterizationRoutine, this);
+  }
+
+  /** Characterizes several extensions owned by the same subsystem in one pass. */
+  public static Command runSysIdRoutine(Subsystem subsystem, Extension... extensions) {
+    return runSysIdRoutine(createCharacterizationRoutine(subsystem, extensions), extensions);
+  }
+
+  private static SysIdRoutine createCharacterizationRoutine(
+      Subsystem subsystem, Extension... extensions) {
+    return new SysIdRoutine(
+        new SysIdRoutine.Config(
+            Volts.of(1).per(Second),
+            Volts.of(3),
+            Seconds.of(3),
+            (state) -> {
+              for (Extension extension : extensions) {
+                Logger.recordOutput(extension.aKitTopic + "/SysIdState", state.toString());
+              }
+            }),
+        new SysIdRoutine.Mechanism(
+            (voltage) -> {
+              for (Extension extension : extensions) {
+                extension.io.setVoltageGoal(voltage);
+              }
+            },
+            null,
+            subsystem));
+  }
+
+  /**
+   * Returns true once any extension has reached the end stop in the direction of travel. The check
+   * is one-sided so a fast dynamic test can't overshoot the tolerance band and keep driving.
+   */
+  private static boolean anyAtEndStop(SysIdRoutine.Direction direction, Extension... extensions) {
+    for (Extension extension : extensions) {
+      double position = extension.getExtensionPosition().in(Meters);
+      double tolerance = extension.constants.constraints.goalTolerance().get().in(Meters);
+      if (direction == SysIdRoutine.Direction.FORWARD
+          ? position >= extension.constants.extensionParameters.MAX_LENGTH().in(Meters) - tolerance
+          : position
+              <= extension.constants.extensionParameters.MIN_LENGTH().in(Meters) + tolerance) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public Command resetExtensionZero() {
     return Commands.sequence(
         Commands.runOnce(() -> currentState = ExtensionState.IDLE),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kForward),
+        Commands.run(() -> io.setVoltageGoal(constants.zeroVoltage.times(-1)))
+            .until(
+                () ->
+                    getTorqueCurrent()
+                        .isNear(constants.zeroCurrentThreshold, constants.zeroCurrentEpsilon)),
+        Commands.runOnce(
+            () -> {
+              io.setVoltageGoal(Volts.zero());
+              io.setPosition(constants.extensionParameters.MIN_LENGTH());
+            }));
+  }
+
+  private static Command runSysIdRoutine(SysIdRoutine routine, Extension... extensions) {
+    return Commands.sequence(
+        Commands.runOnce(
+            () -> {
+              for (Extension extension : extensions) {
+                extension.currentState = ExtensionState.IDLE;
+              }
+            }),
+        routine
+            .quasistatic(SysIdRoutine.Direction.FORWARD)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD, extensions)),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
+        routine
+            .quasistatic(SysIdRoutine.Direction.REVERSE)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE, extensions)),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kForward),
+        routine
+            .dynamic(SysIdRoutine.Direction.FORWARD)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD, extensions)),
         Commands.waitSeconds(1.0),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kReverse));
+        routine
+            .dynamic(SysIdRoutine.Direction.REVERSE)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE, extensions)));
   }
 }

@@ -4,15 +4,15 @@ import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import org.wpilib.framework.RobotBase;
 
 public final class Constants {
-  public static final boolean TUNING_MODE = false;
+  public static final boolean TUNING_MODE = true;
   public static final double LOOP_PERIOD_SECONDS = 0.02;
 
   public static RobotMode getMode() {
     switch (RobotConfig.ROBOT) {
-      case V3_Horse_CV2_TR:
+      case V3_Horse:
         return RobotBase.isReal() ? RobotMode.REAL : RobotMode.REPLAY;
 
-      case V3_Horse_CV2_TR_SIM:
+      case V3_Horse_SIM:
         return RobotMode.SIM;
 
       default:

@@ -1,7 +1,6 @@
 package edu.wpi.team190.gompeilib.core.utility.sysid;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 import static org.wpilib.units.Units.*;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -9,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.*;
-import org.wpilib.units.measure.*;
 
 public class CustomSysidRoutineTest {
   @Test
@@ -32,7 +30,7 @@ public class CustomSysidRoutineTest {
     CustomSysIdRoutine.Mechanism<VoltageUnit> mechanism =
         new CustomSysIdRoutine.Mechanism<>(drivenValue::set, log -> {}, mockSubsystem, "MockMech");
 
-    CustomSysIdRoutine.Mechanism<VoltageUnit> mechanism2 =
+    CustomSysIdRoutine.Mechanism<VoltageUnit> _ =
         new CustomSysIdRoutine.Mechanism<>(drivenValue::set, mockSubsystem);
 
     CustomSysIdRoutine<VoltageUnit> routine = new CustomSysIdRoutine<>(config, mechanism);

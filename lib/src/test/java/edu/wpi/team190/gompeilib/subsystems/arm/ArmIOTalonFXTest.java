@@ -30,12 +30,13 @@ import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class ArmIOTalonFXTest {
   private ArmConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -61,7 +62,7 @@ public class ArmIOTalonFXTest {
             .withCanBus(new CANBus("rio"))
             .withArmParameters(params)
             .withSlot0Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot0")
                     .withKP(1.0)
                     .withKI(0.0)
@@ -72,7 +73,7 @@ public class ArmIOTalonFXTest {
                     .withKG(0.1)
                     .build())
             .withSlot1Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot1")
                     .withKP(2.0)
                     .withKI(0.0)
@@ -83,7 +84,7 @@ public class ArmIOTalonFXTest {
                     .withKG(0.0)
                     .build())
             .withSlot2Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot2")
                     .withKP(3.0)
                     .withKI(0.0)
@@ -94,7 +95,7 @@ public class ArmIOTalonFXTest {
                     .withKG(0.0)
                     .build())
             .withConstraints(
-                AngularPositionConstraints.fromMeasures()
+                AngularPositionConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.RadiansPerSecond.of(2.0))
                     .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(2.0))
@@ -143,7 +144,7 @@ public class ArmIOTalonFXTest {
     when(positionErrorRotations.getValueAsDouble()).thenReturn(0.01);
     when(closedLoopSlot.getValue()).thenReturn(0);
 
-    try (MockedConstruction<TalonFX> mockTalon =
+    try (MockedConstruction<TalonFX> _ =
             mockConstruction(
                 TalonFX.class,
                 (mock, context) -> {
@@ -196,12 +197,12 @@ public class ArmIOTalonFXTest {
       io.setGainSlot(GainSlot.ONE);
       io.setGainSlot(GainSlot.TWO);
 
-      io.updateGains(Gains.fromDoubles().withPrefix("slot0").build(), GainSlot.ZERO);
-      io.updateGains(Gains.fromDoubles().withPrefix("slot1").build(), GainSlot.ONE);
-      io.updateGains(Gains.fromDoubles().withPrefix("slot2").build(), GainSlot.TWO);
+      io.updateGains(Gains.builder().withPrefix("slot0").build(), GainSlot.ZERO);
+      io.updateGains(Gains.builder().withPrefix("slot1").build(), GainSlot.ONE);
+      io.updateGains(Gains.builder().withPrefix("slot2").build(), GainSlot.TWO);
 
       io.updateConstraints(
-          AngularPositionConstraints.fromMeasures()
+          AngularPositionConstraints.builder()
               .withPrefix("constraints")
               .withGoalTolerance(Units.Radians.of(0.01))
               .withMaxVelocity(Units.RadiansPerSecond.of(1.0))

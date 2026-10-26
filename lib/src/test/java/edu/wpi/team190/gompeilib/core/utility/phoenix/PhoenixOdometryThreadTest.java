@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.Angle;
 
+@SuppressWarnings({"unchecked", "rawtypes"}) // Mockito mocks of generic Phoenix types
 public class PhoenixOdometryThreadTest {
   @Test
   public void testPhoenixOdometryThread() {

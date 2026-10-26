@@ -122,7 +122,7 @@ public class ArmIOSim implements ArmIO {
   @Override
   public boolean atPositionGoal(Rotation2d positionReference) {
     return Math.abs(positionReference.getRadians() - armSim.getAngle())
-        < constants.constraints.goalTolerance().get(Radians);
+        < constants.constraints.goalTolerance().get().in(Radians);
   }
 
   @Override
