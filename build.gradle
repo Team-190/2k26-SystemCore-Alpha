@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-6"
-    id "com.gradleup.shadow" version "9.3.0"
+    id "application"
+    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-7"
     id "com.peterabeles.gversion" version "1.10"
     id "io.freefair.lombok" version "8.4"
     id "com.diffplug.spotless" version "8.10.0"
@@ -37,7 +37,7 @@ lombok {
     version = "1.18.46"
 }
 
-def ROBOT_MAIN_CLASS = "first.Main"
+def ROBOT_MAIN_CLASS = "first.robot.Main"
 
 def buildDir = new File("${project.buildDir}/classes/java/main")
 
@@ -67,6 +67,8 @@ deploy {
                 // getTargetTypeClass is a shortcut to get the class type using a string
 
                 wpilibJava(getArtifactTypeClass('WPILibJavaArtifact')) {
+                    // Set to true to use debug including JNI, which will drastically impact performance.
+                    debugJni = false
                 }
 
                 // Static files artifact
@@ -87,9 +89,8 @@ repositories {
 
 def deployArtifact = deploy.targets.systemcore.artifacts.wpilibJava
 
-// Set to true to use debug for all targets including JNI, which will drastically impact
-// performance.
-wpi.java.debugJni = false
+// Set to true to use debug for simulation including JNI
+wpi.java.runSimWithDebugJni = false
 
 // Set this to true to enable desktop support.
 def includeDesktopSupport = true
@@ -108,6 +109,10 @@ dependencies {
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
+
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+
 
     // This is required for the @Tracer annotations to work at runtime.
     // 1.9.21 can't target Java 25 bytecode ("target level should be in ... 21"); 1.9.25 is the
@@ -183,26 +188,24 @@ jacocoTestReport {
 wpi.sim.addGui().defaultEnabled = true
 wpi.sim.addDriverstation()
 
-// Setting up my Jar File. In this case, adding all libraries into the main jar ('fat/shaded jar')
-// in order to make them all available at runtime and merging service files to make JSON work.
-// Also adding the manifest so WPILib knows where to look for our Robot Class.
-shadowJar {
-    mergeServiceFiles()
+application.mainClass = ROBOT_MAIN_CLASS
+
+// Configure deploy, simulation, and test tasks
+deployArtifact.configureApplication(application)
+wpi.java.configureApplication(application)
+wpi.java.configureTestTasks(test)
+
+// Include a backup of the source in the robot jar
+jar {
     from('src') { into 'backup/src' }
     from('vendordeps') { into 'backup/vendordeps' }
     from('build.gradle') { into 'backup' }
-    manifest org.wpilib.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
-
-// Configure jar and deploy tasks
-deployArtifact.jarTask = shadowJar
-wpi.java.configureExecutableTasks(shadowJar)
-wpi.java.configureTestTasks(test)
 
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
+    options.encoding = 'UTF-8'
 }
 
 // Create version file

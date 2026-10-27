@@ -24,14 +24,14 @@ public class Localization {
     this.globalPoseEstimator =
         new SwerveDrivePoseEstimator(
             kinematics,
-            Rotation2d.kZero,
+            Rotation2d.ZERO,
             new SwerveModulePosition[] {
               new SwerveModulePosition(),
               new SwerveModulePosition(),
               new SwerveModulePosition(),
               new SwerveModulePosition()
             },
-            Pose2d.kZero);
+            Pose2d.ZERO);
 
     this.estimationRegions =
         estimationZones.stream()
@@ -72,7 +72,7 @@ public class Localization {
 
   public Pose2d getEstimatedPose(FieldZone fieldZone) {
     Set<Integer> zoneTagIDs =
-        fieldZone.aprilTags().stream().map(t -> t.ID).collect(Collectors.toSet());
+        fieldZone.aprilTags().stream().map(t -> t.getID()).collect(Collectors.toSet());
 
     return estimationRegions.stream()
         .filter(region -> zoneTagIDs.equals(region.getAprilTags().keySet()))

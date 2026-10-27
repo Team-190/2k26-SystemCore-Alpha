@@ -31,9 +31,9 @@ public class ArmConstantsTest {
             .withMomentOfInertia(0.1)
             .build();
 
-    Gains slot0 = Gains.fromDoubles().withPrefix("test").withKP(1.0).build();
+    Gains slot0 = Gains.builder().withPrefix("test").withKP(1.0).build();
     AngularPositionConstraints constraints =
-        AngularPositionConstraints.fromMeasures()
+        AngularPositionConstraints.builder()
             .withPrefix("test")
             .withMaxVelocity(Units.RadiansPerSecond.of(1.0))
             .withMaxAcceleration(Units.RadiansPerSecondPerSecond.of(1.0))

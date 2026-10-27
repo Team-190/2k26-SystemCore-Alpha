@@ -21,6 +21,8 @@ public class VisionConstantsTest {
     assertEquals(0.4, VisionConstants.AMBIGUITY_THRESHOLD);
     assertEquals(1.2, VisionConstants.XY_STDEV_DISTANCE_EXPONENT);
     assertEquals(2.0, VisionConstants.XY_STDEV_TAG_COUNT_EXPONENT);
+
+    assertNotNull(new VisionConstants());
   }
 
   @Test

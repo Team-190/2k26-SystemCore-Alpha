@@ -79,7 +79,7 @@ public class CameraMovingLimelight extends Camera {
 
     allTagPoses = new ArrayList<>();
 
-    currentCameraPose = Pose3d.kZero.transformBy(config.robotToRotationAxisTransform());
+    currentCameraPose = Pose3d.ZERO.transformBy(config.robotToRotationAxisTransform());
 
     LimelightHelpers.setCameraPose_RobotSpace(
         name,
@@ -107,7 +107,7 @@ public class CameraMovingLimelight extends Camera {
     singleTxTyObservationList.clear();
 
     currentCameraPose =
-        Pose3d.kZero
+        Pose3d.ZERO
             .transformBy(config.robotToRotationAxisTransform())
             .rotateAround(
                 currentCameraPose.getTranslation(), new Rotation3d(rotationAxisSupplier.get()))

@@ -1,0 +1,124 @@
+package first.robot.v3_Horse.subsystems.shooter;
+
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.Milliamps;
+import static org.wpilib.units.Units.RadiansPerSecond;
+import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
+import static org.wpilib.units.Units.Volts;
+
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.team190.gompeilib.core.utility.control.CurrentLimits;
+import edu.wpi.team190.gompeilib.core.utility.control.Gains;
+import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
+import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularVelocityConstraints;
+import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
+import edu.wpi.team190.gompeilib.subsystems.generic.flywheel.GenericFlywheelConstants;
+import edu.wpi.team190.gompeilib.subsystems.generic.hood.GenericHoodConstants;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.tunable.Tunable;
+import org.wpilib.units.measure.Current;
+
+public class V3_HorseShooterConstants {
+
+  public static final Tunable<Current> SHOOTER_FEEDFORWARD =
+      GompeiTunables.value("Shooter/Feedforward", Amps.of(40));
+
+  public static final GenericFlywheelConstants SHOOT_CONSTANTS =
+      GenericFlywheelConstants.builder()
+          .withLeaderCANID(41)
+          .withLeaderInversion(InvertedValue.Clockwise_Positive)
+          .withCanBus(new CANBus(CANPort.CAN_S4))
+          .withEnableFOC(true)
+          .withCurrentLimit(
+              CurrentLimits.builder()
+                  .withSupplyCurrentLimit(Amps.of(40.0))
+                  .withStatorCurrentLimit(Amps.of(60.0))
+                  .build())
+          .withPeakReverseTorqueCurrent(Amps.of(0.0))
+          .withMomentOfInertia(0.09473883059)
+          .withGearRatio(30.0 / 18.0)
+          .withMotorConfig(DCMotor.getKrakenX60Foc(4))
+          .withVoltageGains(
+              Gains.builder() // TODO: Use Real Value
+                  .withPrefix("Shooter/Flywheel/Voltage")
+                  .withKP(0.0)
+                  .withKD(0.0)
+                  .withKS(0.0)
+                  .withKV(0.0)
+                  .withKA(0.0)
+                  .build())
+          .withTorqueGains(
+              Gains.builder() // TODO: Use Real Value
+                  .withPrefix("Shooter/Flywheel/Torque")
+                  .withKP(10)
+                  .withKD(0)
+                  .withKS(3.6715)
+                  .withKV(0.011621 * 2 * Math.PI)
+                  .withKA(0.31749 * 2 * Math.PI) // measured in A/(rad/s^2), Talon uses rotations
+                  .build())
+          .withConstraints(
+              AngularVelocityConstraints.builder()
+                  .withPrefix("Shooter/Flywheel")
+                  .withMaxVelocity(RadiansPerSecond.of(1000))
+                  .withMaxAcceleration(RadiansPerSecondPerSecond.of(1000))
+                  .withGoalTolerance(RadiansPerSecond.of(1))
+                  .build())
+          .withOpposedFollowerCANID(42)
+          .withOpposedFollowerCANID(44)
+          .withAlignedFollowerCANID(43)
+          .withVelocityOffsetStep(RadiansPerSecond.of(5))
+          .withVoltageOffsetStep(Volts.of(1))
+          .build();
+
+  public static final double SHOOTER_CALM_DOWN_TIME =
+      0; // TODO: now that we don't have an inertia wheel its fine
+
+  public static final GenericHoodConstants HOOD_CONSTANTS =
+      GenericHoodConstants.builder()
+          .withMotorCanId(45)
+          .withCanBus(new CANBus(CANPort.CAN_S4))
+          .withGearRatio((56.0 / 12.0) * (150.0 / 10.0))
+          .withCurrentLimits(new CurrentLimits(40, 30))
+          .withMomentOfInertia(0.02)
+          .withInvertedValue(InvertedValue.Clockwise_Positive)
+          .withMotorConfig(DCMotor.getKrakenX44Foc(1))
+          .withLengthMeters(0.211582)
+          .withMinAngle(Rotation2d.fromDegrees(0.5))
+          .withMaxAngle(Rotation2d.fromDegrees(35.0))
+          .withZeroVoltage(Volts.of(1.0))
+          .withZeroCurrentThreshold(Amps.of(40.0))
+          .withZeroCurrentEpsilon(Milliamps.of(500))
+          .withGains(
+              Gains.builder()
+                  .withPrefix("Shooter/Hood")
+                  .withKP(1152)
+                  .withKD(20)
+                  .withKS(0.60085)
+                  .withKV(0.15846)
+                  .withKA(0.13428)
+                  .build())
+          .withConstraints(
+              AngularPositionConstraints.builder()
+                  .withPrefix("Shooter/Hood")
+                  .withMaxVelocity(RadiansPerSecond.of(37.5))
+                  .withMaxAcceleration(RadiansPerSecondPerSecond.of(70))
+                  .withGoalTolerance(Degrees.of(1))
+                  .build())
+          .withOffsetStep(Degrees.of(1))
+          .withVoltageStep(Volts.of(0.5))
+          .build();
+
+  public enum ShooterGoal {
+    SCORE,
+    FEED,
+    FIXED_SHOTS,
+    STOW,
+    ZERO,
+    STOP,
+    IDLE
+  }
+}
