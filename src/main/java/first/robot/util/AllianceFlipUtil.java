@@ -24,7 +24,7 @@ public class AllianceFlipUtil {
   }
 
   public static Rotation2d apply(Rotation2d rotation) {
-    return shouldFlip() ? rotation.rotateBy(Rotation2d.kPi) : rotation;
+    return shouldFlip() ? rotation.rotateBy(Rotation2d.PI) : rotation;
   }
 
   public static Pose2d apply(Pose2d pose) {
@@ -45,7 +45,7 @@ public class AllianceFlipUtil {
   }
 
   public static Rotation2d overrideApply(Rotation2d rotation) {
-    return rotation.rotateBy(Rotation2d.kPi);
+    return rotation.rotateBy(Rotation2d.PI);
   }
 
   public static Pose2d overrideApply(Pose2d pose) {

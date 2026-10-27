@@ -1,15 +1,21 @@
 package edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
-import org.wpilib.driverstation.Alert;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.math.util.Units;
+import org.wpilib.util.Alert;
 
 public class SwerveModule {
+  // Alert ids are unique per process, so a module rebuilt with the same index (e.g. in tests)
+  // reuses its existing alerts instead of allocating duplicates.
+  private static final Map<String, Alert> alerts = new ConcurrentHashMap<>();
+
   private final SwerveDriveConstants driveConstants;
   private final SwerveModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -25,16 +31,21 @@ public class SwerveModule {
     this.io = io;
     this.index = index;
     driveDisconnectedAlert =
-        new Alert(
-            "Disconnected drive motor on module " + Integer.toString(index) + ".",
-            Alert.Level.HIGH);
+        getAlert(
+            "SwerveModule" + index + "DriveDisconnected",
+            "Disconnected drive motor on module " + Integer.toString(index) + ".");
     turnDisconnectedAlert =
-        new Alert(
-            "Disconnected turn motor on module " + Integer.toString(index) + ".", Alert.Level.HIGH);
+        getAlert(
+            "SwerveModule" + index + "TurnDisconnected",
+            "Disconnected turn motor on module " + Integer.toString(index) + ".");
     turnEncoderDisconnectedAlert =
-        new Alert(
-            "Disconnected turn encoder on module " + Integer.toString(index) + ".",
-            Alert.Level.HIGH);
+        getAlert(
+            "SwerveModule" + index + "TurnEncoderDisconnected",
+            "Disconnected turn encoder on module " + Integer.toString(index) + ".");
+  }
+
+  private static Alert getAlert(String id, String text) {
+    return alerts.computeIfAbsent(id, key -> new Alert(key, text, Alert.Level.HIGH));
   }
 
   @Trace

@@ -56,7 +56,7 @@ public class CameraLimelightTest {
         MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
         MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
         MockedStatic<GompeiLib> mockLib = mockStatic(GompeiLib.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+        MockedStatic<Logger> _ = mockStatic(Logger.class)) {
 
       mockDS.when(RobotState::isEnabled).thenReturn(false);
       mockDS.when(RobotState::isDisabled).thenReturn(true);
@@ -369,7 +369,7 @@ public class CameraLimelightTest {
     try (MockedStatic<LimelightHelpers> mockHelpers = mockStatic(LimelightHelpers.class);
         MockedStatic<RobotState> mockDS = mockStatic(RobotState.class);
         MockedStatic<Timer> mockTimer = mockStatic(Timer.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class)) {
+        MockedStatic<Logger> _ = mockStatic(Logger.class)) {
 
       mockDS.when(RobotState::isEnabled).thenReturn(false);
       mockDS.when(RobotState::isDisabled).thenReturn(true);

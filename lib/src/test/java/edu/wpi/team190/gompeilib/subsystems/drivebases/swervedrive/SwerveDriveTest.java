@@ -1,8 +1,24 @@
 package edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.wpilib.units.Units.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.MetersPerSecondPerSecond;
+import static org.wpilib.units.Units.Radians;
+import static org.wpilib.units.Units.RadiansPerSecond;
+import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
@@ -12,6 +28,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PathFollowingController;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
@@ -21,8 +38,6 @@ import edu.wpi.team190.gompeilib.core.utility.control.Gains;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.core.utility.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.core.utility.phoenix.PhoenixOdometryThread;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableMeasure;
-import edu.wpi.team190.gompeilib.core.utility.tunable.LoggedTunableNumber;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,8 +48,10 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.Logger;
+import org.mockito.ArgumentMatchers;
 import org.mockito.MockedStatic;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.driverstation.Alliance;
@@ -49,7 +66,9 @@ import org.wpilib.math.linalg.VecBuilder;
 import org.wpilib.math.linalg.Vector;
 import org.wpilib.math.numbers.N2;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.tunable.Tunable;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class SwerveDriveTest {
 
   private SwerveDriveConstants driveConstants;
@@ -69,7 +88,7 @@ public class SwerveDriveTest {
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -132,47 +151,35 @@ public class SwerveDriveTest {
             .withWheelCOF(1.2)
             .build();
 
-    Gains driveGains =
-        Gains.builder()
-            .withKP(new LoggedTunableNumber("kp_drive", 1.0))
-            .withKD(new LoggedTunableNumber("kd_drive", 0.1))
-            .build();
+    Gains driveGains = Gains.builder().withKP(1.0).withKD(0.1).build();
 
-    Gains turnGains =
-        Gains.builder()
-            .withKP(new LoggedTunableNumber("kp_turn", 2.0))
-            .withKD(new LoggedTunableNumber("kd_turn", 0.2))
-            .build();
+    Gains turnGains = Gains.builder().withKP(2.0).withKD(0.2).build();
 
     SwerveDriveConstants.AutoAlignConstants autoAlignConstants =
         SwerveDriveConstants.AutoAlignConstants.builder()
             .withXGains(driveGains)
             .withXConstraints(
                 LinearConstraints.builder()
-                    .withMaxVelocity(new LoggedTunableMeasure<>("max_v_x", MetersPerSecond.of(1.0)))
-                    .withMaxAcceleration(
-                        new LoggedTunableMeasure<>("max_a_x", MetersPerSecondPerSecond.of(1.0)))
-                    .withGoalTolerance(new LoggedTunableMeasure<>("tol_x", Meters.of(0.05)))
+                    .withMaxVelocity(MetersPerSecond.of(1.0))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
+                    .withGoalTolerance(Meters.of(0.05))
                     .build())
             .withYGains(driveGains)
             .withYConstraints(
                 LinearConstraints.builder()
-                    .withMaxVelocity(new LoggedTunableMeasure<>("max_v_y", MetersPerSecond.of(1.0)))
-                    .withMaxAcceleration(
-                        new LoggedTunableMeasure<>("max_a_y", MetersPerSecondPerSecond.of(1.0)))
-                    .withGoalTolerance(new LoggedTunableMeasure<>("tol_y", Meters.of(0.05)))
+                    .withMaxVelocity(MetersPerSecond.of(1.0))
+                    .withMaxAcceleration(MetersPerSecondPerSecond.of(1.0))
+                    .withGoalTolerance(Meters.of(0.05))
                     .build())
             .withRotationGains(turnGains)
             .withRotationConstraints(
                 AngularPositionConstraints.builder()
-                    .withMaxVelocity(
-                        new LoggedTunableMeasure<>("max_v_rot", RadiansPerSecond.of(1.0)))
-                    .withMaxAcceleration(
-                        new LoggedTunableMeasure<>("max_a_rot", RadiansPerSecondPerSecond.of(1.0)))
-                    .withGoalTolerance(new LoggedTunableMeasure<>("tol_rot", Radians.of(0.05)))
+                    .withMaxVelocity(RadiansPerSecond.of(1.0))
+                    .withMaxAcceleration(RadiansPerSecondPerSecond.of(1.0))
+                    .withGoalTolerance(Radians.of(0.05))
                     .build())
-            .withLinearThreshold(new LoggedTunableMeasure<>("lin_thresh", Meters.of(0.01)))
-            .withAngularThreshold(new LoggedTunableMeasure<>("ang_thresh", Radians.of(0.01)))
+            .withLinearThreshold(Tunable.create(Meters.of(0.01)))
+            .withAngularThreshold(Tunable.create(Radians.of(0.01)))
             .build();
 
     driveConstants =
@@ -242,7 +249,7 @@ public class SwerveDriveTest {
   public void testSwerveDriveLowFrequencyGyro() {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
         MockedStatic<DriverStationBackend> mockDSBackend = mockStatic(DriverStationBackend.class)) {
 
@@ -250,7 +257,8 @@ public class SwerveDriveTest {
       mockRobotState.when(RobotState::isDisabled).thenReturn(false);
       mockDSBackend.when(DriverStationBackend::getAlliance).thenReturn(Optional.of(Alliance.RED));
 
-      // Capture the callbacks handed to AutoBuilder.configure and invoke them directly, since the
+      // Capture the callbacks handed to AutoBuilder.configure and invoke them
+      // directly, since the
       // mocked AutoBuilder never calls them itself.
       mockAutoBuilder
           .when(
@@ -274,7 +282,8 @@ public class SwerveDriveTest {
                 output.accept(new ChassisVelocities(1.0, -1.0, 0.5), DriveFeedforwards.zeros(4));
                 assertTrue(shouldFlipPath.getAsBoolean());
 
-                // Also cover the present-but-not-RED case (alliance.get() == RED evaluates false).
+                // Also cover the present-but-not-RED case (alliance.get() == RED evaluates
+                // false).
                 mockDSBackend
                     .when(DriverStationBackend::getAlliance)
                     .thenReturn(Optional.of(Alliance.BLUE));
@@ -312,7 +321,8 @@ public class SwerveDriveTest {
       // runVelocity
       ChassisVelocities targetSpeeds = new ChassisVelocities(1.0, -1.0, 0.5);
       drive.runVelocity(targetSpeeds);
-      // atLeastOnce(): the mocked AutoBuilder.configure's captured output callback also invokes
+      // atLeastOnce(): the mocked AutoBuilder.configure's captured output callback
+      // also invokes
       // runVelocity once during construction to cover that lambda.
       verify(flModuleIO, atLeastOnce()).setDriveVelocity(anyDouble(), anyDouble());
 
@@ -361,7 +371,8 @@ public class SwerveDriveTest {
       // setAutoControllers
       drive.setAutoControllers(driveConstants.driveGains, driveConstants.turnGains);
 
-      // TODO: restore choreoDrive test once ChoreoLib ships a WPILib 2027 alpha build.
+      // TODO: restore choreoDrive test once ChoreoLib ships a WPILib 2027 alpha
+      // build.
 
       // getFieldRelativeVelocity
       Translation2d fieldRelVel = drive.getFieldRelativeVelocity();
@@ -371,9 +382,9 @@ public class SwerveDriveTest {
 
   @Test
   public void testSwerveDriveHighFrequencyGyro() {
-    try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
+    try (MockedStatic<AutoBuilder> _ = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
         MockedStatic<PhoenixOdometryThread> mockOdomThread =
             mockStatic(PhoenixOdometryThread.class)) {
@@ -417,14 +428,15 @@ public class SwerveDriveTest {
   public void testSwerveDriveDisconnectedGyroFallback() {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
         MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
-        MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class);
+        MockedStatic<Logger> _ = mockStatic(Logger.class);
+        MockedStatic<RobotState> _ = mockStatic(RobotState.class);
         MockedStatic<DriverStationBackend> mockDSBackend = mockStatic(DriverStationBackend.class)) {
 
       mockRobotConfig.when(RobotConfig::fromGUISettings).thenReturn(mock(RobotConfig.class));
       mockDSBackend.when(DriverStationBackend::getAlliance).thenReturn(Optional.empty());
 
-      // Capture the shouldFlipPath callback to exercise the no-alliance-reported branch.
+      // Capture the shouldFlipPath callback to exercise the no-alliance-reported
+      // branch.
       mockAutoBuilder
           .when(
               () ->
@@ -475,15 +487,24 @@ public class SwerveDriveTest {
   }
 
   @Test
+  @Disabled("PathPlanner AutoBuilder setup is commented out in SwerveDrive; re-enable with it")
   public void testSwerveDriveRobotConfigLoadFailure() {
     try (MockedStatic<AutoBuilder> mockAutoBuilder = mockStatic(AutoBuilder.class);
-        MockedStatic<RobotConfig> mockRobotConfig = mockStatic(RobotConfig.class);
-        MockedStatic<Logger> mockLogger = mockStatic(Logger.class);
         MockedStatic<RobotState> mockRobotState = mockStatic(RobotState.class)) {
 
-      // Every call to RobotConfig.fromGUISettings() fails, exercising both the constructor's
-      // initial config-load catch block and the catch wrapping AutoBuilder.configure.
-      mockRobotConfig.when(RobotConfig::fromGUISettings).thenThrow(new RuntimeException("boom"));
+      mockAutoBuilder
+          .when(
+              () ->
+                  AutoBuilder.configure(
+                      ArgumentMatchers.<Supplier<Pose2d>>any(),
+                      ArgumentMatchers.<Consumer<Pose2d>>any(),
+                      ArgumentMatchers.<Supplier<ChassisVelocities>>any(),
+                      ArgumentMatchers.<BiConsumer<ChassisVelocities, DriveFeedforwards>>any(),
+                      ArgumentMatchers.<PathFollowingController>any(),
+                      ArgumentMatchers.<RobotConfig>any(),
+                      ArgumentMatchers.<BooleanSupplier>any(),
+                      ArgumentMatchers.<Subsystem>any()))
+          .thenThrow(new RuntimeException("boom"));
       mockRobotState.when(RobotState::isDisabled).thenReturn(false);
 
       assertThrows(

@@ -24,12 +24,13 @@ import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.Units;
 import org.wpilib.units.measure.*;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class GenericRollerIOTalonFXSimTest {
   private GenericRollerConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -81,7 +82,7 @@ public class GenericRollerIOTalonFXSimTest {
     TalonFXSimState simState = mock(TalonFXSimState.class);
     when(simState.getMotorVoltage()).thenReturn(6.0);
 
-    try (MockedConstruction<TalonFX> mockTalon =
+    try (MockedConstruction<TalonFX> _ =
             mockConstruction(
                 TalonFX.class,
                 (mock, context) -> {

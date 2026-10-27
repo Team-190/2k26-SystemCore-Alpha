@@ -44,8 +44,8 @@ public class GenericHood {
    */
   public GenericHood(
       GenericHoodIO io,
-      GenericHoodConstants constants,
       Subsystem subsystem,
+      GenericHoodConstants constants,
       String name,
       Setpoint<AngleUnit> positionGoal,
       Setpoint<VoltageUnit> voltageGoal) {
@@ -69,29 +69,32 @@ public class GenericHood {
     this.voltageGoal = voltageGoal;
 
     this.constants = constants;
+
+    constants.gains.onChange(io::setGains);
+    constants.constraints.onChange(io::setProfile);
   }
 
   public GenericHood(
       GenericHoodIO io,
-      GenericHoodConstants constants,
       Subsystem subsystem,
+      GenericHoodConstants constants,
       String name,
       Setpoint<AngleUnit> positionGoal) {
     this(
         io,
-        constants,
         subsystem,
+        constants,
         name,
         positionGoal,
         new Setpoint<>(Volts.of(0), constants.voltageStep, Volts.of(-12), Volts.of(12)));
   }
 
   public GenericHood(
-      GenericHoodIO io, GenericHoodConstants constants, Subsystem subsystem, String name) {
+      GenericHoodIO io, Subsystem subsystem, GenericHoodConstants constants, String name) {
     this(
         io,
-        constants,
         subsystem,
+        constants,
         name,
         new Setpoint<>(
             Radians.zero(),
@@ -217,7 +220,7 @@ public class GenericHood {
                 () ->
                     inputs.torqueCurrent.isNear(
                         constants.zeroCurrentThreshold, constants.zeroCurrentEpsilon)),
-        Commands.runOnce(() -> io.setPosition(Rotation2d.kZero)));
+        Commands.runOnce(() -> io.setPosition(Rotation2d.ZERO)));
   }
 
   /**
@@ -229,6 +232,17 @@ public class GenericHood {
     io.setProfile(constraints);
   }
 
+  private boolean anyAtEndStop(SysIdRoutine.Direction direction) {
+    double position = getAngle().getMeasure().in(Radians);
+    double tolerance = constants.constraints.goalTolerance().get().in(Radians);
+    if (direction == SysIdRoutine.Direction.FORWARD
+        ? position >= constants.maxAngle.getMeasure().in(Radians) - tolerance
+        : position <= constants.minAngle.getMeasure().in(Radians) + tolerance) {
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Runs the system ID
    *
@@ -236,14 +250,19 @@ public class GenericHood {
    */
   public Command runSysIdRoutine() {
     return Commands.sequence(
-        Commands.runOnce(() -> currentState = GenericHoodState.IDLE),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(3),
-        characterizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
-        Commands.waitSeconds(3),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kForward),
-        Commands.waitSeconds(3),
-        characterizationRoutine.dynamic(SysIdRoutine.Direction.kReverse));
+        Commands.runOnce(() -> currentState = GenericHoodState.OPEN_LOOP_VOLTAGE_CONTROL),
+        characterizationRoutine
+            .quasistatic(SysIdRoutine.Direction.FORWARD)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD)),
+        characterizationRoutine
+            .quasistatic(SysIdRoutine.Direction.REVERSE)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE)),
+        characterizationRoutine
+            .dynamic(SysIdRoutine.Direction.FORWARD)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.FORWARD)),
+        characterizationRoutine
+            .dynamic(SysIdRoutine.Direction.REVERSE)
+            .until(() -> anyAtEndStop(SysIdRoutine.Direction.REVERSE)));
   }
 
   public Rotation2d getAngle() {

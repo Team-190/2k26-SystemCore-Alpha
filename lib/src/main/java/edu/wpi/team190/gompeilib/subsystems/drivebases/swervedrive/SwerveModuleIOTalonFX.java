@@ -196,7 +196,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     cancoder.optimizeBusUtilization();
 
     PhoenixUtil.registerSignals(
-        true,
+        driveConstants.driveConfig.canBus(),
         drivePositionRotations,
         turnPositionRotations,
         turnAbsolutePositionRotations,

@@ -6,11 +6,13 @@ import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.team190.gompeilib.core.GompeiLib;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
@@ -29,12 +31,13 @@ import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Temperature;
 import org.wpilib.units.measure.Voltage;
 
+@SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class ExtensionIOTalonFXSimTest {
   private ExtensionConstants constants;
 
   @BeforeEach
   public void setUp() {
-    org.wpilib.hardware.hal.HAL.initialize(500, 0);
+    org.wpilib.hardware.hal.HAL.initialize();
     try {
       GompeiLib.deinit();
     } catch (Exception e) {
@@ -54,13 +57,15 @@ public class ExtensionIOTalonFXSimTest {
     constants =
         ExtensionConstants.builder()
             .withLeaderCANID(5)
+            .withLeaderInvertedValue(InvertedValue.CounterClockwise_Positive)
+            .withCanBus(new CANBus("rio"))
             .withExtensionGearRatio(10.0)
             .withDrumRadius(0.02)
             .withExtensionSupplyCurrentLimit(40.0)
             .withExtensionStatorCurrentLimit(40.0)
             .withExtensionParameters(params)
             .withSlot0Gains(
-                Gains.fromDoubles()
+                Gains.builder()
                     .withPrefix("slot0")
                     .withKP(1.0)
                     .withKI(0.0)
@@ -71,11 +76,11 @@ public class ExtensionIOTalonFXSimTest {
                     .withKG(0.1)
                     .build())
             .withSlot1Gains(
-                Gains.fromDoubles().withPrefix("slot1").withKP(2.0).withKI(0.0).withKD(0.2).build())
+                Gains.builder().withPrefix("slot1").withKP(2.0).withKI(0.0).withKD(0.2).build())
             .withSlot2Gains(
-                Gains.fromDoubles().withPrefix("slot2").withKP(3.0).withKI(0.0).withKD(0.3).build())
+                Gains.builder().withPrefix("slot2").withKP(3.0).withKI(0.0).withKD(0.3).build())
             .withConstraints(
-                LinearConstraints.fromMeasures()
+                LinearConstraints.builder()
                     .withPrefix("constraints")
                     .withMaxVelocity(Units.MetersPerSecond.of(2.0))
                     .withMaxAcceleration(Units.MetersPerSecondPerSecond.of(2.0))
@@ -104,6 +109,7 @@ public class ExtensionIOTalonFXSimTest {
     StatusSignal<Temperature> temperatureCelsius = mock(StatusSignal.class);
     StatusSignal<Double> positionSetpointRotations = mock(StatusSignal.class);
     StatusSignal<Double> positionErrorRotations = mock(StatusSignal.class);
+    StatusSignal<Double> velocitySetpointRotations = mock(StatusSignal.class);
     StatusSignal<Integer> closedLoopSlot = mock(StatusSignal.class);
 
     when(positionRotations.getValue()).thenReturn(Units.Rotations.of(10.0));
@@ -119,12 +125,13 @@ public class ExtensionIOTalonFXSimTest {
     when(temperatureCelsius.getValueAsDouble()).thenReturn(45.0);
     when(positionSetpointRotations.getValueAsDouble()).thenReturn(0.5);
     when(positionErrorRotations.getValueAsDouble()).thenReturn(0.01);
+    when(velocitySetpointRotations.getValueAsDouble()).thenReturn(0.75);
     when(closedLoopSlot.getValue()).thenReturn(0);
 
     TalonFXSimState simState = mock(TalonFXSimState.class);
     when(simState.getMotorVoltage()).thenReturn(6.0);
 
-    try (MockedConstruction<TalonFX> mockTalon =
+    try (MockedConstruction<TalonFX> _ =
             mockConstruction(
                 TalonFX.class,
                 (mock, context) -> {
@@ -138,6 +145,7 @@ public class ExtensionIOTalonFXSimTest {
                   when(mock.getDeviceTemp()).thenReturn(temperatureCelsius);
                   when(mock.getClosedLoopReference()).thenReturn(positionSetpointRotations);
                   when(mock.getClosedLoopError()).thenReturn(positionErrorRotations);
+                  when(mock.getClosedLoopReferenceSlope()).thenReturn(velocitySetpointRotations);
                   when(mock.getClosedLoopSlot()).thenReturn(closedLoopSlot);
                   when(mock.getSimState()).thenReturn(simState);
                 });
@@ -157,6 +165,7 @@ public class ExtensionIOTalonFXSimTest {
 
       assertEquals(10.0, inputs.position.in(Units.Meters), 0.01);
       assertEquals(1.5, inputs.velocity.in(Units.MetersPerSecond), 0.01);
+      assertEquals(0.75, inputs.linearVelocitySetpoint.in(Units.MetersPerSecond), 0.01);
 
       verify(simState).setSupplyVoltage(anyDouble());
       verify(simState).setRawRotorPosition(any(Angle.class));

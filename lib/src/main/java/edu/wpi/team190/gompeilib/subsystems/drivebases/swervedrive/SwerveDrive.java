@@ -2,6 +2,7 @@
 package edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -64,8 +65,6 @@ public class SwerveDrive extends SubsystemBase {
 
   private final Optional<Queue<Double>> yawTimestampQueue;
   private final Optional<Queue<Double>> yawPositionQueue;
-
-  private RobotConfig config;
 
   public SwerveDrive(
       SwerveDriveConstants driveConstants,
@@ -139,20 +138,43 @@ public class SwerveDrive extends SubsystemBase {
     autoHeadingController.enableContinuousInput(-Math.PI, Math.PI);
     autoHeadingController.setTolerance(Units.degreesToRadians(1.0));
 
+    Gains driveGains = driveConstants.driveGains;
+    Gains turnGains = driveConstants.turnGains;
+    Runnable applyModuleGains =
+        () -> {
+          setPIDGains(driveGains.getKP(), driveGains.getKD(), turnGains.getKP(), turnGains.getKD());
+          setFFGains(driveGains.getKS(), driveGains.getKV());
+        };
+    driveGains.onChange(gains -> applyModuleGains.run());
+    turnGains.onChange(gains -> applyModuleGains.run());
+    driveConstants.autoTranslationGains.onChange(
+        gains -> setAutoControllers(gains, driveConstants.autoRotationGains));
+    driveConstants.autoRotationGains.onChange(
+        gains -> setAutoControllers(driveConstants.autoTranslationGains, gains));
+
     measuredChassisVelocities = new ChassisVelocities();
 
     try {
-      config = RobotConfig.fromGUISettings();
-    } catch (Exception e) {
-      System.err.println("Error occurred while loading robot config: " + e.getMessage());
-    }
+      RobotConfig config =
+          new RobotConfig(
+              driveConstants.driveConfig.robotMassKilograms(),
+              driveConstants.driveConfig.robotMOI(),
+              new ModuleConfig(
+                  driveConstants.driveConfig.wheelRadiusMeters(),
+                  driveConstants.driveConfig.maxLinearVelocityMetersPerSecond(),
+                  driveConstants.driveConfig.wheelCOF(),
+                  driveConstants.driveConfig.driveModel(),
+                  driveConstants.driveConfig.moduleCurrentLimit(),
+                  1),
+              driveConstants.driveConfig.getModuleTranslations());
 
-    try {
       AutoBuilder.configure(
           this.robotPoseSupplier,
           resetPoseConsumer, // resetPose
           () -> getChassisVelocities(), // get robotRelativeSpeeds
           (speeds, feedforwards) -> {
+            // Retained from Choreo; switch to runVelocityTorque(speeds, forces) if needed.
+            @SuppressWarnings("unused")
             List<Vector<N2>> forces =
                 IntStream.range(0, 4)
                     .mapToObj(
@@ -173,7 +195,7 @@ public class SwerveDrive extends SubsystemBase {
                   driveConstants.autoRotationGains.kP().getAsDouble(),
                   driveConstants.autoRotationGains.kI().getAsDouble(),
                   driveConstants.autoRotationGains.kD().getAsDouble())),
-          com.pathplanner.lib.config.RobotConfig.fromGUISettings(),
+          config,
           () -> {
             var alliance = DriverStationBackend.getAlliance();
             if (alliance.isPresent()) {
@@ -183,7 +205,7 @@ public class SwerveDrive extends SubsystemBase {
           },
           this);
     } catch (Exception e) {
-      throw new RuntimeException("Failed to load PathPlanner robot config", e);
+      throw new RuntimeException("Failed to configure PathPlanner AutoBuilder", e);
     }
   }
 
@@ -347,7 +369,8 @@ public class SwerveDrive extends SubsystemBase {
   public void stopWithX() {
     Rotation2d[] headings = new Rotation2d[4];
     for (int i = 0; i < 4; i++) {
-      headings[i] = driveConstants.driveConfig.getModuleTranslations()[i].getAngle();
+      headings[i] =
+          driveConstants.driveConfig.getModuleTranslations()[i].getAngle().orElse(Rotation2d.ZERO);
     }
     kinematics.resetHeadings(headings);
     stop();
@@ -439,8 +462,10 @@ public class SwerveDrive extends SubsystemBase {
     }
   }
 
-  // TODO: restore choreoDrive(SwerveSample) once ChoreoLib ships a WPILib 2027 alpha build;
-  // it has no compatible release yet, so the choreo dependency and this method are removed.
+  // TODO: restore choreoDrive(SwerveSample) once ChoreoLib ships a WPILib 2027
+  // alpha build;
+  // it has no compatible release yet, so the choreo dependency and this method
+  // are removed.
 
   public void setAutoControllers(Gains translationGains, Gains rotationGains) {
     autoXController.setPID(translationGains.kP().get(), 0.0, translationGains.kD().get());

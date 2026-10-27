@@ -58,6 +58,7 @@ public class LimelightHelpersTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // Exercises deprecated getBotpose* on purpose
   public void testGettersAndSettersNT() {
     // Flush
     LimelightHelpers.Flush();
