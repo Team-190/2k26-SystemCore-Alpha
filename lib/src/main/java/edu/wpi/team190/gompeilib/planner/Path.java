@@ -1,11 +1,23 @@
 package edu.wpi.team190.gompeilib.planner;
 
+import edu.wpi.team190.gompeilib.core.GompeiLib;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Path {
 
-  public static final double RATE = 200; // states per second
+  private static final double DEFAULT_SAMPLE_RATE_HZ = 200.0;
+
+  public static double getSampleRateHz() {
+    try {
+      double loopPeriod = GompeiLib.getLoopPeriod();
+      if (loopPeriod > 0.0) {
+        return 1.0 / loopPeriod;
+      }
+    } catch (IllegalStateException ignored) {
+    }
+    return DEFAULT_SAMPLE_RATE_HZ;
+  }
   private final Pose2d startPose;
   private final Pose2d endPose;
   private final double maxVel;

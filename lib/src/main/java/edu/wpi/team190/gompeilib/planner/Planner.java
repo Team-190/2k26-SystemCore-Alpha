@@ -77,7 +77,8 @@ public class Planner {
 
                       // each state is 1 / RATE seconds after the last, so find where we are
                       try {
-                        double exactIndex = planTime * Path.RATE;
+                        double sampleRateHz = Path.getSampleRateHz();
+                        double exactIndex = planTime * sampleRateHz;
                         int currentIndex = (int) exactIndex;
                         State before = states.get(currentIndex);
                         State target;
@@ -102,10 +103,10 @@ public class Planner {
                             "GompeiPlanner/Target/DistanceToPathEnd", distanceToPathEnd);
                         Logger.recordOutput(
                             "GompeiPlanner/Target/StateIndex",
-                            Math.min(planTime * Path.RATE, lastIndex));
+                            Math.min(planTime * sampleRateHz, lastIndex));
                         Logger.recordOutput(
                             "GompeiPlanner/Target/AtFinalSample",
-                            planTime * Path.RATE >= lastIndex);
+                            planTime * sampleRateHz >= lastIndex);
                         Logger.recordOutput(
                             "GompeiPlanner/Target/SampledPathIndex", plan.pathIndexAt(planTime));
                         ChassisVelocities output =
@@ -134,8 +135,9 @@ public class Planner {
                 .until(
                     () -> {
                       // only done once the plan time is over AAND we actually got to the end
+                      double sampleRateHz = Path.getSampleRateHz();
                       boolean planTimeOver =
-                          (timer.get() + skippedTime[0]) * Path.RATE >= lastIndex;
+                          (timer.get() + skippedTime[0]) * sampleRateHz >= lastIndex;
                       boolean atEnd = true; // TODO: check if actually at the end of path
                       Logger.recordOutput("GompeiPlanner/Completion/PlanTimeOver", planTimeOver);
                       Logger.recordOutput("GompeiPlanner/Completion/AtReference", atEnd);
@@ -195,7 +197,7 @@ public class Planner {
     Logger.recordOutput("GompeiPlanner/Plan/Waypoints", waypoints);
     Logger.recordOutput("GompeiPlanner/Plan/StateCount", states.size());
     Logger.recordOutput("GompeiPlanner/Plan/PathCount", pathCount);
-    Logger.recordOutput("GompeiPlanner/Plan/SampleRateHz", Path.RATE);
+    Logger.recordOutput("GompeiPlanner/Plan/SampleRateHz", Path.getSampleRateHz());
     Logger.recordOutput("GompeiPlanner/Plan/PathEndTimes", endTimes);
     Logger.recordOutput("GompeiPlanner/Plan/RequestedEndVelocities", endVelocities);
     Logger.recordOutput(
@@ -218,7 +220,7 @@ public class Planner {
     Logger.recordOutput("GompeiPlanner/Plan/MaxVels", maxVels);
     Logger.recordOutput("GompeiPlanner/Plan/MaxAccels", maxAccels);
     Logger.recordOutput("GompeiPlanner/Plan/EndRadii", endRadii);
-    Logger.recordOutput("GompeiPlanner/Plan/Duration", (states.size() - 1) / Path.RATE);
+    Logger.recordOutput("GompeiPlanner/Plan/Duration", (states.size() - 1) / Path.getSampleRateHz());
   }
 
   private static void logTarget(
@@ -252,7 +254,7 @@ public class Planner {
   }
 
   private static double speedAt(ArrayList<State> states, double time) {
-    int index = Math.min((int) Math.round(time * Path.RATE), states.size() - 1);
+    int index = Math.min((int) Math.round(time * Path.getSampleRateHz()), states.size() - 1);
     ChassisVelocities velocity = states.get(index).velocity();
     return Math.hypot(velocity.vx, velocity.vy);
   }

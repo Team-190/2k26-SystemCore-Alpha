@@ -41,10 +41,11 @@ public class Plan {
     profile.calculate(0, start, end);
     double totalTime = profile.duration();
 
-    int numSteps = Math.max(1, (int) Math.ceil(totalTime * Path.RATE));
+    double sampleRateHz = Path.getSampleRateHz();
+    int numSteps = Math.max(1, (int) Math.ceil(totalTime * sampleRateHz));
     for (int step = 0; step <= numSteps; step++) {
       TrapezoidProfile.State now =
-          profile.calculate(Math.min(step / Path.RATE, totalTime), start, end);
+          profile.calculate(Math.min(step / sampleRateHz, totalTime), start, end);
       states.add(stateAt(paths, now.position, now.velocity));
     }
 
@@ -55,7 +56,7 @@ public class Plan {
       while (step < states.size() - 1 && states.get(step).distance() < pathEnd) {
         step++;
       }
-      pathEndTimes[i] = step / Path.RATE;
+      pathEndTimes[i] = step / sampleRateHz;
     }
   }
 
