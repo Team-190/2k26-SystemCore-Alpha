@@ -18,6 +18,7 @@ public class Path {
     }
     return DEFAULT_SAMPLE_RATE_HZ;
   }
+
   private final Pose2d startPose;
   private final Pose2d endPose;
   private final double maxVel;

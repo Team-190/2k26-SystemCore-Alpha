@@ -220,7 +220,8 @@ public class Planner {
     Logger.recordOutput("GompeiPlanner/Plan/MaxVels", maxVels);
     Logger.recordOutput("GompeiPlanner/Plan/MaxAccels", maxAccels);
     Logger.recordOutput("GompeiPlanner/Plan/EndRadii", endRadii);
-    Logger.recordOutput("GompeiPlanner/Plan/Duration", (states.size() - 1) / Path.getSampleRateHz());
+    Logger.recordOutput(
+        "GompeiPlanner/Plan/Duration", (states.size() - 1) / Path.getSampleRateHz());
   }
 
   private static void logTarget(
