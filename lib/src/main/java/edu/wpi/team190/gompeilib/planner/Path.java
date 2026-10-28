@@ -5,7 +5,7 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Path {
 
-  public static final double RATE = 10; // states per second
+  public static final double RATE = 200; // states per second
   private final Pose2d startPose;
   private final Pose2d endPose;
   private final double maxVel;
