@@ -7,7 +7,9 @@ package first.robot;
 import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixUtil;
 import edu.wpi.team190.gompeilib.robot.subsystems.VirtualSubsystem;
-import first.robot.v3_Horse_CV2_TR.V3_Horse_CV2_TRRobotContainer;
+import first.robot.util.Elastic;
+import first.robot.util.HubActivePeriod;
+import first.robot.v3_Horse.V3_HorseRobotContainer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -20,7 +22,7 @@ import org.wpilib.command2.CommandScheduler;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
 
-  private final V3_Horse_CV2_TRRobotContainer robotContainer;
+  private final V3_HorseRobotContainer robotContainer;
 
   public Robot() {
     super(Constants.LOOP_PERIOD_SECONDS);
@@ -52,7 +54,7 @@ public class Robot extends LoggedRobot {
     // Start AdvantageKit logger
     Logger.start();
     GompeiLib.init(Constants.getMode(), Constants.TUNING_MODE, Constants.LOOP_PERIOD_SECONDS);
-    robotContainer = new V3_Horse_CV2_TRRobotContainer();
+    robotContainer = new V3_HorseRobotContainer();
   }
 
   @Override
@@ -65,7 +67,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    Elastic.selectTab("Autonomous");
+  }
 
   @Override
   public void disabledPeriodic() {}
@@ -75,6 +79,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousInit() {
+    Elastic.selectTab("Autonomous");
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
@@ -90,6 +95,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopInit() {
+    Elastic.selectTab("Teleoperated");
+    HubActivePeriod.initialize();
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }

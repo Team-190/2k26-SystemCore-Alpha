@@ -1,5 +1,6 @@
 package first.robot.util;
 
+import java.util.Optional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.wpilib.driverstation.Alliance;
@@ -37,10 +38,8 @@ public class HubActivePeriod {
       }
     }
 
-    public boolean isActive(Alliance alliance) {
-      return alliance == getFirstActiveAlliance()
-          ? schedule.activeSchedule
-          : schedule.inactiveSchedule;
+    public boolean isActive(Alliance alliance, Alliance firstActiveAlliance) {
+      return alliance == firstActiveAlliance ? schedule.activeSchedule : schedule.inactiveSchedule;
     }
 
     public double getDuration() {
@@ -51,23 +50,22 @@ public class HubActivePeriod {
     }
   }
 
+  private static final double TELEOP_LENGTH = 140.0;
   private static final Timer shiftTimer = new Timer();
   private static final Shift[] shifts = Shift.values();
 
-  public static Alliance getFirstActiveAlliance() {
+  public static Optional<Alliance> getFirstActiveAlliance() {
     // var alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
-    String message = MatchState.getGameData().get();
-    if (!message.isEmpty()) {
-      char character = message.charAt(0);
-      if (character == 'R') {
-        return Alliance.RED;
-      } else if (character == 'B') {
-        return Alliance.BLUE;
-      }
+    String message = MatchState.getGameData().orElse("");
+    if (message.isEmpty()) {
+      return Optional.empty();
     }
-
-    return Alliance.BLUE; // Per Marcus's request
+    return switch (message.charAt(0)) {
+      case 'R' -> Optional.of(Alliance.BLUE);
+      case 'B' -> Optional.of(Alliance.RED);
+      default -> Optional.empty();
+    };
   }
 
   /** Call at start of teleop */
@@ -75,13 +73,18 @@ public class HubActivePeriod {
     shiftTimer.restart();
   }
 
+  private static double getTeleopElapsed() {
+    double matchTime = MatchState.getMatchTime();
+    return matchTime >= 0 ? TELEOP_LENGTH - matchTime : shiftTimer.get();
+  }
+
   public static Shift getCurrentShift() {
     // Auto always returns AUTO
-    if (RobotState.isAutonomousEnabled()) {
+    if (RobotState.isAutonomous()) {
       return Shift.AUTO;
     }
 
-    double time = shiftTimer.get();
+    double time = getTeleopElapsed();
 
     Shift current = Shift.AUTO;
 
@@ -97,13 +100,21 @@ public class HubActivePeriod {
   }
 
   public static boolean isHubActive() {
-    Alliance alliance = MatchState.getAlliance().orElse(Alliance.BLUE);
-    return getCurrentShift().isActive(alliance);
+    Shift shift = getCurrentShift();
+    Optional<Alliance> firstActive = getFirstActiveAlliance();
+    Optional<Alliance> alliance = MatchState.getAlliance();
+
+    if (shift == Shift.AUTO || firstActive.isEmpty() || alliance.isEmpty()) {
+      return true;
+    }
+
+    return shift.isActive(alliance.get(), firstActive.get());
   }
 
   public static double getShiftTimeRemaining() {
-    return getCurrentShift().ordinal() != Shift.values().length - 1
-        ? (getCurrentShift().getDuration() - (shiftTimer.get() - getCurrentShift().startTime))
+    Shift shift = getCurrentShift();
+    return shift.ordinal() != shifts.length - 1
+        ? shift.getDuration() - (getTeleopElapsed() - shift.getStartTime())
         : 0.0;
   }
 }
