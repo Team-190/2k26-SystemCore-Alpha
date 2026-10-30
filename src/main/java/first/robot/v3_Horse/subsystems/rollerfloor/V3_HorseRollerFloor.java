@@ -12,15 +12,14 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.driverstation.MatchState;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Voltage;
 
 public class V3_HorseRollerFloor extends SubsystemBase {
   private final GenericRoller rollerFloor;
   @Getter private RollerFloorState rollerFloorGoal;
-  private final Setpoint<VoltageUnit> rollerFloorSetpoint, rollerFloorOverrideSetpoint;
-  // Separate 0 V setpoint so stopping never overwrites the run or override voltage
-  private final Setpoint<VoltageUnit> rollerFloorStopSetpoint;
+  private final Setpoint<VoltageUnit> rollerFloorSetpoint, rollerFloorOverrideSetpoint, rollerFloorReverseSetpoint;
 
   public V3_HorseRollerFloor(GenericRollerIO rollerFloorIO) {
     rollerFloorGoal = RollerFloorState.STOP;
@@ -36,12 +35,13 @@ public class V3_HorseRollerFloor extends SubsystemBase {
             V3_HorseRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(-12),
             Volts.of(12));
-    rollerFloorStopSetpoint =
+    rollerFloorReverseSetpoint =
         new Setpoint<>(
             Volts.of(-1.5),
             V3_HorseRollerFloorConstants.ROLLER_FLOOR_CONSTANTS.voltageOffsetStep,
             Volts.of(0),
             Volts.of(0));
+    
     rollerFloor =
         new GenericRoller(
             rollerFloorIO,
@@ -64,13 +64,16 @@ public class V3_HorseRollerFloor extends SubsystemBase {
         break;
       case STOP:
         V3_HorseRobotState.setHopperRunning(false);
-
         stopRollerFloor();
         break;
+      case SPIN_UP:
+        V3_HorseRobotState.setHopperRunning(false);
+        runRollerFloor(rollerFloorReverseSetpoint);
       default:
         V3_HorseRobotState.setHopperRunning(false);
         runRollerFloor(rollerFloorSetpoint);
         break;
+
     }
     rollerFloor.periodic();
     Logger.recordOutput(
@@ -79,6 +82,12 @@ public class V3_HorseRollerFloor extends SubsystemBase {
     Logger.recordOutput(
         "Elastic/Hopper/RollerFloor/Voltage Offset",
         String.format("%.1f", rollerFloor.getVoltageGoal().getOffset().in(Volts)));
+
+    if(MatchState.getMatchTime() >= 134) {
+        setState(RollerFloorState.STOP);
+      }
+
+      //TODO: this should probably be changed
   }
 
   public Command setState(RollerFloorState state) {
@@ -98,7 +107,7 @@ public class V3_HorseRollerFloor extends SubsystemBase {
   }
 
   public void stopRollerFloor() {
-    rollerFloor.setVoltageGoal(rollerFloorStopSetpoint);
+    rollerFloor.setVoltageGoal(Volts.of(0));
   }
 
   public Command incrementRollerFloorVelocity() {

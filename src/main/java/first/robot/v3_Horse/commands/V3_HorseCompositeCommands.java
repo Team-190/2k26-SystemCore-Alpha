@@ -89,6 +89,7 @@ public class V3_HorseCompositeCommands {
         shooter.setGoal(
             () -> (V3_HorseRobotState.isInAllianceZone() ? ShooterGoal.SCORE : ShooterGoal.FEED)),
         Commands.sequence(
+            rollerFloor.setState(RollerFloorState.SPIN_UP),
             Commands.waitUntil(() -> shooter.atGoal() && isAimedForShot()),
             rollerFloor.setState(RollerFloorState.RUN),
             intake.squishIntake()));
@@ -117,8 +118,8 @@ public class V3_HorseCompositeCommands {
     return Commands.parallel(
         Commands.sequence(
             shooter.runFixedShot(fixedShot),
+            rollerFloor.setState(RollerFloorState.SPIN_UP),
             Commands.waitUntil(() -> shooter.atGoal()),
-            Commands.waitSeconds(1),
             rollerFloor.setState(RollerFloorState.RUN),
             intake.squishIntake()));
   }
