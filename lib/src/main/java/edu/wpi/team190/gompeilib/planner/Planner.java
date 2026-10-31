@@ -108,8 +108,9 @@ public class Planner {
                             planTime * Path.RATE >= lastIndex);
                         Logger.recordOutput(
                             "GompeiPlanner/Target/SampledPathIndex", plan.pathIndexAt(planTime));
-                        ChassisVelocities output =
-                            target.velocity().toRobotRelative(pose.getRotation());
+                        // feedforward from the plan plus closed loop correction, converted to robot
+                        // relative right before driving
+                        ChassisVelocities output = calculate(solver, pose, target);
                         driveCommand.accept(output);
                         logTarget(pose, target, output, path, pathIndex, planTime);
 

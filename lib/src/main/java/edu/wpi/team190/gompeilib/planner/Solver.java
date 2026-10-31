@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.planner;
 
 // solves ACTUAL chassis velocities based on current state and goal state
 public class Solver {
+  // both gains are per second: a 1 m / 1 rad error turns into 1 m/s / 1 rad/s of correction
   private static final double DEFAULT_TRANSLATION_GAIN = 1.0;
   private static final double DEFAULT_ROTATION_GAIN = 4.0;
   private static final double DEFAULT_TRANSLATION_TOLERANCE = 0.05; // meters
