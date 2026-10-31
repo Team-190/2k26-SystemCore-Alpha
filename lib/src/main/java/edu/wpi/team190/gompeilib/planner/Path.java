@@ -1,12 +1,14 @@
 package edu.wpi.team190.gompeilib.planner;
 
 import edu.wpi.team190.gompeilib.core.GompeiLib;
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Path {
 
   private static final double DEFAULT_SAMPLE_RATE_HZ = 200.0;
+  private static boolean hasWarnedAboutFallback = false;
 
   public static double getSampleRateHz() {
     try {
@@ -14,7 +16,23 @@ public class Path {
       if (loopPeriod > 0.0) {
         return 1.0 / loopPeriod;
       }
-    } catch (IllegalStateException ignored) {
+    } catch (IllegalStateException exception) {
+      if (!hasWarnedAboutFallback) {
+        Logger.warn(
+            "GompeiPlanner/Path/SampleRateFallback",
+            "GompeiLib not initialized when determining sample rate; using default "
+                + DEFAULT_SAMPLE_RATE_HZ
+                + " Hz. Ensure GompeiLib.init() is called before constructing Plans.");
+        hasWarnedAboutFallback = true;
+      }
+    }
+    if (!hasWarnedAboutFallback) {
+      Logger.warn(
+          "GompeiPlanner/Path/SampleRateFallback",
+          "Invalid loop period from GompeiLib; using default "
+              + DEFAULT_SAMPLE_RATE_HZ
+              + " Hz.");
+      hasWarnedAboutFallback = true;
     }
     return DEFAULT_SAMPLE_RATE_HZ;
   }

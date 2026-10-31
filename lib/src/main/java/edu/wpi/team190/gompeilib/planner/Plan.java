@@ -16,10 +16,12 @@ public class Plan {
   private final HashMap<Double, Command> commands = new HashMap<Double, Command>();
   private final List<Path> paths;
   private final double[] pathEndTimes;
+  private final double sampleRateHz;
 
   public Plan(Path... paths) {
     this.paths = List.of(paths);
     this.pathEndTimes = new double[paths.length];
+    this.sampleRateHz = Path.getSampleRateHz();
     // one trapezoid over the whole plan, so it only speeds up at the start and slows down at the
     // end, uses the slowest limits out of all the paths
     double totalDistance = 0;
@@ -41,7 +43,6 @@ public class Plan {
     profile.calculate(0, start, end);
     double totalTime = profile.duration();
 
-    double sampleRateHz = Path.getSampleRateHz();
     int numSteps = Math.max(1, (int) Math.ceil(totalTime * sampleRateHz));
     for (int step = 0; step <= numSteps; step++) {
       TrapezoidProfile.State now =
@@ -125,6 +126,10 @@ public class Plan {
 
   public ArrayList<State> getPlan() {
     return states;
+  }
+
+  public double getSampleRateHz() {
+    return sampleRateHz;
   }
 
   protected ArrayList<Pose2d> getAsPose2dList() {

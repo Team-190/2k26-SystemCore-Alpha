@@ -77,7 +77,7 @@ public class Planner {
 
                       // each state is 1 / RATE seconds after the last, so find where we are
                       try {
-                        double sampleRateHz = Path.getSampleRateHz();
+                        double sampleRateHz = plan.getSampleRateHz();
                         double exactIndex = planTime * sampleRateHz;
                         int currentIndex = (int) exactIndex;
                         State before = states.get(currentIndex);
@@ -135,7 +135,7 @@ public class Planner {
                 .until(
                     () -> {
                       // only done once the plan time is over AAND we actually got to the end
-                      double sampleRateHz = Path.getSampleRateHz();
+                      double sampleRateHz = plan.getSampleRateHz();
                       boolean planTimeOver =
                           (timer.get() + skippedTime[0]) * sampleRateHz >= lastIndex;
                       boolean atEnd = true; // TODO: check if actually at the end of path
@@ -197,7 +197,7 @@ public class Planner {
     Logger.recordOutput("GompeiPlanner/Plan/Waypoints", waypoints);
     Logger.recordOutput("GompeiPlanner/Plan/StateCount", states.size());
     Logger.recordOutput("GompeiPlanner/Plan/PathCount", pathCount);
-    Logger.recordOutput("GompeiPlanner/Plan/SampleRateHz", Path.getSampleRateHz());
+    Logger.recordOutput("GompeiPlanner/Plan/SampleRateHz", plan.getSampleRateHz());
     Logger.recordOutput("GompeiPlanner/Plan/PathEndTimes", endTimes);
     Logger.recordOutput("GompeiPlanner/Plan/RequestedEndVelocities", endVelocities);
     Logger.recordOutput(
@@ -221,7 +221,7 @@ public class Planner {
     Logger.recordOutput("GompeiPlanner/Plan/MaxAccels", maxAccels);
     Logger.recordOutput("GompeiPlanner/Plan/EndRadii", endRadii);
     Logger.recordOutput(
-        "GompeiPlanner/Plan/Duration", (states.size() - 1) / Path.getSampleRateHz());
+        "GompeiPlanner/Plan/Duration", (states.size() - 1) / plan.getSampleRateHz());
   }
 
   private static void logTarget(
