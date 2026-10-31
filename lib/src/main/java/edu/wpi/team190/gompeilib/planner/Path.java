@@ -29,9 +29,7 @@ public class Path {
     if (!hasWarnedAboutFallback) {
       Logger.warn(
           "GompeiPlanner/Path/SampleRateFallback",
-          "Invalid loop period from GompeiLib; using default "
-              + DEFAULT_SAMPLE_RATE_HZ
-              + " Hz.");
+          "Invalid loop period from GompeiLib; using default " + DEFAULT_SAMPLE_RATE_HZ + " Hz.");
       hasWarnedAboutFallback = true;
     }
     return DEFAULT_SAMPLE_RATE_HZ;
