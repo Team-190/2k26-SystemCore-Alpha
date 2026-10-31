@@ -1,7 +1,7 @@
 package edu.wpi.team190.gompeilib.planner;
 
 import edu.wpi.team190.gompeilib.core.GompeiLib;
-import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
@@ -18,18 +18,21 @@ public class Path {
       }
     } catch (IllegalStateException exception) {
       if (!hasWarnedAboutFallback) {
-        Logger.warn(
-            "GompeiPlanner/Path/SampleRateFallback",
-            "GompeiLib not initialized when determining sample rate; using default "
+        DriverStationBackend.reportWarning(
+            "GompeiPlanner: GompeiLib not initialized when determining sample rate; using default "
                 + DEFAULT_SAMPLE_RATE_HZ
-                + " Hz. Ensure GompeiLib.init() is called before constructing Plans.");
+                + " Hz. Ensure GompeiLib.init() is called before constructing Plans.",
+            false);
         hasWarnedAboutFallback = true;
       }
+      return DEFAULT_SAMPLE_RATE_HZ;
     }
     if (!hasWarnedAboutFallback) {
-      Logger.warn(
-          "GompeiPlanner/Path/SampleRateFallback",
-          "Invalid loop period from GompeiLib; using default " + DEFAULT_SAMPLE_RATE_HZ + " Hz.");
+      DriverStationBackend.reportWarning(
+          "GompeiPlanner: Invalid loop period from GompeiLib; using default "
+              + DEFAULT_SAMPLE_RATE_HZ
+              + " Hz.",
+          false);
       hasWarnedAboutFallback = true;
     }
     return DEFAULT_SAMPLE_RATE_HZ;
