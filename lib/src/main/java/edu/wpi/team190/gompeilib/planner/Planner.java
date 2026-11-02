@@ -118,6 +118,7 @@ public class Planner {
                           if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
                             CommandScheduler.getInstance().schedule(entry.getValue());
                             triggeredCommands[0]++;
+                            plan.getCommandMap().remove(entry.getKey());
                             Logger.recordOutput(
                                 "GompeiPlanner/Commands/LastName", entry.getValue().getName());
                             Logger.recordOutput("GompeiPlanner/Commands/LastTime", entry.getKey());
