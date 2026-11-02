@@ -251,6 +251,8 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                         autoPath,
                         V3_Horse_CV2_TRRobotState::getGlobalPose,
                         drive::runVelocity,
+                        drive.getMaxLinearSpeedMetersPerSec(),
+                        drive.getMaxAngularSpeedRadPerSec(),
                         drive)
                     .andThen(
                         V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(

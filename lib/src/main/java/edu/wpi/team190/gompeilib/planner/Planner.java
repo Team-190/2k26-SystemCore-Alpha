@@ -24,6 +24,30 @@ public class Planner {
       Supplier<Pose2d> robotPose,
       Consumer<ChassisVelocities> driveCommand,
       Subsystem... requirements) {
+    return followPath(plan, robotPose, driveCommand, new Solver(), requirements);
+  }
+
+  public static Command followPath(
+      Plan plan,
+      Supplier<Pose2d> robotPose,
+      Consumer<ChassisVelocities> driveCommand,
+      double maxLinearVelocity,
+      double maxAngularVelocity,
+      Subsystem... requirements) {
+    return followPath(
+        plan,
+        robotPose,
+        driveCommand,
+        Solver.forDrivetrain(maxLinearVelocity, maxAngularVelocity),
+        requirements);
+  }
+
+  public static Command followPath(
+      Plan plan,
+      Supplier<Pose2d> robotPose,
+      Consumer<ChassisVelocities> driveCommand,
+      Solver solver,
+      Subsystem... requirements) {
     if (driveCommand == null) {
       DriverStationErrors.reportError(
           "GompeiPlanner drive command not set, call Planner.setDriveCommand()", false);
@@ -35,7 +59,6 @@ public class Planner {
           "GompeiPlanner was given an empty plan, nothing to follow", false);
       return Commands.none();
     }
-    Solver solver = new Solver();
     Timer timer = new Timer();
     double[] lastTime = {-1};
     double[] skippedTime = {0};
@@ -276,6 +299,11 @@ public class Planner {
   }
 
   private static ChassisVelocities calculate(Solver solver, Pose2d robotPose, State goal) {
+    if (!isFinite(robotPose)) {
+      Logger.recordOutput("GompeiPlanner/Solver/Degraded", true);
+      return new ChassisVelocities();
+    }
+    Logger.recordOutput("GompeiPlanner/Solver/Degraded", false);
     double[] solved =
         solver.calculate(
             robotPose.getX(),
@@ -298,6 +326,12 @@ public class Planner {
             solved[2] - goal.velocity().omega));
     return new ChassisVelocities(solved[0], solved[1], solved[2])
         .toRobotRelative(robotPose.getRotation());
+  }
+
+  private static boolean isFinite(Pose2d pose) {
+    return Double.isFinite(pose.getX())
+        && Double.isFinite(pose.getY())
+        && Double.isFinite(pose.getRotation().getRadians());
   }
 
   private static boolean atReference(Solver solver, Pose2d robotPose, State goal) {
