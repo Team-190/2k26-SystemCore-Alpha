@@ -19,9 +19,14 @@ public class Plan {
   private final double sampleRateHz;
 
   public Plan(Path... paths) {
+    this(Path.getSampleRateHz(), paths);
+  }
+
+  public Plan(double sampleRateHz, Path... paths) {
     this.paths = List.of(paths);
     this.pathEndTimes = new double[paths.length];
-    this.sampleRateHz = Path.getSampleRateHz();
+    this.sampleRateHz =
+        Double.isFinite(sampleRateHz) && sampleRateHz > 0 ? sampleRateHz : Path.getSampleRateHz();
     // one trapezoid over the whole plan, so it only speeds up at the start and slows down at the
     // end, uses the slowest limits out of all the paths
     double totalDistance = 0;
@@ -130,6 +135,12 @@ public class Plan {
 
   public double getSampleRateHz() {
     return sampleRateHz;
+  }
+
+  public double speedAt(double time) {
+    int index = Math.min((int) Math.round(time * sampleRateHz), states.size() - 1);
+    ChassisVelocities velocity = states.get(index).velocity();
+    return Math.hypot(velocity.vx, velocity.vy);
   }
 
   protected ArrayList<Pose2d> getAsPose2dList() {

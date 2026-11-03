@@ -183,8 +183,8 @@ public class Planner {
       Path path = plan.getPath(i);
       waypoints[i] = path.getStartPose();
       waypoints[i + 1] = path.getEndPose();
-      startSpeeds[i] = speedAt(states, pathStartTime);
-      endSpeeds[i] = speedAt(states, plan.getPathEndTime(i));
+      startSpeeds[i] = plan.speedAt(pathStartTime);
+      endSpeeds[i] = plan.speedAt(plan.getPathEndTime(i));
       maxVels[i] = path.getMaxVel();
       maxAccels[i] = path.getMaxAccel();
       endRadii[i] = path.getEndRadius();
@@ -252,12 +252,6 @@ public class Planner {
     Logger.recordOutput(
         "GompeiPlanner/Error/Rotation",
         target.pose().getRotation().minus(robotPose.getRotation()).getRadians());
-  }
-
-  private static double speedAt(ArrayList<State> states, double time) {
-    int index = Math.min((int) Math.round(time * Path.getSampleRateHz()), states.size() - 1);
-    ChassisVelocities velocity = states.get(index).velocity();
-    return Math.hypot(velocity.vx, velocity.vy);
   }
 
   // this is lwk kinda cooked, but idk how to create a circle in advantage scope
