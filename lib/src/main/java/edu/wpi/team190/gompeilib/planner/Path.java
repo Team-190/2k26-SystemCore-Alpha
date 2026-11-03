@@ -16,26 +16,25 @@ public class Path {
       if (loopPeriod > 0.0) {
         return 1.0 / loopPeriod;
       }
-    } catch (IllegalStateException exception) {
-      if (!hasWarnedAboutFallback) {
-        DriverStationBackend.reportWarning(
-            "GompeiPlanner: GompeiLib not initialized when determining sample rate; using default "
-                + DEFAULT_SAMPLE_RATE_HZ
-                + " Hz. Ensure GompeiLib.init() is called before constructing Plans.",
-            false);
-        hasWarnedAboutFallback = true;
-      }
-      return DEFAULT_SAMPLE_RATE_HZ;
-    }
-    if (!hasWarnedAboutFallback) {
-      DriverStationBackend.reportWarning(
+      warnFallbackOnce(
           "GompeiPlanner: Invalid loop period from GompeiLib; using default "
               + DEFAULT_SAMPLE_RATE_HZ
-              + " Hz.",
-          false);
-      hasWarnedAboutFallback = true;
+              + " Hz.");
+    } catch (IllegalStateException exception) {
+      warnFallbackOnce(
+          "GompeiPlanner: GompeiLib not initialized when determining sample rate; using default "
+              + DEFAULT_SAMPLE_RATE_HZ
+              + " Hz. Ensure GompeiLib.init() is called before constructing Plans.");
     }
     return DEFAULT_SAMPLE_RATE_HZ;
+  }
+
+  private static void warnFallbackOnce(String message) {
+    if (hasWarnedAboutFallback) {
+      return;
+    }
+    DriverStationBackend.reportWarning(message, false);
+    hasWarnedAboutFallback = true;
   }
 
   private final Pose2d startPose;
