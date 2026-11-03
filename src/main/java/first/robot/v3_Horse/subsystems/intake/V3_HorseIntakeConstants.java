@@ -48,7 +48,8 @@ public class V3_HorseIntakeConstants {
 
   public static final double EXTENSION_INTAKE_POSITION = 0.3;
 
-  // While agitating, reaching within this distance of stow latches the intake to stow
+  // While agitating, reaching within this distance of stow latches the intake to
+  // stow
   public static final double AGITATE_AUTO_STOW_THRESHOLD = 0.01;
 
   // Trigger-to-extension curve, 0 = linear, 1 = full S-curve (flat at the ends)
@@ -74,8 +75,7 @@ public class V3_HorseIntakeConstants {
 
   public static final Voltage EXTENSION_SLOW_MOVE_VOLTAGE;
 
-  public static final Tunable<Voltage> SQUISH_VOLTAGE =
-      GompeiTunables.value("Intake/Squish Voltage", Volts.of(-1));
+  public static final Tunable<Voltage> SQUISH_VOLTAGE;
 
   static {
     INTAKE_IN_ROLLER_VOLTAGE = Volts.of(11.0);
@@ -84,6 +84,8 @@ public class V3_HorseIntakeConstants {
     KICKER_OUT_ROLLER_VOLTAGE = Volts.of(-12.0);
     IDLE_ROLLER_VOLTAGE = Volts.of(5.0); // TODO: tune
     EXTENSION_SLOW_MOVE_VOLTAGE = Volts.of(1.0);
+
+    SQUISH_VOLTAGE = GompeiTunables.value("Intake/Squish Voltage", Volts.of(-1));
 
     LEFT_INTAKE_ROLLER_CONSTANTS =
         GenericRollerConstants.builder()
