@@ -3,7 +3,6 @@ package edu.wpi.team190.gompeilib.planner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-
 import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
