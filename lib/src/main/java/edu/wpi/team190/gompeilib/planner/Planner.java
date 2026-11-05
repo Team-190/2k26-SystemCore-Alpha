@@ -75,43 +75,61 @@ public class Planner {
                         skippedTime[0] = planTime - time;
                       }
 
-                      double sampleRateHz = plan.getSampleRateHz();
-                      State target = plan.sample(planTime);
-                      Logger.recordOutput("GompeiPlanner/Timing/Elapsed", time);
-                      Logger.recordOutput("GompeiPlanner/Timing/Skipped", skippedTime[0]);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Timing/LoopDelta",
-                          lastTime[0] < 0 ? 0 : previousPlanTime - lastTime[0]);
-                      Logger.recordOutput("GompeiPlanner/Timing/Jump", planTime - previousPlanTime);
-                      Logger.recordOutput("GompeiPlanner/Target/InsideEndRadius", insideEndRadius);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/DistanceToPathEnd", distanceToPathEnd);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/StateIndex",
-                          Math.min(planTime * sampleRateHz, lastIndex));
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/AtFinalSample",
-                          planTime * sampleRateHz >= lastIndex);
-                      Logger.recordOutput(
-                          "GompeiPlanner/Target/SampledPathIndex", plan.pathIndexAt(planTime));
-                      ChassisVelocities output =
-                          target.velocity().toRobotRelative(pose.getRotation());
-                      driveCommand.accept(output);
-                      logTarget(pose, target, output, path, pathIndex, planTime);
+                      // each state is 1 / RATE seconds after the last, so find where we are
+                      try {
+                        double sampleRateHz = plan.getSampleRateHz();
+                        double exactIndex = planTime * sampleRateHz;
+                        int currentIndex = (int) exactIndex;
+                        State before = states.get(currentIndex);
+                        State target;
+                        State after;
+                        after = states.get(currentIndex + 1);
+                        double fraction = exactIndex - currentIndex;
+                        target =
+                            new State(
+                                before.pose().interpolate(after.pose(), fraction),
+                                before.velocity().interpolate(after.velocity(), fraction),
+                                0);
+                        Logger.recordOutput("GompeiPlanner/Timing/Elapsed", time);
+                        Logger.recordOutput("GompeiPlanner/Timing/Skipped", skippedTime[0]);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Timing/LoopDelta",
+                            lastTime[0] < 0 ? 0 : previousPlanTime - lastTime[0]);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Timing/Jump", planTime - previousPlanTime);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/InsideEndRadius", insideEndRadius);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/DistanceToPathEnd", distanceToPathEnd);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/StateIndex",
+                            Math.min(planTime * sampleRateHz, lastIndex));
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/AtFinalSample",
+                            planTime * sampleRateHz >= lastIndex);
+                        Logger.recordOutput(
+                            "GompeiPlanner/Target/SampledPathIndex", plan.pathIndexAt(planTime));
+                        ChassisVelocities output =
+                            target.velocity().toRobotRelative(pose.getRotation());
+                        driveCommand.accept(output);
+                        logTarget(pose, target, output, path, pathIndex, planTime);
 
-                      // run any command whose time we passed since the last loop
-                      for (var entry : plan.getCommandMap().entrySet()) {
-                        if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
-                          CommandScheduler.getInstance().schedule(entry.getValue());
-                          triggeredCommands[0]++;
-                          Logger.recordOutput(
-                              "GompeiPlanner/Commands/LastName", entry.getValue().getName());
-                          Logger.recordOutput("GompeiPlanner/Commands/LastTime", entry.getKey());
+                        // run any command whose time we passed since the last loop
+                        for (var entry : plan.getCommandMap().entrySet()) {
+                          if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
+                            CommandScheduler.getInstance().schedule(entry.getValue());
+                            triggeredCommands[0]++;
+                            Logger.recordOutput(
+                                "GompeiPlanner/Commands/LastName", entry.getValue().getName());
+                            Logger.recordOutput("GompeiPlanner/Commands/LastTime", entry.getKey());
+                          }
                         }
+                        Logger.recordOutput(
+                            "GompeiPlanner/Commands/TriggeredCount", triggeredCommands[0]);
+                        lastTime[0] = planTime;
+                      } catch (Exception e) {
+                        System.out.println(e);
                       }
-                      Logger.recordOutput(
-                          "GompeiPlanner/Commands/TriggeredCount", triggeredCommands[0]);
-                      lastTime[0] = planTime;
                     },
                     requirements)
                 .until(
