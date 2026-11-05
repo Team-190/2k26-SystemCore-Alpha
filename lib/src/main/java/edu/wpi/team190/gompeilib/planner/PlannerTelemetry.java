@@ -15,7 +15,7 @@ public final class PlannerTelemetry {
   private static final double HEAVY_LOG_INTERVAL_SECONDS = 0.02; // 50 Hz
   private static double lastHeavyLogTime = Double.NEGATIVE_INFINITY;
 
-  private static final int RADIUS_CIRCLE_POINTS = 67;
+  private static final int RADIUS_CIRCLE_POINTS = 28;
 
   private PlannerTelemetry() {}
 
