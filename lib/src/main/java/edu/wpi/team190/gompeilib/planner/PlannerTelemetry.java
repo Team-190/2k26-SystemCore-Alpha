@@ -17,6 +17,18 @@ public final class PlannerTelemetry {
 
   private static final int RADIUS_CIRCLE_POINTS = 28;
 
+  private static final String AKIT_TOPIC = "GompeiPlanner";
+  private static final String AKIT_PLAN_TOPIC = AKIT_TOPIC + "/Plan";
+  private static final String AKIT_TARGET_TOPIC = AKIT_TOPIC + "/Target";
+  private static final String AKIT_ROBOT_TOPIC = AKIT_TOPIC + "/Robot";
+  private static final String AKIT_ERROR_TOPIC = AKIT_TOPIC + "/Error";
+  private static final String AKIT_OUTPUT_TOPIC = AKIT_TOPIC + "/Output";
+  private static final String AKIT_TIMING_TOPIC = AKIT_TOPIC + "/Timing";
+  private static final String AKIT_STATUS_TOPIC = AKIT_TOPIC + "/Status";
+  private static final String AKIT_IS_RUNNING_TOPIC = AKIT_TOPIC + "/IsRunning";
+  private static final String AKIT_COMMANDS_TOPIC = AKIT_TOPIC + "/Commands";
+  private static final String AKIT_COMPLETION_TOPIC = AKIT_TOPIC + "/Completion";
+
   private PlannerTelemetry() {}
 
   // heavy visual telemetry (3D circles, pose histories) gets downsampled to 50 Hz
@@ -58,34 +70,34 @@ public final class PlannerTelemetry {
       pathStartTime = plan.getPathEndTime(i);
     }
     Logger.recordOutput(
-        "GompeiPlanner/Plan/Trajectory", plan.getAsPose2dList().toArray(new Pose2d[0]));
-    Logger.recordOutput("GompeiPlanner/Plan/Waypoints", waypoints);
-    Logger.recordOutput("GompeiPlanner/Plan/StateCount", states.size());
-    Logger.recordOutput("GompeiPlanner/Plan/PathCount", pathCount);
-    Logger.recordOutput("GompeiPlanner/Plan/SampleRateHz", Path.RATE);
-    Logger.recordOutput("GompeiPlanner/Plan/PathEndTimes", endTimes);
-    Logger.recordOutput("GompeiPlanner/Plan/RequestedEndVelocities", endVelocities);
+        AKIT_PLAN_TOPIC + "/Trajectory", plan.getAsPose2dList().toArray(new Pose2d[0]));
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/Waypoints", waypoints);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/StateCount", states.size());
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/PathCount", pathCount);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/SampleRateHz", Path.RATE);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/PathEndTimes", endTimes);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/RequestedEndVelocities", endVelocities);
     Logger.recordOutput(
-        "GompeiPlanner/Plan/SampleVelocities",
+        AKIT_PLAN_TOPIC + "/SampleVelocities",
         states.stream().map(State::velocity).toArray(ChassisVelocities[]::new));
     Logger.recordOutput(
-        "GompeiPlanner/Plan/SampleDistances",
+        AKIT_PLAN_TOPIC + "/SampleDistances",
         states.stream().mapToDouble(State::distance).toArray());
     Logger.recordOutput(
-        "GompeiPlanner/Plan/CommandTimes",
+        AKIT_PLAN_TOPIC + "/CommandTimes",
         plan.getCommandMap().keySet().stream().sorted().mapToDouble(Double::doubleValue).toArray());
     Logger.recordOutput(
-        "GompeiPlanner/Plan/CommandNames",
+        AKIT_PLAN_TOPIC + "/CommandNames",
         plan.getCommandMap().entrySet().stream()
             .sorted(Comparator.comparingDouble(entry -> entry.getKey()))
             .map(entry -> entry.getValue().getName())
             .toArray(String[]::new));
-    Logger.recordOutput("GompeiPlanner/Plan/StartSpeeds", startSpeeds);
-    Logger.recordOutput("GompeiPlanner/Plan/EndSpeeds", endSpeeds);
-    Logger.recordOutput("GompeiPlanner/Plan/MaxVels", maxVels);
-    Logger.recordOutput("GompeiPlanner/Plan/MaxAccels", maxAccels);
-    Logger.recordOutput("GompeiPlanner/Plan/EndRadii", endRadii);
-    Logger.recordOutput("GompeiPlanner/Plan/Duration", (states.size() - 1) / Path.RATE);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/StartSpeeds", startSpeeds);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/EndSpeeds", endSpeeds);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/MaxVels", maxVels);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/MaxAccels", maxAccels);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/EndRadii", endRadii);
+    Logger.recordOutput(AKIT_PLAN_TOPIC + "/Duration", (states.size() - 1) / Path.RATE);
   }
 
   public static void logTarget(
@@ -98,86 +110,86 @@ public final class PlannerTelemetry {
       double distanceToPathEnd,
       int lastStateIndex,
       boolean insideEndRadius) {
-    Logger.recordOutput("GompeiPlanner/Target/InsideEndRadius", insideEndRadius);
-    Logger.recordOutput("GompeiPlanner/Target/DistanceToPathEnd", distanceToPathEnd);
+    Logger.recordOutput(AKIT_TARGET_TOPIC + "/InsideEndRadius", insideEndRadius);
+    Logger.recordOutput(AKIT_TARGET_TOPIC + "/DistanceToPathEnd", distanceToPathEnd);
     Logger.recordOutput(
-        "GompeiPlanner/Target/StateIndex", Math.min(planTime * Path.RATE, lastStateIndex));
+        AKIT_TARGET_TOPIC + "/StateIndex", Math.min(planTime * Path.RATE, lastStateIndex));
     Logger.recordOutput(
-        "GompeiPlanner/Target/AtFinalSample", planTime * Path.RATE >= lastStateIndex);
-    Logger.recordOutput("GompeiPlanner/Target/SampledPathIndex", pathIndex);
+        AKIT_TARGET_TOPIC + "/AtFinalSample", planTime * Path.RATE >= lastStateIndex);
+    Logger.recordOutput(AKIT_TARGET_TOPIC + "/SampledPathIndex", pathIndex);
 
     // pose values are heavy visual logs, downsample to 50 Hz
     if (shouldLogHeavyTelemetry()) {
-      Logger.recordOutput("GompeiPlanner/Robot/Pose", robotPose);
-      Logger.recordOutput("GompeiPlanner/Target/Pose", target.pose());
-      Logger.recordOutput("GompeiPlanner/Target/EndVelocity", path.getEndVelocity());
-      Logger.recordOutput("GompeiPlanner/Target/PathEndPose", path.getEndPose());
+      Logger.recordOutput(AKIT_ROBOT_TOPIC + "/Pose", robotPose);
+      Logger.recordOutput(AKIT_TARGET_TOPIC + "/Pose", target.pose());
+      Logger.recordOutput(AKIT_TARGET_TOPIC + "/EndVelocity", path.getEndVelocity());
+      Logger.recordOutput(AKIT_TARGET_TOPIC + "/PathEndPose", path.getEndPose());
       Logger.recordOutput(
-          "GompeiPlanner/Target/EndRadiusCircle", circle(path.getEndPose(), path.getEndRadius()));
+          AKIT_TARGET_TOPIC + "/EndRadiusCircle", circle(path.getEndPose(), path.getEndRadius()));
     }
 
-    Logger.recordOutput("GompeiPlanner/Error/X", target.pose().getX() - robotPose.getX());
-    Logger.recordOutput("GompeiPlanner/Error/Y", target.pose().getY() - robotPose.getY());
-    Logger.recordOutput("GompeiPlanner/Target/Velocity", target.velocity());
+    Logger.recordOutput(AKIT_ERROR_TOPIC + "/X", target.pose().getX() - robotPose.getX());
+    Logger.recordOutput(AKIT_ERROR_TOPIC + "/Y", target.pose().getY() - robotPose.getY);
+    Logger.recordOutput(AKIT_TARGET_TOPIC + "/Velocity", target.velocity());
     Logger.recordOutput(
-        "GompeiPlanner/Target/Speed", Math.hypot(target.velocity().vx, target.velocity().vy));
-    Logger.recordOutput("GompeiPlanner/Target/PathIndex", pathIndex);
-    Logger.recordOutput("GompeiPlanner/Target/EndRadius", path.getEndRadius());
-    Logger.recordOutput("GompeiPlanner/PlanTime", planTime);
+        AKIT_TARGET_TOPIC + "/Speed", Math.hypot(target.velocity().vx, target.velocity().vy));
+    Logger.recordOutput(AKIT_TARGET_TOPIC + "/PathIndex", pathIndex);
+    Logger.recordOutput(AKIT_TARGET_TOPIC + "/EndRadius", path.getEndRadius());
+    Logger.recordOutput(AKIT_TOPIC + "/PlanTime", planTime);
     // motor outputs run at full rate, so no downsampling here
-    Logger.recordOutput("GompeiPlanner/Output/RobotRelativeVelocity", output);
+    Logger.recordOutput(AKIT_OUTPUT_TOPIC + "/RobotRelativeVelocity", output);
     Logger.recordOutput(
-        "GompeiPlanner/Error/Translation",
+        AKIT_ERROR_TOPIC + "/Translation",
         robotPose.getTranslation().getDistance(target.pose().getTranslation()));
     Logger.recordOutput(
-        "GompeiPlanner/Error/Rotation",
+        AKIT_ERROR_TOPIC + "/Rotation",
         target.pose().getRotation().minus(robotPose.getRotation()).getRadians());
   }
 
   public static void logTiming(double elapsed, double skipped, double loopDelta, double jump) {
-    Logger.recordOutput("GompeiPlanner/Timing/Elapsed", elapsed);
-    Logger.recordOutput("GompeiPlanner/Timing/Skipped", skipped);
-    Logger.recordOutput("GompeiPlanner/Timing/LoopDelta", loopDelta);
-    Logger.recordOutput("GompeiPlanner/Timing/Jump", jump);
+    Logger.recordOutput(AKIT_TIMING_TOPIC + "/Elapsed", elapsed);
+    Logger.recordOutput(AKIT_TIMING_TOPIC + "/Skipped", skipped);
+    Logger.recordOutput(AKIT_TIMING_TOPIC + "/LoopDelta", loopDelta);
+    Logger.recordOutput(AKIT_TIMING_TOPIC + "/Jump", jump);
   }
 
   public static void logStatus(String status, boolean isRunning) {
-    Logger.recordOutput("GompeiPlanner/Status", status);
-    Logger.recordOutput("GompeiPlanner/IsRunning", isRunning);
+    Logger.recordOutput(AKIT_STATUS_TOPIC, status);
+    Logger.recordOutput(AKIT_IS_RUNNING_TOPIC, isRunning);
   }
 
   public static void logIsRunning(boolean isRunning) {
-    Logger.recordOutput("GompeiPlanner/IsRunning", isRunning);
+    Logger.recordOutput(AKIT_IS_RUNNING_TOPIC, isRunning);
   }
 
   public static void logCommands(
       int triggeredCount, String lastCommandName, double lastCommandTime) {
-    Logger.recordOutput("GompeiPlanner/Commands/TriggeredCount", triggeredCount);
-    Logger.recordOutput("GompeiPlanner/Commands/LastName", lastCommandName);
-    Logger.recordOutput("GompeiPlanner/Commands/LastTime", lastCommandTime);
+    Logger.recordOutput(AKIT_COMMANDS_TOPIC + "/TriggeredCount", triggeredCount);
+    Logger.recordOutput(AKIT_COMMANDS_TOPIC + "/LastName", lastCommandName);
+    Logger.recordOutput(AKIT_COMMANDS_TOPIC + "/LastTime", lastCommandTime);
   }
 
   public static void logOutput(ChassisVelocities robotRelativeVelocity) {
-    Logger.recordOutput("GompeiPlanner/Output/RobotRelativeVelocity", robotRelativeVelocity);
+    Logger.recordOutput(AKIT_OUTPUT_TOPIC + "/RobotRelativeVelocity", robotRelativeVelocity);
   }
 
   public static void logFieldRelativeVelocity(ChassisVelocities fieldRelativeVelocity) {
-    Logger.recordOutput("GompeiPlanner/Output/FieldRelativeVelocity", fieldRelativeVelocity);
+    Logger.recordOutput(AKIT_OUTPUT_TOPIC + "/FieldRelativeVelocity", fieldRelativeVelocity);
   }
 
   public static void logFieldRelativeCorrection(ChassisVelocities fieldRelativeCorrection) {
-    Logger.recordOutput("GompeiPlanner/Output/FieldRelativeCorrection", fieldRelativeCorrection);
+    Logger.recordOutput(AKIT_OUTPUT_TOPIC + "/FieldRelativeCorrection", fieldRelativeCorrection);
   }
 
   public static void logCompletion(
       boolean planTimeOver, boolean atEnd, Pose2d finalPose, Pose2d robotPose) {
-    Logger.recordOutput("GompeiPlanner/Completion/PlanTimeOver", planTimeOver);
-    Logger.recordOutput("GompeiPlanner/Completion/AtReference", atEnd);
+    Logger.recordOutput(AKIT_COMPLETION_TOPIC + "/PlanTimeOver", planTimeOver);
+    Logger.recordOutput(AKIT_COMPLETION_TOPIC + "/AtReference", atEnd);
     Logger.recordOutput(
-        "GompeiPlanner/Completion/TranslationError",
+        AKIT_COMPLETION_TOPIC + "/TranslationError",
         robotPose.getTranslation().getDistance(finalPose.getTranslation()));
     Logger.recordOutput(
-        "GompeiPlanner/Completion/HeadingError",
+        AKIT_COMPLETION_TOPIC + "/HeadingError",
         finalPose.getRotation().minus(robotPose.getRotation()).getRadians());
   }
 
