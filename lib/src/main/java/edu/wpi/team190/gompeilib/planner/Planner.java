@@ -98,7 +98,8 @@ public class Planner {
                             pathIndex,
                             planTime,
                             distanceToPathEnd,
-                            lastIndex);
+                            lastIndex,
+                            insideEndRadius);
 
                         // run any command whose time we passed since the last loop
                         for (var entry : plan.getCommandMap().entrySet()) {

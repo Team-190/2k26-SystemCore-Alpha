@@ -11,6 +11,7 @@ public final class PlannerTelemetry {
 
   // heavy visual logs (3D circles and pose histories) are downsampled to 50 Hz so we dont flood
   // NetworkTables while motor outputs still run at full rate
+  // (the end radius circle is the heavy one: it allocates 68 poses every call)
   private static final double HEAVY_LOG_INTERVAL_SECONDS = 0.02; // 50 Hz
   private static double lastHeavyLogTime = Double.NEGATIVE_INFINITY;
 
@@ -19,8 +20,9 @@ public final class PlannerTelemetry {
   private PlannerTelemetry() {}
 
   // heavy visual telemetry (3D circles, pose histories) gets downsampled to 50 Hz
+  // uses Logger's timestamp so the gate lines up with the replayed/simulated log timeline
   private static boolean shouldLogHeavyTelemetry() {
-    double now = System.nanoTime() * 1e-9;
+    double now = Logger.getTimestamp() * 1e-9; // Logger.getTimestamp() is in nanoseconds
     if (now - lastHeavyLogTime >= HEAVY_LOG_INTERVAL_SECONDS) {
       lastHeavyLogTime = now;
       return true;
@@ -29,6 +31,8 @@ public final class PlannerTelemetry {
   }
 
   public static void logPlan(Plan plan) {
+    // a new plan means a new followPath, so start the downsampling gate fresh
+    lastHeavyLogTime = Double.NEGATIVE_INFINITY;
     ArrayList<State> states = plan.getPlan();
     int pathCount = plan.getPathCount();
     Pose2d[] waypoints = new Pose2d[pathCount + 1];
@@ -92,8 +96,8 @@ public final class PlannerTelemetry {
       int pathIndex,
       double planTime,
       double distanceToPathEnd,
-      int lastStateIndex) {
-    boolean insideEndRadius = distanceToPathEnd < path.getEndRadius();
+      int lastStateIndex,
+      boolean insideEndRadius) {
     Logger.recordOutput("GompeiPlanner/Target/InsideEndRadius", insideEndRadius);
     Logger.recordOutput("GompeiPlanner/Target/DistanceToPathEnd", distanceToPathEnd);
     Logger.recordOutput(
