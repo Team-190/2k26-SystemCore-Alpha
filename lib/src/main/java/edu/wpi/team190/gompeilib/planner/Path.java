@@ -1,41 +1,9 @@
 package edu.wpi.team190.gompeilib.planner;
 
-import edu.wpi.team190.gompeilib.core.GompeiLib;
-import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class Path {
-
-  private static final double DEFAULT_SAMPLE_RATE_HZ = 200.0;
-  private static boolean hasWarnedAboutFallback = false;
-
-  public static double getSampleRateHz() {
-    try {
-      double loopPeriod = GompeiLib.getLoopPeriod();
-      if (loopPeriod > 0.0) {
-        return 1.0 / loopPeriod;
-      }
-      warnFallbackOnce(
-          "GompeiPlanner: Invalid loop period from GompeiLib; using default "
-              + DEFAULT_SAMPLE_RATE_HZ
-              + " Hz.");
-    } catch (IllegalStateException exception) {
-      warnFallbackOnce(
-          "GompeiPlanner: GompeiLib not initialized when determining sample rate; using default "
-              + DEFAULT_SAMPLE_RATE_HZ
-              + " Hz. Ensure GompeiLib.init() is called before constructing Plans.");
-    }
-    return DEFAULT_SAMPLE_RATE_HZ;
-  }
-
-  private static void warnFallbackOnce(String message) {
-    if (hasWarnedAboutFallback) {
-      return;
-    }
-    DriverStationBackend.reportWarning(message, false);
-    hasWarnedAboutFallback = true;
-  }
 
   private final Pose2d startPose;
   private final Pose2d endPose;
