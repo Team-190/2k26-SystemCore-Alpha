@@ -136,7 +136,7 @@ public class V3_HorseShooter extends SubsystemBase {
     switch (shooterGoal) {
       case STOW:
         hood.setPositionGoal(V3_HorseShooterConstants.HOOD_CONSTANTS.minAngle);
-        flywheel.stop();
+        flywheel.setVelocityGoal(getIdleVelocity(), getCurrentFeedforward());
         break;
       case SCORE:
         hood.setPositionGoal(V3_HorseRobotState.getScoreAngle());
@@ -158,7 +158,7 @@ public class V3_HorseShooter extends SubsystemBase {
         break;
       case STOP:
         hood.setPositionGoal(Rotation2d.ZERO);
-        flywheel.stop();
+        flywheel.setVelocityGoal(getIdleVelocity(), getCurrentFeedforward());
         break;
       default:
         break;
@@ -202,6 +202,12 @@ public class V3_HorseShooter extends SubsystemBase {
         : Amps.zero();
   }
 
+  private AngularVelocity getIdleVelocity() {
+    return V3_HorseRobotState.isInAllianceZone()
+        ? V3_HorseRobotState.getScoreVelocity()
+        : V3_HorseRobotState.FixedShots.FRONT_TOWER.getParameters().flywheelSpeed().get();
+  }
+
   public Command setGoal(ShooterGoal shooterGoal) {
     return this.runOnce(() -> this.shooterGoal = shooterGoal);
   }
@@ -239,7 +245,8 @@ public class V3_HorseShooter extends SubsystemBase {
   }
 
   public Command flywheelSysId() {
-    // IDLE keeps periodic() from overriding the routine's current requests with stop()
+    // IDLE keeps periodic() from overriding the routine's current requests with
+    // stop()
     return setGoal(ShooterGoal.IDLE).andThen(flywheel.sysIdRoutineTorque());
   }
 

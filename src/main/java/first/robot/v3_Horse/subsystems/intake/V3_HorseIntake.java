@@ -376,8 +376,8 @@ public class V3_HorseIntake extends SubsystemBase {
                     return;
                   }
                   extensionState = ExtensionState.SQUISH;
-                  leftExtension.setVoltageGoal(Volts.of(-1));
-                  rightExtension.setVoltageGoal(Volts.of(-1));
+                  leftExtension.setVoltageGoal(V3_HorseIntakeConstants.SQUISH_VOLTAGE.get());
+                  rightExtension.setVoltageGoal(V3_HorseIntakeConstants.SQUISH_VOLTAGE.get());
                 }),
             Commands.waitUntil(() -> extensionState != ExtensionState.SQUISH || isNearStow(0.01))
                 .withTimeout(5))
