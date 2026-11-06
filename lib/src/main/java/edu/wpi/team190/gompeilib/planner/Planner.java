@@ -76,9 +76,9 @@ public class Planner {
                       }
 
                       // each state is 1 / RATE seconds after the last, so find where we are
-                      try {
                         double exactIndex = planTime * Path.RATE;
                         int currentIndex = (int) exactIndex;
+                        if((currentIndex+1) < states.size()){
                         State before = states.get(currentIndex);
                         State target;
                         State after;
@@ -112,23 +112,20 @@ public class Planner {
                             target.velocity().toRobotRelative(pose.getRotation());
                         driveCommand.accept(output);
                         logTarget(pose, target, output, path, pathIndex, planTime);
-
-                        // run any command whose time we passed since the last loop
-                        for (var entry : plan.getCommandMap().entrySet()) {
-                          if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
-                            CommandScheduler.getInstance().schedule(entry.getValue());
-                            triggeredCommands[0]++;
-                            Logger.recordOutput(
-                                "GompeiPlanner/Commands/LastName", entry.getValue().getName());
-                            Logger.recordOutput("GompeiPlanner/Commands/LastTime", entry.getKey());
-                          }
+                      } 
+                      // run any command whose time we passed since the last loop
+                      for (var entry : plan.getCommandMap().entrySet()) {
+                        if (entry.getKey() > lastTime[0] && entry.getKey() <= planTime) {
+                          CommandScheduler.getInstance().schedule(entry.getValue());
+                          triggeredCommands[0]++;
+                          Logger.recordOutput(
+                              "GompeiPlanner/Commands/LastName", entry.getValue().getName());
+                          Logger.recordOutput("GompeiPlanner/Commands/LastTime", entry.getKey());
                         }
-                        Logger.recordOutput(
-                            "GompeiPlanner/Commands/TriggeredCount", triggeredCommands[0]);
-                        lastTime[0] = planTime;
-                      } catch (Exception e) {
-                        System.out.println(e);
                       }
+                      Logger.recordOutput(
+                          "GompeiPlanner/Commands/TriggeredCount", triggeredCommands[0]);
+                      lastTime[0] = planTime;
                     },
                     requirements)
                 .until(
