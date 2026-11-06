@@ -4,9 +4,6 @@ import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
-import edu.wpi.team190.gompeilib.planner.Path;
-import edu.wpi.team190.gompeilib.planner.Plan;
-import edu.wpi.team190.gompeilib.planner.Planner;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIO;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveModuleIOSim;
@@ -29,7 +26,6 @@ import edu.wpi.team190.gompeilib.subsystems.vision.io.CameraIOLimelight;
 import first.robot.Constants;
 import first.robot.FieldConstants;
 import first.robot.RobotConfig;
-import first.robot.util.AllianceFlipUtil;
 import first.robot.util.CV2_input.XKeysInput;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRCompositeCommands;
 import first.robot.v3_Horse_CV2_TR.commands.V3_Horse_CV2_TRDriveCommands;
@@ -51,8 +47,6 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandNiDsXboxController;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.geometry.Translation2d;
 
 public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private SwerveDrive drive;
@@ -68,16 +62,6 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private final XKeysInput xkeys = new XKeysInput(1);
 
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
-
-  private Pose2d midpoint =
-      AllianceFlipUtil.apply(
-          new Pose2d(
-              new Translation2d(1.8835363859953707, 3.981658637152778), new Rotation2d(Math.PI)));
-  private Pose2d startPoint =
-      AllianceFlipUtil.apply(
-          new Pose2d(new Translation2d(3.5264897280092597, 3.981658637152778), new Rotation2d(0)));
-  private final Plan autoPath =
-      new Plan(new Path(startPoint, midpoint, 2, 2), new Path(midpoint, midpoint, 2, 2));
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -238,26 +222,7 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
 
     autoChooser.add("Shooter Flywheel Torque SysId", shooter.flywheelSysId());
 
-    autoChooser.add("Do Nothing", Commands.none());
-
-    autoChooser.addDefault(
-        "Back up and Shoot(Gompei Planner)",
-        Commands.runOnce(
-                () -> {
-                  V3_Horse_CV2_TRRobotState.resetPose(startPoint);
-                })
-            .andThen(
-                Planner.followPath(
-                        autoPath,
-                        V3_Horse_CV2_TRRobotState::getGlobalPose,
-                        drive::runVelocity,
-                        drive)
-                    .andThen(
-                        V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
-                            drive,
-                            rollerFloor,
-                            shooter,
-                            V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER))));
+    autoChooser.addDefault("Do Nothing", Commands.none());
   }
 
   private void configureButtonBindings() {
