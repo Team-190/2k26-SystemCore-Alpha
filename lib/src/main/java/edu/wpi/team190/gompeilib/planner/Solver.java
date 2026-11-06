@@ -2,22 +2,29 @@ package edu.wpi.team190.gompeilib.planner;
 
 // solves ACTUAL chassis velocities based on current state and goal state
 public class Solver {
+  // both gains are per second: a 1 m / 1 rad error turns into 1 m/s / 1 rad/s of correction
   private static final double DEFAULT_TRANSLATION_GAIN = 1.0;
   private static final double DEFAULT_ROTATION_GAIN = 4.0;
   private static final double DEFAULT_TRANSLATION_TOLERANCE = 0.05; // meters
   private static final double DEFAULT_ROTATION_TOLERANCE = Math.toRadians(2);
+  private static final double DEFAULT_MAX_LINEAR_VELOCITY = 4.5;
+  private static final double DEFAULT_MAX_ANGULAR_VELOCITY = 2 * Math.PI;
 
   private final double translationGain;
   private final double rotationGain;
   private final double translationTolerance;
   private final double rotationTolerance;
+  private final double maxLinearVelocity;
+  private final double maxAngularVelocity;
 
   public Solver() {
     this(
         DEFAULT_TRANSLATION_GAIN,
         DEFAULT_ROTATION_GAIN,
         DEFAULT_TRANSLATION_TOLERANCE,
-        DEFAULT_ROTATION_TOLERANCE);
+        DEFAULT_ROTATION_TOLERANCE,
+        DEFAULT_MAX_LINEAR_VELOCITY,
+        DEFAULT_MAX_ANGULAR_VELOCITY);
   }
 
   public Solver(
@@ -25,10 +32,38 @@ public class Solver {
       double rotationGain,
       double translationTolerance,
       double rotationTolerance) {
+    this(
+        translationGain,
+        rotationGain,
+        translationTolerance,
+        rotationTolerance,
+        DEFAULT_MAX_LINEAR_VELOCITY,
+        DEFAULT_MAX_ANGULAR_VELOCITY);
+  }
+
+  public Solver(
+      double translationGain,
+      double rotationGain,
+      double translationTolerance,
+      double rotationTolerance,
+      double maxLinearVelocity,
+      double maxAngularVelocity) {
     this.translationGain = translationGain;
     this.rotationGain = rotationGain;
     this.translationTolerance = translationTolerance;
     this.rotationTolerance = rotationTolerance;
+    this.maxLinearVelocity = maxLinearVelocity;
+    this.maxAngularVelocity = maxAngularVelocity;
+  }
+
+  public static Solver forDrivetrain(double maxLinearVelocity, double maxAngularVelocity) {
+    return new Solver(
+        DEFAULT_TRANSLATION_GAIN,
+        DEFAULT_ROTATION_GAIN,
+        DEFAULT_TRANSLATION_TOLERANCE,
+        DEFAULT_ROTATION_TOLERANCE,
+        maxLinearVelocity,
+        maxAngularVelocity);
   }
 
   // returns FIELD relative {vx, vy, omega}, the robot turns it into robot relative with its own
@@ -47,8 +82,10 @@ public class Solver {
     if (!isFinite(plannedVelocityX, plannedVelocityY, plannedTurnSpeed)) {
       return new double[] {0, 0, 0};
     }
-    // bad pose (vision glitch, gyro issue), just follow the plan with no correction
-    if (!isFinite(robotX, robotY, robotHeading, goalX, goalY, goalHeading)) {
+    if (!isFinite(robotX, robotY, robotHeading)) {
+      return new double[] {0, 0, 0};
+    }
+    if (!isFinite(goalX, goalY, goalHeading)) {
       return new double[] {plannedVelocityX, plannedVelocityY, plannedTurnSpeed};
     }
 
@@ -63,6 +100,16 @@ public class Solver {
     double fieldVelocityX = plannedVelocityX + correctionX;
     double fieldVelocityY = plannedVelocityY + correctionY;
     double turnSpeed = plannedTurnSpeed + turnCorrection;
+
+    double linearSpeed = Math.hypot(fieldVelocityX, fieldVelocityY);
+    if (maxLinearVelocity > 0 && linearSpeed > maxLinearVelocity) {
+      double scale = maxLinearVelocity / linearSpeed;
+      fieldVelocityX *= scale;
+      fieldVelocityY *= scale;
+    }
+    if (maxAngularVelocity > 0) {
+      turnSpeed = Math.clamp(turnSpeed, -maxAngularVelocity, maxAngularVelocity);
+    }
 
     return new double[] {fieldVelocityX, fieldVelocityY, turnSpeed};
   }
