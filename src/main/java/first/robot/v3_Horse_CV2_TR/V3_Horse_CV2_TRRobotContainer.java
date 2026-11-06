@@ -76,8 +76,13 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
   private Pose2d startPoint =
       AllianceFlipUtil.apply(
           new Pose2d(new Translation2d(3.5264897280092597, 3.981658637152778), new Rotation2d(0)));
+  private Pose2d twopoint =
+      AllianceFlipUtil.apply(new Pose2d(new Translation2d(10, 10), new Rotation2d(0)));
   private final Plan autoPath =
-      new Plan(new Path(startPoint, midpoint, 2, 2), new Path(midpoint, midpoint, 2, 2));
+      new Plan(
+          new Path(startPoint, midpoint, 0.5, 20),
+          new Path(midpoint, midpoint, 0.5, 20),
+          new Path(midpoint, twopoint, 1, 20));
 
   public V3_Horse_CV2_TRRobotContainer() {
     if (Constants.getMode() != RobotMode.REPLAY) {
@@ -239,7 +244,14 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
     autoChooser.add("Shooter Flywheel Torque SysId", shooter.flywheelSysId());
 
     autoChooser.add("Do Nothing", Commands.none());
-
+    autoPath.addCommand(
+        5,
+        V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+            drive, rollerFloor, shooter, V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER));
+    autoPath.addCommand(
+        10,
+        V3_Horse_CV2_TRCompositeCommands.intakeCollect(intake)
+            .withName("operator-rightBumper-true"));
     autoChooser.addDefault(
         "Back up and Shoot(Gompei Planner)",
         Commands.runOnce(

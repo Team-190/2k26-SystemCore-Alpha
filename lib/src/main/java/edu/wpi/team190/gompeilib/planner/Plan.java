@@ -1,8 +1,9 @@
 package edu.wpi.team190.gompeilib.planner;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
@@ -13,7 +14,7 @@ public class Plan {
   private static final double MIN_DISTANCE = 1e-9;
 
   private final ArrayList<State> states = new ArrayList<State>();
-  private final HashMap<Double, Command> commands = new HashMap<Double, Command>();
+  private final SortedMap<Double, Command> commands = new TreeMap<Double, Command>();
   private final List<Path> paths;
   private final double[] pathEndTimes;
 
@@ -97,7 +98,7 @@ public class Plan {
     return this;
   }
 
-  public HashMap<Double, Command> getCommandMap() {
+  public SortedMap<Double, Command> getCommandMap() {
     return commands;
   }
 
