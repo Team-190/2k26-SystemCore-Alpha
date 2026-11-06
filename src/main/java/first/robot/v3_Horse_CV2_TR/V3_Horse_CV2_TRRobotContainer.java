@@ -260,10 +260,18 @@ public class V3_Horse_CV2_TRRobotContainer implements RobotContainer {
                 })
             .andThen(
                 Planner.followPath(
-                    autoPath,
-                    V3_Horse_CV2_TRRobotState::getGlobalPose,
-                    drive::runVelocity,
-                    drive)));
+                        autoPath,
+                        V3_Horse_CV2_TRRobotState::getGlobalPose,
+                        drive::runVelocity,
+                        drive.getMaxLinearSpeedMetersPerSec(),
+                        drive.getMaxAngularSpeedRadPerSec(),
+                        drive)
+                    .andThen(
+                        V3_Horse_CV2_TRCompositeCommands.fixedShotCommand(
+                            drive,
+                            rollerFloor,
+                            shooter,
+                            V3_Horse_CV2_TRRobotState.FixedShots.FRONT_TOWER))));
   }
 
   private void configureButtonBindings() {
