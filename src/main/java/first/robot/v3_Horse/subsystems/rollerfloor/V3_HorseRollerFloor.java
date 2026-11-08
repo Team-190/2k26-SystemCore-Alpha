@@ -97,8 +97,6 @@ public class V3_HorseRollerFloor extends SubsystemBase {
     if (MatchState.getMatchTime() >= 134) {
       rollerFloorGoal = RollerFloorState.STOP;
     }
-
-    // TODO: this should probably be changed
   }
 
   public Command setState(RollerFloorState state) {

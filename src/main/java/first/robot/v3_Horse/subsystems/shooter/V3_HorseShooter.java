@@ -23,6 +23,7 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.Trigger;
+import org.wpilib.driverstation.MatchState;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.AngleUnit;
@@ -190,6 +191,10 @@ public class V3_HorseShooter extends SubsystemBase {
         (V3_HorseRobotState.isInAllianceZone())
             ? hood.atPositionGoal()
             : hoodFeedingTrigger.getAsBoolean());
+
+    if (MatchState.getMatchTime() >= 134) {
+      shooterGoal = ShooterGoal.STOW;
+    }
   }
 
   private Current getCurrentFeedforward() {
@@ -204,7 +209,7 @@ public class V3_HorseShooter extends SubsystemBase {
 
   private AngularVelocity getIdleVelocity() {
     return V3_HorseRobotState.isInAllianceZone()
-        ? V3_HorseRobotState.getScoreVelocity()
+        ? V3_HorseRobotState.getScoreVelocity().times(0.9)
         : V3_HorseRobotState.FixedShots.FRONT_TOWER.getParameters().flywheelSpeed().get();
   }
 
