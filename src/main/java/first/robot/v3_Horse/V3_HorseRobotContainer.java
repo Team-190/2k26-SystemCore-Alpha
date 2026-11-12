@@ -386,7 +386,9 @@ public class V3_HorseRobotContainer implements RobotContainer {
 
     driver.b().onTrue(V3_HorseCompositeCommands.intakeStow(intake).withName("driver-B-true"));
 
-    driver.rightStick().onTrue(V3_HorseDriveCommands.toggleSchoolBus().withName("driver-rightStick-true"));
+    driver
+        .rightStick()
+        .onTrue(V3_HorseDriveCommands.toggleSchoolBus().withName("driver-rightStick-true"));
 
     operator
         .leftBumper()
