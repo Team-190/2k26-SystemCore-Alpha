@@ -354,6 +354,10 @@ public class V3_HorseRobotState {
                 "FixedShots/Side-Tower/Angle",
                 Rotation2d.fromRadians(0.3490658503988659).getMeasure()),
             GompeiTunables.value("FixedShots/Side-Tower/Speed", RadiansPerSecond.of(165.0)))),
+    FEED(
+        new FixedShotParameters(
+            GompeiTunables.value("FixedShots/Feed/Angle", Rotation2d.fromRadians(0.5).getMeasure()),
+            GompeiTunables.value("FixedShots/Feed/Speed", RadiansPerSecond.of(165.0)))),
     CORNER(
         new FixedShotParameters(
             GompeiTunables.value(

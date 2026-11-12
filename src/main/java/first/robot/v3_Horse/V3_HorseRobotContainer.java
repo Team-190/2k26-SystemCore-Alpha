@@ -436,10 +436,19 @@ public class V3_HorseRobotContainer implements RobotContainer {
         .povRight()
         .onTrue(intake.zeroExtensions().withName("operator-dPadRight-true"));
 
-    operator.y().onTrue(shooter.incrementFlywheelVelocity().withName("operator-Y-true"));
-    operator.x().onTrue(shooter.decrementFlywheelVelocity().withName("operator-X-true"));
-    operator.b().onTrue(shooter.incrementHoodAngle().withName("operator-B-true"));
-    operator.a().onTrue(shooter.decrementHoodAngle().withName("operator-A-true"));
+    operator.b().onTrue(shooter.incrementFlywheelVelocity().withName("operator-B-true"));
+    operator.a().onTrue(shooter.decrementFlywheelVelocity().withName("operator-A-true"));
+
+    operator
+        .x()
+        .whileTrue(
+            V3_HorseCompositeCommands.fixedShotCommand(
+                    drive, rollerFloor, shooter, intake, V3_HorseRobotState.FixedShots.FEED)
+                .withName("driver-X-true"))
+        .onFalse(stopShooter("driver-X-false"));
+
+    // operator.b().onTrue(shooter.incrementHoodAngle().withName("operator-B-true"));
+    // operator.a().onTrue(shooter.decrementHoodAngle().withName("operator-A-true"));
 
     operator.back().onTrue(shooter.setGoal(ShooterGoal.STOW).withName("operator-back-true"));
     operator.start().onTrue(intake.resetIntakeZeroPosition().withName("operator-start-true"));
