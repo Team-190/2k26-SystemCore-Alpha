@@ -484,6 +484,8 @@ public class V3_HorseRobotContainer implements RobotContainer {
     String autoName = selectedAutoName.get();
     boolean flipped = AllianceFlipUtil.shouldFlip();
 
+    Logger.recordOutput("Drive/School Bus/Enabled", V3_HorseDriveCommands.isSchoolBusEnabled());
+
     if (!autoName.equals(lastPublishedAuto) || flipped != lastPublishedFlipped) {
       Pose2d[] trajectory = autoTrajectories.getOrDefault(autoName, new Pose2d[0]);
       if (flipped) {
