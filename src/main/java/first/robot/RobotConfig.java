@@ -1,7 +1,7 @@
 package first.robot;
 
 public final class RobotConfig {
-  public static final RobotType ROBOT = RobotType.V3_Horse;
+  public static final RobotType ROBOT = RobotType.V3_Horse_SIM;
 
   public enum RobotType {
     V3_Horse,
