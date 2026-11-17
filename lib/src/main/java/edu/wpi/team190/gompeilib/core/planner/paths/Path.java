@@ -9,7 +9,7 @@ public abstract class Path {
 
   public Pose2d startPose;
   public Pose2d endPose;
-  public PathConstrants constants;
+  public PathConstraints constraints;
   public ArrayList<Pair<Double, Command>> eventList = new ArrayList<Pair<Double, Command>>();
 
   abstract Pose2d sample(double time);

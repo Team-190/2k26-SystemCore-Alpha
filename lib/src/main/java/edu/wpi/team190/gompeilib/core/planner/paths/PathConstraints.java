@@ -1,14 +1,16 @@
 package edu.wpi.team190.gompeilib.core.planner.paths;
 
-public class PathConstrants {
+public class PathConstraints {
 
-  public double maxAcceleration;
-  public double maxVelocity;
-  public double maxThetaVelocity;
+  public final double maxAcceleration;
+  public final double maxVelocity;
+  public final double maxThetaVelocity;
+
+  //for zones
   public double timeInital;
   public double timeFinal;
 
-  public PathConstrants(double maxAcceleration, double maxVelocity, double maxThetaVelocity) {
+  public PathConstraints(double maxAcceleration, double maxVelocity, double maxThetaVelocity) {
     this.maxAcceleration = maxAcceleration;
     this.maxVelocity = maxVelocity;
     this.maxThetaVelocity = maxThetaVelocity;
