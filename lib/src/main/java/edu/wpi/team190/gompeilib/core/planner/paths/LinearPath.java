@@ -4,7 +4,6 @@ import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 
-import edu.wpi.team190.gompeilib.core.planner.States;
 
 public class LinearPath extends Path {
   private final Translation2d start;
@@ -16,12 +15,12 @@ public class LinearPath extends Path {
   }
 
   @Override
-  public States sample(double t) {
+  public Pose2d sample(double t) {
      throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
 
   @Override
-  States sample(Pose2d pose) {
+  Pose2d sample(Pose2d pose) {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
