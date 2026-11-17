@@ -5,6 +5,8 @@ import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.util.Pair;
 
+import edu.wpi.team190.gompeilib.core.planner.States;
+
 public abstract class Path {
 
   public final Pose2d startPose;
@@ -17,9 +19,9 @@ public abstract class Path {
     this.endPose = endPose;
     this.constraints = constraints;
   }
-  abstract Pose2d sample(double time);
+  abstract States sample(double time);
 
-  abstract Pose2d sample(Pose2d pose);
+  abstract States sample(Pose2d pose);
 
   public Path withCommand(double time, Command command) {
     eventList.add(Pair.of(time, command));
