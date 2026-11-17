@@ -7,19 +7,17 @@ import org.wpilib.math.geometry.Translation2d;
 public class LinearPath extends Path {
   private final Translation2d start;
   private final Translation2d end;
+  private final double time;
 
-  public LinearPath(Translation2d start, Translation2d end) {
+  public LinearPath(Pose2d start, Pose2d end) {
     this.start = start;
     this.end = end;
+    
   }
 
   @Override
   public Pose2d sample(double t) {
-    return new Pose2d(
-        new Translation2d(
-            start.getX() + (end.getX() - start.getX()) * t,
-            start.getY() + (end.getY() - start.getY()) * t),
-        new Rotation2d());
+    return ;
   }
 
   @Override
@@ -27,4 +25,8 @@ public class LinearPath extends Path {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
+
+ public double calculateTime(){
+
+ }
 }
