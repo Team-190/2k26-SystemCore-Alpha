@@ -7,11 +7,16 @@ import org.wpilib.util.Pair;
 
 public abstract class Path {
 
-  public Pose2d startPose;
-  public Pose2d endPose;
-  public PathConstraints constraints;
+  public final Pose2d startPose;
+  public final Pose2d endPose;
+  public final PathConstraints constraints;
   public ArrayList<Pair<Double, Command>> eventList = new ArrayList<Pair<Double, Command>>();
 
+  public Path(Pose2d startPose,Pose2d endPose, PathConstraints constraints){
+    this.startPose = startPose;
+    this.endPose = endPose;
+    this.constraints = constraints;
+  }
   abstract Pose2d sample(double time);
 
   abstract Pose2d sample(Pose2d pose);
