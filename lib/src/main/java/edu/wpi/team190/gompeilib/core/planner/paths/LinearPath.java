@@ -5,19 +5,17 @@ import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 
 public class LinearPath extends Path {
-  private final Translation2d start;
-  private final Translation2d end;
   private final double time;
 
-  public LinearPath(Pose2d start, Pose2d end) {
-    this.start = start;
-    this.end = end;
+  public LinearPath(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
+    super(startPose,endPose,constraints);
+    time = calculateTime();
     
   }
 
   @Override
   public Pose2d sample(double t) {
-    return ;
+    return startPose.interpolate(endPose, t/time);
   }
 
   @Override
@@ -27,6 +25,18 @@ public class LinearPath extends Path {
   }
 
  public double calculateTime(){
-
+    double totalTime;
+    double accTime = constraints.maxVelocity/constraints.maxAcceleration;
+    double accDist = (constraints.maxVelocity/2)*accTime;
+    double totalDist = (startPose.getTranslation().getDistance(endPose.getTranslation()));
+    double constDist = totalDist-accDist;
+    if(constDist < 0){
+        double vf = Math.sqrt(2*constraints.maxAcceleration*totalDist);
+        totalTime = vf/constraints.maxAcceleration;
+    }else{
+        double constTime = constDist/constraints.maxVelocity;
+        totalTime = accTime+constTime;
+    }
+    return totalTime;
  }
 }
