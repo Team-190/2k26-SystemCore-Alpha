@@ -4,6 +4,11 @@ import org.wpilib.math.geometry.Pose2d;
 
 public class WaitPath extends Path {
 
+  public WaitPath(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
+        super(startPose, endPose, constraints);
+        //TODO Auto-generated constructor stub
+    }
+
   @Override
   Pose2d sample(double time) {
     // TODO Auto-generated method stub
