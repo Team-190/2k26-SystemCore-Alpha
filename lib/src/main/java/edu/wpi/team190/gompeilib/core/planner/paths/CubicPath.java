@@ -2,13 +2,12 @@ package edu.wpi.team190.gompeilib.core.planner.paths;
 
 import org.wpilib.math.geometry.Pose2d;
 
-
 public class CubicPath extends Path {
 
   public CubicPath(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
-        super(startPose, endPose, constraints);
-        //TODO Auto-generated constructor stub
-    }
+    super(startPose, endPose, constraints);
+    // TODO Auto-generated constructor stub
+  }
 
   @Override
   Pose2d sample(double time) {

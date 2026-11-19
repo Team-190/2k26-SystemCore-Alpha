@@ -6,7 +6,7 @@ public class PathConstraints {
   public final double maxVelocity;
   public final double maxThetaVelocity;
 
-  //for zones
+  // for zones
   public double timeInital;
   public double timeFinal;
 

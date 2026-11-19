@@ -5,6 +5,8 @@ import static org.wpilib.units.Units.RadiansPerSecond;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIO;
 import edu.wpi.team190.gompeilib.core.io.components.inertial.GyroIOPigeon2;
+import edu.wpi.team190.gompeilib.core.planner.paths.LinearPath;
+import edu.wpi.team190.gompeilib.core.planner.paths.PathConstraints;
 import edu.wpi.team190.gompeilib.core.robot.RobotContainer;
 import edu.wpi.team190.gompeilib.core.robot.RobotMode;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
@@ -54,6 +56,8 @@ import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandNiDsXboxController;
 import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.networktables.StringSubscriber;
 
@@ -94,6 +98,12 @@ public class V3_HorseRobotContainer implements RobotContainer {
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
   public V3_HorseRobotContainer() {
+    new LinearPath(
+            new Pose2d(),
+            new Pose2d(new Translation2d(10, 10), new Rotation2d(10)),
+            new PathConstraints(1, 4, 2))
+        .LogPath();
+    ;
     if (Constants.getMode() != RobotMode.REPLAY) {
       switch (RobotConfig.ROBOT) {
         case V3_Horse:

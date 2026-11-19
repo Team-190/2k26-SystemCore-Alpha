@@ -2,13 +2,12 @@ package edu.wpi.team190.gompeilib.core.planner.paths;
 
 import org.wpilib.math.geometry.Pose2d;
 
-
 public class ArcPath extends Path {
 
   public ArcPath(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
-        super(startPose, endPose, constraints);
-        //TODO Auto-generated constructor stub
-    }
+    super(startPose, endPose, constraints);
+    // TODO Auto-generated constructor stub
+  }
 
   @Override
   Pose2d sample(double time) {
@@ -21,5 +20,4 @@ public class ArcPath extends Path {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
-
 }
