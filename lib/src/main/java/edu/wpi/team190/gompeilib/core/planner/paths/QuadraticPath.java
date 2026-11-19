@@ -4,7 +4,6 @@ import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 
-import edu.wpi.team190.gompeilib.core.planner.States;
 
 public class QuadraticPath extends Path {
   private final Translation2d start;
@@ -18,13 +17,13 @@ public class QuadraticPath extends Path {
   }
 
   @Override
-  States sample(double time) {
+  Pose2d sample(double time) {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
 
   @Override
-  States sample(Pose2d pose) {
+  Pose2d sample(Pose2d pose) {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
