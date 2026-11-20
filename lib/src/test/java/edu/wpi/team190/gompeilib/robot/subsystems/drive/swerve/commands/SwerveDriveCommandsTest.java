@@ -139,7 +139,7 @@ public class SwerveDriveCommandsTest extends GompeiLibTestBase {
     assertSame(sample, amps.sample(OutputType.CURRENT));
     assertFalse(volts.atLimit(Leg.DYNAMIC_FORWARD));
     assertTrue(volts.gravity().isEmpty());
-    assertTrue(volts.drumRadius().isEmpty());
+    assertTrue(volts.distancePerRadian().isEmpty());
   }
 
   @Test

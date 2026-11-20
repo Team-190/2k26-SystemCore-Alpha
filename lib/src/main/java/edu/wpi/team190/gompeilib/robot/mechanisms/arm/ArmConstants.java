@@ -8,7 +8,7 @@ import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;

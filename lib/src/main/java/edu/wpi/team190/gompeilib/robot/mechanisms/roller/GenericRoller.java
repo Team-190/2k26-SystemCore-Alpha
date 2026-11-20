@@ -1,7 +1,5 @@
 package edu.wpi.team190.gompeilib.robot.mechanisms.roller;
 
-import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Value;
 import static org.wpilib.units.Units.Volts;
 
 import edu.wpi.team190.gompeilib.control.Setpoint;
@@ -10,14 +8,15 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.openloop.CurrentControllable;
+import edu.wpi.team190.gompeilib.robot.common.openloop.DutyCycleControllable;
+import edu.wpi.team190.gompeilib.robot.common.openloop.OpenLoopControl;
+import edu.wpi.team190.gompeilib.robot.common.openloop.OpenLoopControls;
+import edu.wpi.team190.gompeilib.robot.common.openloop.VoltageControllable;
 import org.wpilib.command2.Subsystem;
+import org.wpilib.units.CurrentUnit;
+import org.wpilib.units.DimensionlessUnit;
 import org.wpilib.units.VoltageUnit;
 
 /**
@@ -27,9 +26,7 @@ import org.wpilib.units.VoltageUnit;
 public class GenericRoller
     implements VoltageControllable, CurrentControllable, DutyCycleControllable {
   private final MechanismCore core;
-  private final VoltageControl voltageControl;
-  private final CurrentControl currentControl;
-  private final DutyCycleControl dutyCycleControl;
+  private final OpenLoopControls openLoop;
 
   /**
    * Creates a roller.
@@ -48,16 +45,14 @@ public class GenericRoller
       Setpoint<VoltageUnit> voltageGoal) {
     core =
         new MechanismCore(new MotorControllerGroup(constants.motor, motorFactory), subsystem, name);
-    boolean foc = constants.motor.enableFOC;
-    voltageControl = new VoltageControl(core, voltageGoal, foc);
-    currentControl =
-        new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
-    dutyCycleControl =
-        new DutyCycleControl(
+    openLoop =
+        OpenLoopControls.create(
             core,
-            new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
-            foc);
-    core.activate(voltageControl);
+            constants.motor,
+            voltageGoal,
+            constants.currentOffsetStep,
+            constants.dutyCycleOffsetStep);
+    core.activate(openLoop.voltage());
   }
 
   /**
@@ -98,18 +93,18 @@ public class GenericRoller
   }
 
   @Override
-  public VoltageControl voltageControl() {
-    return voltageControl;
+  public OpenLoopControl<VoltageUnit> voltageControl() {
+    return openLoop.voltage();
   }
 
   @Override
-  public CurrentControl currentControl() {
-    return currentControl;
+  public OpenLoopControl<CurrentUnit> currentControl() {
+    return openLoop.current();
   }
 
   @Override
-  public DutyCycleControl dutyCycleControl() {
-    return dutyCycleControl;
+  public OpenLoopControl<DimensionlessUnit> dutyCycleControl() {
+    return openLoop.dutyCycle();
   }
 
   @Override

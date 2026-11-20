@@ -476,4 +476,48 @@ public sealed interface PositionRequest extends ClosedLoopRequest {
       return OutputType.CURRENT;
     }
   }
+
+  /**
+   * Returns the position request for a profile mode and feedforward. The feedforward's kind picks
+   * the output: voltage, torque current, or duty cycle.
+   *
+   * @param mode how the request reaches the position
+   * @param position the position, at the gearbox output
+   * @param feedforward the feedforward, which picks the output type
+   * @param foc whether voltage and duty-cycle requests use field-oriented control
+   * @param slot the gain slot
+   * @param options the request options
+   * @return the request
+   */
+  static PositionRequest of(
+      ProfileMode mode,
+      Angle position,
+      Feedforward feedforward,
+      boolean foc,
+      GainSlot slot,
+      RequestOptions options) {
+    AngularVelocity zero = RadiansPerSecond.of(0.0);
+    return switch (feedforward) {
+      case Feedforward.Volts(Voltage ff) ->
+          switch (mode) {
+            case PROFILED -> new ProfiledPositionVoltage(position, ff, foc, slot, options);
+            case UNPROFILED -> new PositionVoltage(position, zero, ff, foc, slot, options);
+            case EXPONENTIAL ->
+                new ExponentialProfiledPositionVoltage(position, ff, foc, slot, options);
+          };
+      case Feedforward.Amps(Current ff) ->
+          switch (mode) {
+            case PROFILED -> new ProfiledPositionCurrent(position, ff, slot, options);
+            case UNPROFILED -> new PositionCurrent(position, zero, ff, slot, options);
+            case EXPONENTIAL -> new ExponentialProfiledPositionCurrent(position, ff, slot, options);
+          };
+      case Feedforward.DutyCycle(double ff) ->
+          switch (mode) {
+            case PROFILED -> new ProfiledPositionDutyCycle(position, ff, foc, slot, options);
+            case UNPROFILED -> new PositionDutyCycle(position, zero, ff, foc, slot, options);
+            case EXPONENTIAL ->
+                new ExponentialProfiledPositionDutyCycle(position, ff, foc, slot, options);
+          };
+    };
+  }
 }

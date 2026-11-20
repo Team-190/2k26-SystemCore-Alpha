@@ -18,7 +18,7 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
+import edu.wpi.team190.gompeilib.robot.common.openloop.VoltageControllable;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;

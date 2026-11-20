@@ -215,4 +215,46 @@ public sealed interface VelocityRequest extends ClosedLoopRequest {
       return OutputType.CURRENT;
     }
   }
+
+  /**
+   * Returns the velocity request for a profile mode and feedforward. The feedforward's kind picks
+   * the output: voltage, torque current, or duty cycle.
+   *
+   * @param mode {@link ProfileMode#PROFILED} or {@link ProfileMode#UNPROFILED}
+   * @param velocity the velocity, at the gearbox output
+   * @param acceleration the acceleration, at the gearbox output
+   * @param feedforward the feedforward, which picks the output type
+   * @param foc whether voltage and duty-cycle requests use field-oriented control
+   * @param slot the gain slot
+   * @param options the request options
+   * @return the request
+   * @throws IllegalArgumentException if the mode is {@link ProfileMode#EXPONENTIAL}
+   */
+  static VelocityRequest of(
+      ProfileMode mode,
+      AngularVelocity velocity,
+      AngularAcceleration acceleration,
+      Feedforward feedforward,
+      boolean foc,
+      GainSlot slot,
+      RequestOptions options) {
+    if (mode == ProfileMode.EXPONENTIAL) {
+      throw new IllegalArgumentException("Velocity control has no exponential profile");
+    }
+    boolean profiled = mode == ProfileMode.PROFILED;
+    return switch (feedforward) {
+      case Feedforward.Volts(Voltage ff) ->
+          profiled
+              ? new ProfiledVelocityVoltage(velocity, acceleration, ff, foc, slot, options)
+              : new VelocityVoltage(velocity, acceleration, ff, foc, slot, options);
+      case Feedforward.Amps(Current ff) ->
+          profiled
+              ? new ProfiledVelocityCurrent(velocity, acceleration, ff, slot, options)
+              : new VelocityCurrent(velocity, acceleration, ff, slot, options);
+      case Feedforward.DutyCycle(double ff) ->
+          profiled
+              ? new ProfiledVelocityDutyCycle(velocity, acceleration, ff, foc, slot, options)
+              : new VelocityDutyCycle(velocity, acceleration, ff, foc, slot, options);
+    };
+  }
 }

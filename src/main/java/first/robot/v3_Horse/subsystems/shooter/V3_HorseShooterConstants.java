@@ -19,7 +19,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.SoftLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
 import edu.wpi.team190.gompeilib.tuning.GompeiTunables;

@@ -22,6 +22,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.io.motor.outputs.Feedforward;
 import edu.wpi.team190.gompeilib.io.motor.outputs.FollowerRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.NeutralRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
@@ -29,7 +30,7 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -200,7 +201,7 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
       flywheel.periodic();
       verify(leader).setControl(velocityVoltage(80.0));
 
-      flywheel.setVelocityGoal(RadiansPerSecond.of(50.0), Amps.of(2.0));
+      flywheel.setVelocityGoal(RadiansPerSecond.of(50.0), Feedforward.amps(Amps.of(2.0)));
       assertEquals("VelocityCurrent", flywheel.getMode());
       flywheel.periodic();
       verify(leader).setControl(velocityCurrent(50.0, 2.0));
@@ -211,11 +212,11 @@ public class GenericFlywheelTest extends GompeiLibTestBase {
               RadiansPerSecond.of(5.0),
               RadiansPerSecond.of(-500.0),
               RadiansPerSecond.of(500.0)),
-          Amps.of(3.0));
+          Feedforward.amps(Amps.of(3.0)));
       flywheel.periodic();
       verify(leader).setControl(velocityCurrent(30.0, 3.0));
 
-      assertEquals(Amps.of(3.0), flywheel.getVelocityFeedforward());
+      assertEquals(Feedforward.amps(Amps.of(3.0)), flywheel.getVelocityFeedforward());
 
       flywheel.setCurrentGoal(Amps.of(4.0));
       assertEquals("Current", flywheel.getMode());

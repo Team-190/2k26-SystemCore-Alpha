@@ -15,7 +15,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.Arm;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
 import java.util.Optional;

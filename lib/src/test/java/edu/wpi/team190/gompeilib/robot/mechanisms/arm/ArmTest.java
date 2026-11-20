@@ -29,8 +29,8 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.physics.Inertia;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
@@ -263,6 +263,7 @@ public class ArmTest extends GompeiLibTestBase {
     Command home = arm.home();
     home.initialize();
     home.execute();
+    arm.periodic();
     home.execute();
     verify(motor)
         .setControl(new OpenLoopRequest.VoltageOutput(Volts.of(-1), true, CurrentHoming.OPTIONS));

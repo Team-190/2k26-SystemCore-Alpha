@@ -31,8 +31,8 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.phoenix.TalonFXConversions;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
@@ -120,7 +120,7 @@ public class ExtensionTest extends GompeiLibTestBase {
         .withMotor(motor)
         .withSlot(GainSlot.ZERO, slot0)
         .withSlot(GainSlot.ONE, slot1)
-        .withDrumRadius(Meters.of(DRUM_RADIUS))
+        .withDistancePerRadian(Meters.of(DRUM_RADIUS))
         .withHoming(homing)
         .withExtensionParameters(
             ExtensionConstants.ExtensionParameters.builder()
@@ -320,6 +320,7 @@ public class ExtensionTest extends GompeiLibTestBase {
                         Volts.of(-1.0), Amps.of(-20.0), Amps.of(5.0), Meters.of(0.0)))));
     Command home = extension.home();
     home.initialize();
+    extension.periodic();
     home.execute();
     home.execute();
     verify(motor)
@@ -375,7 +376,7 @@ public class ExtensionTest extends GompeiLibTestBase {
     assertSame(extension.core(), target.core());
     assertSame(constraint, target.constraint().orElseThrow());
     assertEquals(Optional.of(GravityType.CONSTANT), target.gravity());
-    assertEquals(Optional.of(constants.drumRadius), target.drumRadius());
+    assertEquals(Optional.of(constants.distancePerRadian), target.distancePerRadian());
     assertEquals(
         new OpenLoopRequest.VoltageOutput(Volts.of(2), true, RequestOptions.DEFAULT),
         target.request().apply(Volts.of(2)));

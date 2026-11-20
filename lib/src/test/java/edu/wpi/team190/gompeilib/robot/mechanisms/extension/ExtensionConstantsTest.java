@@ -59,7 +59,7 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     ExtensionConstants constants =
         ExtensionConstants.builder()
             .withMotor(motor)
-            .withDrumRadius(Meters.of(0.02))
+            .withDistancePerRadian(Meters.of(0.02))
             .withExtensionParameters(parameters)
             .withConstraints(constraints)
             .withVoltageOffsetStep(Volts.of(0.5))
@@ -68,7 +68,7 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
             .build();
 
     assertSame(motor, constants.motor);
-    assertEquals(Meters.of(0.02), constants.drumRadius);
+    assertEquals(Meters.of(0.02), constants.distancePerRadian);
     assertSame(parameters, constants.extensionParameters);
     assertSame(constraints, constants.constraints);
     assertEquals(Volts.of(0.5), constants.voltageOffsetStep);

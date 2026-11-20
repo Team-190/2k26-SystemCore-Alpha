@@ -55,7 +55,7 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OpenLoopRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.PositionRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismConversion;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -303,7 +303,7 @@ public class TalonFXConversionsTest extends GompeiLibTestBase {
     SlotConfigs slot =
         TalonFXConversions.toSlotConfigs(
             SlotConfig.position(
-                MechanismConversion.drum(Meters.of(0.05)).toMotorPositionGains(perMeter)),
+                MechanismConversion.linear(Meters.of(0.05)).toMotorPositionGains(perMeter)),
             GainSlot.ZERO);
 
     double metersPerRotation = 2 * Math.PI * 0.05;

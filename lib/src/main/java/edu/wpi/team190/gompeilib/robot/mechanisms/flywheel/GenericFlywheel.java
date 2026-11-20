@@ -16,26 +16,26 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MotionReadable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.TuningBindings;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VelocityControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VelocityControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
+import edu.wpi.team190.gompeilib.robot.common.characterization.Characterizable;
+import edu.wpi.team190.gompeilib.robot.common.characterization.ConstraintConfigurable;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismConversion;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.core.TuningBindings;
+import edu.wpi.team190.gompeilib.robot.common.openloop.CurrentControllable;
+import edu.wpi.team190.gompeilib.robot.common.openloop.DutyCycleControllable;
+import edu.wpi.team190.gompeilib.robot.common.openloop.OpenLoopControl;
+import edu.wpi.team190.gompeilib.robot.common.openloop.OpenLoopControls;
+import edu.wpi.team190.gompeilib.robot.common.openloop.VoltageControllable;
+import edu.wpi.team190.gompeilib.robot.common.position.MotionReadable;
+import edu.wpi.team190.gompeilib.robot.common.velocity.VelocityControl;
+import edu.wpi.team190.gompeilib.robot.common.velocity.VelocityControllable;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularAccelerationUnit;
 import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.CurrentUnit;
+import org.wpilib.units.DimensionlessUnit;
 import org.wpilib.units.VoltageUnit;
 
 /**
@@ -62,9 +62,7 @@ public class GenericFlywheel
 
   private final MechanismCore core;
   private final VelocityControl<AngularVelocityUnit> velocityControl;
-  private final VoltageControl voltageControl;
-  private final CurrentControl currentControl;
-  private final DutyCycleControl dutyCycleControl;
+  private final OpenLoopControls openLoop;
 
   private final CharacterizationConfig<VoltageUnit> voltageCharacterizationConfig;
   private final CharacterizationConfig<CurrentUnit> currentCharacterizationConfig;
@@ -98,24 +96,18 @@ public class GenericFlywheel
             .build();
     MotorControllerGroup motors = new MotorControllerGroup(config, motorFactory);
     core = new MechanismCore(motors, subsystem, name);
-    boolean foc = constants.motor.enableFOC;
     velocityControl =
         new VelocityControl<>(
             core,
             CONVERSION,
             velocityGoal,
             () -> constants.constraints.goalTolerance().get(),
-            foc,
-            VOLTAGE_SLOT,
-            CURRENT_SLOT);
-    voltageControl = new VoltageControl(core, voltageGoal, foc);
-    currentControl =
-        new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
-    dutyCycleControl =
-        new DutyCycleControl(
-            core,
-            new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
-            foc);
+            constants.motor.enableFOC);
+    velocityControl.setGainSlot(VOLTAGE_SLOT);
+    velocityControl.setGainSlot(OutputType.CURRENT, CURRENT_SLOT);
+    openLoop =
+        OpenLoopControls.create(
+            core, config, voltageGoal, constants.currentOffsetStep, constants.dutyCycleOffsetStep);
 
     voltageCharacterizationConfig = constants.voltageCharacterization;
     currentCharacterizationConfig = constants.currentCharacterization;
@@ -239,18 +231,18 @@ public class GenericFlywheel
   }
 
   @Override
-  public VoltageControl voltageControl() {
-    return voltageControl;
+  public OpenLoopControl<VoltageUnit> voltageControl() {
+    return openLoop.voltage();
   }
 
   @Override
-  public CurrentControl currentControl() {
-    return currentControl;
+  public OpenLoopControl<CurrentUnit> currentControl() {
+    return openLoop.current();
   }
 
   @Override
-  public DutyCycleControl dutyCycleControl() {
-    return dutyCycleControl;
+  public OpenLoopControl<DimensionlessUnit> dutyCycleControl() {
+    return openLoop.dutyCycle();
   }
 
   @Override
@@ -275,7 +267,7 @@ public class GenericFlywheel
    * @return the command
    */
   public Command characterizeVoltage() {
-    return characterize(voltageCharacterizationConfig, voltageControl::request);
+    return characterize(voltageCharacterizationConfig, openLoop.voltage()::request);
   }
 
   /**
@@ -285,6 +277,6 @@ public class GenericFlywheel
    * @return the command
    */
   public Command characterizeTorque() {
-    return characterize(currentCharacterizationConfig, currentControl::request);
+    return characterize(currentCharacterizationConfig, openLoop.current()::request);
   }
 }

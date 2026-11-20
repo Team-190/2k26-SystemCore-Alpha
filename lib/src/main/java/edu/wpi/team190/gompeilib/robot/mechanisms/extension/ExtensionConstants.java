@@ -10,7 +10,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
@@ -27,20 +27,23 @@ import org.wpilib.units.measure.Voltage;
 @Builder(setterPrefix = "with", toBuilder = true)
 public class ExtensionConstants {
   /**
-   * The leader motor and its followers. Its gear ratio is rotor rotations per drum rotation. Leave
-   * its slots empty: the extension fills them from {@link #slots}, and adds soft limits from the
-   * travel range and profile constraints from {@link #constraints}.
+   * The leader motor and its followers. Its gear ratio is rotor rotations per gearbox-output
+   * rotation. Leave its slots empty: the extension fills them from {@link #slots}, and adds soft
+   * limits from the travel range and profile constraints from {@link #constraints}.
    */
   @NonNull public final MotorConfig motor;
 
   /**
    * The position gains, by slot, per meter of travel (or whatever distance unit they were tuned
-   * in). The extension converts them through the drum to gains at the motor.
+   * in). The extension converts them through {@link #distancePerRadian} to gains at the motor.
    */
   @NonNull @Singular public final Map<GainSlot, Gains<?, DistanceUnit, LinearVelocityUnit>> slots;
 
-  /** The radius of the drum that turns rotation into travel. */
-  @NonNull public final Distance drumRadius;
+  /**
+   * How far the extension travels per radian of the gearbox output: a drum or sprocket's radius, or
+   * a lead screw's lead divided by 2π.
+   */
+  @NonNull public final Distance distancePerRadian;
 
   /** How the extension finds its position against a hard stop, or empty if it doesn't home. */
   @NonNull @Builder.Default
@@ -79,7 +82,7 @@ public class ExtensionConstants {
    * @param carriageGearbox the motors driving the carriage, for simulation
    * @param minLength the shortest extension
    * @param maxLength the longest extension
-   * @param plant how the extension responds to its motors at the drum, per drum radian, for
+   * @param plant how the extension responds to its motors at the gearbox output, per radian, for
    *     simulation: what {@link Extension#characterize()} measured, or {@link
    *     PlantCharacterization#ofElevator} before the extension exists
    */

@@ -12,7 +12,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.physics.Inertia;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;

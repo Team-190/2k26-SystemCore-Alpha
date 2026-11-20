@@ -133,7 +133,7 @@ public final class SwerveDriveCommands {
     }
 
     @Override
-    public Optional<Distance> drumRadius() {
+    public Optional<Distance> distancePerRadian() {
       return Optional.empty();
     }
   }

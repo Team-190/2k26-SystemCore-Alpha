@@ -9,6 +9,7 @@ import edu.wpi.team190.gompeilib.control.constraints.AngularVelocityConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
+import edu.wpi.team190.gompeilib.io.motor.outputs.Feedforward;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheel;
 import edu.wpi.team190.gompeilib.robot.mechanisms.hood.GenericHood;
@@ -29,7 +30,6 @@ import org.wpilib.units.AngularVelocityUnit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
-import org.wpilib.units.measure.Current;
 
 public class V3_HorseShooter extends SubsystemBase {
 
@@ -166,14 +166,15 @@ public class V3_HorseShooter extends SubsystemBase {
             : hoodFeedingTrigger.getAsBoolean());
   }
 
-  private Current getCurrentFeedforward() {
-    return isHopperRunning.getAsBoolean()
-        ? (flywheel
-                .getVelocity()
-                .lt(flywheel.getVelocityGoal().getSetpoint().minus(RadiansPerSecond.of(5)))
-            ? V3_HorseShooterConstants.SHOOTER_FEEDFORWARD.get()
-            : Amps.zero())
-        : Amps.zero();
+  private Feedforward getCurrentFeedforward() {
+    return Feedforward.amps(
+        isHopperRunning.getAsBoolean()
+            ? (flywheel
+                    .getVelocity()
+                    .lt(flywheel.getVelocityGoal().getSetpoint().minus(RadiansPerSecond.of(5)))
+                ? V3_HorseShooterConstants.SHOOTER_FEEDFORWARD.get()
+                : Amps.zero())
+            : Amps.zero());
   }
 
   public Command setGoal(ShooterGoal shooterGoal) {
@@ -223,7 +224,10 @@ public class V3_HorseShooter extends SubsystemBase {
     return characterizing(flywheel.characterizeVoltage(), "Characterize Flywheel Voltage");
   }
 
-  /** Runs a characterization while periodic leaves the hood and flywheel goals alone. */
+  /**
+   * Runs a command that drives the hood or flywheel itself, such as a characterization or homing,
+   * while periodic leaves the hood and flywheel goals alone.
+   */
   private Command characterizing(Command characterization, String name) {
     return Commands.runOnce(() -> characterizing = true)
         .andThen(characterization)
@@ -302,11 +306,17 @@ public class V3_HorseShooter extends SubsystemBase {
 
   public Command setFlywheelVelocity(AngularVelocity velocity) {
     return setGoal(ShooterGoal.IDLE)
-        .andThen(Commands.runOnce(() -> flywheel.setVelocityGoal(velocity, Amps.of(0))));
+        .andThen(
+            Commands.runOnce(
+                () -> flywheel.setVelocityGoal(velocity, Feedforward.amps(Amps.of(0)))));
   }
 
+  /**
+   * Homes the hood against its hard stop. Homing is the hood's active control, so periodic stops
+   * setting hood goals until it finishes.
+   */
   public Command resetHoodZero() {
-    return hood.home();
+    return characterizing(hood.home(), "Reset Hood Zero");
   }
 
   public Angle getHoodAngle() {

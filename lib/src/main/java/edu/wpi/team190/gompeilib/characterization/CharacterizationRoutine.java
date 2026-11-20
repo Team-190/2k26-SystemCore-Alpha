@@ -9,7 +9,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -104,12 +104,12 @@ public final class CharacterizationRoutine<U extends Unit> {
     Optional<GravityType> gravity();
 
     /**
-     * Returns the drum that turns the target's rotation into travel, so the report prints gains per
+     * Returns how far the target travels per radian of its rotation, so the report prints gains per
      * meter.
      *
-     * @return the drum's radius, or empty for gains per rotation
+     * @return the distance per radian, or empty for gains per rotation
      */
-    Optional<Distance> drumRadius();
+    Optional<Distance> distancePerRadian();
   }
 
   /**
@@ -119,7 +119,7 @@ public final class CharacterizationRoutine<U extends Unit> {
    * @param request how an output becomes a request to the motors
    * @param constraint the travel the mechanism must stay inside, or empty for a continuous one
    * @param gravity how gravity loads the mechanism, or empty if it doesn't
-   * @param drumRadius the mechanism's drum, or empty for an angular mechanism
+   * @param distancePerRadian the mechanism's travel per radian, or empty for an angular mechanism
    * @param <U> the output unit
    */
   public record MechanismTarget<U extends Unit>(
@@ -127,14 +127,14 @@ public final class CharacterizationRoutine<U extends Unit> {
       Function<Measure<U>, MotorRequest> request,
       Optional<CharacterizationConstraint<?>> constraint,
       Optional<GravityType> gravity,
-      Optional<Distance> drumRadius)
+      Optional<Distance> distancePerRadian)
       implements Target<U> {
     public MechanismTarget {
       Objects.requireNonNull(core, "core");
       Objects.requireNonNull(request, "request");
       Objects.requireNonNull(constraint, "constraint");
       Objects.requireNonNull(gravity, "gravity");
-      Objects.requireNonNull(drumRadius, "drumRadius");
+      Objects.requireNonNull(distancePerRadian, "distancePerRadian");
     }
 
     @Override
@@ -290,7 +290,7 @@ public final class CharacterizationRoutine<U extends Unit> {
       try {
         Result result = fit(i);
         log(target.topic(), result);
-        report.append(format(result, effort, target.drumRadius()));
+        report.append(format(result, effort, target.distancePerRadian()));
       } catch (IllegalArgumentException e) {
         report.append("FAILED: ").append(e.getMessage()).append('\n');
       }
@@ -314,10 +314,11 @@ public final class CharacterizationRoutine<U extends Unit> {
    *
    * @param result the fit
    * @param effort the effort's type
-   * @param drumRadius the drum, to print the gains per meter, or empty to print them per rotation
+   * @param distancePerRadian the travel per radian, to print the gains per meter, or empty to print
+   *     them per rotation
    * @return the text
    */
-  static String format(Result result, OutputType effort, Optional<Distance> drumRadius) {
+  static String format(Result result, OutputType effort, Optional<Distance> distancePerRadian) {
     boolean voltage = effort == OutputType.VOLTAGE;
     String unit = voltage ? "Volts" : "Amps";
     String symbol = voltage ? "V" : "A";
@@ -355,8 +356,8 @@ public final class CharacterizationRoutine<U extends Unit> {
     text.append("    .build()\n");
 
     text.append("Gains:\n");
-    if (drumRadius.isPresent()) {
-      double meters = drumRadius.get().in(Meters);
+    if (distancePerRadian.isPresent()) {
+      double meters = distancePerRadian.get().in(Meters);
       appendTerms(
           text,
           unit,

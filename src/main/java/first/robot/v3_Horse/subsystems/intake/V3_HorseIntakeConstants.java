@@ -17,7 +17,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.OpenLoopRamps;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
+import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants.ExtensionParameters;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRollerConstants;
@@ -272,7 +272,7 @@ public class V3_HorseIntakeConstants {
                 .withPrefix("Intake/" + name + "/Slot1")
                 .withKP(VoltsPerMeter.ofNative(0.1))
                 .build())
-        .withDrumRadius(EXTENSION_DRUM_RADIUS)
+        .withDistancePerRadian(EXTENSION_DRUM_RADIUS)
         // Drive back into the hard stop at 1 V until the torque current reaches -20 A
         .withHoming(
             Optional.of(

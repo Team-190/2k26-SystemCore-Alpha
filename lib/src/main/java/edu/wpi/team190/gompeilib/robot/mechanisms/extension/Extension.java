@@ -2,12 +2,8 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.extension;
 
 import static org.wpilib.units.Units.*;
 
-import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
-import edu.wpi.team190.gompeilib.characterization.CharacterizationConstraint;
-import edu.wpi.team190.gompeilib.characterization.CharacterizationRoutine;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
-import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
@@ -17,59 +13,27 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.Homeable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MotionReadable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.TuningBindings;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismConversion;
+import edu.wpi.team190.gompeilib.robot.common.core.PositionalMechanism;
 import java.util.Optional;
 import lombok.Getter;
-import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.DistanceUnit;
 import org.wpilib.units.LinearAccelerationUnit;
 import org.wpilib.units.LinearVelocityUnit;
-import org.wpilib.units.Unit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Distance;
 
 /**
- * A linear extension driven through a drum: one leader motor and any number of followers. The
- * motors work in drum rotations; the extension's drum conversion turns travel into rotation and
- * back. It starts idle.
+ * A linear extension: one leader motor and any number of followers, driving a drum, sprocket, or
+ * screw. The motors work in gearbox-output rotations; the extension's linear conversion turns
+ * travel into rotation and back. It starts idle.
  */
 public class Extension
-    implements PositionControllable<DistanceUnit>,
-        VoltageControllable,
-        CurrentControllable,
-        DutyCycleControllable,
-        MotionReadable<DistanceUnit, LinearVelocityUnit>,
-        ConstraintConfigurable<LinearConstraints>,
-        Homeable,
-        Characterizable {
+    extends PositionalMechanism<
+        DistanceUnit, LinearVelocityUnit, LinearAccelerationUnit, LinearConstraints> {
   @Getter private final ExtensionConstants constants;
-  private final MechanismConversion<DistanceUnit, LinearVelocityUnit, LinearAccelerationUnit>
-      conversion;
-  private final MechanismCore core;
-  private final PositionControl<DistanceUnit> positionControl;
-  private final VoltageControl voltageControl;
-  private final CurrentControl currentControl;
-  private final DutyCycleControl dutyCycleControl;
-  private final Optional<CurrentHoming<DistanceUnit>> homing;
-
-  private final CharacterizationConstraint<DistanceUnit> characterizationConstraint;
 
   /**
    * Creates an extension.
@@ -80,6 +44,8 @@ public class Extension
    * @param constants the extension's constants
    * @param positionGoal the initial position goal
    * @param voltageGoal the initial voltage goal
+   * @throws IllegalArgumentException if the motor config has slots; set {@link
+   *     ExtensionConstants#slots} instead
    */
   public Extension(
       MotorIOFactory motorFactory,
@@ -88,56 +54,25 @@ public class Extension
       ExtensionConstants constants,
       Setpoint<DistanceUnit> positionGoal,
       Setpoint<VoltageUnit> voltageGoal) {
+    super(
+        motorFactory,
+        motorConfig(constants, name),
+        subsystem,
+        name,
+        MechanismConversion.linear(constants.distancePerRadian),
+        constants.constraints,
+        () -> constants.constraints.goalTolerance().get(),
+        constants.extensionParameters.minLength(),
+        constants.extensionParameters.maxLength(),
+        constants.constraints.characterizationMargin(),
+        constants.closedLoopOutputType,
+        positionGoal,
+        voltageGoal,
+        constants.currentOffsetStep,
+        constants.dutyCycleOffsetStep,
+        constants.homing,
+        constants.characterization);
     this.constants = constants;
-    conversion = MechanismConversion.drum(constants.drumRadius);
-    ExtensionConstants.ExtensionParameters parameters = constants.extensionParameters;
-    if (!constants.motor.slots.isEmpty()) {
-      throw new IllegalArgumentException(
-          name + "'s motor slots must be empty; set its gains per distance in slots instead");
-    }
-    MotorConfig.MotorConfigBuilder motorBuilder =
-        constants.motor.toBuilder()
-            .withSoftLimits(
-                SoftLimits.between(
-                    conversion.toMotorPosition(parameters.minLength()),
-                    conversion.toMotorPosition(parameters.maxLength())))
-            .withMotionProfile(motionProfile(constants.constraints));
-    constants.slots.forEach(
-        (slot, gains) ->
-            motorBuilder.withSlot(
-                slot, SlotConfig.position(conversion.toMotorPositionGains(gains))));
-    MotorConfig motor = motorBuilder.build();
-    MotorControllerGroup motors = new MotorControllerGroup(motor, motorFactory);
-    core = new MechanismCore(motors, subsystem, name);
-    boolean foc = constants.motor.enableFOC;
-    positionControl =
-        new PositionControl<>(
-            core,
-            conversion,
-            positionGoal,
-            () -> constants.constraints.goalTolerance().get(),
-            foc,
-            constants.closedLoopOutputType);
-    voltageControl = new VoltageControl(core, voltageGoal, foc);
-    currentControl =
-        new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
-    dutyCycleControl =
-        new DutyCycleControl(
-            core,
-            new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
-            foc);
-    homing =
-        constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
-
-    characterizationConstraint =
-        new CharacterizationConstraint<>(
-            this::getPosition,
-            parameters.minLength(),
-            parameters.maxLength(),
-            constants.constraints.characterizationMargin());
-
-    TuningBindings.bindGains(motors, motor);
-    TuningBindings.bindConstraints(motors, constants.constraints, this::motionProfile);
   }
 
   /**
@@ -187,77 +122,67 @@ public class Extension
   }
 
   /**
-   * Builds the physics model for simulating an extension: its plant at the drum, between hard stops
-   * at its travel limits. It starts at the shortest extension.
+   * Builds the leader's config: soft limits at the travel limits, the motion profile, and each
+   * slot's gains converted from per-distance to per-radian.
+   */
+  private static MotorConfig motorConfig(ExtensionConstants constants, String name) {
+    if (!constants.motor.slots.isEmpty()) {
+      throw new IllegalArgumentException(
+          name + "'s motor slots must be empty; set its gains per distance in slots instead");
+    }
+    MechanismConversion<DistanceUnit, LinearVelocityUnit, LinearAccelerationUnit> conversion =
+        MechanismConversion.linear(constants.distancePerRadian);
+    ExtensionConstants.ExtensionParameters parameters = constants.extensionParameters;
+    MotorConfig.MotorConfigBuilder motorBuilder =
+        constants.motor.toBuilder()
+            .withSoftLimits(
+                SoftLimits.between(
+                    conversion.toMotorPosition(parameters.minLength()),
+                    conversion.toMotorPosition(parameters.maxLength())))
+            .withMotionProfile(profile(conversion, constants.constraints));
+    constants.slots.forEach(
+        (slot, gains) ->
+            motorBuilder.withSlot(
+                slot, SlotConfig.position(conversion.toMotorPositionGains(gains))));
+    return motorBuilder.build();
+  }
+
+  private static MotionProfileConfig profile(
+      MechanismConversion<DistanceUnit, LinearVelocityUnit, LinearAccelerationUnit> conversion,
+      LinearConstraints constraints) {
+    return conversion.trapezoidal(
+        constraints.maxVelocity().get(), constraints.maxAcceleration().get());
+  }
+
+  /**
+   * Builds the physics model for simulating an extension: its plant at the gearbox output, between
+   * hard stops at its travel limits. It starts at the shortest extension.
    *
    * @param constants the extension's constants
    * @return the physics model
    */
   public static MechanismSim simMechanism(ExtensionConstants constants) {
     ExtensionConstants.ExtensionParameters parameters = constants.extensionParameters;
-    double drumMeters = constants.drumRadius.in(Meters);
-    Angle min = Radians.of(parameters.minLength().in(Meters) / drumMeters);
+    double metersPerRadian = constants.distancePerRadian.in(Meters);
+    Angle min = Radians.of(parameters.minLength().in(Meters) / metersPerRadian);
     return new PlantMechanismSim(
         parameters.carriageGearbox(),
         constants.motor.gearRatio,
         parameters.plant(),
         min,
-        Radians.of(parameters.maxLength().in(Meters) / drumMeters),
+        Radians.of(parameters.maxLength().in(Meters) / metersPerRadian),
         min);
   }
 
   @Override
-  public MechanismCore core() {
-    return core;
-  }
-
-  @Override
-  public PositionControl<DistanceUnit> positionControl() {
-    return positionControl;
-  }
-
-  @Override
-  public VoltageControl voltageControl() {
-    return voltageControl;
-  }
-
-  @Override
-  public CurrentControl currentControl() {
-    return currentControl;
-  }
-
-  @Override
-  public DutyCycleControl dutyCycleControl() {
-    return dutyCycleControl;
-  }
-
-  @Override
-  public CurrentHoming<DistanceUnit> homing() {
-    return homing.orElseThrow(
-        () -> new IllegalStateException(core.getTopic() + " has no homing config"));
-  }
-
-  @Override
-  public MechanismConversion<DistanceUnit, LinearVelocityUnit, LinearAccelerationUnit>
-      conversion() {
-    return conversion;
-  }
-
-  @Override
   public MotionProfileConfig motionProfile(LinearConstraints constraints) {
-    return conversion.trapezoidal(
-        constraints.maxVelocity().get(), constraints.maxAcceleration().get());
+    return profile(conversion(), constraints);
   }
 
   @Override
   @Trace
   public void periodic() {
-    core.periodic();
-  }
-
-  @Override
-  public Optional<CharacterizationConstraint<?>> characterizationConstraint() {
-    return Optional.of(characterizationConstraint);
+    core().periodic();
   }
 
   @Override
@@ -266,30 +191,7 @@ public class Extension
   }
 
   @Override
-  public Optional<Distance> characterizationDrumRadius() {
-    return Optional.of(constants.drumRadius);
-  }
-
-  /**
-   * Returns this extension as a target driven open loop in a config's unit, for characterizing
-   * several extensions together.
-   *
-   * @param config the config whose unit picks voltage or torque current
-   * @param <U> the output unit
-   * @return the target
-   */
-  public <U extends Unit> CharacterizationRoutine.Target<U> characterizationTarget(
-      CharacterizationConfig<U> config) {
-    return characterizationTarget(config, voltageControl, currentControl);
-  }
-
-  /**
-   * Returns a command that characterizes the extension in its config's unit, stopping each leg
-   * short of its travel limits, and prints its plant and gains.
-   *
-   * @return the command
-   */
-  public Command characterize() {
-    return characterize(constants.characterization, voltageControl, currentControl);
+  public Optional<Distance> characterizationDistancePerRadian() {
+    return Optional.of(constants.distancePerRadian);
   }
 }

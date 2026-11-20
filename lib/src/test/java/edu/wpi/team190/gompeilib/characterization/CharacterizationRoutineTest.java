@@ -26,9 +26,9 @@ import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.io.motor.sim.MotorIOSim;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismTestSupport.TestMotors;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismTestSupport.TestMotors;
+import edu.wpi.team190.gompeilib.robot.common.openloop.OpenLoopControl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -175,7 +175,7 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
     }
 
     @Override
-    public Optional<Distance> drumRadius() {
+    public Optional<Distance> distancePerRadian() {
       return Optional.empty();
     }
   }
@@ -384,7 +384,7 @@ public class CharacterizationRoutineTest extends GompeiLibTestBase {
             .withDynamicTimeout(Seconds.of(0.1))
             .withLegs(Set.of(Leg.DYNAMIC_FORWARD, Leg.QUASISTATIC_FORWARD))
             .build();
-    VoltageControl voltage = new VoltageControl(core, Volts.of(1), true);
+    var voltage = OpenLoopControl.voltage(core, Volts.of(1), true);
     voltage.setGoal(Volts.of(2));
     CharacterizationRoutine<VoltageUnit> routine = routine(config, Optional.empty());
 

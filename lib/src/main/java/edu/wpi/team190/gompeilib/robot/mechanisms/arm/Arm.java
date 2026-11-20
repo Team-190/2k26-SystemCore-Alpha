@@ -2,38 +2,20 @@ package edu.wpi.team190.gompeilib.robot.mechanisms.arm;
 
 import static org.wpilib.units.Units.*;
 
-import edu.wpi.team190.gompeilib.characterization.CharacterizationConfig;
-import edu.wpi.team190.gompeilib.characterization.CharacterizationConstraint;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
-import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.physics.MechanismSim;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.robot.mechanisms.Characterizable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.ConstraintConfigurable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.CurrentHoming;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.DutyCycleControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.EncoderSeed;
-import edu.wpi.team190.gompeilib.robot.mechanisms.EncoderSeedable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.Homeable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismConversion;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MechanismCore;
-import edu.wpi.team190.gompeilib.robot.mechanisms.MotionReadable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.PositionControllable;
-import edu.wpi.team190.gompeilib.robot.mechanisms.TuningBindings;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControl;
-import edu.wpi.team190.gompeilib.robot.mechanisms.VoltageControllable;
+import edu.wpi.team190.gompeilib.robot.common.core.MechanismConversion;
+import edu.wpi.team190.gompeilib.robot.common.core.PositionalMechanism;
+import edu.wpi.team190.gompeilib.robot.common.encoder.EncoderSeed;
+import edu.wpi.team190.gompeilib.robot.common.encoder.EncoderSeedable;
 import java.util.Optional;
-import org.wpilib.command2.Command;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.AngleUnit;
 import org.wpilib.units.AngularAccelerationUnit;
@@ -46,28 +28,13 @@ import org.wpilib.units.VoltageUnit;
  * against a hard stop. It starts idle.
  */
 public class Arm
-    implements PositionControllable<AngleUnit>,
-        VoltageControllable,
-        CurrentControllable,
-        DutyCycleControllable,
-        MotionReadable<AngleUnit, AngularVelocityUnit>,
-        ConstraintConfigurable<AngularPositionConstraints>,
-        Homeable,
-        EncoderSeedable,
-        Characterizable {
+    extends PositionalMechanism<
+        AngleUnit, AngularVelocityUnit, AngularAccelerationUnit, AngularPositionConstraints>
+    implements EncoderSeedable {
   private static final MechanismConversion<AngleUnit, AngularVelocityUnit, AngularAccelerationUnit>
       CONVERSION = MechanismConversion.angular();
 
-  private final MechanismCore core;
-  private final PositionControl<AngleUnit> positionControl;
-  private final VoltageControl voltageControl;
-  private final CurrentControl currentControl;
-  private final DutyCycleControl dutyCycleControl;
   private final EncoderSeed encoderSeed;
-  private final Optional<CurrentHoming<AngleUnit>> homing;
-
-  private final CharacterizationConfig<?> characterizationConfig;
-  private final CharacterizationConstraint<AngleUnit> characterizationConstraint;
 
   /**
    * Creates an arm.
@@ -88,42 +55,25 @@ public class Arm
       ArmConstants constants,
       Setpoint<AngleUnit> positionGoal,
       Setpoint<VoltageUnit> voltageGoal) {
-    MotorControllerGroup motors =
-        new MotorControllerGroup(
-            constants.motor.toBuilder().withMotionProfile(profile(constants.constraints)).build(),
-            motorFactory);
-    core = new MechanismCore(motors, subsystem, name);
-    boolean foc = constants.motor.enableFOC;
-    positionControl =
-        new PositionControl<>(
-            core,
-            CONVERSION,
-            positionGoal,
-            () -> constants.constraints.goalTolerance().get(),
-            foc,
-            constants.closedLoopOutputType);
-    voltageControl = new VoltageControl(core, voltageGoal, foc);
-    currentControl =
-        new CurrentControl(core, new Setpoint<>(Amps.of(0), constants.currentOffsetStep));
-    dutyCycleControl =
-        new DutyCycleControl(
-            core,
-            new Setpoint<>(Value.of(0), constants.dutyCycleOffsetStep, Value.of(-1), Value.of(1)),
-            foc);
-    encoderSeed = new EncoderSeed(core, encoder);
-    homing =
-        constants.homing.map(config -> new CurrentHoming<>(core, positionControl, config, foc));
-
-    characterizationConfig = constants.characterization;
-    characterizationConstraint =
-        new CharacterizationConstraint<>(
-            this::getPosition,
-            constants.armParameters.minAngle(),
-            constants.armParameters.maxAngle(),
-            constants.constraints.characterizationMargin());
-
-    TuningBindings.bindGains(motors, constants.motor);
-    TuningBindings.bindConstraints(motors, constants.constraints, Arm::profile);
+    super(
+        motorFactory,
+        constants.motor.toBuilder().withMotionProfile(profile(constants.constraints)).build(),
+        subsystem,
+        name,
+        CONVERSION,
+        constants.constraints,
+        () -> constants.constraints.goalTolerance().get(),
+        constants.armParameters.minAngle(),
+        constants.armParameters.maxAngle(),
+        constants.constraints.characterizationMargin(),
+        constants.closedLoopOutputType,
+        positionGoal,
+        voltageGoal,
+        constants.currentOffsetStep,
+        constants.dutyCycleOffsetStep,
+        constants.homing,
+        constants.characterization);
+    encoderSeed = new EncoderSeed(core(), encoder);
   }
 
   /**
@@ -198,44 +148,8 @@ public class Arm
   }
 
   @Override
-  public MechanismCore core() {
-    return core;
-  }
-
-  @Override
-  public PositionControl<AngleUnit> positionControl() {
-    return positionControl;
-  }
-
-  @Override
-  public VoltageControl voltageControl() {
-    return voltageControl;
-  }
-
-  @Override
-  public CurrentControl currentControl() {
-    return currentControl;
-  }
-
-  @Override
-  public DutyCycleControl dutyCycleControl() {
-    return dutyCycleControl;
-  }
-
-  @Override
   public EncoderSeed encoderSeed() {
     return encoderSeed;
-  }
-
-  @Override
-  public CurrentHoming<AngleUnit> homing() {
-    return homing.orElseThrow(
-        () -> new IllegalStateException(core.getTopic() + " has no homing config"));
-  }
-
-  @Override
-  public MechanismConversion<AngleUnit, AngularVelocityUnit, AngularAccelerationUnit> conversion() {
-    return CONVERSION;
   }
 
   @Override
@@ -246,26 +160,11 @@ public class Arm
   @Override
   @Trace
   public void periodic() {
-    core.periodic();
-  }
-
-  @Override
-  public Optional<CharacterizationConstraint<?>> characterizationConstraint() {
-    return Optional.of(characterizationConstraint);
+    core().periodic();
   }
 
   @Override
   public Optional<GravityType> characterizationGravity() {
     return Optional.of(GravityType.COSINE);
-  }
-
-  /**
-   * Returns a command that characterizes the arm in its config's unit, stopping each leg short of
-   * its travel limits, and prints its plant and gains.
-   *
-   * @return the command
-   */
-  public Command characterize() {
-    return characterize(characterizationConfig, voltageControl, currentControl);
   }
 }

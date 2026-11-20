@@ -37,7 +37,7 @@ public class TestContractEnforcerTest {
           "edu/wpi/team190/gompeilib/control/TestGains.java",
           "edu/wpi/team190/gompeilib/io/IOTestSupport.java",
           // Shared motor fixture and all-capability test mechanism for the mechanism-layer tests
-          "edu/wpi/team190/gompeilib/robot/mechanisms/MechanismTestSupport.java",
+          "edu/wpi/team190/gompeilib/robot/common/core/MechanismTestSupport.java",
           // Shared drive constants and mocked drive for the swerve drive command tests
           "edu/wpi/team190/gompeilib/robot/subsystems/drive/swerve/commands/DriveCommandsTestSupport.java");
 

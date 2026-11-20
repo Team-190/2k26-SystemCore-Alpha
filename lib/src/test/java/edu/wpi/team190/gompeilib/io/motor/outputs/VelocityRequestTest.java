@@ -43,4 +43,58 @@ public class VelocityRequestTest {
           request.velocity());
     }
   }
+
+  @Test
+  public void testOfPicksRequestFromModeAndFeedforward() {
+    org.wpilib.units.measure.AngularVelocity velocity =
+        org.wpilib.units.Units.RadiansPerSecond.of(10.0);
+    org.wpilib.units.measure.AngularAcceleration acceleration =
+        org.wpilib.units.Units.RadiansPerSecondPerSecond.of(0.0);
+    edu.wpi.team190.gompeilib.io.motor.config.GainSlot slot =
+        edu.wpi.team190.gompeilib.io.motor.config.GainSlot.ONE;
+    RequestOptions options = RequestOptions.DEFAULT;
+    Feedforward volts = Feedforward.volts(org.wpilib.units.Units.Volts.of(0.5));
+    Feedforward amps = Feedforward.amps(org.wpilib.units.Units.Amps.of(2.0));
+    Feedforward duty = Feedforward.dutyCycle(0.1);
+
+    assertInstanceOf(
+        VelocityRequest.ProfiledVelocityVoltage.class,
+        VelocityRequest.of(
+            ProfileMode.PROFILED, velocity, acceleration, volts, true, slot, options));
+    assertInstanceOf(
+        VelocityRequest.VelocityVoltage.class,
+        VelocityRequest.of(
+            ProfileMode.UNPROFILED, velocity, acceleration, volts, true, slot, options));
+    assertInstanceOf(
+        VelocityRequest.ProfiledVelocityCurrent.class,
+        VelocityRequest.of(
+            ProfileMode.PROFILED, velocity, acceleration, amps, true, slot, options));
+    assertInstanceOf(
+        VelocityRequest.VelocityCurrent.class,
+        VelocityRequest.of(
+            ProfileMode.UNPROFILED, velocity, acceleration, amps, true, slot, options));
+    assertInstanceOf(
+        VelocityRequest.ProfiledVelocityDutyCycle.class,
+        VelocityRequest.of(
+            ProfileMode.PROFILED, velocity, acceleration, duty, true, slot, options));
+    assertInstanceOf(
+        VelocityRequest.VelocityDutyCycle.class,
+        VelocityRequest.of(
+            ProfileMode.UNPROFILED, velocity, acceleration, duty, true, slot, options));
+  }
+
+  @Test
+  public void testOfRejectsExponential() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            VelocityRequest.of(
+                ProfileMode.EXPONENTIAL,
+                org.wpilib.units.Units.RadiansPerSecond.of(1.0),
+                org.wpilib.units.Units.RadiansPerSecondPerSecond.of(0.0),
+                Feedforward.volts(org.wpilib.units.Units.Volts.of(0.0)),
+                true,
+                edu.wpi.team190.gompeilib.io.motor.config.GainSlot.ZERO,
+                RequestOptions.DEFAULT));
+  }
 }
