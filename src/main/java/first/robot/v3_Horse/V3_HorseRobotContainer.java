@@ -58,6 +58,7 @@ import org.wpilib.command2.button.CommandNiDsXboxController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.networktables.StringSubscriber;
 
@@ -101,7 +102,10 @@ public class V3_HorseRobotContainer implements RobotContainer {
     new LinearPath(
             new Pose2d(),
             new Pose2d(new Translation2d(10, 10), new Rotation2d(10)),
-            new PathConstraints(1, 4, 2))
+            new PathConstraints(1, 4, 2),
+            () -> {
+              return new ChassisVelocities();
+            })
         .LogPath();
     ;
     if (Constants.getMode() != RobotMode.REPLAY) {
