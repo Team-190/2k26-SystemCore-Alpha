@@ -6,6 +6,7 @@ import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
+import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants.AutoAlignConstants;
@@ -32,6 +33,7 @@ import org.wpilib.math.trajectory.TrapezoidProfile;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
 import org.wpilib.system.Timer;
+import org.wpilib.tunable.Tunable;
 import org.wpilib.util.Pair;
 
 public final class V3_HorseDriveCommands {
@@ -40,6 +42,8 @@ public final class V3_HorseDriveCommands {
   @Getter private static double slowFactor = 0.5;
 
   @Getter private static boolean schoolBusEnabled = false;
+    private static final Tunable<Double> schoolBusDeadband =
+      GompeiTunables.value("Drive/School Bus/Deadband", 0.3);
 
   /**
    * A command that drives a SwerveDrive using joystick input.
@@ -212,11 +216,12 @@ public final class V3_HorseDriveCommands {
         omegaHijack(
             drive, omegaController, rotationSupplier, () -> cardinalDirection.get().getRadians());
 
-    BooleanSupplier schoolBusActive =
+        BooleanSupplier schoolBusActive =
         () ->
             schoolBusEnabled
                 && Math.hypot(xSupplier.getAsDouble(), ySupplier.getAsDouble())
-                    > driveConstants.driverDeadband;
+                    > schoolBusDeadband.get();
+
     DoubleSupplier travelHeading =
         () ->
             AllianceFlipUtil.apply(new Rotation2d(xSupplier.getAsDouble(), ySupplier.getAsDouble()))
@@ -299,6 +304,10 @@ public final class V3_HorseDriveCommands {
 
   public static Command toggleSchoolBus() {
     return Commands.runOnce(() -> schoolBusEnabled = !schoolBusEnabled).ignoringDisable(true);
+  }
+
+    public static double getSchoolBusDeadband() {
+    return schoolBusDeadband.get();
   }
 
   public static Command incrementSlowFactor() {
