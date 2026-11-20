@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.function.UnaryOperator;
 
 /**
  * A Phoenix6 device's individual live and sticky fault signals, packed into {@link HardwareFault}
@@ -30,8 +30,8 @@ public final class FaultSignals<F extends Enum<F> & HardwareFault> {
    *
    * @param device the Phoenix6 device
    * @param type the device's fault enum
-   * @param track called with {@code "faults"} or {@code "stickyFaults"} and each signal, returning
-   *     the signal to keep
+   * @param trackLive called with each live fault signal, returning the signal to keep
+   * @param trackSticky called with each sticky fault signal, returning the signal to keep
    * @param <F> the device's fault enum
    * @return the fault signals
    * @throws IllegalStateException if a getter has no matching fault, or a fault has no getter
@@ -40,7 +40,8 @@ public final class FaultSignals<F extends Enum<F> & HardwareFault> {
   public static <F extends Enum<F> & HardwareFault> FaultSignals<F> of(
       Object device,
       Class<F> type,
-      BiFunction<String, StatusSignal<Boolean>, StatusSignal<Boolean>> track) {
+      UnaryOperator<StatusSignal<Boolean>> trackLive,
+      UnaryOperator<StatusSignal<Boolean>> trackSticky) {
     Map<F, StatusSignal<Boolean>> live = new EnumMap<>(type);
     Map<F, StatusSignal<Boolean>> sticky = new EnumMap<>(type);
     for (Method method : device.getClass().getMethods()) {
@@ -56,8 +57,11 @@ public final class FaultSignals<F extends Enum<F> & HardwareFault> {
       } catch (ReflectiveOperationException e) {
         throw new IllegalStateException("Couldn't read " + method.getName(), e);
       }
-      (isSticky ? sticky : live)
-          .put(fault, track.apply(isSticky ? "stickyFaults" : "faults", signal));
+      if (isSticky) {
+        sticky.put(fault, trackSticky.apply(signal));
+      } else {
+        live.put(fault, trackLive.apply(signal));
+      }
     }
     for (F fault : type.getEnumConstants()) {
       if (!live.containsKey(fault) || !sticky.containsKey(fault)) {

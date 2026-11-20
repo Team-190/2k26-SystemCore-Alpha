@@ -2,74 +2,120 @@ package edu.wpi.team190.gompeilib.io.base;
 
 import static org.wpilib.units.Units.Hertz;
 
-import edu.wpi.team190.gompeilib.GompeiLib;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.Set;
 import org.wpilib.units.measure.Frequency;
 
 /**
- * How often each field of a device's telemetry is published. Control-relevant fields run at {@code
- * control}; diagnostics run at {@code diagnostic}; {@code overrides} sets individual fields by
- * name. Each device's config says which of its fields are control-relevant.
+ * How often each of a device's signals is published. Every signal belongs to one of the device's
+ * {@link SignalGroup}s, and each group has its own rate; {@code signalOverrides} sets individual
+ * signals regardless of their group. A rate of zero turns a signal off.
  *
- * @param control the rate for control-relevant fields
- * @param diagnostic the rate for diagnostic fields
- * @param overrides per-field rates, keyed by telemetry field name
+ * @param signals the device's signal enum
+ * @param groups the device's group enum
+ * @param groupRates the rate of every group
+ * @param signalOverrides per-signal rates
+ * @param <S> the device's signal enum
+ * @param <G> the device's group enum
  */
-public record SignalRates(
-    Frequency control, Frequency diagnostic, Map<String, Frequency> overrides) {
+public record SignalRates<S extends Enum<S> & Signal<G>, G extends Enum<G> & SignalGroup>(
+    Class<S> signals,
+    Class<G> groups,
+    Map<G, Frequency> groupRates,
+    Map<S, Frequency> signalOverrides) {
 
-  /**
-   * The slowest control rate allowed. A hardware follower copies its leader's output signals, which
-   * must be published at least this fast.
-   */
-  public static final Frequency MIN_CONTROL_RATE = Hertz.of(20.0);
-
-  /** Loop-rate control signals and slow diagnostics. */
-  public static final SignalRates DEFAULT =
-      new SignalRates(Hertz.of(1.0 / GompeiLib.getLoopPeriod()), Hertz.of(4.0), Map.of());
+  /** The rate that turns a signal off. */
+  public static final Frequency OFF = Hertz.of(0.0);
 
   public SignalRates {
-    if (control.lt(MIN_CONTROL_RATE)) {
-      throw new IllegalArgumentException(
-          "control rate must be at least " + MIN_CONTROL_RATE + ", got " + control);
+    for (G group : groups.getEnumConstants()) {
+      Frequency rate = groupRates.get(group);
+      if (rate == null) {
+        throw new IllegalArgumentException("no rate for group " + group);
+      }
+      requireNonNegative(group, rate);
     }
-    overrides = Map.copyOf(overrides);
+    signalOverrides.forEach(SignalRates::requireNonNegative);
+    groupRates = copy(groups, groupRates);
+    signalOverrides = copy(signals, signalOverrides);
   }
 
   /**
-   * Returns the rate a telemetry field is published at.
+   * Returns every group at its default rate, with no signal overrides.
    *
-   * @param field a telemetry field name
-   * @param controlFields the device's control-relevant fields
-   * @return the field's rate
+   * @param signals the device's signal enum
+   * @param groups the device's group enum
+   * @param <S> the device's signal enum
+   * @param <G> the device's group enum
+   * @return the default rates
    */
-  public Frequency rateFor(String field, Set<String> controlFields) {
-    Frequency override = overrides.get(field);
-    if (override != null) {
-      return override;
+  public static <S extends Enum<S> & Signal<G>, G extends Enum<G> & SignalGroup>
+      SignalRates<S, G> defaults(Class<S> signals, Class<G> groups) {
+    Map<G, Frequency> rates = new EnumMap<>(groups);
+    for (G group : groups.getEnumConstants()) {
+      rates.put(group, group.defaultRate());
     }
-    return controlFields.contains(field) ? control : diagnostic;
+    return new SignalRates<>(signals, groups, rates, Map.of());
   }
 
   /**
-   * Checks that every override names a field of the given telemetry class.
+   * Returns a copy with one group's rate changed.
    *
-   * @param telemetry the device's telemetry class
-   * @throws IllegalArgumentException if an override names no such field
+   * @param group the group
+   * @param rate its rate, or {@link #OFF}
+   * @return the new rates
    */
-  public void requireFieldsOf(Class<?> telemetry) {
-    for (String name : overrides.keySet()) {
-      boolean found = false;
-      for (Field field : telemetry.getFields()) {
-        found |= field.getName().equals(name) && !Modifier.isStatic(field.getModifiers());
-      }
-      if (!found) {
-        throw new IllegalArgumentException(
-            name + " is not a " + telemetry.getSimpleName() + " field");
-      }
+  public SignalRates<S, G> withGroup(G group, Frequency rate) {
+    Map<G, Frequency> rates = new EnumMap<>(groupRates);
+    rates.put(group, rate);
+    return new SignalRates<>(signals, groups, rates, signalOverrides);
+  }
+
+  /**
+   * Returns a copy with one signal's rate overridden, regardless of its group's rate.
+   *
+   * @param signal the signal
+   * @param rate its rate, or {@link #OFF}
+   * @return the new rates
+   */
+  public SignalRates<S, G> withSignal(S signal, Frequency rate) {
+    Map<S, Frequency> overrides = new EnumMap<>(signals);
+    overrides.putAll(signalOverrides);
+    overrides.put(signal, rate);
+    return new SignalRates<>(signals, groups, groupRates, overrides);
+  }
+
+  /**
+   * Returns a group's rate.
+   *
+   * @param group the group
+   * @return its rate
+   */
+  public Frequency rateOf(G group) {
+    return groupRates.get(group);
+  }
+
+  /**
+   * Returns the rate a signal is published at: its override, or else its group's rate.
+   *
+   * @param signal the signal
+   * @return its rate
+   */
+  public Frequency rateFor(S signal) {
+    Frequency override = signalOverrides.get(signal);
+    return override != null ? override : groupRates.get(signal.group());
+  }
+
+  private static <K extends Enum<K>> Map<K, Frequency> copy(Class<K> type, Map<K, Frequency> map) {
+    Map<K, Frequency> copy = new EnumMap<>(type);
+    copy.putAll(map);
+    return Collections.unmodifiableMap(copy);
+  }
+
+  private static void requireNonNegative(Object name, Frequency rate) {
+    if (rate.in(Hertz) < 0.0) {
+      throw new IllegalArgumentException(name + " rate must not be negative, got " + rate);
     }
   }
 }

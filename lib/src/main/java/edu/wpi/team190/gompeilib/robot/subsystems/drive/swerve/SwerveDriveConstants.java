@@ -6,10 +6,9 @@ import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
-import edu.wpi.team190.gompeilib.io.base.SignalRates;
 import edu.wpi.team190.gompeilib.io.gyro.config.GyroConfig;
+import edu.wpi.team190.gompeilib.io.gyro.config.GyroSignal;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.Builder;
 import lombok.NonNull;
@@ -65,10 +64,8 @@ public class SwerveDriveConstants {
         .withCanId(driveConfig.pigeon2Id())
         .withBus(driveConfig.canBus())
         .withSignalRates(
-            new SignalRates(
-                SignalRates.DEFAULT.control(),
-                SignalRates.DEFAULT.diagnostic(),
-                Map.of("yawPosition", Hertz.of(odometryFrequency))))
+            GyroSignal.DEFAULT_RATES.withSignal(
+                GyroSignal.YAW_POSITION, Hertz.of(odometryFrequency)))
         .build();
   }
 

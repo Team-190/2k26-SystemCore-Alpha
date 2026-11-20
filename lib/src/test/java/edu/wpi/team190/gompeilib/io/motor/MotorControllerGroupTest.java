@@ -23,6 +23,8 @@ import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignal;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignalGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.RemoteSensorMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
@@ -136,6 +138,8 @@ public class MotorControllerGroupTest extends GompeiLibTestBase {
     RecordingFactory factory = new RecordingFactory("Vendor", true);
     new MotorControllerGroup(
         leader()
+            .withSignalRates(
+                MotorSignal.DEFAULT_RATES.withGroup(MotorSignalGroup.DIFFERENTIAL, Hertz.of(100.0)))
             .withFollower(
                 new FollowerMotor(2, MotorAlignment.ALIGNED, FollowerMotor.FollowType.STRICT))
             .withFollower(
@@ -150,6 +154,44 @@ public class MotorControllerGroupTest extends GompeiLibTestBase {
     verify(factory.motors.get(3))
         .setControl(new FollowerRequest.DifferentialFollow(1, MotorAlignment.OPPOSED));
     verify(factory.motors.get(4)).setControl(new FollowerRequest.DifferentialStrictFollow(1));
+  }
+
+  @Test
+  public void shouldRejectSlowOutputWithHardwareFollowers() {
+    RecordingFactory factory = new RecordingFactory("Vendor", true);
+    MotorConfig config =
+        leader()
+            .withSignalRates(
+                MotorSignal.DEFAULT_RATES.withSignal(MotorSignal.DUTY_CYCLE, Hertz.of(10.0)))
+            .withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED))
+            .build();
+
+    assertThrows(IllegalArgumentException.class, () -> new MotorControllerGroup(config, factory));
+  }
+
+  @Test
+  public void shouldRejectDifferentialFollowersWhileDifferentialIsOff() {
+    RecordingFactory factory = new RecordingFactory("Vendor", true);
+    MotorConfig config =
+        leader()
+            .withFollower(
+                new FollowerMotor(2, MotorAlignment.ALIGNED, FollowerMotor.FollowType.DIFFERENTIAL))
+            .build();
+
+    assertThrows(IllegalArgumentException.class, () -> new MotorControllerGroup(config, factory));
+  }
+
+  @Test
+  public void testMirroredFollowersAllowSlowOutput() {
+    RecordingFactory factory = new RecordingFactory("Vendor", false);
+    MotorConfig config =
+        leader()
+            .withSignalRates(
+                MotorSignal.DEFAULT_RATES.withGroup(MotorSignalGroup.OUTPUT, Hertz.of(4.0)))
+            .withFollower(new FollowerMotor(2, MotorAlignment.ALIGNED))
+            .build();
+
+    assertDoesNotThrow(() -> new MotorControllerGroup(config, factory));
   }
 
   @Test

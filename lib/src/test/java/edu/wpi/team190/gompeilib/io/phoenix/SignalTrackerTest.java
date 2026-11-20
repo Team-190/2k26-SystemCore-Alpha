@@ -9,38 +9,68 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.ParentDevice;
+import edu.wpi.team190.gompeilib.io.base.HardwareFault;
+import edu.wpi.team190.gompeilib.io.base.Signal;
+import edu.wpi.team190.gompeilib.io.base.SignalGroup;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
+import org.wpilib.units.measure.Frequency;
 
 @SuppressWarnings("unchecked") // Mockito mocks of generic types
 public class SignalTrackerTest {
 
-  /** A stand-in telemetry class. */
-  public static class Telemetry {
-    public double position;
-    public double temperature;
-    public long faults;
-    public long stickyFaults;
+  /** Stand-in groups. */
+  public enum Groups implements SignalGroup {
+    MOTION(50.0),
+    DIAGNOSTIC(4.0);
+
+    private final double hertz;
+
+    Groups(double hertz) {
+      this.hertz = hertz;
+    }
+
+    @Override
+    public Frequency defaultRate() {
+      return Hertz.of(hertz);
+    }
+  }
+
+  /** Stand-in signals. */
+  public enum Signals implements Signal<Groups> {
+    POSITION(Groups.MOTION),
+    TEMPERATURE(Groups.DIAGNOSTIC),
+    FAULTS(Groups.DIAGNOSTIC),
+    STICKY_FAULTS(Groups.DIAGNOSTIC);
+
+    private final Groups group;
+
+    Signals(Groups group) {
+      this.group = group;
+    }
+
+    @Override
+    public Groups group() {
+      return group;
+    }
+  }
+
+  private static SignalRates<Signals, Groups> defaults() {
+    return SignalRates.defaults(Signals.class, Groups.class);
   }
 
   @Test
   public void testGroupsSignalsByRateAndRegistersThem() {
-    SignalTracker tracker =
-        new SignalTracker(
-            new SignalRates(Hertz.of(50.0), Hertz.of(4.0), Map.of()),
-            Set.of("position"),
-            Telemetry.class);
+    SignalTracker<Signals, Groups> tracker = new SignalTracker<>(defaults());
     StatusSignal<Double> position = mock(StatusSignal.class);
     StatusSignal<Double> temperature = mock(StatusSignal.class);
     ParentDevice device = mock(ParentDevice.class);
     CANBus bus = new CANBus("rio");
 
-    assertSame(position, tracker.track("position", position));
-    assertSame(temperature, tracker.track("temperature", temperature));
+    assertSame(position, tracker.track(Signals.POSITION, position));
+    assertSame(temperature, tracker.track(Signals.TEMPERATURE, temperature));
 
     try (MockedStatic<BaseStatusSignal> signals = mockStatic(BaseStatusSignal.class);
         MockedStatic<PhoenixUtil> phoenix = mockStatic(PhoenixUtil.class)) {
@@ -57,17 +87,71 @@ public class SignalTrackerTest {
   }
 
   @Test
-  public void testTracksFaults() {
-    SignalTracker tracker = new SignalTracker(SignalRates.DEFAULT, Set.of(), Telemetry.class);
+  public void testSignalOverridesApply() {
+    SignalTracker<Signals, Groups> tracker =
+        new SignalTracker<>(defaults().withSignal(Signals.POSITION, Hertz.of(250.0)));
+    StatusSignal<Double> position = mock(StatusSignal.class);
+    tracker.track(Signals.POSITION, position);
+
+    try (MockedStatic<BaseStatusSignal> signals = mockStatic(BaseStatusSignal.class);
+        MockedStatic<PhoenixUtil> phoenix = mockStatic(PhoenixUtil.class)) {
+      tracker.apply(mock(ParentDevice.class), new CANBus("rio"));
+
+      signals.verify(() -> BaseStatusSignal.setUpdateFrequencyForAll(250.0, position));
+    }
+  }
+
+  @Test
+  public void testOffSignalsAreDisabledAndNotRefreshed() {
+    SignalTracker<Signals, Groups> tracker =
+        new SignalTracker<>(defaults().withGroup(Groups.DIAGNOSTIC, SignalRates.OFF));
+    StatusSignal<Double> position = mock(StatusSignal.class);
+    StatusSignal<Double> temperature = mock(StatusSignal.class);
+    ParentDevice device = mock(ParentDevice.class);
+    CANBus bus = new CANBus("rio");
+
+    tracker.track(Signals.POSITION, position);
+    tracker.track(Signals.TEMPERATURE, temperature);
+
+    try (MockedStatic<BaseStatusSignal> signals = mockStatic(BaseStatusSignal.class);
+        MockedStatic<PhoenixUtil> phoenix = mockStatic(PhoenixUtil.class)) {
+      tracker.apply(device, bus);
+
+      signals.verify(() -> BaseStatusSignal.setUpdateFrequencyForAll(0.0, temperature));
+      ArgumentCaptor<BaseStatusSignal[]> registered =
+          ArgumentCaptor.forClass(BaseStatusSignal[].class);
+      phoenix.verify(() -> PhoenixUtil.registerSignals(eq(bus), registered.capture()));
+      assertArrayEquals(new BaseStatusSignal[] {position}, registered.getValue());
+    }
+  }
+
+  @Test
+  public void testTracksFaultsAtTheirSignalsRates() {
+    SignalTracker<Signals, Groups> tracker =
+        new SignalTracker<>(defaults().withSignal(Signals.STICKY_FAULTS, SignalRates.OFF));
 
     FaultSignals<?> faults =
-        tracker.trackFaults(new FaultSignalsTest.Device(), FaultSignalsTestFaults.class);
+        tracker.trackFaults(
+            new FaultSignalsTest.Device(),
+            FaultSignalsTestFaults.class,
+            Signals.FAULTS,
+            Signals.STICKY_FAULTS);
 
     assertNotNull(faults);
+    try (MockedStatic<BaseStatusSignal> signals = mockStatic(BaseStatusSignal.class);
+        MockedStatic<PhoenixUtil> phoenix = mockStatic(PhoenixUtil.class)) {
+      tracker.apply(mock(ParentDevice.class), new CANBus("rio"));
+
+      ArgumentCaptor<BaseStatusSignal[]> registered =
+          ArgumentCaptor.forClass(BaseStatusSignal[].class);
+      phoenix.verify(() -> PhoenixUtil.registerSignals(any(), registered.capture()));
+      // Only the two live fault signals are refreshed; the sticky ones are off.
+      assertEquals(2, registered.getValue().length);
+    }
   }
 
   /** The faults {@link FaultSignalsTest.Device} reports. */
-  private enum FaultSignalsTestFaults implements edu.wpi.team190.gompeilib.io.base.HardwareFault {
+  private enum FaultSignalsTestFaults implements HardwareFault {
     HARDWARE,
     FIVE_V_TOO_HIGH;
 
@@ -75,16 +159,5 @@ public class SignalTrackerTest {
     public int bit() {
       return ordinal();
     }
-  }
-
-  @Test
-  public void shouldRejectOverridesForUnknownFields() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new SignalTracker(
-                new SignalRates(Hertz.of(50.0), Hertz.of(4.0), Map.of("speed", Hertz.of(1.0))),
-                Set.of(),
-                Telemetry.class));
   }
 }

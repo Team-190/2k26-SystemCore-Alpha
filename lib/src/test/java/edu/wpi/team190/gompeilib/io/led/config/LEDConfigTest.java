@@ -5,8 +5,6 @@ import static org.wpilib.units.Units.Hertz;
 
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 public class LEDConfigTest {
@@ -23,13 +21,13 @@ public class LEDConfigTest {
     assertTrue(config.enableFiveVoltRail);
     assertEquals(SupplyOutputMode.ON, config.supplyOutputMode);
     assertTrue(config.statusLedWhenActive);
-    assertSame(SignalRates.DEFAULT, config.signalRates);
-    assertEquals(Set.of(), LEDConfig.CONTROL_FIELDS);
+    assertSame(LEDSignal.DEFAULT_RATES, config.signalRates);
   }
 
   @Test
   public void testEveryField() {
-    SignalRates rates = new SignalRates(Hertz.of(50.0), Hertz.of(1.0), Map.of());
+    SignalRates<LEDSignal, LEDSignalGroup> rates =
+        LEDSignal.DEFAULT_RATES.withGroup(LEDSignalGroup.DIAGNOSTIC, Hertz.of(1.0));
     LEDConfig config =
         LEDConfig.builder()
             .withCanId(2)

@@ -19,6 +19,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.FeedbackSensor;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignal;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.RemoteSensorMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
@@ -85,8 +86,7 @@ public class SwerveModuleConstantsConversionsTest extends GompeiLibTestBase {
     assertEquals(1.0, TalonFXConversions.toSlotConfigs(driveSlot, GainSlot.ZERO).kP, 1e-9);
     assertEquals(0.5, TalonFXConversions.toSlotConfigs(driveSlot, GainSlot.ZERO).kV, 1e-9);
     assertEquals(Seconds.of(0.02), drive.closedLoopRamps.current());
-    assertEquals(
-        Hertz.of(250.0), drive.signalRates.rateFor("position", MotorConfig.CONTROL_FIELDS));
+    assertEquals(Hertz.of(250.0), drive.signalRates.rateFor(MotorSignal.POSITION));
   }
 
   @Test

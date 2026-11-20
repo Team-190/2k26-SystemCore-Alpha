@@ -11,7 +11,6 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CANcoderConfigurator;
 import com.ctre.phoenix6.hardware.CANcoder;
-import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
@@ -50,7 +49,7 @@ public class AbsoluteEncoderIOCANcoderTest extends GompeiLibTestBase {
               .verify(
                   () ->
                       BaseStatusSignal.setUpdateFrequencyForAll(
-                          eq(1.0 / GompeiLib.getLoopPeriod()), any(BaseStatusSignal[].class)));
+                          eq(100.0), any(BaseStatusSignal[].class)));
           mocks
               .phoenix()
               .verify(

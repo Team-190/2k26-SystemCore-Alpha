@@ -5,6 +5,8 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.CANdle;
 import edu.wpi.team190.gompeilib.io.led.config.LEDConfig;
+import edu.wpi.team190.gompeilib.io.led.config.LEDSignal;
+import edu.wpi.team190.gompeilib.io.led.config.LEDSignalGroup;
 import edu.wpi.team190.gompeilib.io.led.inputs.LEDTelemetry;
 import edu.wpi.team190.gompeilib.io.led.interfaces.LEDIO;
 import edu.wpi.team190.gompeilib.io.led.outputs.LEDRequest;
@@ -44,18 +46,20 @@ public class LEDIOCANdle implements LEDIO {
     PhoenixUtil.tryUntilOk(
         5, () -> candle.getConfigurator().apply(CANdleConversions.toConfiguration(config), 0.25));
 
-    SignalTracker signals =
-        new SignalTracker(config.signalRates, LEDConfig.CONTROL_FIELDS, LEDTelemetry.class);
-    version = signals.track("firmwareVersion", candle.getVersion());
-    isProLicensed = signals.track("isProLicensed", candle.getIsProLicensed());
-    supplyVoltage = signals.track("supplyVoltage", candle.getSupplyVoltage());
-    fiveVoltRailVoltage = signals.track("fiveVoltRailVoltage", candle.getFiveVRailVoltage());
-    outputCurrent = signals.track("outputCurrent", candle.getOutputCurrent());
-    deviceTemperature = signals.track("deviceTemperature", candle.getDeviceTemp());
-    supplyModulation = signals.track("supplyModulation", candle.getVBatModulation());
+    SignalTracker<LEDSignal, LEDSignalGroup> signals = new SignalTracker<>(config.signalRates);
+    version = signals.track(LEDSignal.FIRMWARE_VERSION, candle.getVersion());
+    isProLicensed = signals.track(LEDSignal.IS_PRO_LICENSED, candle.getIsProLicensed());
+    supplyVoltage = signals.track(LEDSignal.SUPPLY_VOLTAGE, candle.getSupplyVoltage());
+    fiveVoltRailVoltage =
+        signals.track(LEDSignal.FIVE_VOLT_RAIL_VOLTAGE, candle.getFiveVRailVoltage());
+    outputCurrent = signals.track(LEDSignal.OUTPUT_CURRENT, candle.getOutputCurrent());
+    deviceTemperature = signals.track(LEDSignal.DEVICE_TEMPERATURE, candle.getDeviceTemp());
+    supplyModulation = signals.track(LEDSignal.SUPPLY_MODULATION, candle.getVBatModulation());
     maxSimultaneousAnimations =
-        signals.track("maxSimultaneousAnimations", candle.getMaxSimultaneousAnimationCount());
-    faults = signals.trackFaults(candle, CANdleFault.class);
+        signals.track(
+            LEDSignal.MAX_SIMULTANEOUS_ANIMATIONS, candle.getMaxSimultaneousAnimationCount());
+    faults =
+        signals.trackFaults(candle, CANdleFault.class, LEDSignal.FAULTS, LEDSignal.STICKY_FAULTS);
     signals.apply(candle, bus);
   }
 

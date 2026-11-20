@@ -4,7 +4,6 @@ import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
@@ -15,61 +14,6 @@ import lombok.Singular;
  */
 @Builder(setterPrefix = "with", toBuilder = true)
 public class MotorConfig {
-  /**
-   * The {@link edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry} fields published at the
-   * control rate.
-   */
-  public static final Set<String> CONTROL_FIELDS =
-      Set.of(
-          "position",
-          "velocity",
-          "acceleration",
-          "rotorPosition",
-          "rotorVelocity",
-          "appliedVoltage",
-          "supplyVoltage",
-          "dutyCycle",
-          "supplyCurrent",
-          "outputCurrent",
-          "torqueCurrent",
-          "controlMode",
-          "focActive",
-          "gainSlot",
-          "closedLoopPositionReference",
-          "closedLoopPositionReferenceSlope",
-          "closedLoopPositionError",
-          "closedLoopVelocityReference",
-          "closedLoopVelocityReferenceSlope",
-          "closedLoopVelocityError",
-          "closedLoopProportionalOutput",
-          "closedLoopIntegratedOutput",
-          "closedLoopDerivativeOutput",
-          "closedLoopFeedforward",
-          "closedLoopOutput",
-          "profileAtTarget",
-          "profileRunning",
-          "differentialControlMode",
-          "differentialFocActive",
-          "differentialAveragePosition",
-          "differentialAverageVelocity",
-          "differentialDifferencePosition",
-          "differentialDifferenceVelocity",
-          "differentialGainSlot",
-          "differentialOutput",
-          "differentialClosedLoopProportionalOutput",
-          "differentialClosedLoopIntegratedOutput",
-          "differentialClosedLoopDerivativeOutput",
-          "differentialClosedLoopFeedforward",
-          "differentialClosedLoopOutput",
-          "differentialClosedLoopPositionReference",
-          "differentialClosedLoopPositionReferenceSlope",
-          "differentialClosedLoopPositionError",
-          "differentialClosedLoopVelocityReference",
-          "differentialClosedLoopVelocityReferenceSlope",
-          "differentialClosedLoopVelocityError",
-          "forwardLimitSwitchAsserted",
-          "reverseLimitSwitchAsserted");
-
   /** The motor's CAN ID. */
   @NonNull public final Integer canId;
 
@@ -122,7 +66,8 @@ public class MotorConfig {
   @NonNull @Builder.Default public final Boolean enableFOC = true;
 
   /** How often each telemetry field is published. */
-  @NonNull @Builder.Default public final SignalRates signalRates = SignalRates.DEFAULT;
+  @NonNull @Builder.Default
+  public final SignalRates<MotorSignal, MotorSignalGroup> signalRates = MotorSignal.DEFAULT_RATES;
 
   /** Motors that follow this one. */
   @NonNull @Singular public final List<FollowerMotor> followers;

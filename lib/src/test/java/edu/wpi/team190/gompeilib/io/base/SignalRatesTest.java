@@ -3,84 +3,124 @@ package edu.wpi.team190.gompeilib.io.base;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.Hertz;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.wpilib.units.measure.Frequency;
 
 public class SignalRatesTest {
-  private static final Set<String> CONTROL = Set.of("position");
 
-  /** A stand-in telemetry class. */
-  public static class Telemetry {
-    public static int notAField = 0;
-    public double position;
-    public double temperature;
+  /** Stand-in groups. */
+  public enum Groups implements SignalGroup {
+    MOTION(100.0),
+    THERMAL(4.0);
+
+    private final double hertz;
+
+    Groups(double hertz) {
+      this.hertz = hertz;
+    }
+
+    @Override
+    public Frequency defaultRate() {
+      return Hertz.of(hertz);
+    }
+  }
+
+  /** Stand-in signals. */
+  public enum Signals implements Signal<Groups> {
+    POSITION(Groups.MOTION),
+    VELOCITY(Groups.MOTION),
+    TEMPERATURE(Groups.THERMAL);
+
+    private final Groups group;
+
+    Signals(Groups group) {
+      this.group = group;
+    }
+
+    @Override
+    public Groups group() {
+      return group;
+    }
+  }
+
+  private static SignalRates<Signals, Groups> defaults() {
+    return SignalRates.defaults(Signals.class, Groups.class);
   }
 
   @Test
-  public void testDefaultRates() {
-    assertEquals(Hertz.of(200.0), SignalRates.DEFAULT.control());
-    assertEquals(Hertz.of(4.0), SignalRates.DEFAULT.diagnostic());
-    assertEquals(Map.of(), SignalRates.DEFAULT.overrides());
+  public void testDefaultsUseEachGroupsDefaultRate() {
+    SignalRates<Signals, Groups> rates = defaults();
+
+    assertEquals(Hertz.of(100.0), rates.rateOf(Groups.MOTION));
+    assertEquals(Hertz.of(4.0), rates.rateOf(Groups.THERMAL));
+    assertEquals(Hertz.of(100.0), rates.rateFor(Signals.POSITION));
+    assertEquals(Hertz.of(4.0), rates.rateFor(Signals.TEMPERATURE));
+    assertEquals(Map.of(), rates.signalOverrides());
   }
 
   @Test
-  public void testRateForControlAndDiagnosticFields() {
-    assertEquals(Hertz.of(200.0), SignalRates.DEFAULT.rateFor("position", CONTROL));
-    assertEquals(Hertz.of(4.0), SignalRates.DEFAULT.rateFor("temperature", CONTROL));
+  public void testWithGroupChangesEverySignalInTheGroup() {
+    SignalRates<Signals, Groups> rates = defaults().withGroup(Groups.MOTION, Hertz.of(50.0));
+
+    assertEquals(Hertz.of(50.0), rates.rateFor(Signals.POSITION));
+    assertEquals(Hertz.of(50.0), rates.rateFor(Signals.VELOCITY));
+    assertEquals(Hertz.of(4.0), rates.rateFor(Signals.TEMPERATURE));
+    assertEquals(Hertz.of(100.0), defaults().rateFor(Signals.POSITION));
   }
 
   @Test
-  public void testOverridesWin() {
-    SignalRates rates =
-        new SignalRates(
-            Hertz.of(100.0),
-            Hertz.of(10.0),
-            Map.of("temperature", Hertz.of(1.0), "position", Hertz.of(250.0)));
+  public void testSignalOverridesBeatGroupRates() {
+    SignalRates<Signals, Groups> rates =
+        defaults()
+            .withSignal(Signals.POSITION, Hertz.of(250.0))
+            .withGroup(Groups.MOTION, Hertz.of(50.0));
 
-    assertEquals(Hertz.of(1.0), rates.rateFor("temperature", CONTROL));
-    assertEquals(Hertz.of(250.0), rates.rateFor("position", CONTROL));
-    assertEquals(Hertz.of(100.0), rates.rateFor("velocity", Set.of("velocity")));
-    assertEquals(Hertz.of(10.0), rates.rateFor("voltage", CONTROL));
+    assertEquals(Hertz.of(250.0), rates.rateFor(Signals.POSITION));
+    assertEquals(Hertz.of(50.0), rates.rateFor(Signals.VELOCITY));
   }
 
   @Test
-  public void testOverridesAreCopied() {
-    Map<String, Frequency> overrides = new HashMap<>();
-    overrides.put("position", Hertz.of(200.0));
-    SignalRates rates = new SignalRates(Hertz.of(50.0), Hertz.of(4.0), overrides);
-    overrides.clear();
+  public void testOffTurnsAGroupOff() {
+    SignalRates<Signals, Groups> rates = defaults().withGroup(Groups.THERMAL, SignalRates.OFF);
 
-    assertEquals(Hertz.of(200.0), rates.rateFor("position", CONTROL));
+    assertEquals(0.0, rates.rateFor(Signals.TEMPERATURE).in(Hertz));
   }
 
   @Test
-  public void testMinimumControlRateIsAccepted() {
-    assertDoesNotThrow(
-        () -> new SignalRates(SignalRates.MIN_CONTROL_RATE, Hertz.of(4.0), Map.of()));
+  public void testMapsAreCopied() {
+    Map<Groups, Frequency> groupRates = new EnumMap<>(Groups.class);
+    groupRates.put(Groups.MOTION, Hertz.of(100.0));
+    groupRates.put(Groups.THERMAL, Hertz.of(4.0));
+    SignalRates<Signals, Groups> rates =
+        new SignalRates<>(Signals.class, Groups.class, groupRates, Map.of());
+    groupRates.put(Groups.MOTION, Hertz.of(1.0));
+
+    assertEquals(Hertz.of(100.0), rates.rateFor(Signals.POSITION));
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> rates.groupRates().put(Groups.MOTION, Hertz.of(1.0)));
   }
 
   @Test
-  public void shouldRejectSlowControlRate() {
+  public void shouldRejectMissingGroupRates() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new SignalRates(Hertz.of(19.0), Hertz.of(4.0), Map.of()));
+        () ->
+            new SignalRates<>(
+                Signals.class,
+                Groups.class,
+                Map.of(Groups.MOTION, Hertz.of(100.0)),
+                Map.<Signals, Frequency>of()));
   }
 
   @Test
-  public void testRequireFieldsOf() {
-    SignalRates known =
-        new SignalRates(Hertz.of(50.0), Hertz.of(4.0), Map.of("temperature", Hertz.of(1.0)));
-    SignalRates unknown =
-        new SignalRates(Hertz.of(50.0), Hertz.of(4.0), Map.of("speed", Hertz.of(1.0)));
-    SignalRates staticField =
-        new SignalRates(Hertz.of(50.0), Hertz.of(4.0), Map.of("notAField", Hertz.of(1.0)));
-
-    assertDoesNotThrow(() -> known.requireFieldsOf(Telemetry.class));
-    assertThrows(IllegalArgumentException.class, () -> unknown.requireFieldsOf(Telemetry.class));
+  public void shouldRejectNegativeRates() {
     assertThrows(
-        IllegalArgumentException.class, () -> staticField.requireFieldsOf(Telemetry.class));
+        IllegalArgumentException.class, () -> defaults().withGroup(Groups.MOTION, Hertz.of(-1.0)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> defaults().withSignal(Signals.POSITION, Hertz.of(-1.0)));
   }
 }

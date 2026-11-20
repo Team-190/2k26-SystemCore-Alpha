@@ -2,19 +2,12 @@ package edu.wpi.team190.gompeilib.io.led.config;
 
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 
 /** Everything one LED controller needs. */
 @Builder(setterPrefix = "with", toBuilder = true)
 public class LEDConfig {
-  /**
-   * The {@link edu.wpi.team190.gompeilib.io.led.inputs.LEDTelemetry} fields published at the
-   * control rate. LED telemetry is all diagnostic.
-   */
-  public static final Set<String> CONTROL_FIELDS = Set.of();
-
   /** The controller's CAN ID. */
   @NonNull public final Integer canId;
 
@@ -40,5 +33,6 @@ public class LEDConfig {
   @NonNull @Builder.Default public final Boolean statusLedWhenActive = true;
 
   /** How often each telemetry field is published. */
-  @NonNull @Builder.Default public final SignalRates signalRates = SignalRates.DEFAULT;
+  @NonNull @Builder.Default
+  public final SignalRates<LEDSignal, LEDSignalGroup> signalRates = LEDSignal.DEFAULT_RATES;
 }

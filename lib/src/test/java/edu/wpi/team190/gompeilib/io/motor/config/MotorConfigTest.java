@@ -5,10 +5,8 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.TestGains;
-import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -37,7 +35,7 @@ public class MotorConfigTest extends GompeiLibTestBase {
     assertSame(MotionProfileConfig.NONE, config.motionProfile);
     assertSame(OpenLoopRamps.NONE, config.openLoopRamps);
     assertTrue(config.enableFOC);
-    assertSame(SignalRates.DEFAULT, config.signalRates);
+    assertSame(MotorSignal.DEFAULT_RATES, config.signalRates);
     assertEquals(List.of(), config.followers);
   }
 
@@ -52,7 +50,8 @@ public class MotorConfigTest extends GompeiLibTestBase {
             Volts.per(RotationsPerSecond).ofNative(0.1),
             Volts.per(RotationsPerSecondPerSecond).ofNative(0.2));
     OpenLoopRamps ramps = new OpenLoopRamps(Seconds.of(0.1), Seconds.of(0.2), Seconds.of(0.3));
-    SignalRates rates = new SignalRates(Hertz.of(100.0), Hertz.of(10.0), Map.of());
+    SignalRates<MotorSignal, MotorSignalGroup> rates =
+        MotorSignal.DEFAULT_RATES.withGroup(MotorSignalGroup.CLOSED_LOOP, Hertz.of(100.0));
     FollowerMotor follower = new FollowerMotor(4, MotorAlignment.OPPOSED);
 
     MotorConfig config =
@@ -113,20 +112,5 @@ public class MotorConfigTest extends GompeiLibTestBase {
     assertThrows(
         NullPointerException.class,
         () -> MotorConfig.builder().withCanId(1).withBus(CANBusId.named("rio")).build());
-  }
-
-  @Test
-  public void testControlFieldsAreRealTelemetryFields() {
-    assertTrue(
-        IOTestSupport.publicFieldNames(MotorTelemetry.class)
-            .containsAll(MotorConfig.CONTROL_FIELDS));
-  }
-
-  @Test
-  public void testFollowerOutputSignalsAreControlRate() {
-    // A hardware follower copies these from its leader, so they must run at the control rate.
-    assertTrue(MotorConfig.CONTROL_FIELDS.contains("dutyCycle"));
-    assertTrue(MotorConfig.CONTROL_FIELDS.contains("appliedVoltage"));
-    assertTrue(MotorConfig.CONTROL_FIELDS.contains("torqueCurrent"));
   }
 }

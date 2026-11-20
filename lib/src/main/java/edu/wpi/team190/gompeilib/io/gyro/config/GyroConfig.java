@@ -4,7 +4,6 @@ import static org.wpilib.units.Units.Degrees;
 
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.units.measure.Angle;
@@ -12,19 +11,6 @@ import org.wpilib.units.measure.Angle;
 /** Everything one gyro needs. */
 @Builder(setterPrefix = "with", toBuilder = true)
 public class GyroConfig {
-  /**
-   * The {@link edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetry} fields published at the
-   * control rate.
-   */
-  public static final Set<String> CONTROL_FIELDS =
-      Set.of(
-          "yawPosition",
-          "pitchPosition",
-          "rollPosition",
-          "yawVelocity",
-          "pitchVelocity",
-          "rollVelocity");
-
   /** The gyro's CAN ID. */
   @NonNull public final Integer canId;
 
@@ -50,5 +36,6 @@ public class GyroConfig {
   @NonNull @Builder.Default public final Boolean disableNoMotionCalibration = false;
 
   /** How often each telemetry field is published. */
-  @NonNull @Builder.Default public final SignalRates signalRates = SignalRates.DEFAULT;
+  @NonNull @Builder.Default
+  public final SignalRates<GyroSignal, GyroSignalGroup> signalRates = GyroSignal.DEFAULT_RATES;
 }

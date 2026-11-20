@@ -4,7 +4,6 @@ import static org.wpilib.units.Units.*;
 
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.units.measure.Angle;
@@ -14,13 +13,6 @@ import org.wpilib.units.measure.Frequency;
 /** Everything one range (time-of-flight) sensor needs. */
 @Builder(setterPrefix = "with", toBuilder = true)
 public class RangeSensorConfig {
-  /**
-   * The {@link edu.wpi.team190.gompeilib.io.range.inputs.RangeSensorTelemetry} fields published at
-   * the control rate.
-   */
-  public static final Set<String> CONTROL_FIELDS =
-      Set.of("distance", "distanceStdDev", "detected", "signalStrength", "measurementHealth");
-
   /** The sensor's CAN ID. */
   @NonNull public final Integer canId;
 
@@ -56,5 +48,7 @@ public class RangeSensorConfig {
   @NonNull @Builder.Default public final Angle fovRangeY = Degrees.of(27.0);
 
   /** How often each telemetry field is published. */
-  @NonNull @Builder.Default public final SignalRates signalRates = SignalRates.DEFAULT;
+  @NonNull @Builder.Default
+  public final SignalRates<RangeSensorSignal, RangeSensorSignalGroup> signalRates =
+      RangeSensorSignal.DEFAULT_RATES;
 }

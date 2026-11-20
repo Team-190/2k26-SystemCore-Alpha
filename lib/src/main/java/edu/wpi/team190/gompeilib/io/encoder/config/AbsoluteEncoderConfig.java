@@ -4,7 +4,6 @@ import static org.wpilib.units.Units.Rotations;
 
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.units.measure.Angle;
@@ -12,13 +11,6 @@ import org.wpilib.units.measure.Angle;
 /** Everything one absolute encoder needs. */
 @Builder(setterPrefix = "with", toBuilder = true)
 public class AbsoluteEncoderConfig {
-  /**
-   * The {@link edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry} fields
-   * published at the control rate.
-   */
-  public static final Set<String> CONTROL_FIELDS =
-      Set.of("absolutePosition", "position", "positionSinceBoot", "velocity", "unfilteredVelocity");
-
   /** The encoder's CAN ID. */
   @NonNull public final Integer canId;
 
@@ -39,5 +31,7 @@ public class AbsoluteEncoderConfig {
   @NonNull @Builder.Default public final Angle discontinuityPoint = Rotations.of(0.5);
 
   /** How often each telemetry field is published. */
-  @NonNull @Builder.Default public final SignalRates signalRates = SignalRates.DEFAULT;
+  @NonNull @Builder.Default
+  public final SignalRates<AbsoluteEncoderSignal, AbsoluteEncoderSignalGroup> signalRates =
+      AbsoluteEncoderSignal.DEFAULT_RATES;
 }

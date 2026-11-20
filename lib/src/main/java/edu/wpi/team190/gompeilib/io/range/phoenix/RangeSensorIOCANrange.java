@@ -10,6 +10,8 @@ import edu.wpi.team190.gompeilib.io.phoenix.FaultSignals;
 import edu.wpi.team190.gompeilib.io.phoenix.PhoenixUtil;
 import edu.wpi.team190.gompeilib.io.phoenix.SignalTracker;
 import edu.wpi.team190.gompeilib.io.range.config.RangeSensorConfig;
+import edu.wpi.team190.gompeilib.io.range.config.RangeSensorSignal;
+import edu.wpi.team190.gompeilib.io.range.config.RangeSensorSignalGroup;
 import edu.wpi.team190.gompeilib.io.range.inputs.RangeSensorTelemetry;
 import edu.wpi.team190.gompeilib.io.range.interfaces.RangeSensorIO;
 import edu.wpi.team190.gompeilib.logging.Trace;
@@ -52,24 +54,31 @@ public class RangeSensorIOCANrange implements RangeSensorIO {
         5,
         () -> canrange.getConfigurator().apply(CANrangeConversions.toConfiguration(config), 0.25));
 
-    SignalTracker signals =
-        new SignalTracker(
-            config.signalRates, RangeSensorConfig.CONTROL_FIELDS, RangeSensorTelemetry.class);
-    version = signals.track("firmwareVersion", canrange.getVersion());
-    isProLicensed = signals.track("isProLicensed", canrange.getIsProLicensed());
-    distance = signals.track("distance", canrange.getDistance());
-    distanceStdDev = signals.track("distanceStdDev", canrange.getDistanceStdDev());
-    measurementTime = signals.track("measurementTime", canrange.getMeasurementTime());
-    detected = signals.track("detected", canrange.getIsDetected());
-    signalStrength = signals.track("signalStrength", canrange.getSignalStrength());
-    ambientSignal = signals.track("ambientSignal", canrange.getAmbientSignal());
-    measurementHealth = signals.track("measurementHealth", canrange.getMeasurementHealth());
-    fovCenterX = signals.track("fovCenterX", canrange.getRealFOVCenterX());
-    fovCenterY = signals.track("fovCenterY", canrange.getRealFOVCenterY());
-    fovRangeX = signals.track("fovRangeX", canrange.getRealFOVRangeX());
-    fovRangeY = signals.track("fovRangeY", canrange.getRealFOVRangeY());
-    supplyVoltage = signals.track("supplyVoltage", canrange.getSupplyVoltage());
-    faults = signals.trackFaults(canrange, CANrangeFault.class);
+    SignalTracker<RangeSensorSignal, RangeSensorSignalGroup> signals =
+        new SignalTracker<>(config.signalRates);
+    version = signals.track(RangeSensorSignal.FIRMWARE_VERSION, canrange.getVersion());
+    isProLicensed = signals.track(RangeSensorSignal.IS_PRO_LICENSED, canrange.getIsProLicensed());
+    distance = signals.track(RangeSensorSignal.DISTANCE, canrange.getDistance());
+    distanceStdDev =
+        signals.track(RangeSensorSignal.DISTANCE_STD_DEV, canrange.getDistanceStdDev());
+    measurementTime =
+        signals.track(RangeSensorSignal.MEASUREMENT_TIME, canrange.getMeasurementTime());
+    detected = signals.track(RangeSensorSignal.DETECTED, canrange.getIsDetected());
+    signalStrength = signals.track(RangeSensorSignal.SIGNAL_STRENGTH, canrange.getSignalStrength());
+    ambientSignal = signals.track(RangeSensorSignal.AMBIENT_SIGNAL, canrange.getAmbientSignal());
+    measurementHealth =
+        signals.track(RangeSensorSignal.MEASUREMENT_HEALTH, canrange.getMeasurementHealth());
+    fovCenterX = signals.track(RangeSensorSignal.FOV_CENTER_X, canrange.getRealFOVCenterX());
+    fovCenterY = signals.track(RangeSensorSignal.FOV_CENTER_Y, canrange.getRealFOVCenterY());
+    fovRangeX = signals.track(RangeSensorSignal.FOV_RANGE_X, canrange.getRealFOVRangeX());
+    fovRangeY = signals.track(RangeSensorSignal.FOV_RANGE_Y, canrange.getRealFOVRangeY());
+    supplyVoltage = signals.track(RangeSensorSignal.SUPPLY_VOLTAGE, canrange.getSupplyVoltage());
+    faults =
+        signals.trackFaults(
+            canrange,
+            CANrangeFault.class,
+            RangeSensorSignal.FAULTS,
+            RangeSensorSignal.STICKY_FAULTS);
     signals.apply(canrange, bus);
   }
 

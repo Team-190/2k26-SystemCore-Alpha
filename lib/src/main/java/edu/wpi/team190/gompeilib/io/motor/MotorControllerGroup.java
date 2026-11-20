@@ -7,15 +7,19 @@ import edu.wpi.team190.gompeilib.io.base.GainSlotControllableIO;
 import edu.wpi.team190.gompeilib.io.base.MotionProfileConfigurableIO;
 import edu.wpi.team190.gompeilib.io.base.PositionResettableIO;
 import edu.wpi.team190.gompeilib.io.base.RequestControllableIO;
+import edu.wpi.team190.gompeilib.io.base.SignalRates;
 import edu.wpi.team190.gompeilib.io.base.StickyFaultClearableIO;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.FeedbackSensor;
 import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor;
+import edu.wpi.team190.gompeilib.io.motor.config.FollowerMotor.FollowType;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorAlignment;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignal;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignalGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetryAutoLogged;
@@ -32,6 +36,7 @@ import java.util.List;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.Frequency;
 
 /**
  * A leader motor and its followers, built from one {@link MotorConfig}. The group is the single
@@ -108,6 +113,13 @@ public class MotorControllerGroup
           followerFactory.supportsHardwareFollowing()
               && followerFactory.family().equals(factory.family())
               && bus.equals(config.bus);
+      if (hardware) {
+        requireFollowedRate(config.signalRates, MotorSignalGroup.OUTPUT);
+        if (follower.followType() == FollowType.DIFFERENTIAL
+            || follower.followType() == FollowType.DIFFERENTIAL_STRICT) {
+          requireFollowedRate(config.signalRates, MotorSignalGroup.DIFFERENTIAL);
+        }
+      }
       MotorDirection direction =
           hardware || follower.alignment() == MotorAlignment.ALIGNED
               ? config.direction
@@ -154,6 +166,29 @@ public class MotorControllerGroup
               hardware ? FollowMode.HARDWARE : FollowMode.MIRROR));
     }
     hasMirroredFollower = mirrored;
+  }
+
+  /**
+   * Checks that every field of a group hardware followers copy from their leader is published fast
+   * enough for them to follow.
+   */
+  private static void requireFollowedRate(
+      SignalRates<MotorSignal, MotorSignalGroup> rates, MotorSignalGroup group) {
+    for (MotorSignal signal : MotorSignal.values()) {
+      if (signal.group() != group) {
+        continue;
+      }
+      Frequency rate = rates.rateFor(signal);
+      if (rate.lt(MotorSignalGroup.MIN_FOLLOWED_RATE)) {
+        throw new IllegalArgumentException(
+            "A leader with hardware followers must publish "
+                + signal
+                + " at least "
+                + MotorSignalGroup.MIN_FOLLOWED_RATE
+                + ", got "
+                + rate);
+      }
+    }
   }
 
   private static MotorTelemetryAutoLogged newTelemetry() {

@@ -21,6 +21,8 @@ import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorDirection;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignal;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignalGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.NeutralMode;
 import edu.wpi.team190.gompeilib.io.motor.config.RemoteSensorMode;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
@@ -28,7 +30,6 @@ import edu.wpi.team190.gompeilib.io.motor.config.TorqueCurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.robot.subsystems.drive.swerve.SwerveModuleConfig;
-import java.util.Map;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.AngleUnit;
@@ -71,11 +72,8 @@ public final class SwerveModuleConstantsConversions {
       DCMotor turnModel) {
     ClosedLoopRamps ramps =
         new ClosedLoopRamps(Seconds.of(0.0), Seconds.of(0.0), closedLoopRampPeriod);
-    SignalRates odometryRates =
-        new SignalRates(
-            SignalRates.DEFAULT.control(),
-            SignalRates.DEFAULT.diagnostic(),
-            Map.of("position", odometryFrequency));
+    SignalRates<MotorSignal, MotorSignalGroup> odometryRates =
+        MotorSignal.DEFAULT_RATES.withSignal(MotorSignal.POSITION, odometryFrequency);
 
     MotorConfig drive =
         MotorConfig.builder()

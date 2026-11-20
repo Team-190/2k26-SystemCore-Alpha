@@ -3,11 +3,8 @@ package edu.wpi.team190.gompeilib.io.range.config;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
-import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import edu.wpi.team190.gompeilib.io.range.inputs.RangeSensorTelemetry;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class RangeSensorConfigTest {
@@ -27,12 +24,13 @@ public class RangeSensorConfigTest {
     assertEquals(0.0, config.fovCenterY.in(Degrees));
     assertEquals(27.0, config.fovRangeX.in(Degrees));
     assertEquals(27.0, config.fovRangeY.in(Degrees));
-    assertSame(SignalRates.DEFAULT, config.signalRates);
+    assertSame(RangeSensorSignal.DEFAULT_RATES, config.signalRates);
   }
 
   @Test
   public void testEveryField() {
-    SignalRates rates = new SignalRates(Hertz.of(100.0), Hertz.of(4.0), Map.of());
+    SignalRates<RangeSensorSignal, RangeSensorSignalGroup> rates =
+        RangeSensorSignal.DEFAULT_RATES.withGroup(RangeSensorSignalGroup.CONTROL, Hertz.of(50.0));
     RangeSensorConfig config =
         RangeSensorConfig.builder()
             .withCanId(6)
@@ -60,13 +58,6 @@ public class RangeSensorConfigTest {
     assertEquals(12.0, config.fovRangeY.in(Degrees));
     assertSame(rates, config.signalRates);
     assertEquals(7, config.toBuilder().withCanId(7).build().canId);
-  }
-
-  @Test
-  public void testControlFieldsAreRealTelemetryFields() {
-    assertTrue(
-        IOTestSupport.publicFieldNames(RangeSensorTelemetry.class)
-            .containsAll(RangeSensorConfig.CONTROL_FIELDS));
   }
 
   @Test

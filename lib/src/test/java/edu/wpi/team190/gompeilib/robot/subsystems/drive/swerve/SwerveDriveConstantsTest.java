@@ -10,9 +10,10 @@ import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.control.constraints.LinearConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
-import edu.wpi.team190.gompeilib.io.base.SignalRates;
 import edu.wpi.team190.gompeilib.io.encoder.config.AbsoluteEncoderConfig;
 import edu.wpi.team190.gompeilib.io.gyro.config.GyroConfig;
+import edu.wpi.team190.gompeilib.io.gyro.config.GyroSignal;
+import edu.wpi.team190.gompeilib.io.gyro.config.GyroSignalGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
@@ -178,11 +179,9 @@ public class SwerveDriveConstantsTest extends GompeiLibTestBase {
     GyroConfig gyro = constants.gyroConfig();
     assertEquals(constants.driveConfig.pigeon2Id(), gyro.canId);
     assertEquals(constants.driveConfig.canBus(), gyro.bus);
+    assertEquals(Hertz.of(250.0), gyro.signalRates.rateFor(GyroSignal.YAW_POSITION));
     assertEquals(
-        Hertz.of(250.0), gyro.signalRates.rateFor("yawPosition", GyroConfig.CONTROL_FIELDS));
-    assertEquals(
-        SignalRates.DEFAULT.control(),
-        gyro.signalRates.rateFor("pitchPosition", GyroConfig.CONTROL_FIELDS));
+        GyroSignalGroup.CONTROL.defaultRate(), gyro.signalRates.rateFor(GyroSignal.PITCH_POSITION));
     assertEquals(0.1, constants.driverDeadband);
     assertEquals(0.1, constants.operatorDeadband);
 

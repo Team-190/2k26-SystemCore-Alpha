@@ -18,7 +18,6 @@ import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
-import edu.wpi.team190.gompeilib.GompeiLib;
 import edu.wpi.team190.gompeilib.GompeiLibTestBase;
 import edu.wpi.team190.gompeilib.control.TestGains;
 import edu.wpi.team190.gompeilib.io.IOTestSupport;
@@ -142,7 +141,7 @@ public class MotorIOTalonFXTest extends GompeiLibTestBase {
               .verify(
                   () ->
                       BaseStatusSignal.setUpdateFrequencyForAll(
-                          eq(1.0 / GompeiLib.getLoopPeriod()), any(BaseStatusSignal[].class)));
+                          eq(100.0), any(BaseStatusSignal[].class)));
           mocks
               .signals()
               .verify(

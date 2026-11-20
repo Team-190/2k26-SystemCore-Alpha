@@ -7,6 +7,8 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.team190.gompeilib.io.gyro.config.GyroConfig;
+import edu.wpi.team190.gompeilib.io.gyro.config.GyroSignal;
+import edu.wpi.team190.gompeilib.io.gyro.config.GyroSignalGroup;
 import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetry;
 import edu.wpi.team190.gompeilib.io.gyro.interfaces.GyroIO;
 import edu.wpi.team190.gompeilib.io.phoenix.CANBuses;
@@ -97,50 +99,55 @@ public class GyroIOPigeon2 implements GyroIO {
     pigeon.getConfigurator().setYaw(Degrees.of(0.0));
     this.headingUpdateTimestamp = headingUpdateTimestamp;
 
-    SignalTracker signals =
-        new SignalTracker(config.signalRates, GyroConfig.CONTROL_FIELDS, GyroTelemetry.class);
-    version = signals.track("firmwareVersion", pigeon.getVersion());
-    isProLicensed = signals.track("isProLicensed", pigeon.getIsProLicensed());
-    yaw = signals.track("yawPosition", pigeon.getYaw());
-    pitch = signals.track("pitchPosition", pigeon.getPitch());
-    roll = signals.track("rollPosition", pigeon.getRoll());
-    rollVelocity = signals.track("rollVelocity", pigeon.getAngularVelocityXWorld());
-    pitchVelocity = signals.track("pitchVelocity", pigeon.getAngularVelocityYWorld());
-    yawVelocity = signals.track("yawVelocity", pigeon.getAngularVelocityZWorld());
+    SignalTracker<GyroSignal, GyroSignalGroup> signals = new SignalTracker<>(config.signalRates);
+    version = signals.track(GyroSignal.FIRMWARE_VERSION, pigeon.getVersion());
+    isProLicensed = signals.track(GyroSignal.IS_PRO_LICENSED, pigeon.getIsProLicensed());
+    yaw = signals.track(GyroSignal.YAW_POSITION, pigeon.getYaw());
+    pitch = signals.track(GyroSignal.PITCH_POSITION, pigeon.getPitch());
+    roll = signals.track(GyroSignal.ROLL_POSITION, pigeon.getRoll());
+    rollVelocity = signals.track(GyroSignal.ROLL_VELOCITY, pigeon.getAngularVelocityXWorld());
+    pitchVelocity = signals.track(GyroSignal.PITCH_VELOCITY, pigeon.getAngularVelocityYWorld());
+    yawVelocity = signals.track(GyroSignal.YAW_VELOCITY, pigeon.getAngularVelocityZWorld());
     deviceAngularVelocityX =
-        signals.track("deviceAngularVelocityX", pigeon.getAngularVelocityXDevice());
+        signals.track(GyroSignal.DEVICE_ANGULAR_VELOCITY_X, pigeon.getAngularVelocityXDevice());
     deviceAngularVelocityY =
-        signals.track("deviceAngularVelocityY", pigeon.getAngularVelocityYDevice());
+        signals.track(GyroSignal.DEVICE_ANGULAR_VELOCITY_Y, pigeon.getAngularVelocityYDevice());
     deviceAngularVelocityZ =
-        signals.track("deviceAngularVelocityZ", pigeon.getAngularVelocityZDevice());
-    accelerationX = signals.track("accelerationX", pigeon.getAccelerationX());
-    accelerationY = signals.track("accelerationY", pigeon.getAccelerationY());
-    accelerationZ = signals.track("accelerationZ", pigeon.getAccelerationZ());
-    quaternionW = signals.track("quaternionW", pigeon.getQuatW());
-    quaternionX = signals.track("quaternionX", pigeon.getQuatX());
-    quaternionY = signals.track("quaternionY", pigeon.getQuatY());
-    quaternionZ = signals.track("quaternionZ", pigeon.getQuatZ());
-    gravityVectorX = signals.track("gravityVectorX", pigeon.getGravityVectorX());
-    gravityVectorY = signals.track("gravityVectorY", pigeon.getGravityVectorY());
-    gravityVectorZ = signals.track("gravityVectorZ", pigeon.getGravityVectorZ());
-    accumulatedRotationX = signals.track("accumulatedRotationX", pigeon.getAccumGyroX());
-    accumulatedRotationY = signals.track("accumulatedRotationY", pigeon.getAccumGyroY());
-    accumulatedRotationZ = signals.track("accumulatedRotationZ", pigeon.getAccumGyroZ());
-    magneticFieldX = signals.track("magneticFieldX", pigeon.getMagneticFieldX());
-    magneticFieldY = signals.track("magneticFieldY", pigeon.getMagneticFieldY());
-    magneticFieldZ = signals.track("magneticFieldZ", pigeon.getMagneticFieldZ());
-    rawMagneticFieldX = signals.track("rawMagneticFieldX", pigeon.getRawMagneticFieldX());
-    rawMagneticFieldY = signals.track("rawMagneticFieldY", pigeon.getRawMagneticFieldY());
-    rawMagneticFieldZ = signals.track("rawMagneticFieldZ", pigeon.getRawMagneticFieldZ());
-    temperature = signals.track("temperature", pigeon.getTemperature());
+        signals.track(GyroSignal.DEVICE_ANGULAR_VELOCITY_Z, pigeon.getAngularVelocityZDevice());
+    accelerationX = signals.track(GyroSignal.ACCELERATION_X, pigeon.getAccelerationX());
+    accelerationY = signals.track(GyroSignal.ACCELERATION_Y, pigeon.getAccelerationY());
+    accelerationZ = signals.track(GyroSignal.ACCELERATION_Z, pigeon.getAccelerationZ());
+    quaternionW = signals.track(GyroSignal.QUATERNION_W, pigeon.getQuatW());
+    quaternionX = signals.track(GyroSignal.QUATERNION_X, pigeon.getQuatX());
+    quaternionY = signals.track(GyroSignal.QUATERNION_Y, pigeon.getQuatY());
+    quaternionZ = signals.track(GyroSignal.QUATERNION_Z, pigeon.getQuatZ());
+    gravityVectorX = signals.track(GyroSignal.GRAVITY_VECTOR_X, pigeon.getGravityVectorX());
+    gravityVectorY = signals.track(GyroSignal.GRAVITY_VECTOR_Y, pigeon.getGravityVectorY());
+    gravityVectorZ = signals.track(GyroSignal.GRAVITY_VECTOR_Z, pigeon.getGravityVectorZ());
+    accumulatedRotationX = signals.track(GyroSignal.ACCUMULATED_ROTATION_X, pigeon.getAccumGyroX());
+    accumulatedRotationY = signals.track(GyroSignal.ACCUMULATED_ROTATION_Y, pigeon.getAccumGyroY());
+    accumulatedRotationZ = signals.track(GyroSignal.ACCUMULATED_ROTATION_Z, pigeon.getAccumGyroZ());
+    magneticFieldX = signals.track(GyroSignal.MAGNETIC_FIELD_X, pigeon.getMagneticFieldX());
+    magneticFieldY = signals.track(GyroSignal.MAGNETIC_FIELD_Y, pigeon.getMagneticFieldY());
+    magneticFieldZ = signals.track(GyroSignal.MAGNETIC_FIELD_Z, pigeon.getMagneticFieldZ());
+    rawMagneticFieldX =
+        signals.track(GyroSignal.RAW_MAGNETIC_FIELD_X, pigeon.getRawMagneticFieldX());
+    rawMagneticFieldY =
+        signals.track(GyroSignal.RAW_MAGNETIC_FIELD_Y, pigeon.getRawMagneticFieldY());
+    rawMagneticFieldZ =
+        signals.track(GyroSignal.RAW_MAGNETIC_FIELD_Z, pigeon.getRawMagneticFieldZ());
+    temperature = signals.track(GyroSignal.TEMPERATURE, pigeon.getTemperature());
     temperatureCompensationDisabled =
         signals.track(
-            "temperatureCompensationDisabled", pigeon.getTemperatureCompensationDisabled());
-    noMotionEnabled = signals.track("noMotionEnabled", pigeon.getNoMotionEnabled());
-    noMotionCount = signals.track("noMotionCount", pigeon.getNoMotionCount());
-    upTime = signals.track("upTime", pigeon.getUpTime());
-    supplyVoltage = signals.track("supplyVoltage", pigeon.getSupplyVoltage());
-    faults = signals.trackFaults(pigeon, Pigeon2Fault.class);
+            GyroSignal.TEMPERATURE_COMPENSATION_DISABLED,
+            pigeon.getTemperatureCompensationDisabled());
+    noMotionEnabled = signals.track(GyroSignal.NO_MOTION_ENABLED, pigeon.getNoMotionEnabled());
+    noMotionCount = signals.track(GyroSignal.NO_MOTION_COUNT, pigeon.getNoMotionCount());
+    upTime = signals.track(GyroSignal.UP_TIME, pigeon.getUpTime());
+    supplyVoltage = signals.track(GyroSignal.SUPPLY_VOLTAGE, pigeon.getSupplyVoltage());
+    faults =
+        signals.trackFaults(
+            pigeon, Pigeon2Fault.class, GyroSignal.FAULTS, GyroSignal.STICKY_FAULTS);
     signals.apply(pigeon, bus);
 
     if (odometryThread != null) {

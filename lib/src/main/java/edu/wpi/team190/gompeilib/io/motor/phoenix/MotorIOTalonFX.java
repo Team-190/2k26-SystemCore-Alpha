@@ -20,6 +20,8 @@ import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignal;
+import edu.wpi.team190.gompeilib.io.motor.config.MotorSignalGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.SlotConfig;
 import edu.wpi.team190.gompeilib.io.motor.inputs.MotorTelemetry;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
@@ -65,7 +67,7 @@ public class MotorIOTalonFX implements MotorIO {
   protected final TalonFX talonFX;
   protected final MotorConfig config;
 
-  private final SignalTracker signals;
+  private final SignalTracker<MotorSignal, MotorSignalGroup> signals;
 
   private final StatusSignal<Integer> version;
   private final StatusSignal<Boolean> isProLicensed;
@@ -149,95 +151,107 @@ public class MotorIOTalonFX implements MotorIO {
     this.config = config;
     CANBus canBus = CANBuses.toCANBus(config.bus);
     talonFX = new TalonFX(config.canId, canBus);
-    signals =
-        new SignalTracker(config.signalRates, MotorConfig.CONTROL_FIELDS, MotorTelemetry.class);
+    signals = new SignalTracker<>(config.signalRates);
 
     PhoenixUtil.tryUntilOk(
         5, () -> talonFX.getConfigurator().apply(TalonFXConversions.toConfiguration(config), 0.25));
 
-    version = track("firmwareVersion", talonFX.getVersion());
-    isProLicensed = track("isProLicensed", talonFX.getIsProLicensed());
-    position = track("position", talonFX.getPosition());
-    velocity = track("velocity", talonFX.getVelocity());
-    acceleration = track("acceleration", talonFX.getAcceleration());
-    rotorPosition = track("rotorPosition", talonFX.getRotorPosition());
-    rotorVelocity = track("rotorVelocity", talonFX.getRotorVelocity());
-    motorVoltage = track("appliedVoltage", talonFX.getMotorVoltage());
-    supplyVoltage = track("supplyVoltage", talonFX.getSupplyVoltage());
-    dutyCycle = track("dutyCycle", talonFX.getDutyCycle());
-    supplyCurrent = track("supplyCurrent", talonFX.getSupplyCurrent());
-    statorCurrent = track("outputCurrent", talonFX.getStatorCurrent());
-    torqueCurrent = track("torqueCurrent", talonFX.getTorqueCurrent());
-    deviceTemp = track("deviceTemperature", talonFX.getDeviceTemp());
-    processorTemp = track("processorTemperature", talonFX.getProcessorTemp());
-    ancillaryDeviceTemp = track("ancillaryDeviceTemperature", talonFX.getAncillaryDeviceTemp());
-    rotorPolarity = track("rotorPolarity", talonFX.getAppliedRotorPolarity());
-    connectedMotor = track("connectedMotor", talonFX.getConnectedMotor());
-    motorKT = track("motorKT", talonFX.getMotorKT());
-    motorKV = track("motorKV", talonFX.getMotorKV());
-    motorStallCurrent = track("motorStallCurrent", talonFX.getMotorStallCurrent());
-    robotEnable = track("robotEnabled", talonFX.getRobotEnable());
-    deviceEnable = track("deviceEnabled", talonFX.getDeviceEnable());
-    controlMode = track("controlMode", talonFX.getControlMode());
-    motorOutputStatus = track("motorOutputStatus", talonFX.getMotorOutputStatus());
-    bridgeOutput = track("bridgeOutput", talonFX.getBridgeOutput());
-    closedLoopSlot = track("gainSlot", talonFX.getClosedLoopSlot());
-    closedLoopReference = track("closedLoopPositionReference", talonFX.getClosedLoopReference());
+    version = track(MotorSignal.FIRMWARE_VERSION, talonFX.getVersion());
+    isProLicensed = track(MotorSignal.IS_PRO_LICENSED, talonFX.getIsProLicensed());
+    position = track(MotorSignal.POSITION, talonFX.getPosition());
+    velocity = track(MotorSignal.VELOCITY, talonFX.getVelocity());
+    acceleration = track(MotorSignal.ACCELERATION, talonFX.getAcceleration());
+    rotorPosition = track(MotorSignal.ROTOR_POSITION, talonFX.getRotorPosition());
+    rotorVelocity = track(MotorSignal.ROTOR_VELOCITY, talonFX.getRotorVelocity());
+    motorVoltage = track(MotorSignal.APPLIED_VOLTAGE, talonFX.getMotorVoltage());
+    supplyVoltage = track(MotorSignal.SUPPLY_VOLTAGE, talonFX.getSupplyVoltage());
+    dutyCycle = track(MotorSignal.DUTY_CYCLE, talonFX.getDutyCycle());
+    supplyCurrent = track(MotorSignal.SUPPLY_CURRENT, talonFX.getSupplyCurrent());
+    statorCurrent = track(MotorSignal.OUTPUT_CURRENT, talonFX.getStatorCurrent());
+    torqueCurrent = track(MotorSignal.TORQUE_CURRENT, talonFX.getTorqueCurrent());
+    deviceTemp = track(MotorSignal.DEVICE_TEMPERATURE, talonFX.getDeviceTemp());
+    processorTemp = track(MotorSignal.PROCESSOR_TEMPERATURE, talonFX.getProcessorTemp());
+    ancillaryDeviceTemp =
+        track(MotorSignal.ANCILLARY_DEVICE_TEMPERATURE, talonFX.getAncillaryDeviceTemp());
+    rotorPolarity = track(MotorSignal.ROTOR_POLARITY, talonFX.getAppliedRotorPolarity());
+    connectedMotor = track(MotorSignal.CONNECTED_MOTOR, talonFX.getConnectedMotor());
+    motorKT = track(MotorSignal.MOTOR_KT, talonFX.getMotorKT());
+    motorKV = track(MotorSignal.MOTOR_KV, talonFX.getMotorKV());
+    motorStallCurrent = track(MotorSignal.MOTOR_STALL_CURRENT, talonFX.getMotorStallCurrent());
+    robotEnable = track(MotorSignal.ROBOT_ENABLED, talonFX.getRobotEnable());
+    deviceEnable = track(MotorSignal.DEVICE_ENABLED, talonFX.getDeviceEnable());
+    controlMode = track(MotorSignal.CONTROL_MODE, talonFX.getControlMode());
+    motorOutputStatus = track(MotorSignal.MOTOR_OUTPUT_STATUS, talonFX.getMotorOutputStatus());
+    bridgeOutput = track(MotorSignal.BRIDGE_OUTPUT, talonFX.getBridgeOutput());
+    closedLoopSlot = track(MotorSignal.GAIN_SLOT, talonFX.getClosedLoopSlot());
+    closedLoopReference =
+        track(MotorSignal.CLOSED_LOOP_REFERENCE, talonFX.getClosedLoopReference());
     closedLoopReferenceSlope =
-        track("closedLoopPositionReferenceSlope", talonFX.getClosedLoopReferenceSlope());
-    closedLoopError = track("closedLoopPositionError", talonFX.getClosedLoopError());
+        track(MotorSignal.CLOSED_LOOP_REFERENCE_SLOPE, talonFX.getClosedLoopReferenceSlope());
+    closedLoopError = track(MotorSignal.CLOSED_LOOP_ERROR, talonFX.getClosedLoopError());
     closedLoopProportionalOutput =
-        track("closedLoopProportionalOutput", talonFX.getClosedLoopProportionalOutput());
+        track(
+            MotorSignal.CLOSED_LOOP_PROPORTIONAL_OUTPUT, talonFX.getClosedLoopProportionalOutput());
     closedLoopIntegratedOutput =
-        track("closedLoopIntegratedOutput", talonFX.getClosedLoopIntegratedOutput());
+        track(MotorSignal.CLOSED_LOOP_INTEGRATED_OUTPUT, talonFX.getClosedLoopIntegratedOutput());
     closedLoopDerivativeOutput =
-        track("closedLoopDerivativeOutput", talonFX.getClosedLoopDerivativeOutput());
-    closedLoopFeedForward = track("closedLoopFeedforward", talonFX.getClosedLoopFeedForward());
-    closedLoopOutput = track("closedLoopOutput", talonFX.getClosedLoopOutput());
-    motionMagicAtTarget = track("profileAtTarget", talonFX.getMotionMagicAtTarget());
-    motionMagicIsRunning = track("profileRunning", talonFX.getMotionMagicIsRunning());
+        track(MotorSignal.CLOSED_LOOP_DERIVATIVE_OUTPUT, talonFX.getClosedLoopDerivativeOutput());
+    closedLoopFeedForward =
+        track(MotorSignal.CLOSED_LOOP_FEEDFORWARD, talonFX.getClosedLoopFeedForward());
+    closedLoopOutput = track(MotorSignal.CLOSED_LOOP_OUTPUT, talonFX.getClosedLoopOutput());
+    motionMagicAtTarget = track(MotorSignal.PROFILE_AT_TARGET, talonFX.getMotionMagicAtTarget());
+    motionMagicIsRunning = track(MotorSignal.PROFILE_RUNNING, talonFX.getMotionMagicIsRunning());
     differentialControlMode =
-        track("differentialControlMode", talonFX.getDifferentialControlMode());
+        track(MotorSignal.DIFFERENTIAL_CONTROL_MODE, talonFX.getDifferentialControlMode());
     differentialAveragePosition =
-        track("differentialAveragePosition", talonFX.getDifferentialAveragePosition());
+        track(MotorSignal.DIFFERENTIAL_AVERAGE_POSITION, talonFX.getDifferentialAveragePosition());
     differentialAverageVelocity =
-        track("differentialAverageVelocity", talonFX.getDifferentialAverageVelocity());
+        track(MotorSignal.DIFFERENTIAL_AVERAGE_VELOCITY, talonFX.getDifferentialAverageVelocity());
     differentialDifferencePosition =
-        track("differentialDifferencePosition", talonFX.getDifferentialDifferencePosition());
+        track(
+            MotorSignal.DIFFERENTIAL_DIFFERENCE_POSITION,
+            talonFX.getDifferentialDifferencePosition());
     differentialDifferenceVelocity =
-        track("differentialDifferenceVelocity", talonFX.getDifferentialDifferenceVelocity());
+        track(
+            MotorSignal.DIFFERENTIAL_DIFFERENCE_VELOCITY,
+            talonFX.getDifferentialDifferenceVelocity());
     differentialClosedLoopSlot =
-        track("differentialGainSlot", talonFX.getDifferentialClosedLoopSlot());
-    differentialOutput = track("differentialOutput", talonFX.getDifferentialOutput());
+        track(MotorSignal.DIFFERENTIAL_GAIN_SLOT, talonFX.getDifferentialClosedLoopSlot());
+    differentialOutput = track(MotorSignal.DIFFERENTIAL_OUTPUT, talonFX.getDifferentialOutput());
     differentialClosedLoopProportionalOutput =
         track(
-            "differentialClosedLoopProportionalOutput",
+            MotorSignal.DIFFERENTIAL_CLOSED_LOOP_PROPORTIONAL_OUTPUT,
             talonFX.getDifferentialClosedLoopProportionalOutput());
     differentialClosedLoopIntegratedOutput =
         track(
-            "differentialClosedLoopIntegratedOutput",
+            MotorSignal.DIFFERENTIAL_CLOSED_LOOP_INTEGRATED_OUTPUT,
             talonFX.getDifferentialClosedLoopIntegratedOutput());
     differentialClosedLoopDerivativeOutput =
         track(
-            "differentialClosedLoopDerivativeOutput",
+            MotorSignal.DIFFERENTIAL_CLOSED_LOOP_DERIVATIVE_OUTPUT,
             talonFX.getDifferentialClosedLoopDerivativeOutput());
     differentialClosedLoopFeedForward =
-        track("differentialClosedLoopFeedforward", talonFX.getDifferentialClosedLoopFeedForward());
+        track(
+            MotorSignal.DIFFERENTIAL_CLOSED_LOOP_FEEDFORWARD,
+            talonFX.getDifferentialClosedLoopFeedForward());
     differentialClosedLoopOutput =
-        track("differentialClosedLoopOutput", talonFX.getDifferentialClosedLoopOutput());
+        track(
+            MotorSignal.DIFFERENTIAL_CLOSED_LOOP_OUTPUT, talonFX.getDifferentialClosedLoopOutput());
     differentialClosedLoopReference =
         track(
-            "differentialClosedLoopPositionReference",
+            MotorSignal.DIFFERENTIAL_CLOSED_LOOP_REFERENCE,
             talonFX.getDifferentialClosedLoopReference());
     differentialClosedLoopReferenceSlope =
         track(
-            "differentialClosedLoopPositionReferenceSlope",
+            MotorSignal.DIFFERENTIAL_CLOSED_LOOP_REFERENCE_SLOPE,
             talonFX.getDifferentialClosedLoopReferenceSlope());
     differentialClosedLoopError =
-        track("differentialClosedLoopPositionError", talonFX.getDifferentialClosedLoopError());
-    forwardLimit = track("forwardLimitSwitchAsserted", talonFX.getForwardLimit());
-    reverseLimit = track("reverseLimitSwitchAsserted", talonFX.getReverseLimit());
-    faults = signals.trackFaults(talonFX, TalonFXFault.class);
+        track(MotorSignal.DIFFERENTIAL_CLOSED_LOOP_ERROR, talonFX.getDifferentialClosedLoopError());
+    forwardLimit = track(MotorSignal.FORWARD_LIMIT_SWITCH_ASSERTED, talonFX.getForwardLimit());
+    reverseLimit = track(MotorSignal.REVERSE_LIMIT_SWITCH_ASSERTED, talonFX.getReverseLimit());
+    faults =
+        signals.trackFaults(
+            talonFX, TalonFXFault.class, MotorSignal.FAULTS, MotorSignal.STICKY_FAULTS);
     signals.apply(talonFX, canBus);
 
     if (odometryThread != null) {
@@ -274,8 +288,8 @@ public class MotorIOTalonFX implements MotorIO {
     };
   }
 
-  private <T> StatusSignal<T> track(String field, StatusSignal<T> signal) {
-    return signals.track(field, signal);
+  private <T> StatusSignal<T> track(MotorSignal signal, StatusSignal<T> status) {
+    return signals.track(signal, status);
   }
 
   @Override

@@ -6,6 +6,8 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.MagnetHealthValue;
 import edu.wpi.team190.gompeilib.io.encoder.config.AbsoluteEncoderConfig;
+import edu.wpi.team190.gompeilib.io.encoder.config.AbsoluteEncoderSignal;
+import edu.wpi.team190.gompeilib.io.encoder.config.AbsoluteEncoderSignalGroup;
 import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry;
 import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.phoenix.CANBuses;
@@ -46,21 +48,28 @@ public class AbsoluteEncoderIOCANcoder implements AbsoluteEncoderIO {
         5,
         () -> cancoder.getConfigurator().apply(CANcoderConversions.toConfiguration(config), 0.25));
 
-    SignalTracker signals =
-        new SignalTracker(
-            config.signalRates,
-            AbsoluteEncoderConfig.CONTROL_FIELDS,
-            AbsoluteEncoderTelemetry.class);
-    version = signals.track("firmwareVersion", cancoder.getVersion());
-    isProLicensed = signals.track("isProLicensed", cancoder.getIsProLicensed());
-    absolutePosition = signals.track("absolutePosition", cancoder.getAbsolutePosition());
-    position = signals.track("position", cancoder.getPosition());
-    positionSinceBoot = signals.track("positionSinceBoot", cancoder.getPositionSinceBoot());
-    velocity = signals.track("velocity", cancoder.getVelocity());
-    unfilteredVelocity = signals.track("unfilteredVelocity", cancoder.getUnfilteredVelocity());
-    magnetHealth = signals.track("magnetHealth", cancoder.getMagnetHealth());
-    supplyVoltage = signals.track("supplyVoltage", cancoder.getSupplyVoltage());
-    faults = signals.trackFaults(cancoder, CANcoderFault.class);
+    SignalTracker<AbsoluteEncoderSignal, AbsoluteEncoderSignalGroup> signals =
+        new SignalTracker<>(config.signalRates);
+    version = signals.track(AbsoluteEncoderSignal.FIRMWARE_VERSION, cancoder.getVersion());
+    isProLicensed =
+        signals.track(AbsoluteEncoderSignal.IS_PRO_LICENSED, cancoder.getIsProLicensed());
+    absolutePosition =
+        signals.track(AbsoluteEncoderSignal.ABSOLUTE_POSITION, cancoder.getAbsolutePosition());
+    position = signals.track(AbsoluteEncoderSignal.POSITION, cancoder.getPosition());
+    positionSinceBoot =
+        signals.track(AbsoluteEncoderSignal.POSITION_SINCE_BOOT, cancoder.getPositionSinceBoot());
+    velocity = signals.track(AbsoluteEncoderSignal.VELOCITY, cancoder.getVelocity());
+    unfilteredVelocity =
+        signals.track(AbsoluteEncoderSignal.UNFILTERED_VELOCITY, cancoder.getUnfilteredVelocity());
+    magnetHealth = signals.track(AbsoluteEncoderSignal.MAGNET_HEALTH, cancoder.getMagnetHealth());
+    supplyVoltage =
+        signals.track(AbsoluteEncoderSignal.SUPPLY_VOLTAGE, cancoder.getSupplyVoltage());
+    faults =
+        signals.trackFaults(
+            cancoder,
+            CANcoderFault.class,
+            AbsoluteEncoderSignal.FAULTS,
+            AbsoluteEncoderSignal.STICKY_FAULTS);
     signals.apply(cancoder, bus);
   }
 

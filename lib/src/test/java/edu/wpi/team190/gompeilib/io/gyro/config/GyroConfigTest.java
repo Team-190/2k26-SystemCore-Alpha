@@ -3,11 +3,8 @@ package edu.wpi.team190.gompeilib.io.gyro.config;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
-import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import edu.wpi.team190.gompeilib.io.gyro.inputs.GyroTelemetry;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class GyroConfigTest {
@@ -24,13 +21,13 @@ public class GyroConfigTest {
     assertFalse(config.enableCompass);
     assertFalse(config.disableTemperatureCompensation);
     assertFalse(config.disableNoMotionCalibration);
-    assertSame(SignalRates.DEFAULT, config.signalRates);
+    assertSame(GyroSignal.DEFAULT_RATES, config.signalRates);
   }
 
   @Test
   public void testEveryField() {
-    SignalRates rates =
-        new SignalRates(Hertz.of(50.0), Hertz.of(4.0), Map.of("yawPosition", Hertz.of(250.0)));
+    SignalRates<GyroSignal, GyroSignalGroup> rates =
+        GyroSignal.DEFAULT_RATES.withSignal(GyroSignal.YAW_POSITION, Hertz.of(250.0));
     GyroConfig config =
         GyroConfig.builder()
             .withCanId(1)
@@ -52,12 +49,6 @@ public class GyroConfigTest {
     assertTrue(config.disableNoMotionCalibration);
     assertSame(rates, config.signalRates);
     assertEquals(2, config.toBuilder().withCanId(2).build().canId);
-  }
-
-  @Test
-  public void testControlFieldsAreRealTelemetryFields() {
-    assertTrue(
-        IOTestSupport.publicFieldNames(GyroTelemetry.class).containsAll(GyroConfig.CONTROL_FIELDS));
   }
 
   @Test

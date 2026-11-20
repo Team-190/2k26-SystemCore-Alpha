@@ -112,42 +112,53 @@ public class FaultSignalsTest {
         FaultSignals.of(
             new Device(),
             TestFault.class,
-            (field, signal) -> {
-              tracked.add(field);
+            signal -> {
+              tracked.add("live");
+              return signal;
+            },
+            signal -> {
+              tracked.add("sticky");
               return signal;
             });
 
     assertEquals(TestFault.HARDWARE.mask(), faults.faults());
     assertEquals(TestFault.FIVE_V_TOO_HIGH.mask(), faults.stickyFaults());
-    assertEquals(2, tracked.stream().filter("faults"::equals).count());
-    assertEquals(2, tracked.stream().filter("stickyFaults"::equals).count());
+    assertEquals(2, tracked.stream().filter("live"::equals).count());
+    assertEquals(2, tracked.stream().filter("sticky"::equals).count());
   }
 
   @Test
   public void shouldRejectAFaultTheEnumDoesNotName() {
     assertThrows(
         IllegalStateException.class,
-        () -> FaultSignals.of(new ExtraFaultDevice(), TestFault.class, (field, signal) -> signal));
+        () ->
+            FaultSignals.of(
+                new ExtraFaultDevice(), TestFault.class, signal -> signal, signal -> signal));
   }
 
   @Test
   public void shouldRejectAFaultTheDeviceDoesNotReport() {
     assertThrows(
         IllegalStateException.class,
-        () -> FaultSignals.of(new Device(), MissingFault.class, (field, signal) -> signal));
+        () ->
+            FaultSignals.of(new Device(), MissingFault.class, signal -> signal, signal -> signal));
   }
 
   @Test
   public void shouldRejectAFaultWithoutAStickyGetter() {
     assertThrows(
         IllegalStateException.class,
-        () -> FaultSignals.of(new LiveOnlyDevice(), TestFault.class, (field, signal) -> signal));
+        () ->
+            FaultSignals.of(
+                new LiveOnlyDevice(), TestFault.class, signal -> signal, signal -> signal));
   }
 
   @Test
   public void shouldWrapAFailingGetter() {
     assertThrows(
         IllegalStateException.class,
-        () -> FaultSignals.of(new BrokenDevice(), TestFault.class, (field, signal) -> signal));
+        () ->
+            FaultSignals.of(
+                new BrokenDevice(), TestFault.class, signal -> signal, signal -> signal));
   }
 }

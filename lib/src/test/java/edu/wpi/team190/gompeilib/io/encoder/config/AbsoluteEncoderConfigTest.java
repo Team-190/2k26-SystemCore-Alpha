@@ -3,11 +3,8 @@ package edu.wpi.team190.gompeilib.io.encoder.config;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.wpilib.units.Units.*;
 
-import edu.wpi.team190.gompeilib.io.IOTestSupport;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
 import edu.wpi.team190.gompeilib.io.base.SignalRates;
-import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class AbsoluteEncoderConfigTest {
@@ -22,12 +19,14 @@ public class AbsoluteEncoderConfigTest {
     assertEquals(SensorDirection.COUNTER_CLOCKWISE_POSITIVE, config.direction);
     assertEquals(0.0, config.magnetOffset.in(Rotations));
     assertEquals(0.5, config.discontinuityPoint.in(Rotations));
-    assertSame(SignalRates.DEFAULT, config.signalRates);
+    assertSame(AbsoluteEncoderSignal.DEFAULT_RATES, config.signalRates);
   }
 
   @Test
   public void testEveryField() {
-    SignalRates rates = new SignalRates(Hertz.of(100.0), Hertz.of(10.0), Map.of());
+    SignalRates<AbsoluteEncoderSignal, AbsoluteEncoderSignalGroup> rates =
+        AbsoluteEncoderSignal.DEFAULT_RATES.withGroup(
+            AbsoluteEncoderSignalGroup.DIAGNOSTIC, Hertz.of(10.0));
     AbsoluteEncoderConfig config =
         AbsoluteEncoderConfig.builder()
             .withCanId(5)
@@ -43,13 +42,6 @@ public class AbsoluteEncoderConfigTest {
     assertEquals(1.0, config.discontinuityPoint.in(Rotations));
     assertSame(rates, config.signalRates);
     assertEquals(7, config.toBuilder().withCanId(7).build().canId);
-  }
-
-  @Test
-  public void testControlFieldsAreRealTelemetryFields() {
-    assertTrue(
-        IOTestSupport.publicFieldNames(AbsoluteEncoderTelemetry.class)
-            .containsAll(AbsoluteEncoderConfig.CONTROL_FIELDS));
   }
 
   @Test
