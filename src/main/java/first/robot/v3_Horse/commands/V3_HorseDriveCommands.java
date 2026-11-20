@@ -42,7 +42,7 @@ public final class V3_HorseDriveCommands {
   @Getter private static double slowFactor = 0.5;
 
   @Getter private static boolean schoolBusEnabled = false;
-    private static final Tunable<Double> schoolBusDeadband =
+  private static final Tunable<Double> schoolBusDeadband =
       GompeiTunables.value("Drive/School Bus/Deadband", 0.3);
 
   /**
@@ -216,7 +216,7 @@ public final class V3_HorseDriveCommands {
         omegaHijack(
             drive, omegaController, rotationSupplier, () -> cardinalDirection.get().getRadians());
 
-        BooleanSupplier schoolBusActive =
+    BooleanSupplier schoolBusActive =
         () ->
             schoolBusEnabled
                 && Math.hypot(xSupplier.getAsDouble(), ySupplier.getAsDouble())
@@ -306,7 +306,7 @@ public final class V3_HorseDriveCommands {
     return Commands.runOnce(() -> schoolBusEnabled = !schoolBusEnabled).ignoringDisable(true);
   }
 
-    public static double getSchoolBusDeadband() {
+  public static double getSchoolBusDeadband() {
     return schoolBusDeadband.get();
   }
 
