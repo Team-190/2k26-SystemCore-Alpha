@@ -8,12 +8,9 @@ import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
 import org.wpilib.math.system.DCMotor;
-import org.wpilib.units.AngleUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Dimensionless;
@@ -56,10 +53,6 @@ public class ArmConstants {
 
   /** How far one increment or decrement moves the open-loop duty-cycle goal. */
   @NonNull @Builder.Default public final Dimensionless dutyCycleOffsetStep = Value.of(0.05);
-
-  /** How the arm finds its position against a hard stop, or empty if it doesn't home. */
-  @NonNull @Builder.Default
-  public final Optional<CurrentHoming.Config<AngleUnit>> homing = Optional.empty();
 
   /**
    * The arm's travel and how it responds to its motors.

@@ -23,10 +23,10 @@ import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.flywheel.GenericFlywheelConstants;
 import edu.wpi.team190.gompeilib.tuning.GompeiTunables;
-import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.tunable.Tunable;
+import org.wpilib.units.AngleUnit;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Current;
 
@@ -166,11 +166,15 @@ public class V3_HorseShooterConstants {
                   .build())
           .withPositionOffsetStep(Degrees.of(1))
           .withVoltageOffsetStep(Volts.of(0.5))
-          .withHoming(
-              Optional.of(
-                  new CurrentHoming.Config<>(
-                      Volts.of(-1.0), Amps.of(40.0), Milliamps.of(500), Degrees.of(0.0))))
           .build();
+
+  /** Drive back into the hard stop at 1 V until the torque current reaches 40 A. */
+  public static final CurrentHoming.Config<AngleUnit> HOOD_HOMING =
+      new CurrentHoming.Config<>(
+          CurrentHoming.Output.volts(Volts.of(-1.0)),
+          Amps.of(40.0),
+          Milliamps.of(500),
+          Degrees.of(0.0));
 
   public enum ShooterGoal {
     SCORE,

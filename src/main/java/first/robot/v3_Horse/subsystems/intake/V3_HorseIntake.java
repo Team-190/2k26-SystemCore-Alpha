@@ -9,7 +9,7 @@ import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.logging.Trace;
-import edu.wpi.team190.gompeilib.robot.mechanisms.extension.Extension;
+import edu.wpi.team190.gompeilib.robot.mechanisms.extension.HomingExtension;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRoller;
 import first.robot.v3_Horse.subsystems.intake.V3_HorseIntakeConstants.ExtensionState;
 import first.robot.v3_Horse.subsystems.intake.V3_HorseIntakeConstants.RollerState;
@@ -32,9 +32,9 @@ public class V3_HorseIntake extends SubsystemBase {
 
   private final GenericRoller intakeRoller;
 
-  public final Extension leftExtension;
+  public final HomingExtension leftExtension;
 
-  public final Extension rightExtension;
+  public final HomingExtension rightExtension;
 
   private final GenericRoller kickerRoller;
 
@@ -83,18 +83,20 @@ public class V3_HorseIntake extends SubsystemBase {
             V3_HorseIntakeConstants.KICKER_ROLLER_STATES.get(rollerState));
 
     leftExtension =
-        new Extension(
+        new HomingExtension(
             leftExtensionMotors,
             this,
             "LeftExtension",
             V3_HorseIntakeConstants.LEFT_EXTENSION_CONSTANTS,
+            V3_HorseIntakeConstants.EXTENSION_HOMING,
             V3_HorseIntakeConstants.LEFT_EXTENSION_STATES.get(extensionState));
     rightExtension =
-        new Extension(
+        new HomingExtension(
             rightExtensionMotors,
             this,
             "RightExtension",
             V3_HorseIntakeConstants.RIGHT_EXTENSION_CONSTANTS,
+            V3_HorseIntakeConstants.EXTENSION_HOMING,
             V3_HorseIntakeConstants.RIGHT_EXTENSION_STATES.get(extensionState));
 
     leftManualPositionGoal =

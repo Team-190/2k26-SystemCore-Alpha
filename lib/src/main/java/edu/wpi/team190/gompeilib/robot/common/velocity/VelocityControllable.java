@@ -4,8 +4,8 @@ import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.outputs.Feedforward;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.io.motor.outputs.ProfileMode;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityProfileMode;
 import edu.wpi.team190.gompeilib.robot.common.core.Mechanism;
 import org.wpilib.command2.Command;
 import org.wpilib.units.Measure;
@@ -90,11 +90,11 @@ public interface VelocityControllable<V extends Unit> extends Mechanism {
     return velocityControl().getGainSlot();
   }
 
-  default void setVelocityProfileMode(ProfileMode profileMode) {
+  default void setVelocityProfileMode(VelocityProfileMode profileMode) {
     velocityControl().setProfileMode(profileMode);
   }
 
-  default ProfileMode getVelocityProfileMode() {
+  default VelocityProfileMode getVelocityProfileMode() {
     return velocityControl().getProfileMode();
   }
 

@@ -1,7 +1,6 @@
 package edu.wpi.team190.gompeilib.robot.common.homing;
 
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
-import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
 import edu.wpi.team190.gompeilib.robot.common.openloop.OpenLoopControl;
@@ -16,6 +15,7 @@ import org.wpilib.units.Measure;
 import org.wpilib.units.Unit;
 import org.wpilib.units.VoltageUnit;
 import org.wpilib.units.measure.Current;
+import org.wpilib.units.measure.Voltage;
 
 /**
  * Current-based homing: drives the mechanism into a hard stop until the leader's torque current
@@ -34,22 +34,54 @@ public final class CurrentHoming<P extends Unit> implements MechanismCore.Contro
           false, false, false, false, true, false, RequestOptions.DEFAULT_UPDATE_FREQUENCY);
 
   /**
+   * What drives a mechanism into its hard stop: a voltage, or a torque current. Its sign picks the
+   * direction.
+   */
+  public sealed interface Output {
+    /**
+     * Drives the mechanism with a voltage.
+     *
+     * @param voltage the voltage
+     */
+    record Volts(Voltage voltage) implements Output {
+      public Volts {
+        Objects.requireNonNull(voltage, "voltage");
+      }
+    }
+
+    /**
+     * Drives the mechanism with a torque current.
+     *
+     * @param current the torque current
+     */
+    record Amps(Current current) implements Output {
+      public Amps {
+        Objects.requireNonNull(current, "current");
+      }
+    }
+
+    static Output volts(Voltage voltage) {
+      return new Volts(voltage);
+    }
+
+    static Output amps(Current current) {
+      return new Amps(current);
+    }
+  }
+
+  /**
    * How a mechanism homes.
    *
-   * @param output what drives the mechanism into the hard stop, in volts or in amps for torque
-   *     current; its sign picks the direction
+   * @param output what drives the mechanism into the hard stop
    * @param currentThreshold the torque current that means the mechanism has reached the hard stop
    * @param currentEpsilon how close to {@code currentThreshold} counts as reaching it
    * @param position the mechanism's position at the hard stop
    * @param <P> the mechanism's position unit
    */
   public record Config<P extends Unit>(
-      Measure<?> output, Current currentThreshold, Current currentEpsilon, Measure<P> position) {
+      Output output, Current currentThreshold, Current currentEpsilon, Measure<P> position) {
     public Config {
       Objects.requireNonNull(output, "output");
-      if (OutputType.of(output.unit()).filter(type -> type != OutputType.DUTY_CYCLE).isEmpty()) {
-        throw new IllegalArgumentException("Home in volts or amps, not " + output.unit());
-      }
       Objects.requireNonNull(currentThreshold, "currentThreshold");
       Objects.requireNonNull(currentEpsilon, "currentEpsilon");
       Objects.requireNonNull(position, "position");
@@ -92,17 +124,17 @@ public final class CurrentHoming<P extends Unit> implements MechanismCore.Contro
     Objects.requireNonNull(voltage, "voltage");
     Objects.requireNonNull(current, "current");
     this.config = Objects.requireNonNull(config, "config");
-    this.drive = request(config.output(), voltage, current, OPTIONS);
-    this.zero = request(config.output().times(0.0), voltage, current, RequestOptions.DEFAULT);
+    switch (config.output()) {
+      case Output.Volts(Voltage output) -> {
+        drive = voltage.request(output, OPTIONS);
+        zero = voltage.request(output.times(0.0));
+      }
+      case Output.Amps(Current output) -> {
+        drive = current.request(output, OPTIONS);
+        zero = current.request(output.times(0.0));
+      }
+    }
     core.add(this);
-  }
-
-  private static <U extends Unit> MotorRequest request(
-      Measure<U> output,
-      OpenLoopControl<VoltageUnit> voltage,
-      OpenLoopControl<CurrentUnit> current,
-      RequestOptions options) {
-    return OpenLoopControl.select(output.unit(), voltage, current, options).apply(output);
   }
 
   /**

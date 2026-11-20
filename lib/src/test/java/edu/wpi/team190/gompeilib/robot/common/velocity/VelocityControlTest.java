@@ -9,8 +9,8 @@ import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.outputs.Feedforward;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.io.motor.outputs.ProfileMode;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityProfileMode;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismTestSupport;
@@ -57,7 +57,7 @@ public class VelocityControlTest extends GompeiLibTestBase {
   public void testVoltageLoopUsesTheVoltageSlotAndFeedforward() {
     VelocityControl<AngularVelocityUnit> control = control(zero());
     assertTrue(core.components().contains(control));
-    assertEquals(ProfileMode.UNPROFILED, control.getProfileMode());
+    assertEquals(VelocityProfileMode.UNPROFILED, control.getProfileMode());
 
     control.setGoal(RadiansPerSecond.of(100));
     assertTrue(core.isActive(control));
@@ -76,7 +76,7 @@ public class VelocityControlTest extends GompeiLibTestBase {
 
     control.setGoal(RadiansPerSecond.of(120), Feedforward.volts(Volts.of(2.5)));
     assertEquals(Feedforward.volts(Volts.of(2.5)), control.getFeedforward());
-    control.setProfileMode(ProfileMode.PROFILED);
+    control.setProfileMode(VelocityProfileMode.PROFILED);
     core.periodic();
     verify(motors.motor)
         .setControl(
@@ -119,7 +119,7 @@ public class VelocityControlTest extends GompeiLibTestBase {
     control.setGoal(RadiansPerSecond.of(50), Feedforward.dutyCycle(0.2));
     assertEquals(OutputType.DUTY_CYCLE, control.getOutputType());
     assertEquals("VelocityDutyCycle", control.name());
-    control.setProfileMode(ProfileMode.PROFILED);
+    control.setProfileMode(VelocityProfileMode.PROFILED);
     core.periodic();
     verify(motors.motor)
         .setControl(
@@ -141,14 +141,6 @@ public class VelocityControlTest extends GompeiLibTestBase {
 
     control.setOutputType(OutputType.VOLTAGE);
     assertEquals(Feedforward.zero(OutputType.VOLTAGE), control.getFeedforward());
-  }
-
-  @Test
-  public void testRejectsAnExponentialProfile() {
-    VelocityControl<AngularVelocityUnit> control = control(zero());
-    assertThrows(
-        IllegalArgumentException.class, () -> control.setProfileMode(ProfileMode.EXPONENTIAL));
-    assertEquals(ProfileMode.UNPROFILED, control.getProfileMode());
   }
 
   @Test

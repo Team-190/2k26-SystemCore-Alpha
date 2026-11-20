@@ -12,11 +12,8 @@ import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.physics.Inertia;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.wpilib.math.system.DCMotor;
-import org.wpilib.units.AngleUnit;
 import org.wpilib.units.VoltageUnit;
 
 public class ArmConstantsTest extends GompeiLibTestBase {
@@ -85,7 +82,6 @@ public class ArmConstantsTest extends GompeiLibTestBase {
                 Inertia.atOutput(KilogramSquareMeters.of(0.1)))
             .build(),
         parameters.plant());
-    assertTrue(constants.homing.isEmpty());
     assertEquals(
         edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.VOLTAGE,
         constants.closedLoopOutputType);
@@ -102,37 +98,6 @@ public class ArmConstantsTest extends GompeiLibTestBase {
         edu.wpi.team190.gompeilib.io.motor.outputs.OutputType.CURRENT, custom.closedLoopOutputType);
     assertEquals(Amps.of(2.0), custom.currentOffsetStep);
     assertEquals(Value.of(0.1), custom.dutyCycleOffsetStep);
-  }
-
-  @Test
-  public void testHoming() {
-    CurrentHoming.Config<AngleUnit> homing =
-        new CurrentHoming.Config<>(Volts.of(-1.0), Amps.of(40.0), Milliamps.of(500), Degrees.of(0));
-    ArmConstants constants =
-        ArmConstants.builder()
-            .withMotor(
-                MotorConfig.builder()
-                    .withCanId(1)
-                    .withBus(CANBusId.named("rio"))
-                    .withCurrentLimits(new CurrentLimits(40, 40))
-                    .build())
-            .withArmParameters(
-                ArmConstants.ArmParameters.builder()
-                    .withArmGearbox(DCMotor.getKrakenX60(1))
-                    .withMinAngle(Degrees.of(0))
-                    .withMaxAngle(Degrees.of(30))
-                    .withPlant(
-                        PlantCharacterization.ofInertia(
-                                DCMotor.getKrakenX60(1), 50.0, KilogramSquareMeters.of(0.001))
-                            .build())
-                    .build())
-            .withConstraints(AngularPositionConstraints.builder().build())
-            .withVoltageOffsetStep(Volts.of(0.5))
-            .withCharacterization(sysId())
-            .withPositionOffsetStep(Degrees.of(1))
-            .withHoming(Optional.of(homing))
-            .build();
-    assertSame(homing, constants.homing.orElseThrow());
   }
 
   @Test

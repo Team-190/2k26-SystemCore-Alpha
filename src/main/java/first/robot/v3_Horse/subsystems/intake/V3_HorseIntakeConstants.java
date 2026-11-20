@@ -22,7 +22,6 @@ import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants;
 import edu.wpi.team190.gompeilib.robot.mechanisms.extension.ExtensionConstants.ExtensionParameters;
 import edu.wpi.team190.gompeilib.robot.mechanisms.roller.GenericRollerConstants;
 import java.util.Map;
-import java.util.Optional;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.DistanceUnit;
@@ -242,6 +241,14 @@ public class V3_HorseIntakeConstants {
   }
 
   /** The two extensions share everything but their ID, direction, and tunable prefix. */
+  /** Drive back into the hard stop at 1 V until the torque current reaches -20 A. */
+  public static final CurrentHoming.Config<DistanceUnit> EXTENSION_HOMING =
+      new CurrentHoming.Config<>(
+          CurrentHoming.Output.volts(Volts.of(-1.0)),
+          Amps.of(-20.0),
+          Amps.of(5.0),
+          Meters.of(MIN_EXTENSION));
+
   private static ExtensionConstants extensionConstants(
       int canId, MotorDirection direction, String name) {
     return ExtensionConstants.builder()
@@ -273,11 +280,6 @@ public class V3_HorseIntakeConstants {
                 .withKP(VoltsPerMeter.ofNative(0.1))
                 .build())
         .withDistancePerRadian(EXTENSION_DRUM_RADIUS)
-        // Drive back into the hard stop at 1 V until the torque current reaches -20 A
-        .withHoming(
-            Optional.of(
-                new CurrentHoming.Config<>(
-                    Volts.of(-1.0), Amps.of(-20.0), Amps.of(5.0), Meters.of(MIN_EXTENSION))))
         .withVoltageOffsetStep(Volts.of(1))
         .withHeightOffsetStep(Meters.of(0.01))
         .withExtensionParameters(

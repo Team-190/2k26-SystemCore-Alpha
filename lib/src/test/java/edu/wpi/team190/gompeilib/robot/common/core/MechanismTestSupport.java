@@ -6,6 +6,8 @@ import static org.wpilib.units.Units.*;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
+import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry;
+import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.motor.MotorControllerGroup;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
@@ -30,7 +32,6 @@ import edu.wpi.team190.gompeilib.robot.common.position.PositionControl;
 import edu.wpi.team190.gompeilib.robot.common.position.PositionControllable;
 import edu.wpi.team190.gompeilib.robot.common.velocity.VelocityControl;
 import edu.wpi.team190.gompeilib.robot.common.velocity.VelocityControllable;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.wpilib.command2.Subsystem;
 import org.wpilib.units.AngleUnit;
@@ -104,6 +105,7 @@ public final class MechanismTestSupport {
     public final VelocityControl<AngularVelocityUnit> velocity;
     public final DifferentialControl<AngleUnit, AngleUnit> differential;
     public final CurrentHoming<AngleUnit> homing;
+    public final AbsoluteEncoderIO encoderIO = mock(AbsoluteEncoderIO.class);
     public final EncoderSeed encoder;
 
     public TestMechanism(TestMotors motors) {
@@ -143,8 +145,20 @@ public final class MechanismTestSupport {
               position,
               voltage,
               current,
-              new CurrentHoming.Config<>(Volts.of(-1), Amps.of(-20), Amps.of(1), Radians.of(0)));
-      encoder = new EncoderSeed(core, Optional.empty());
+              new CurrentHoming.Config<>(
+                  CurrentHoming.Output.volts(Volts.of(-1)),
+                  Amps.of(-20),
+                  Amps.of(1),
+                  Radians.of(0)));
+      doAnswer(
+              invocation -> {
+                ((AbsoluteEncoderTelemetry) invocation.getArgument(0)).absolutePosition =
+                    Rotations.of(0.25);
+                return null;
+              })
+          .when(encoderIO)
+          .updateInputs(any());
+      encoder = new EncoderSeed(core, encoderIO);
     }
 
     @Override

@@ -8,8 +8,8 @@ import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.outputs.Feedforward;
 import edu.wpi.team190.gompeilib.io.motor.outputs.MotorRequest;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.io.motor.outputs.ProfileMode;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityProfileMode;
 import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityRequest;
 import edu.wpi.team190.gompeilib.robot.common.core.GainSlots;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismConversion;
@@ -38,7 +38,7 @@ public final class VelocityControl<V extends Unit> implements MechanismCore.Cont
 
   @Getter private Setpoint<V> goal;
   @Getter private Feedforward feedforward;
-  @Getter private ProfileMode profileMode = ProfileMode.UNPROFILED;
+  @Getter private VelocityProfileMode profileMode = VelocityProfileMode.UNPROFILED;
   @Getter private RequestOptions options = RequestOptions.DEFAULT;
 
   /**
@@ -179,14 +179,10 @@ public final class VelocityControl<V extends Unit> implements MechanismCore.Cont
   /**
    * Sets how the loop reaches the goal.
    *
-   * @param profileMode {@link ProfileMode#PROFILED} or {@link ProfileMode#UNPROFILED}
-   * @throws IllegalArgumentException if the mode is {@link ProfileMode#EXPONENTIAL}
+   * @param profileMode the mode
    */
-  public void setProfileMode(ProfileMode profileMode) {
-    if (Objects.requireNonNull(profileMode, "profileMode") == ProfileMode.EXPONENTIAL) {
-      throw new IllegalArgumentException("Velocity control has no exponential profile");
-    }
-    this.profileMode = profileMode;
+  public void setProfileMode(VelocityProfileMode profileMode) {
+    this.profileMode = Objects.requireNonNull(profileMode, "profileMode");
   }
 
   public void setOptions(RequestOptions options) {

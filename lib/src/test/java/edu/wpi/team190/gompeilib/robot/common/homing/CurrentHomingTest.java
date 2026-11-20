@@ -46,7 +46,9 @@ public class CurrentHomingTest extends GompeiLibTestBase {
             true);
     voltage = OpenLoopControl.voltage(core, Volts.of(0.5), true);
     current = OpenLoopControl.current(core, new Setpoint<>(Amps.of(0), Amps.of(1)));
-    config = new CurrentHoming.Config<>(Volts.of(-1.0), Amps.of(-20), Amps.of(1), Meters.of(0.1));
+    config =
+        new CurrentHoming.Config<>(
+            CurrentHoming.Output.volts(Volts.of(-1.0)), Amps.of(-20), Amps.of(1), Meters.of(0.1));
   }
 
   @AfterEach
@@ -101,7 +103,12 @@ public class CurrentHomingTest extends GompeiLibTestBase {
   @Test
   public void testHomesInTorqueCurrent() {
     CurrentHoming<DistanceUnit> homing =
-        homing(new CurrentHoming.Config<>(Amps.of(-8.0), Amps.of(-20), Amps.of(1), Meters.of(0.1)));
+        homing(
+            new CurrentHoming.Config<>(
+                CurrentHoming.Output.amps(Amps.of(-8.0)),
+                Amps.of(-20),
+                Amps.of(1),
+                Meters.of(0.1)));
 
     Command home = homing.command();
     home.initialize();
@@ -163,13 +170,13 @@ public class CurrentHomingTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void shouldHomeOnlyInVoltsOrAmps() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new CurrentHoming.Config<>(Percent.of(10), Amps.of(1), Amps.of(1), Meters.of(0)));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new CurrentHoming.Config<>(Meters.of(1), Amps.of(1), Amps.of(1), Meters.of(0)));
+  public void testOutputCarriesItsValue() {
+    assertEquals(
+        new CurrentHoming.Output.Volts(Volts.of(-2)), CurrentHoming.Output.volts(Volts.of(-2)));
+    assertEquals(
+        new CurrentHoming.Output.Amps(Amps.of(-8)), CurrentHoming.Output.amps(Amps.of(-8)));
+    assertThrows(NullPointerException.class, () -> CurrentHoming.Output.volts(null));
+    assertThrows(NullPointerException.class, () -> CurrentHoming.Output.amps(null));
   }
 
   @Test
@@ -198,15 +205,21 @@ public class CurrentHomingTest extends GompeiLibTestBase {
         () -> new CurrentHoming<DistanceUnit>(core, position, voltage, current, null));
     assertThrows(
         NullPointerException.class,
-        () -> new CurrentHoming.Config<>(null, Amps.of(1), Amps.of(1), Meters.of(0)));
+        () -> new CurrentHoming.Config<DistanceUnit>(null, Amps.of(1), Amps.of(1), Meters.of(0)));
     assertThrows(
         NullPointerException.class,
-        () -> new CurrentHoming.Config<>(Volts.of(1), null, Amps.of(1), Meters.of(0)));
+        () ->
+            new CurrentHoming.Config<>(
+                CurrentHoming.Output.volts(Volts.of(1)), null, Amps.of(1), Meters.of(0)));
     assertThrows(
         NullPointerException.class,
-        () -> new CurrentHoming.Config<>(Volts.of(1), Amps.of(1), null, Meters.of(0)));
+        () ->
+            new CurrentHoming.Config<>(
+                CurrentHoming.Output.volts(Volts.of(1)), Amps.of(1), null, Meters.of(0)));
     assertThrows(
         NullPointerException.class,
-        () -> new CurrentHoming.Config<DistanceUnit>(Volts.of(1), Amps.of(1), Amps.of(1), null));
+        () ->
+            new CurrentHoming.Config<DistanceUnit>(
+                CurrentHoming.Output.volts(Volts.of(1)), Amps.of(1), Amps.of(1), null));
   }
 }

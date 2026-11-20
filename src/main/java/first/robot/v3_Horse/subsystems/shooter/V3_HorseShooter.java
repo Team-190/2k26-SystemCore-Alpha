@@ -81,6 +81,7 @@ public class V3_HorseShooter extends SubsystemBase {
             this,
             "Hood",
             V3_HorseShooterConstants.HOOD_CONSTANTS,
+            V3_HorseShooterConstants.HOOD_HOMING,
             hoodAngleSetpoint,
             hoodVoltageSetpoint);
     this.shooterGoal = ShooterGoal.STOW;

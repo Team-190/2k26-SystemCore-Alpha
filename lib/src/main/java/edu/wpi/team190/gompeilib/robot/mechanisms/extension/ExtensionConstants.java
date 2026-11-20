@@ -10,9 +10,7 @@ import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.MotorConfig;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
-import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Map;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
@@ -44,10 +42,6 @@ public class ExtensionConstants {
    * a lead screw's lead divided by 2π.
    */
   @NonNull public final Distance distancePerRadian;
-
-  /** How the extension finds its position against a hard stop, or empty if it doesn't home. */
-  @NonNull @Builder.Default
-  public final Optional<CurrentHoming.Config<DistanceUnit>> homing = Optional.empty();
 
   /** The travel range and physical properties. */
   @NonNull public final ExtensionParameters extensionParameters;

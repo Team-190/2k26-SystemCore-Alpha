@@ -220,7 +220,7 @@ public sealed interface VelocityRequest extends ClosedLoopRequest {
    * Returns the velocity request for a profile mode and feedforward. The feedforward's kind picks
    * the output: voltage, torque current, or duty cycle.
    *
-   * @param mode {@link ProfileMode#PROFILED} or {@link ProfileMode#UNPROFILED}
+   * @param mode how the request reaches the velocity
    * @param velocity the velocity, at the gearbox output
    * @param acceleration the acceleration, at the gearbox output
    * @param feedforward the feedforward, which picks the output type
@@ -228,20 +228,16 @@ public sealed interface VelocityRequest extends ClosedLoopRequest {
    * @param slot the gain slot
    * @param options the request options
    * @return the request
-   * @throws IllegalArgumentException if the mode is {@link ProfileMode#EXPONENTIAL}
    */
   static VelocityRequest of(
-      ProfileMode mode,
+      VelocityProfileMode mode,
       AngularVelocity velocity,
       AngularAcceleration acceleration,
       Feedforward feedforward,
       boolean foc,
       GainSlot slot,
       RequestOptions options) {
-    if (mode == ProfileMode.EXPONENTIAL) {
-      throw new IllegalArgumentException("Velocity control has no exponential profile");
-    }
-    boolean profiled = mode == ProfileMode.PROFILED;
+    boolean profiled = mode == VelocityProfileMode.PROFILED;
     return switch (feedforward) {
       case Feedforward.Volts(Voltage ff) ->
           profiled

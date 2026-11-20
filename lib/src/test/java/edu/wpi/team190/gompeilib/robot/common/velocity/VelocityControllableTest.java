@@ -9,8 +9,8 @@ import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.outputs.Feedforward;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.io.motor.outputs.ProfileMode;
 import edu.wpi.team190.gompeilib.io.motor.outputs.RequestOptions;
+import edu.wpi.team190.gompeilib.io.motor.outputs.VelocityProfileMode;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismTestSupport.TestMechanism;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismTestSupport.TestMotors;
 import org.junit.jupiter.api.AfterEach;
@@ -77,8 +77,8 @@ public class VelocityControllableTest extends GompeiLibTestBase {
     mechanism.setVelocityGainSlot(OutputType.VOLTAGE, GainSlot.TWO);
     assertEquals(GainSlot.TWO, mechanism.getVelocityGainSlot());
 
-    mechanism.setVelocityProfileMode(ProfileMode.PROFILED);
-    assertEquals(ProfileMode.PROFILED, mechanism.getVelocityProfileMode());
+    mechanism.setVelocityProfileMode(VelocityProfileMode.PROFILED);
+    assertEquals(VelocityProfileMode.PROFILED, mechanism.getVelocityProfileMode());
 
     RequestOptions options =
         new RequestOptions(

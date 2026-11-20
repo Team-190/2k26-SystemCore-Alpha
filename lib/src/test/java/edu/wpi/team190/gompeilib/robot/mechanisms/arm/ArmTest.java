@@ -12,8 +12,6 @@ import edu.wpi.team190.gompeilib.control.Gains;
 import edu.wpi.team190.gompeilib.control.Setpoint;
 import edu.wpi.team190.gompeilib.control.constraints.AngularPositionConstraints;
 import edu.wpi.team190.gompeilib.io.base.CANBusId;
-import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry;
-import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.io.motor.config.CurrentLimits;
 import edu.wpi.team190.gompeilib.io.motor.config.GainSlot;
 import edu.wpi.team190.gompeilib.io.motor.config.GravityType;
@@ -30,8 +28,6 @@ import edu.wpi.team190.gompeilib.io.physics.Inertia;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
-import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +74,7 @@ public class ArmTest extends GompeiLibTestBase {
     when(subsystem.getName()).thenReturn("TestArmSubsystem");
 
     slot0 = Gains.angularPosition(Volts).withPrefix("arm/slot0").withKG(Volts.of(0.3)).build();
-    constants = constants(Optional.empty());
+    constants = constants();
   }
 
   @AfterEach
@@ -86,7 +82,7 @@ public class ArmTest extends GompeiLibTestBase {
     logger.close();
   }
 
-  private ArmConstants constants(Optional<CurrentHoming.Config<AngleUnit>> homing) {
+  private ArmConstants constants() {
     return ArmConstants.builder()
         .withMotor(
             MotorConfig.builder()
@@ -130,7 +126,6 @@ public class ArmTest extends GompeiLibTestBase {
                 .withQuasistaticTimeout(Seconds.of(12))
                 .withDynamicTimeout(Seconds.of(12))
                 .build())
-        .withHoming(homing)
         .build();
   }
 
@@ -217,57 +212,6 @@ public class ArmTest extends GompeiLibTestBase {
         .setControl(
             new PositionRequest.ProfiledPositionVoltage(
                 Degrees.of(540), Volts.of(0.0), true, GainSlot.ZERO, RequestOptions.DEFAULT));
-  }
-
-  @Test
-  public void testSeedsPositionFromItsEncoder() {
-    AbsoluteEncoderIO encoder = mock(AbsoluteEncoderIO.class);
-    doAnswer(
-            invocation -> {
-              ((AbsoluteEncoderTelemetry) invocation.getArgument(0)).absolutePosition =
-                  Rotations.of(0.125);
-              return null;
-            })
-        .when(encoder)
-        .updateInputs(any());
-    Arm arm =
-        new Arm(
-            factory,
-            Optional.of(encoder),
-            subsystem,
-            "Arm",
-            constants,
-            new Setpoint<>(Degrees.of(0), Degrees.of(1)),
-            new Setpoint<>(Volts.of(0), Volts.of(0.5)));
-    assertTrue(arm.encoderSeed().isPresent());
-
-    arm.periodic();
-    arm.seedPositionFromEncoder();
-    verify(motor).setPosition(Rotations.of(0.125));
-  }
-
-  @Test
-  public void testHomesOnlyWithAHomingConfig() {
-    assertThrows(
-        IllegalStateException.class, () -> new Arm(factory, subsystem, "Arm", constants).home());
-
-    Arm arm =
-        new Arm(
-            factory,
-            subsystem,
-            "Arm",
-            constants(
-                Optional.of(
-                    new CurrentHoming.Config<>(
-                        Volts.of(-1), Amps.of(-20), Amps.of(1), Degrees.of(-90)))));
-    Command home = arm.home();
-    home.initialize();
-    home.execute();
-    arm.periodic();
-    home.execute();
-    verify(motor)
-        .setControl(new OpenLoopRequest.VoltageOutput(Volts.of(-1), true, CurrentHoming.OPTIONS));
-    assertEquals(Degrees.of(-90), arm.homing().getConfig().position());
   }
 
   @Test

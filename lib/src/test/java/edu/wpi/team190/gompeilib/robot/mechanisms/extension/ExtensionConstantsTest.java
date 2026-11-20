@@ -74,7 +74,6 @@ public class ExtensionConstantsTest extends GompeiLibTestBase {
     assertEquals(Volts.of(0.5), constants.voltageOffsetStep);
     assertEquals(Meters.of(0.01), constants.heightOffsetStep);
     assertSame(sysId, constants.characterization);
-    assertTrue(constants.homing.isEmpty());
 
     assertEquals(
         PlantCharacterization.ofElevator(

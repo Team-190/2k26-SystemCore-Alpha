@@ -15,6 +15,7 @@ import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.logging.Trace;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismConversion;
 import edu.wpi.team190.gompeilib.robot.common.core.PositionalMechanism;
+import edu.wpi.team190.gompeilib.robot.common.core.PositionalMechanism.Travel;
 import java.util.Optional;
 import lombok.Getter;
 import org.wpilib.command2.Subsystem;
@@ -28,7 +29,8 @@ import org.wpilib.units.measure.Distance;
 /**
  * A linear extension: one leader motor and any number of followers, driving a drum, sprocket, or
  * screw. The motors work in gearbox-output rotations; the extension's linear conversion turns
- * travel into rotation and back. It starts idle.
+ * travel into rotation and back. It starts idle. An extension that homes against a hard stop is a
+ * {@link HomingExtension}.
  */
 public class Extension
     extends PositionalMechanism<
@@ -62,15 +64,16 @@ public class Extension
         MechanismConversion.linear(constants.distancePerRadian),
         constants.constraints,
         () -> constants.constraints.goalTolerance().get(),
-        constants.extensionParameters.minLength(),
-        constants.extensionParameters.maxLength(),
-        constants.constraints.characterizationMargin(),
+        Optional.of(
+            new Travel<>(
+                constants.extensionParameters.minLength(),
+                constants.extensionParameters.maxLength(),
+                constants.constraints.characterizationMargin())),
         constants.closedLoopOutputType,
         positionGoal,
         voltageGoal,
         constants.currentOffsetStep,
         constants.dutyCycleOffsetStep,
-        constants.homing,
         constants.characterization);
     this.constants = constants;
   }
@@ -85,16 +88,7 @@ public class Extension
    */
   public Extension(
       MotorIOFactory motorFactory, Subsystem subsystem, String name, ExtensionConstants constants) {
-    this(
-        motorFactory,
-        subsystem,
-        name,
-        constants,
-        new Setpoint<>(
-            Meters.of(0),
-            constants.heightOffsetStep,
-            constants.extensionParameters.minLength(),
-            constants.extensionParameters.maxLength()));
+    this(motorFactory, subsystem, name, constants, defaultPositionGoal(constants));
   }
 
   /**
@@ -112,13 +106,31 @@ public class Extension
       String name,
       ExtensionConstants constants,
       Setpoint<DistanceUnit> positionGoal) {
-    this(
-        motorFactory,
-        subsystem,
-        name,
-        constants,
-        positionGoal,
-        new Setpoint<>(Volts.of(0), constants.voltageOffsetStep, Volts.of(-12), Volts.of(12)));
+    this(motorFactory, subsystem, name, constants, positionGoal, defaultVoltageGoal(constants));
+  }
+
+  /**
+   * Returns a position goal at zero, limited to the extension's travel.
+   *
+   * @param constants the extension's constants
+   * @return the goal
+   */
+  protected static Setpoint<DistanceUnit> defaultPositionGoal(ExtensionConstants constants) {
+    return new Setpoint<>(
+        Meters.of(0),
+        constants.heightOffsetStep,
+        constants.extensionParameters.minLength(),
+        constants.extensionParameters.maxLength());
+  }
+
+  /**
+   * Returns a 0 V goal, limited to ±12 V.
+   *
+   * @param constants the extension's constants
+   * @return the goal
+   */
+  protected static Setpoint<VoltageUnit> defaultVoltageGoal(ExtensionConstants constants) {
+    return new Setpoint<>(Volts.of(0), constants.voltageOffsetStep, Volts.of(-12), Volts.of(12));
   }
 
   /**

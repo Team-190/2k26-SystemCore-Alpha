@@ -13,7 +13,6 @@ import edu.wpi.team190.gompeilib.io.motor.config.MotionProfileConfig;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.motor.outputs.OutputType;
-import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +33,7 @@ public class PositionalMechanismTest extends GompeiLibTestBase {
         MotorIOFactory factory,
         Subsystem subsystem,
         AngularPositionConstraints constraints,
-        Optional<CurrentHoming.Config<AngleUnit>> homing) {
+        Optional<Travel<AngleUnit>> travel) {
       super(
           factory,
           MechanismTestSupport.config(),
@@ -43,15 +42,12 @@ public class PositionalMechanismTest extends GompeiLibTestBase {
           MechanismConversion.angular(),
           constraints,
           () -> constraints.goalTolerance().get(),
-          Radians.of(-1),
-          Radians.of(1),
-          constraints.characterizationMargin(),
+          travel,
           OutputType.CURRENT,
           new Setpoint<>(Radians.of(0), Radians.of(0.1)),
           new Setpoint<>(Volts.of(0), Volts.of(0.5)),
           Amps.of(1),
           Value.of(0.05),
-          homing,
           CharacterizationConfig.voltage()
               .withRampRate(VoltsPerSecond.ofNative(1))
               .withStepOutput(Volts.of(4))
@@ -93,6 +89,12 @@ public class PositionalMechanismTest extends GompeiLibTestBase {
             .build();
   }
 
+  private Optional<PositionalMechanism.Travel<AngleUnit>> travel() {
+    return Optional.of(
+        new PositionalMechanism.Travel<>(
+            Radians.of(-1), Radians.of(1), constraints.characterizationMargin()));
+  }
+
   @AfterEach
   public void tearDown() {
     logger.close();
@@ -100,7 +102,7 @@ public class PositionalMechanismTest extends GompeiLibTestBase {
 
   @Test
   public void testWiresEveryControlToOneCore() {
-    Pivot pivot = new Pivot(factory, subsystem, constraints, Optional.empty());
+    Pivot pivot = new Pivot(factory, subsystem, constraints, travel());
     MechanismCore core = pivot.core();
     assertEquals("Test/Pivot", core.getTopic());
     assertEquals(MechanismCore.IDLE, pivot.getMode());
@@ -114,7 +116,7 @@ public class PositionalMechanismTest extends GompeiLibTestBase {
 
   @Test
   public void testConstrainsCharacterizationToItsTravel() {
-    Pivot pivot = new Pivot(factory, subsystem, constraints, Optional.empty());
+    Pivot pivot = new Pivot(factory, subsystem, constraints, travel());
     var constraint = pivot.characterizationConstraint().orElseThrow();
     assertEquals(Radians.of(-1), constraint.lowerLimit());
     assertEquals(Radians.of(1), constraint.upperLimit());
@@ -130,17 +132,28 @@ public class PositionalMechanismTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testHomesOnlyWhenConfigured() {
-    Pivot unhomed = new Pivot(factory, subsystem, constraints, Optional.empty());
-    assertThrows(IllegalStateException.class, unhomed::homing);
+  public void testRunsFreelyWithoutATravelRange() {
+    Pivot turret = new Pivot(factory, subsystem, constraints, Optional.empty());
+    assertTrue(turret.characterizationConstraint().isEmpty());
+    assertNotNull(turret.characterize());
+  }
 
-    Pivot homed =
-        new Pivot(
-            factory,
-            subsystem,
-            constraints,
-            Optional.of(
-                new CurrentHoming.Config<>(Volts.of(-1), Amps.of(-20), Amps.of(1), Radians.of(0))));
-    assertTrue(homed.core().components().contains(homed.homing()));
+  @Test
+  public void shouldRejectAnInvertedOrMissingTravel() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PositionalMechanism.Travel<>(
+                Radians.of(1), Radians.of(-1), constraints.characterizationMargin()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new PositionalMechanism.Travel<>(
+                null, Radians.of(1), constraints.characterizationMargin()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new PositionalMechanism.Travel<>(Radians.of(-1), Radians.of(1), null));
+    assertThrows(
+        NullPointerException.class, () -> new Pivot(factory, subsystem, constraints, null));
   }
 }

@@ -16,9 +16,8 @@ import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIO;
 import edu.wpi.team190.gompeilib.io.motor.interfaces.MotorIOFactory;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
-import edu.wpi.team190.gompeilib.robot.mechanisms.arm.Arm;
 import edu.wpi.team190.gompeilib.robot.mechanisms.arm.ArmConstants;
-import java.util.Optional;
+import edu.wpi.team190.gompeilib.robot.mechanisms.arm.HomingArm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.wpilib.command2.Subsystem;
@@ -48,7 +47,7 @@ public class GenericHoodTest extends GompeiLibTestBase {
     when(subsystem.getName()).thenReturn("Shooter");
   }
 
-  private static ArmConstants constants(Optional<CurrentHoming.Config<AngleUnit>> homing) {
+  private static ArmConstants constants() {
     return ArmConstants.builder()
         .withMotor(
             MotorConfig.builder()
@@ -70,16 +69,16 @@ public class GenericHoodTest extends GompeiLibTestBase {
         .withVoltageOffsetStep(Volts.of(0.5))
         .withCharacterization(sysId())
         .withPositionOffsetStep(Degrees.of(1))
-        .withHoming(homing)
         .build();
   }
 
-  private GenericHood hood(ArmConstants constants) {
+  private GenericHood hood(CurrentHoming.Config<AngleUnit> homing) {
     return new GenericHood(
         factory,
         subsystem,
         "Hood",
-        constants,
+        constants(),
+        homing,
         new Setpoint<>(Degrees.of(0), Degrees.of(1)),
         new Setpoint<>(Volts.of(0), Volts.of(0.5)));
   }
@@ -87,17 +86,16 @@ public class GenericHoodTest extends GompeiLibTestBase {
   @Test
   public void testIsAnArmThatHomes() {
     CurrentHoming.Config<AngleUnit> homing =
-        new CurrentHoming.Config<>(Volts.of(-1), Amps.of(40), Milliamps.of(500), Degrees.of(0));
-    GenericHood hood = hood(constants(Optional.of(homing)));
+        new CurrentHoming.Config<>(
+            CurrentHoming.Output.volts(Volts.of(-1)),
+            Amps.of(40),
+            Milliamps.of(500),
+            Degrees.of(0));
+    GenericHood hood = hood(homing);
 
-    assertInstanceOf(Arm.class, hood);
+    assertInstanceOf(HomingArm.class, hood);
     assertEquals("Shooter/Hood", hood.core().getTopic());
     assertSame(homing, hood.homing().getConfig());
     assertNotNull(hood.home());
-  }
-
-  @Test
-  public void shouldRequireAHomingConfig() {
-    assertThrows(IllegalArgumentException.class, () -> hood(constants(Optional.empty())));
   }
 }

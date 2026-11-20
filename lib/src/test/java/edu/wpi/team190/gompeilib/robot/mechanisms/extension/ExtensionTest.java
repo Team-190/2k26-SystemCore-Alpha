@@ -32,7 +32,6 @@ import edu.wpi.team190.gompeilib.io.motor.phoenix.TalonFXConversions;
 import edu.wpi.team190.gompeilib.io.physics.PlantCharacterization;
 import edu.wpi.team190.gompeilib.io.physics.PlantMechanismSim;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
-import edu.wpi.team190.gompeilib.robot.common.homing.CurrentHoming;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
@@ -90,7 +89,7 @@ public class ExtensionTest extends GompeiLibTestBase {
             .withKV(VoltsPerMeterPerSecond.ofNative(6.0))
             .build();
     slot1 = Gains.linearPosition(Volts).withPrefix("slot1").build();
-    constants = constants(Optional.empty());
+    constants = constants();
   }
 
   @AfterEach
@@ -110,18 +109,16 @@ public class ExtensionTest extends GompeiLibTestBase {
         .withGearRatio(10.0);
   }
 
-  private ExtensionConstants constants(Optional<CurrentHoming.Config<DistanceUnit>> homing) {
-    return constants(homing, motor().build());
+  private ExtensionConstants constants() {
+    return constants(motor().build());
   }
 
-  private ExtensionConstants constants(
-      Optional<CurrentHoming.Config<DistanceUnit>> homing, MotorConfig motor) {
+  private ExtensionConstants constants(MotorConfig motor) {
     return ExtensionConstants.builder()
         .withMotor(motor)
         .withSlot(GainSlot.ZERO, slot0)
         .withSlot(GainSlot.ONE, slot1)
         .withDistancePerRadian(Meters.of(DRUM_RADIUS))
-        .withHoming(homing)
         .withExtensionParameters(
             ExtensionConstants.ExtensionParameters.builder()
                 .withCarriageGearbox(DCMotor.getNeo550(1))
@@ -289,7 +286,6 @@ public class ExtensionTest extends GompeiLibTestBase {
   public void shouldRejectGainsInTheMotorConfig() {
     ExtensionConstants withMotorSlots =
         constants(
-            Optional.empty(),
             motor()
                 .withSlot(GainSlot.ZERO, SlotConfig.position(TestGains.positionKP(1.0)))
                 .build());
@@ -301,38 +297,6 @@ public class ExtensionTest extends GompeiLibTestBase {
   @Test
   public void testSimMechanism() {
     assertInstanceOf(PlantMechanismSim.class, Extension.simMechanism(constants));
-  }
-
-  @Test
-  public void testHomesOnlyWithAHomingConfig() {
-    assertThrows(
-        IllegalStateException.class,
-        () -> new Extension(factory, subsystem, "Extension", constants).home());
-
-    Extension extension =
-        new Extension(
-            factory,
-            subsystem,
-            "Extension",
-            constants(
-                Optional.of(
-                    new CurrentHoming.Config<>(
-                        Volts.of(-1.0), Amps.of(-20.0), Amps.of(5.0), Meters.of(0.0)))));
-    Command home = extension.home();
-    home.initialize();
-    extension.periodic();
-    home.execute();
-    home.execute();
-    verify(motor)
-        .setControl(new OpenLoopRequest.VoltageOutput(Volts.of(-1.0), true, CurrentHoming.OPTIONS));
-
-    reading = t -> t.torqueCurrent = Amps.of(-20.0);
-    extension.periodic();
-    for (int i = 0; i < 5 && !home.isFinished(); i++) {
-      home.execute();
-    }
-    assertTrue(home.isFinished());
-    verify(motor).setPosition(Radians.of(0.0));
   }
 
   @Test

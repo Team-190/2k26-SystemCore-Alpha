@@ -9,7 +9,6 @@ import edu.wpi.team190.gompeilib.io.encoder.inputs.AbsoluteEncoderTelemetry;
 import edu.wpi.team190.gompeilib.io.encoder.interfaces.AbsoluteEncoderIO;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismCore;
 import edu.wpi.team190.gompeilib.robot.common.core.MechanismTestSupport.TestMotors;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,8 +43,7 @@ public class EncoderSeedTest extends GompeiLibTestBase {
             })
         .when(encoder)
         .updateInputs(any());
-    EncoderSeed seed = new EncoderSeed(core, Optional.of(encoder));
-    assertTrue(seed.isPresent());
+    EncoderSeed seed = new EncoderSeed(core, encoder);
     assertTrue(core.components().contains(seed));
 
     core.periodic();
@@ -56,18 +54,29 @@ public class EncoderSeedTest extends GompeiLibTestBase {
   }
 
   @Test
-  public void testWithoutAnEncoderDoesNothing() {
-    EncoderSeed seed = new EncoderSeed(core, Optional.empty());
-    assertFalse(seed.isPresent());
+  public void testSeedingReadsTheEncoderFirst() {
+    AbsoluteEncoderIO encoder = mock(AbsoluteEncoderIO.class);
+    doAnswer(
+            invocation -> {
+              ((AbsoluteEncoderTelemetry) invocation.getArgument(0)).absolutePosition =
+                  Rotations.of(0.4);
+              return null;
+            })
+        .when(encoder)
+        .updateInputs(any());
+    EncoderSeed seed = new EncoderSeed(core, encoder);
 
-    seed.periodic("T");
+    // No loop has run, so the seed must read the encoder itself
     seed.seedPosition();
-    logger.verify(() -> Logger.processInputs(eq("T/Encoder"), any()), never());
-    verify(motors.motor, never()).setPosition(any());
+    verify(encoder).updateInputs(any());
+    logger.verify(() -> Logger.processInputs(eq("Test/Mechanism/Encoder"), any()));
+    verify(motors.motor).setPosition(Rotations.of(0.4));
   }
 
   @Test
-  public void shouldRequireAnOptional() {
+  public void shouldRequireAnEncoder() {
     assertThrows(NullPointerException.class, () -> new EncoderSeed(core, null));
+    assertThrows(
+        NullPointerException.class, () -> new EncoderSeed(null, mock(AbsoluteEncoderIO.class)));
   }
 }
