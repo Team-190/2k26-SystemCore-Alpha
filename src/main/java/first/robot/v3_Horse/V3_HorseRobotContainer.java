@@ -306,7 +306,7 @@ public class V3_HorseRobotContainer implements RobotContainer {
 
   private void configureButtonBindings() {
     drive.setDefaultCommand(
-        V3_HorseDriveCommands.joystickDriveRotationLock(
+        V3_HorseDriveCommands.schoolBusDrive(
                 drive,
                 V3_HorseConstants.DRIVE_CONSTANTS,
                 () -> -driver.getLeftY(),
@@ -318,7 +318,7 @@ public class V3_HorseRobotContainer implements RobotContainer {
                 () -> 0.0,
                 driver.leftTrigger(),
                 () -> V3_HorseRobotState.getCardinalDirection())
-            .withName("joystickDriveRotationLock"));
+            .withName("schoolBusDrive"));
 
     driver.leftTrigger().onTrue(Commands.runOnce(() -> {}).withName("cardinal-direction-set"));
 
@@ -385,6 +385,10 @@ public class V3_HorseRobotContainer implements RobotContainer {
                 .withName("driver-top-right-true"));
 
     driver.b().onTrue(V3_HorseCompositeCommands.intakeStow(intake).withName("driver-B-true"));
+
+    driver
+        .rightStick()
+        .onTrue(V3_HorseDriveCommands.toggleSchoolBus().withName("driver-rightStick-true"));
 
     operator
         .leftBumper()
@@ -479,6 +483,9 @@ public class V3_HorseRobotContainer implements RobotContainer {
 
     String autoName = selectedAutoName.get();
     boolean flipped = AllianceFlipUtil.shouldFlip();
+
+    Logger.recordOutput("Drive/School Bus/Enabled", V3_HorseDriveCommands.isSchoolBusEnabled());
+    Logger.recordOutput("Drive/School Bus/Deadband", V3_HorseDriveCommands.getSchoolBusDeadband());
 
     if (!autoName.equals(lastPublishedAuto) || flipped != lastPublishedFlipped) {
       Pose2d[] trajectory = autoTrajectories.getOrDefault(autoName, new Pose2d[0]);

@@ -6,6 +6,7 @@ import static org.wpilib.units.Units.RadiansPerSecond;
 import static org.wpilib.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.team190.gompeilib.core.logging.Trace;
+import edu.wpi.team190.gompeilib.core.utility.tunable.GompeiTunables;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDrive;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants;
 import edu.wpi.team190.gompeilib.subsystems.drivebases.swervedrive.SwerveDriveConstants.AutoAlignConstants;
@@ -32,12 +33,17 @@ import org.wpilib.math.trajectory.TrapezoidProfile;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
 import org.wpilib.system.Timer;
+import org.wpilib.tunable.Tunable;
 import org.wpilib.util.Pair;
 
 public final class V3_HorseDriveCommands {
 
   @Setter private static double lastCardinalDirection = 0.0;
   @Getter private static double slowFactor = 0.5;
+
+  @Getter private static boolean schoolBusEnabled = false;
+  private static final Tunable<Double> schoolBusDeadband =
+      GompeiTunables.value("Drive/School Bus/Deadband", 0.3);
 
   /**
    * A command that drives a SwerveDrive using joystick input.
@@ -191,6 +197,55 @@ public final class V3_HorseDriveCommands {
         () -> 1.0);
   }
 
+  public static Command schoolBusDrive(
+      SwerveDrive drive,
+      SwerveDriveConstants driveConstants,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
+      Supplier<Rotation2d> rotationSupplier,
+      BooleanSupplier pointAtHub,
+      DoubleSupplier hubSetpoint,
+      DoubleSupplier hubFeedforward,
+      BooleanSupplier cardinalDirectionAlign,
+      Supplier<Rotation2d> cardinalDirection) {
+    ProfiledPIDController omegaController = createTunedOmegaController(driveConstants);
+
+    DoubleSupplier hubOmega = omegaHijack(drive, omegaController, rotationSupplier, hubSetpoint);
+    DoubleSupplier cardinalOmega =
+        omegaHijack(
+            drive, omegaController, rotationSupplier, () -> cardinalDirection.get().getRadians());
+
+    BooleanSupplier schoolBusActive =
+        () ->
+            schoolBusEnabled
+                && Math.hypot(xSupplier.getAsDouble(), ySupplier.getAsDouble())
+                    > schoolBusDeadband.get();
+
+    DoubleSupplier travelHeading =
+        () ->
+            AllianceFlipUtil.apply(new Rotation2d(xSupplier.getAsDouble(), ySupplier.getAsDouble()))
+                .getRadians();
+    DoubleSupplier schoolBusOmega =
+        omegaHijack(drive, omegaController, rotationSupplier, travelHeading);
+
+    return joystickDrive(
+        drive,
+        driveConstants,
+        xSupplier,
+        ySupplier,
+        omegaSupplier,
+        rotationSupplier,
+        List.of(),
+        List.of(),
+        List.of(
+            Pair.of(pointAtHub, () -> hubOmega.getAsDouble() + hubFeedforward.getAsDouble()),
+            Pair.of(cardinalDirectionAlign, cardinalOmega),
+            Pair.of(schoolBusActive, schoolBusOmega)),
+        () -> false,
+        () -> 1.0);
+  }
+
   public static Command joystickDriveRotationLock(
       SwerveDrive drive,
       SwerveDriveConstants driveConstants,
@@ -245,6 +300,14 @@ public final class V3_HorseDriveCommands {
                     drive, omegaController, rotationSupplier, () -> lastCardinalDirection))),
         slowMode,
         () -> slowFactor);
+  }
+
+  public static Command toggleSchoolBus() {
+    return Commands.runOnce(() -> schoolBusEnabled = !schoolBusEnabled).ignoringDisable(true);
+  }
+
+  public static double getSchoolBusDeadband() {
+    return schoolBusDeadband.get();
   }
 
   public static Command incrementSlowFactor() {
