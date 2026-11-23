@@ -14,18 +14,19 @@ public class ArcPath extends Path {
 
   public ArcPath(
       Pose2d startPose,
-      double theta,
-      double centerX,
-      double centerY,
-      double endRot,
+      Rotation2d rotation,
+      Translation2d translation,
+      Rotation2d endrot,
       PathConstraints constraints) {
+    double centerX = translation.getX();
+    double centerY = translation.getY();
+    double theta = rotation.getRadians();
     double endX = centerX * Math.cos(theta) + (startPose.getX() - centerX);
     double endY = centerY * Math.sin(theta) + (startPose.getY() - centerY);
     this.centerX = centerX;
     this.centerY = centerY;
     this.theta = theta;
-    super(
-        startPose, new Pose2d(new Translation2d(endX, endY), new Rotation2d(endRot)), constraints);
+    super(startPose, new Pose2d(new Translation2d(endX, endY), endrot), constraints);
   }
 
   @Override
