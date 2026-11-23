@@ -21,5 +21,4 @@ public class WaitPath extends Path {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
-
 }

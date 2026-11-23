@@ -21,5 +21,4 @@ public class CubicPath extends Path {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
-
 }

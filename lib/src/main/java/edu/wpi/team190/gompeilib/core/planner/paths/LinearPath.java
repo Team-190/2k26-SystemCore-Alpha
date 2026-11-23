@@ -1,15 +1,11 @@
 package edu.wpi.team190.gompeilib.core.planner.paths;
 
-import java.util.function.Supplier;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class LinearPath extends Path {
 
-  public LinearPath(
-      Pose2d startPose,
-      Pose2d endPose,
-      PathConstraints constraints) {
+  public LinearPath(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
     super(startPose, endPose, constraints);
   }
 

@@ -1,7 +1,5 @@
 package edu.wpi.team190.gompeilib.core.planner.paths;
 
-import java.util.ArrayList;
-import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;

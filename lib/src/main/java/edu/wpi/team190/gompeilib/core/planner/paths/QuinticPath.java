@@ -21,6 +21,4 @@ public class QuinticPath extends Path {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
-
-
 }
