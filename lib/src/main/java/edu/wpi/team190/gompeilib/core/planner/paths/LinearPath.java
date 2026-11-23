@@ -20,18 +20,22 @@ public class LinearPath extends Path {
 
   @Override
   public Pose2d sample(double t) {
-    return startPose.interpolate(endPose, t);
+    return new Pose2d(
+        startPose.getTranslation().interpolate(endPose.getTranslation(), t),
+        startPose.getRotation().interpolate(endPose.getRotation(), t));
   }
 
   @Override
   public Pose2d sample(Pose2d pose) {
     double vy = vel.get().vy;
     double vx = vel.get().vx;
+    double dist =
+        (Math.sqrt(vy * vy + vx * vx) * 0.02)
+            / startPose.getTranslation().getDistance(endPose.getTranslation());
     Pose2d newPose =
-        pose.interpolate(
-            pose,
-            (Math.sqrt(vy * vy + vx * vx) * 0.02)
-                / startPose.getTranslation().getDistance(endPose.getTranslation()));
+        new Pose2d(
+            pose.getTranslation().interpolate(endPose.getTranslation(), dist),
+            pose.getRotation().interpolate(endPose.getRotation(), dist));
     return newPose;
   }
 
@@ -39,7 +43,7 @@ public class LinearPath extends Path {
     ArrayList<Pose2d> poseList = new ArrayList<Pose2d>();
     poseList.add(startPose);
     for (int i = 0; i <= 10; i++) {
-      poseList.add(sample(i / 10.0));
+      poseList.add(sample(poseList.get(i)));
     }
     Pose2d[] poseArray = {};
     Logger.recordOutput("LINEARPATHLISSI", poseList.toArray(poseArray));
