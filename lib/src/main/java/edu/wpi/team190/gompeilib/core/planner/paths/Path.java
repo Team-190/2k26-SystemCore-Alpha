@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.util.Pair;
 
 public abstract class Path {
@@ -23,7 +24,7 @@ public abstract class Path {
 
   abstract Pose2d sample(double time);
 
-  abstract Pose2d sample(Pose2d pose);
+  abstract Pose2d sample(Pose2d pose, ChassisVelocities vel);
 
   public Path withCommand(double time, Command command) {
     eventList.add(Pair.of(time, command));
@@ -61,5 +62,10 @@ public abstract class Path {
 
   private static double distance(Pose2d a, Pose2d b) {
     return Math.hypot(a.getX() - b.getX(), a.getY() - b.getY());
+  }
+
+  Pose2d sample(Pose2d pose) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
 }

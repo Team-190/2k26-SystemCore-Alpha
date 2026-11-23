@@ -5,15 +5,12 @@ import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class LinearPath extends Path {
-  private Supplier<ChassisVelocities> vel;
 
   public LinearPath(
       Pose2d startPose,
       Pose2d endPose,
-      PathConstraints constraints,
-      Supplier<ChassisVelocities> vel) {
+      PathConstraints constraints) {
     super(startPose, endPose, constraints);
-    this.vel = vel;
   }
 
   @Override
@@ -24,9 +21,9 @@ public class LinearPath extends Path {
   }
 
   @Override
-  public Pose2d sample(Pose2d pose) {
-    double vy = vel.get().vy;
-    double vx = vel.get().vx;
+  public Pose2d sample(Pose2d pose, ChassisVelocities vel) {
+    double vy = vel.vy;
+    double vx = vel.vx;
     double dist =
         (Math.sqrt(vy * vy + vx * vx) * 0.02)
             / startPose.getTranslation().getDistance(endPose.getTranslation());

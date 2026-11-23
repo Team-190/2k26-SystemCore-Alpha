@@ -13,7 +13,6 @@ public class ArcPath extends Path {
   private final double centerX;
   private final double centerY;
   private final double theta;
-  private ChassisVelocities vel;
 
   public ArcPath(
       Pose2d startPose,
@@ -40,12 +39,8 @@ public class ArcPath extends Path {
         startPose.getRotation().interpolate(endPose.getRotation(), t));
   }
 
-  public void setVel(ChassisVelocities vel) {
-    this.vel = vel;
-  }
-
   @Override
-  Pose2d sample(Pose2d pose) {
+  Pose2d sample(Pose2d pose, ChassisVelocities vel) {
     return new Pose2d(
         startPose
             .getTranslation()
