@@ -29,6 +29,7 @@
     null
   ],
   "java.test.defaultConfig": "WPIlibUnitTests",
+  "java.import.gradle.annotationProcessing.enabled": false,
   "java.import.gradle.rootDirectories.exclude": [
     "**/lib"
   ],
