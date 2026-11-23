@@ -1,47 +1,68 @@
 package edu.wpi.team190.gompeilib.core.planner.paths;
 
 import java.util.ArrayList;
-import java.util.List;
-
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
-
+import org.wpilib.math.geometry.Twist2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class ArcPath extends Path {
 
   private final double centerX;
   private final double centerY;
   private final double theta;
-  public ArcPath(Pose2d startPose, double theta, double centerX, double centerY, double endRot, PathConstraints constraints) {
-    double endX = centerX*Math.cos(theta)+(startPose.getX()-centerX);
-    double endY = centerY*Math.sin(theta)+(startPose.getY()-centerY);
+  private ChassisVelocities vel;
+
+  public ArcPath(
+      Pose2d startPose,
+      double theta,
+      double centerX,
+      double centerY,
+      double endRot,
+      PathConstraints constraints) {
+    double endX = centerX * Math.cos(theta) + (startPose.getX() - centerX);
+    double endY = centerY * Math.sin(theta) + (startPose.getY() - centerY);
     this.centerX = centerX;
     this.centerY = centerY;
     this.theta = theta;
-    super(startPose, new Pose2d(new Translation2d(endX,endY), new Rotation2d(endRot)), constraints);
+    super(
+        startPose, new Pose2d(new Translation2d(endX, endY), new Rotation2d(endRot)), constraints);
   }
 
   @Override
-  Pose2d sample(double angle) {
-    double endX = centerX*Math.cos(angle/theta)+(startPose.getX()-centerX);
-    double endY = centerY*Math.sin(angle/theta)+(startPose.getY()-centerY);
-    return new Pose2d(new Translation2d(endX,endY), startPose.getRotation().interpolate(endPose.getRotation(), angle/theta));
+  Pose2d sample(double t) {
+    double endX = centerX * Math.cos(Math.toRadians(t * theta)) + (startPose.getX() - centerX);
+    double endY = centerY * Math.sin(Math.toRadians(t * theta)) + (startPose.getY() - centerY);
+    return new Pose2d(
+        new Translation2d(endX, endY),
+        startPose.getRotation().interpolate(endPose.getRotation(), t));
+  }
+
+  public void setVel(ChassisVelocities vel) {
+    this.vel = vel;
   }
 
   @Override
   Pose2d sample(Pose2d pose) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'sample'");
+    return new Pose2d(
+        startPose
+            .getTranslation()
+            .plus(
+                new Twist2d(vel.vx, vel.vy, pose.getRotation().getRadians())
+                    .exp()
+                    .getTranslation()),
+        startPose.getRotation().plus(new Rotation2d(vel.omega)));
   }
-  public void toLog(){
+
+  public void toLog() {
     ArrayList<Pose2d> poseList = new ArrayList<>();
-    for(int i = 0; i<=theta; i+=5){
+    for (double i = 0; i < 1; i += 0.1) {
+      System.out.print(i);
       poseList.add(sample(i));
     }
-
     Pose2d[] pathList = {};
-    Logger.recordOutput("PathListPlanner",poseList.toArray(pathList));
+    Logger.recordOutput("PathListPlanner", poseList.toArray(pathList));
   }
 }
