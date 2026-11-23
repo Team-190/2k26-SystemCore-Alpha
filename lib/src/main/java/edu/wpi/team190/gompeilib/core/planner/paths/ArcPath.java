@@ -55,14 +55,4 @@ public class ArcPath extends Path {
                     .getTranslation()),
         startPose.getRotation().plus(new Rotation2d(vel.omega)));
   }
-
-  public void toLog() {
-    ArrayList<Pose2d> poseList = new ArrayList<>();
-    for (double i = 0; i < 1; i += 0.1) {
-      System.out.print(i);
-      poseList.add(sample(i));
-    }
-    Pose2d[] pathList = {};
-    Logger.recordOutput("PathListPlanner", poseList.toArray(pathList));
-  }
 }
