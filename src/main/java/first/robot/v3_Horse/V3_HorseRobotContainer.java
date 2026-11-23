@@ -99,15 +99,6 @@ public class V3_HorseRobotContainer implements RobotContainer {
   private final CommandNiDsXboxController operator = new CommandNiDsXboxController(2);
 
   public V3_HorseRobotContainer() {
-    new LinearPath(
-            new Pose2d(),
-            new Pose2d(new Translation2d(10, 10), new Rotation2d(10)),
-            new PathConstraints(1, 4, 2),
-            () -> {
-              return new ChassisVelocities();
-            })
-        .LogPath();
-    ;
     if (Constants.getMode() != RobotMode.REPLAY) {
       switch (RobotConfig.ROBOT) {
         case V3_Horse:

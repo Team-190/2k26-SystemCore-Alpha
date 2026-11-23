@@ -38,14 +38,4 @@ public class LinearPath extends Path {
             pose.getRotation().interpolate(endPose.getRotation(), dist));
     return newPose;
   }
-
-  public void LogPath() {
-    ArrayList<Pose2d> poseList = new ArrayList<Pose2d>();
-    poseList.add(startPose);
-    for (int i = 0; i <= 10; i++) {
-      poseList.add(sample(poseList.get(i)));
-    }
-    Pose2d[] poseArray = {};
-    Logger.recordOutput("LINEARPATHLISSI", poseList.toArray(poseArray));
-  }
 }
