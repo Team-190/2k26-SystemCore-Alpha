@@ -1,27 +1,39 @@
 package edu.wpi.team190.gompeilib.core.planner.paths;
 
+import java.util.function.Supplier;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.geometry.Translation2d;
-
+import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class LinearPath extends Path {
-  private final Translation2d start;
-  private final Translation2d end;
+  private Supplier<ChassisVelocities> vel;
 
-  public LinearPath(Translation2d start, Translation2d end) {
-    this.start = start;
-    this.end = end;
+  public LinearPath(
+      Pose2d startPose,
+      Pose2d endPose,
+      PathConstraints constraints,
+      Supplier<ChassisVelocities> vel) {
+    super(startPose, endPose, constraints);
+    this.vel = vel;
   }
 
   @Override
   public Pose2d sample(double t) {
-     throw new UnsupportedOperationException("Unimplemented method 'sample'");
+    return new Pose2d(
+        startPose.getTranslation().interpolate(endPose.getTranslation(), t),
+        startPose.getRotation().interpolate(endPose.getRotation(), t));
   }
 
   @Override
-  Pose2d sample(Pose2d pose) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'sample'");
+  public Pose2d sample(Pose2d pose) {
+    double vy = vel.get().vy;
+    double vx = vel.get().vx;
+    double dist =
+        (Math.sqrt(vy * vy + vx * vx) * 0.02)
+            / startPose.getTranslation().getDistance(endPose.getTranslation());
+    Pose2d newPose =
+        new Pose2d(
+            pose.getTranslation().interpolate(endPose.getTranslation(), dist),
+            pose.getRotation().interpolate(endPose.getRotation(), dist));
+    return newPose;
   }
 }
