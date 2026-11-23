@@ -1,8 +1,6 @@
 package edu.wpi.team190.gompeilib.core.planner.paths;
 
-import java.util.ArrayList;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 
