@@ -10,13 +10,13 @@ import org.wpilib.util.Pair;
 public abstract class Path {
 
   public static final int SAMPLE_RATE = 100;
-
+  
+  private final PathConstraints baseConstraint;
   protected final Pose2d startPose;
   protected final Pose2d endPose;
-  private final PathConstraints baseConstraint;
+  protected double time;
 
   private ArrayList<ZonePathConstraints> zoneConstraintslist = new ArrayList<ZonePathConstraints>();
-  protected double time;
   private ArrayList<Pair<Double, Command>> eventList = new ArrayList<Pair<Double, Command>>();
 
   public Path(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
