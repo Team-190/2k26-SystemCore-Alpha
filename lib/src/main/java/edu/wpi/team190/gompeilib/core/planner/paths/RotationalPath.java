@@ -1,6 +1,7 @@
 package edu.wpi.team190.gompeilib.core.planner.paths;
 
 import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class RotationalPath extends Path {
 
@@ -16,7 +17,7 @@ public class RotationalPath extends Path {
   }
 
   @Override
-  Pose2d sample(Pose2d pose) {
+  Pose2d sample(Pose2d pose, ChassisVelocities vel) {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
