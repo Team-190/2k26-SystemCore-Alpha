@@ -2,6 +2,7 @@ package edu.wpi.team190.gompeilib.core.planner.paths;
 
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 
 
 public class WaitPath extends Path {
@@ -19,7 +20,6 @@ public class WaitPath extends Path {
 
   @Override
   Pose2d sample(Pose2d pose, ChassisVelocities vel) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'sample'");
+    return new Pose2d(startPose.getTranslation(),pose.getRotation().plus(new Rotation2d(vel.omega)));
   }
 }
