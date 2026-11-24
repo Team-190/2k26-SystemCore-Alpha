@@ -49,4 +49,10 @@ public class ArcPath extends Path {
                     .getTranslation()),
         startPose.getRotation().plus(new Rotation2d(vel.omega)));
   }
+
+  @Override
+  void calculateTime() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'calculateTime'");
+  }
 }

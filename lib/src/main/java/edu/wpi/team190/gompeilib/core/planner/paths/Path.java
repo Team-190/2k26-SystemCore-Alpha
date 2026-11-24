@@ -11,12 +11,12 @@ public abstract class Path {
 
   public static final int SAMPLE_RATE = 100;
 
-  private final Pose2d startPose;
-  private final Pose2d endPose;
+  protected final Pose2d startPose;
+  protected final Pose2d endPose;
   private final PathConstraints baseConstraint;
 
   private ArrayList<ZonePathConstraints> zoneConstraintslist = new ArrayList<ZonePathConstraints>();
-  private double time;
+  protected double time;
   private ArrayList<Pair<Double, Command>> eventList = new ArrayList<Pair<Double, Command>>();
 
   public Path(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
