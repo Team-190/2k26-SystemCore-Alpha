@@ -18,10 +18,8 @@ public class WaitPath extends Path {
   }
 
   @Override
-  Pose2d sample(Pose2d pose) {
+  Pose2d sample(Pose2d pose, ChassisVelocities vel) {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
-
-
 }
