@@ -6,19 +6,21 @@ public class PathConstraints {
   private final double maxVelocity;
   private final double maxThetaVelocity;
 
-
   public PathConstraints(double maxAcceleration, double maxVelocity, double maxThetaVelocity) {
     this.maxAcceleration = maxAcceleration;
     this.maxVelocity = maxVelocity;
     this.maxThetaVelocity = maxThetaVelocity;
   }
-  public double getMaxAccel(){
+
+  public double getMaxAccel() {
     return maxAcceleration;
   }
-  public double getMaxVel(){
+
+  public double getMaxVel() {
     return maxVelocity;
   }
-  public double getMaxRotVel(){
+
+  public double getMaxRotVel() {
     return maxThetaVelocity;
   }
 }

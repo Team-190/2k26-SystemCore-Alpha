@@ -10,7 +10,7 @@ import org.wpilib.util.Pair;
 public abstract class Path {
 
   public static final int SAMPLE_RATE = 100;
-  
+
   private final PathConstraints baseConstraint;
   protected final Pose2d startPose;
   protected final Pose2d endPose;
@@ -31,29 +31,32 @@ public abstract class Path {
 
   abstract void calculateTime();
 
-  public PathConstraints getBasePathConstraints(){
+  public PathConstraints getBasePathConstraints() {
     return baseConstraint;
   }
-  public Path addPathConstraint(ZonePathConstraints constraint){
+
+  public Path addPathConstraint(ZonePathConstraints constraint) {
     zoneConstraintslist.add(constraint);
     return this;
   }
-  public ArrayList<ZonePathConstraints> getZoneConstraints(){
+
+  public ArrayList<ZonePathConstraints> getZoneConstraints() {
     return zoneConstraintslist;
   }
 
-  public double getTime(){
+  public double getTime() {
     return time;
   }
 
-  public ArrayList<Pair<Double, Command>> getEventMarkers(){
+  public ArrayList<Pair<Double, Command>> getEventMarkers() {
     return eventList;
   }
-  
-  public Pose2d getStartPose(){
+
+  public Pose2d getStartPose() {
     return startPose;
   }
-  public Pose2d getEndPose(){
+
+  public Pose2d getEndPose() {
     return endPose;
   }
 
