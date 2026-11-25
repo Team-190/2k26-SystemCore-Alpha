@@ -29,4 +29,10 @@ public class LinearPath extends Path {
             pose.getRotation().interpolate(endPose.getRotation(), dist));
     return newPose;
   }
+
+  @Override
+  void calculateTime() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'calculateTime'");
+  }
 }

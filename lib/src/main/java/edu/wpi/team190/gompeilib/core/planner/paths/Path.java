@@ -11,20 +11,54 @@ public abstract class Path {
 
   public static final int SAMPLE_RATE = 100;
 
-  public final Pose2d startPose;
-  public final Pose2d endPose;
-  public final PathConstraints constraints;
-  public ArrayList<Pair<Double, Command>> eventList = new ArrayList<Pair<Double, Command>>();
+  private final PathConstraints baseConstraint;
+  protected final Pose2d startPose;
+  protected final Pose2d endPose;
+  protected double time;
+
+  private ArrayList<ZonePathConstraints> zoneConstraintslist = new ArrayList<ZonePathConstraints>();
+  private ArrayList<Pair<Double, Command>> eventList = new ArrayList<Pair<Double, Command>>();
 
   public Path(Pose2d startPose, Pose2d endPose, PathConstraints constraints) {
     this.startPose = startPose;
     this.endPose = endPose;
-    this.constraints = constraints;
+    this.baseConstraint = constraints;
   }
 
   abstract Pose2d sample(double time);
 
   abstract Pose2d sample(Pose2d pose, ChassisVelocities vel);
+
+  abstract void calculateTime();
+
+  public PathConstraints getBasePathConstraints() {
+    return baseConstraint;
+  }
+
+  public Path addPathConstraint(ZonePathConstraints constraint) {
+    zoneConstraintslist.add(constraint);
+    return this;
+  }
+
+  public ArrayList<ZonePathConstraints> getZoneConstraints() {
+    return zoneConstraintslist;
+  }
+
+  public double getTime() {
+    return time;
+  }
+
+  public ArrayList<Pair<Double, Command>> getEventMarkers() {
+    return eventList;
+  }
+
+  public Pose2d getStartPose() {
+    return startPose;
+  }
+
+  public Pose2d getEndPose() {
+    return endPose;
+  }
 
   public Path withCommand(double time, Command command) {
     eventList.add(Pair.of(time, command));
@@ -62,10 +96,5 @@ public abstract class Path {
 
   private static double distance(Pose2d a, Pose2d b) {
     return Math.hypot(a.getX() - b.getX(), a.getY() - b.getY());
-  }
-
-  Pose2d sample(Pose2d pose) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
 }

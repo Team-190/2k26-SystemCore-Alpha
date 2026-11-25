@@ -21,4 +21,10 @@ public class ClothoidPath extends Path {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'sample'");
   }
+
+  @Override
+  void calculateTime() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'calculateTime'");
+  }
 }
